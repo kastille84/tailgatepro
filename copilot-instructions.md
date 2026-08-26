@@ -11,10 +11,10 @@ Scope
 Key Rules (draft)
 
 - Follow existing project style and conventions; prefer minimal, surgical changes.
-- Use TypeScript/React idioms in `client/` and Node.js idioms in `server/`.
+- Use TypeScript/React idioms in `client/` and Node.js / Express idioms in `server/`.
 - Do not reformat entire files unless explicitly requested.
 - When editing code: run only the smallest change needed to fix the issue.
-- Add tests only when the change introduces new behavior or fixes a bug that benefits from regression protection.
+- Add tests only when the change introduces new behavior or fixes a bug that benefits from regression protection. _Important:_ do not use jest, only vitest for unit testing. See `docs/unit-testing.md` for details.
 - Avoid introducing new major dependencies without prior approval.
 
 Communication & Clarifications
@@ -55,3 +55,4 @@ The `docs/` folder contains markdown files that refer to different aspects of th
 | design  | ui-styling.md       | This file describes the UI styling standards for TailgatePro.                       |
 | design  | responsive.md       | This file describes the mobile-first & responsive design standards for TailgatePro. |
 | ui      | ui-inputs.md        | This file describes the UI input standards for TailgatePro.                         |
+| auth    | auth.md             | This file describes the authentication standards for TailgatePro.                   |
