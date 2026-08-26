@@ -62,4 +62,11 @@ export const StyledIconButton = styled(StyledButton)`
 `;
 ```
 
-## Responsiveness
+### Theme Reference Structure
+
+Ensure your implementations hook directly into our typed theme interface:
+
+- `theme.colors` (primary, secondary, background, surface, text, error)
+- `theme.spacing` (xs: 4px, sm: 8px, md: 16px, lg: 24px, xl: 32px)
+- `theme.breakpoints` (mobile, tablet, desktop)
+- `theme.typography` (fontSizes, fontWeights)
