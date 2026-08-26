@@ -73,7 +73,7 @@ server.js # Port binding and network listener, App initialization and middleware
 - **Core Security Middleware:** Ensure `helmet`, `cors`, and `express.json()` are loaded globally.
 - **Status Codes:** Express explicit status codes on responses (`200 OK`, `201 Created`, `400 Bad Request`, `401 Unauthorized`, `403 Forbidden`, `404 Not Found`, `500 Internal Server Error`).
 
-### Example src/services/userService.js
+### Example server/services/userService.js
 
 ```
 import prisma from '../config/prismaClient.js';
@@ -135,10 +135,10 @@ export const userService = {
 
 ```
 
-### Example src/controller/userController.js
+### Example server/controller/userController.js
 
 ```
-// src/controllers/userController.js
+// server/controllers/userController.js
 import { userService } from '../services/userService.js';
 
 export const registerUser = async (req, res, next) => {

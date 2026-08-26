@@ -51,3 +51,5 @@ The `docs/` folder contains markdown files that refer to different aspects of th
 | general | prd.md              | This file describes the product requirements and design for TailgatePro. |
 | error   | error-handling.md   | This file describes the error handling standards for TailgatePro.        |
 | coding  | coding-style.md     | This file describes the coding standards for TailgatePro.                |
+| unit    | unit-testing.md     | This file describes the unit testing standards for TailgatePro.          |
+| design  | ui-styling.md       | This file describes the UI styling standards for TailgatePro.            |

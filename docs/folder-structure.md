@@ -30,7 +30,8 @@ This folder '/client' is to handle the UI aka front end.
 This folder './server' is to handle the server calls sent from the front end ui to the back end.
 | folder | description |
 | ---- | ---------- |
-| server/controllers | These controller files handle making the calls to update supabase, stripe, authentication, emails, etc |
+| server/controllers | These controller files handle Request validation, parsing, and sending HTTP responses |
+| server/services | These files handle making the calls to update supabase, stripe, authentication, emails, etc |
 | server/middlewares | These files handle validating the data coming from the front end so that it can be transfered to the backend |
 | server/routes | These files handle connecting the correct route & HTTP Method to the correct controller. i.e. auth, email, stripe |
 | server/utility | holds all the utility functions that are used by controllers |
