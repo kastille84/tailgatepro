@@ -24,7 +24,7 @@ The Digital Toolbox Safety Talks application digitizes mandatory safety meetings
 
 ## 3. Technology Stack
 
-- **Frontend:** React.js, StyledComponents, Tanstack ReactQuery, ReactRouter.
+- **Frontend:** React.js, StyledComponents, Tanstack ReactQuery, ReactRouter, React Hook Form.
 - **Backend:** Node.js, Express.
 - **Database & Auth:** Supabase (PostgreSQL).
 - **Payments:** Stripe.

@@ -54,3 +54,4 @@ The `docs/` folder contains markdown files that refer to different aspects of th
 | unit    | unit-testing.md     | This file describes the unit testing standards for TailgatePro.                     |
 | design  | ui-styling.md       | This file describes the UI styling standards for TailgatePro.                       |
 | design  | responsive.md       | This file describes the mobile-first & responsive design standards for TailgatePro. |
+| ui      | ui-inputs.md        | This file describes the UI input standards for TailgatePro.                         |

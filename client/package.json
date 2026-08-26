@@ -19,6 +19,8 @@
     "@tanstack/react-query-devtools": "^5.76.1",
     "@vitejs/plugin-basic-ssl": "^2.0.0",
     "react-hook-form": "^7.56.3",
+    "@hookform/resolvers": "^3.1.1",
+    "zod": "^3.0.0",
     "react-hot-toast": "^2.5.2",
     "react-icons": "^5.5.0",
     "react-modal": "^3.16.3",

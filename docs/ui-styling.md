@@ -70,3 +70,7 @@ Ensure your implementations hook directly into our typed theme interface:
 - `theme.spacing` (xs: 4px, sm: 8px, md: 16px, lg: 24px, xl: 32px)
 - `theme.breakpoints` (mobile, tablet, desktop)
 - `theme.typography` (fontSizes, fontWeights)
+
+## Construction Considerations
+
+**Important** when creating pages and ui components, take into account that construction sites need high contrast and bigger clickable areas to click on components as they will most likely be on the job site while interacting with our app using their thick dirty gloves instead of their actual fingers.
