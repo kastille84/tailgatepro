@@ -43,7 +43,7 @@ Ambiguities / Questions for the maintainer
 
 ## Docs folder
 
-The `docs/` folder contains markdown files that refer to different aspects of the codebase. **IMPORTANT** always check the `docs/` folder for relevant information before making changes to the codebase. If you find a discrepancy between the code and the docs, please flag it for review. The table below lists the files in the `docs/` folder and their purpose.
+The `docs/` folder contains markdown files that refer to different aspects of the codebase. **IMPORTANT** always check the `docs/` folder for relevant information before making changes to the codebase. DO NOT SKIP THIS STEP. If you find a discrepancy between the code and the docs, please flag it for review. The table below lists the files in the `docs/` folder and their purpose.
 
 | type    | file                | purpose                                                                             |
 | ------- | ------------------- | ----------------------------------------------------------------------------------- |

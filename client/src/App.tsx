@@ -4,8 +4,12 @@ import { ReactQueryDevtools } from "@tanstack/react-query-devtools";
 import { BrowserRouter, Route, Routes } from "react-router";
 import { Toaster } from "react-hot-toast";
 
+import { AuthProvider } from "./context/auth";
+
 import GlobalStyles from "./styles/GlobalStyles";
 import theme from "./styles/theme";
+
+import { Input } from "./ui_comps/form";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -20,45 +24,47 @@ const queryClient = new QueryClient({
 function App() {
   return (
     <div data-testid="app">
-      <ThemeProvider theme={theme}>
-        <QueryClientProvider client={queryClient}>
-          <ReactQueryDevtools
-            initialIsOpen={false}
-            buttonPosition="bottom-left"
-          ></ReactQueryDevtools>
-          <GlobalStyles />
-          <BrowserRouter>
-            <Routes>
-              <Route path="/landing" element={<p>Hey</p>}></Route>
-            </Routes>
-          </BrowserRouter>
-          <Toaster
-            position="bottom-right"
-            gutter={12}
-            containerStyle={{ margin: "8px" }}
-            toastOptions={{
-              success: {
-                duration: 3000,
-              },
-              error: {
-                duration: 6000,
-              },
-              style: {
-                fontSize: "16px",
-                maxWidth: "500px",
-                padding: "16px 24px",
-                backgroundColor: "var(--color-concrete-100)",
-                color: "var(--color-navy-700)",
-                opacity: 0,
-              },
-              ariaProps: {
-                role: "alert",
-                "aria-live": "polite",
-              },
-            }}
-          />
-        </QueryClientProvider>
-      </ThemeProvider>
+      <AuthProvider>
+        <ThemeProvider theme={theme}>
+          <QueryClientProvider client={queryClient}>
+            <ReactQueryDevtools
+              initialIsOpen={false}
+              buttonPosition="bottom-left"
+            ></ReactQueryDevtools>
+            <GlobalStyles />
+            <BrowserRouter>
+              <Routes>
+                <Route path="/landing" element={<Input />}></Route>
+              </Routes>
+            </BrowserRouter>
+            <Toaster
+              position="bottom-right"
+              gutter={12}
+              containerStyle={{ margin: "8px" }}
+              toastOptions={{
+                success: {
+                  duration: 3000,
+                },
+                error: {
+                  duration: 6000,
+                },
+                style: {
+                  fontSize: "16px",
+                  maxWidth: "500px",
+                  padding: "16px 24px",
+                  backgroundColor: "var(--color-concrete-100)",
+                  color: "var(--color-navy-700)",
+                  opacity: 0,
+                },
+                ariaProps: {
+                  role: "alert",
+                  "aria-live": "polite",
+                },
+              }}
+            />
+          </QueryClientProvider>
+        </ThemeProvider>
+      </AuthProvider>
     </div>
   );
 }
