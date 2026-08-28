@@ -9,8 +9,9 @@ import { AuthProvider } from "./context/auth";
 import GlobalStyles from "./styles/GlobalStyles";
 import theme from "./styles/theme";
 
-import { Input } from "./ui_comps/form";
 import { Navbar } from "./ui_comps/navbar";
+
+import { Landing } from "./pages/Landing";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -36,7 +37,7 @@ function App() {
             <BrowserRouter>
               <Navbar />
               <Routes>
-                <Route path="/landing" element={<Input />}></Route>
+                <Route path="/landing" element={<Landing />}></Route>
               </Routes>
             </BrowserRouter>
             <Toaster

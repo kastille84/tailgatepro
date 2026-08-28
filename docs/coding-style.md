@@ -61,6 +61,14 @@ server.js # Port binding and network listener, App initialization and middleware
 ### 4. Code Formatting & Syntax
 
 - **Module System:** Use ES Modules (`import/export`) instead of CommonJS (`require`).
+
+- **Type-only imports:** When importing types only, prefer `import type { Foo } from '...'` so TypeScript emits no runtime import. This avoids errors when `verbatimModuleSyntax` (or similar strict TS emit settings) is enabled and clarifies intent. Example:
+
+```ts
+import { StyledButton } from "./ui_comps/button/styles";
+import type { ButtonVariant } from "./ui_comps/button/styles";
+```
+
 - **Naming Conventions:**
   - File names: camelCase (e.g., `userController.js`).
   - Variables and Functions: camelCase.

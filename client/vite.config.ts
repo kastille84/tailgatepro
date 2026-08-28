@@ -33,7 +33,7 @@ export default defineConfig(({ mode }) => {
       }),
     ],
     server: {
-      https: true, // same as "--https" flag
+      https: true as any, // same as "--https" flag
       host: true, // same as "--host" flag
     },
     test: {

@@ -10,7 +10,7 @@
 
 ### Component & Styling Structure
 
-- **File Pairing:** Keep styles in the same directory as the component. Use a `.styles.ts` file or define them at the bottom of the component file if short (< 30 lines).
+- **File Pairing:** Keep styles in the same directory as the component. Use a `.styles.ts` file or define them at the top of the component file if short (< 30 lines).
 - **Naming Convention:** Prefix styled elements with `Styled` to clearly separate them from standard React components (e.g., `StyledButton` wrapping a functional `Button`).
 
 ### CSS & Prop Guidelines
