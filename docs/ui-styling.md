@@ -19,6 +19,30 @@
 - **Prop Destructuring:** Always destructure `theme` and custom props inside the template literal for readability.
 - **Nesting & Nesting Depth:** Limit CSS nesting to 3 levels deep. Use ampersand (`&`) for pseudo-classes (`&:hover`, `&:focus`).
 
+### Icon Library Requirement
+
+When incorporating icons into the application, ALWAYS use icons from `react-icons/hi2`.
+
+```tsx
+import {
+  HiOutlineArrowsPointingIn,
+  HiOutlineArrowsPointingOut,
+  HiOutlineArrowTopRightOnSquare,
+  HiOutlineBolt,
+  HiOutlineBookmark,
+  HiOutlineBookmarkSlash,
+  HiOutlineCheckBadge,
+  HiOutlineShieldCheck,
+  HiOutlineTrash,
+} from "react-icons/hi2";
+```
+
+```tsx
+<li onClick={handleViewFullFlyer}>
+  <HiOutlineArrowTopRightOnSquare /> View Full Flyer
+</li>
+```
+
 ### Code Examples
 
 #### 1. Declaring a Styled Component with Transient Props

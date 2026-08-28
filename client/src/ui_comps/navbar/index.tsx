@@ -1,5 +1,4 @@
 import React, { useState } from "react";
-import { Link } from "react-router-dom";
 import {
   Nav,
   Logo,
@@ -29,11 +28,11 @@ export const Navbar: React.FC = () => {
       </NavLinks>
 
       <MenuButton
+        $open={open}
         aria-label="Toggle menu"
         aria-expanded={open}
         onClick={() => setOpen((v) => !v)}
       >
-        <span />
         <span />
         <span />
       </MenuButton>
