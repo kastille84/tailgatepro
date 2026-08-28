@@ -6,6 +6,7 @@
 - **Typing Props:** Explicitly define component props using TypeScript `interface` rather than `type`.
 - **Naming:** Use PascalCase for component files and folders (e.g., `UserProfile.tsx`). Use camelCase for hooks and utilities.
 - **Exports:** Prefer named exports over default exports for safer refactoring and better IDE autocompletion.
+- **Routing Links:** For internal navigation use React Router `Link` components instead of raw `<a>` tags so client-side routing is preserved. Import `Link` from `react-router-dom` and style it via `styled-components` when needed.
 
 ### State & Performance
 

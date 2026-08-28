@@ -10,6 +10,7 @@ import GlobalStyles from "./styles/GlobalStyles";
 import theme from "./styles/theme";
 
 import { Input } from "./ui_comps/form";
+import { Navbar } from "./ui_comps/navbar";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -33,6 +34,7 @@ function App() {
             ></ReactQueryDevtools>
             <GlobalStyles />
             <BrowserRouter>
+              <Navbar />
               <Routes>
                 <Route path="/landing" element={<Input />}></Route>
               </Routes>
