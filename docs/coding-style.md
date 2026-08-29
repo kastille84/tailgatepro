@@ -17,6 +17,7 @@
 ### Data Fetching & Styling
 
 - **Data Layer:** Use TanStack Query (React Query) for server state. Do not handle raw loading/error fetch flags inside components using standard `useEffect`.
+- **Query Hooks:** Do not call `useQuery`/`useMutation` directly inside a component. Wrap each in a domain-specific custom hook under `src/hooks/` (e.g. `useWaitlist`) that calls the matching `src/services/` API function, owns cross-cutting concerns like error toasts (`onError`), and returns a plain action/data plus derived flags (`isPending`, `isSuccess`, `data`). Components consume the hook and stay presentational.
 - **Styling:** Use styled-components. Avoid inline styles and standard CSS files.
 
 ## Strict Boundaries & Anti-Patterns

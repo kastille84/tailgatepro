@@ -35,6 +35,15 @@ export default defineConfig(({ mode }) => {
     server: {
       https: true as any, // same as "--https" flag
       host: true, // same as "--host" flag
+      proxy: {
+        // Forward API calls to the Express server in dev so the browser stays
+        // same-origin (matches production, where the server serves the SPA).
+        "/api": {
+          target: "http://localhost:5000",
+          changeOrigin: true,
+          secure: false,
+        },
+      },
     },
     test: {
       globals: true,

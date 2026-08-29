@@ -1,10 +1,10 @@
-import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { HiCheckCircle } from "react-icons/hi2";
 
 import { Button } from "../../ui_comps/button";
+import { useWaitlist } from "../../hooks/useWaitlist";
 import {
   StyledForm,
   StyledFieldRow,
@@ -16,7 +16,11 @@ import {
 } from "./Landing.styles";
 
 const waitlistSchema = z.object({
-  name: z.string().trim().min(1, "Name is required").max(100, "Name is too long"),
+  name: z
+    .string()
+    .trim()
+    .min(1, "Name is required")
+    .max(100, "Name is too long"),
   email: z
     .string()
     .min(1, "Email is required")
@@ -33,33 +37,33 @@ interface WaitlistFormProps {
   tone?: "onDark" | "onLight";
 }
 
-export const WaitlistForm = ({ idPrefix, tone = "onLight" }: WaitlistFormProps) => {
+export const WaitlistForm = ({
+  idPrefix,
+  tone = "onLight",
+}: WaitlistFormProps) => {
   const onDark = tone === "onDark";
-  const [submittedEmail, setSubmittedEmail] = useState<string | null>(null);
+  const { joinWaitlist, isJoining, hasJoined, joinedEmail } = useWaitlist();
 
   const {
     register,
     handleSubmit,
-    formState: { errors, isSubmitting },
+    formState: { errors },
   } = useForm<WaitlistValues>({
     resolver: zodResolver(waitlistSchema),
     mode: "onTouched",
   });
 
   const onSubmit = (data: WaitlistValues) => {
-    // TODO: wire to the waitlist API — a useMutation(addToWaitlist) call in
-    // client/src/services/apiWaitlist.ts once the endpoint exists. For now the
-    // submission is captured locally and confirmed to the user.
-    setSubmittedEmail(data.email);
+    joinWaitlist(data);
   };
 
-  if (submittedEmail) {
+  if (hasJoined && joinedEmail) {
     return (
       <StyledSuccess role="status" $onDark={onDark}>
         <HiCheckCircle aria-hidden="true" />
         <span>
           You&apos;re on the list — we&apos;ll email{" "}
-          <strong>{submittedEmail}</strong> when TailgatePro launches.
+          <strong>{joinedEmail}</strong> when TailgatePro launches.
         </span>
       </StyledSuccess>
     );
@@ -80,13 +84,17 @@ export const WaitlistForm = ({ idPrefix, tone = "onLight" }: WaitlistFormProps) 
             id={nameId}
             type="text"
             autoComplete="name"
-            placeholder="Jordan Rivera"
+            placeholder="Edwin Martinez"
             hasError={!!errors.name}
             aria-describedby={errors.name ? `${nameId}-error` : undefined}
             {...register("name")}
           />
           {errors.name && (
-            <StyledFieldError id={`${nameId}-error`} role="alert" $onDark={onDark}>
+            <StyledFieldError
+              id={`${nameId}-error`}
+              role="alert"
+              $onDark={onDark}
+            >
               {errors.name.message}
             </StyledFieldError>
           )}
@@ -106,7 +114,11 @@ export const WaitlistForm = ({ idPrefix, tone = "onLight" }: WaitlistFormProps) 
             {...register("email")}
           />
           {errors.email && (
-            <StyledFieldError id={`${emailId}-error`} role="alert" $onDark={onDark}>
+            <StyledFieldError
+              id={`${emailId}-error`}
+              role="alert"
+              $onDark={onDark}
+            >
               {errors.email.message}
             </StyledFieldError>
           )}
@@ -142,7 +154,7 @@ export const WaitlistForm = ({ idPrefix, tone = "onLight" }: WaitlistFormProps) 
         variant="primary"
         size="lg"
         fullWidth
-        loading={isSubmitting}
+        loading={isJoining}
       >
         Join the waitlist
       </Button>
