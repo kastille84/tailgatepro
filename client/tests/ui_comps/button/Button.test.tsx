@@ -33,7 +33,11 @@ describe("Button", () => {
 
   it("shows the loading spinner, disables the button, and hides icons", () => {
     renderWithTheme(
-      <Button loading leftIcon={<span>left</span>} rightIcon={<span>right</span>}>
+      <Button
+        loading
+        leftIcon={<span>left</span>}
+        rightIcon={<span>right</span>}
+      >
         Processing
       </Button>,
     );
