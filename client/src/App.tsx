@@ -9,7 +9,7 @@ import { AuthProvider } from "./context/auth";
 import GlobalStyles from "./styles/GlobalStyles";
 import theme from "./styles/theme";
 
-import { Navbar } from "./ui_comps/navbar";
+import { Navbar } from "./ui_comps/navbar/Navbar";
 
 import { Landing } from "./pages/Landing";
 
