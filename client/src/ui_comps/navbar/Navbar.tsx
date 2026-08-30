@@ -1,5 +1,4 @@
 import React, { useState } from "react";
-import { Link } from "react-router-dom";
 import {
   Nav,
   Logo,
@@ -9,6 +8,7 @@ import {
   NavAnchor,
   MenuButton,
 } from "./styles";
+import { Button } from "../button";
 
 export const Navbar: React.FC = () => {
   const [open, setOpen] = useState(false);
@@ -24,16 +24,25 @@ export const Navbar: React.FC = () => {
 
       <NavLinks $open={open}>
         <NavAnchor to="/landing">Home</NavAnchor>
-        <NavAnchor to="/about">About</NavAnchor>
+        <NavAnchor to="/faq">FAQ</NavAnchor>
+        <NavAnchor to="/pricing">Pricing</NavAnchor>
         <NavAnchor to="/contact">Contact</NavAnchor>
+        <NavAnchor>
+          <Button size="sm" variant="outline">
+            Login
+          </Button>
+        </NavAnchor>
+        <NavAnchor to="/signup">
+          <Button size="sm">Sign Up</Button>
+        </NavAnchor>
       </NavLinks>
 
       <MenuButton
+        $open={open}
         aria-label="Toggle menu"
         aria-expanded={open}
         onClick={() => setOpen((v) => !v)}
       >
-        <span />
         <span />
         <span />
       </MenuButton>

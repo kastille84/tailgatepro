@@ -76,3 +76,13 @@ CREATE TABLE signatures (
   quiz_passed BOOLEAN,
   created_at TIMESTAMPTZ DEFAULT NOW()
 );
+
+-- 8. Waitlist (landing-page early-access signups)
+CREATE TABLE waitlist (
+  id UUID PRIMARY KEY,
+  name TEXT NOT NULL,
+  email TEXT NOT NULL UNIQUE,
+  company TEXT,
+  created_at TIMESTAMPTZ DEFAULT NOW()
+);
+CREATE INDEX idx_waitlist_email ON waitlist(email);

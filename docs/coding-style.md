@@ -17,6 +17,7 @@
 ### Data Fetching & Styling
 
 - **Data Layer:** Use TanStack Query (React Query) for server state. Do not handle raw loading/error fetch flags inside components using standard `useEffect`.
+- **Query Hooks:** Do not call `useQuery`/`useMutation` directly inside a component. Wrap each in a domain-specific custom hook under `src/hooks/` (e.g. `useWaitlist`) that calls the matching `src/services/` API function, owns cross-cutting concerns like error toasts (`onError`), and returns a plain action/data plus derived flags (`isPending`, `isSuccess`, `data`). Components consume the hook and stay presentational.
 - **Styling:** Use styled-components. Avoid inline styles and standard CSS files.
 
 ## Strict Boundaries & Anti-Patterns
@@ -61,6 +62,14 @@ server.js # Port binding and network listener, App initialization and middleware
 ### 4. Code Formatting & Syntax
 
 - **Module System:** Use ES Modules (`import/export`) instead of CommonJS (`require`).
+
+- **Type-only imports:** When importing types only, prefer `import type { Foo } from '...'` so TypeScript emits no runtime import. This avoids errors when `verbatimModuleSyntax` (or similar strict TS emit settings) is enabled and clarifies intent. Example:
+
+```ts
+import { StyledButton } from "./ui_comps/button/styles";
+import type { ButtonVariant } from "./ui_comps/button/styles";
+```
+
 - **Naming Conventions:**
   - File names: camelCase (e.g., `userController.js`).
   - Variables and Functions: camelCase.

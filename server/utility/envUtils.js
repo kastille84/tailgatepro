@@ -13,6 +13,7 @@ exports.keysBasedOnEnv = () => {
       supabase: {
         url: process.env.SUPABASE_URL_PROD,
         apiKey: process.env.SUPABASE_API_KEY_PROD,
+        serviceRoleKey: process.env.SUPABASE_SERVICE_ROLE_KEY_PROD,
         deleteUserUrl: process.env.SUPABASE_DB_DELETE_USER_URL_PROD,
       },
       // Cloudinary
@@ -44,6 +45,7 @@ exports.keysBasedOnEnv = () => {
       supabase: {
         url: process.env.SUPABASE_URL,
         apiKey: process.env.SUPABASE_API_KEY,
+        serviceRoleKey: process.env.SUPABASE_SERVICE_ROLE_KEY,
         deleteUserUrl: process.env.SUPABASE_DB_DELETE_USER_URL,
       },
       // Cloudinary

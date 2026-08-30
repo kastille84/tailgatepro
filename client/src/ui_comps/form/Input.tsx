@@ -9,7 +9,7 @@ interface InputProps extends React.ComponentPropsWithoutRef<"input"> {
 const StyledInput = styled.input<{ $hasError?: boolean }>`
   width: 100%;
   padding: 0.75rem 0.875rem;
-  border: 1px solid
+  border: 0.1rem solid
     ${({ theme, $hasError }) =>
       $hasError ? theme.colors.red[500] : theme.colors.navy[200]};
   border-radius: ${({ theme }) => theme.borderRadius.md};
@@ -29,7 +29,7 @@ const StyledInput = styled.input<{ $hasError?: boolean }>`
     outline: none;
     border-color: ${({ theme, $hasError }) =>
       $hasError ? theme.colors.red[500] : theme.colors.green[500]};
-    box-shadow: 0 0 0 3px
+    box-shadow: 0 0 0 0.3rem
       ${({ $hasError }) =>
         $hasError ? "rgba(211, 47, 47, 0.15)" : "rgba(85, 161, 102, 0.15)"};
   }
