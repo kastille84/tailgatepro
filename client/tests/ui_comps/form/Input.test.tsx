@@ -140,7 +140,11 @@ describe("Input", () => {
       <ThemeProvider theme={theme}>
         <Form>
           <FormField id="email" label="Email" error="Email is required">
-            <Input id="email" aria-label="Email" aria-describedby="existing-help" />
+            <Input
+              id="email"
+              aria-label="Email"
+              aria-describedby="existing-help"
+            />
           </FormField>
         </Form>
       </ThemeProvider>,

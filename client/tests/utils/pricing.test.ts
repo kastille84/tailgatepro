@@ -13,8 +13,18 @@ describe("planCadence", () => {
   };
 
   it("returns null for free and custom quote plans", () => {
-    expect(planCadence({ ...plan, price: { monthly: "$0", annual: "$0" } }, "monthly")).toBeNull();
-    expect(planCadence({ ...plan, price: { monthly: "Custom", annual: "Custom" } }, "annual")).toBeNull();
+    expect(
+      planCadence(
+        { ...plan, price: { monthly: "$0", annual: "$0" } },
+        "monthly",
+      ),
+    ).toBeNull();
+    expect(
+      planCadence(
+        { ...plan, price: { monthly: "Custom", annual: "Custom" } },
+        "annual",
+      ),
+    ).toBeNull();
   });
 
   it("adds the monthly cadence for billed plans without a unit", () => {
@@ -22,6 +32,15 @@ describe("planCadence", () => {
   });
 
   it("adds the annual cadence and unit suffix for site-based plans", () => {
-    expect(planCadence({ ...plan, unit: "/site", price: { monthly: "$149", annual: "$1,490" } }, "annual")).toBe("/site /yr");
+    expect(
+      planCadence(
+        {
+          ...plan,
+          unit: "/site",
+          price: { monthly: "$149", annual: "$1,490" },
+        },
+        "annual",
+      ),
+    ).toBe("/site /yr");
   });
 });

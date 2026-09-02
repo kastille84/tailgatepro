@@ -41,7 +41,9 @@ describe("PricingTeaser", () => {
     expect(screen.getByText("Trade Free")).toBeDefined();
     expect(screen.queryByText("GC Free Portal")).toBeNull();
 
-    await user.click(screen.getByRole("button", { name: /for general contractors/i }));
+    await user.click(
+      screen.getByRole("button", { name: /for general contractors/i }),
+    );
 
     expect(screen.getByText("GC Free Portal")).toBeDefined();
     expect(screen.queryByText("Trade Free")).toBeNull();
