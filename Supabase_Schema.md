@@ -72,4 +72,6 @@
 | `name` | Text | Not Null | Name entered on the landing page |
 | `email` | Text | Not Null, Unique | Contact email; unique constraint drives idempotent re-submits |
 | `company` | Text | Nullable | Optional company name |
+| `audience` | Text | Nullable | `sub` or `gc` when the signup came via the pricing page |
+| `plan_interest` | Text | Nullable | Plan id the visitor clicked through from, e.g. `trade-pro` |
 | `created_at` | Timestamptz | Default `now()` | Signup time |

@@ -29,6 +29,15 @@ router.post(
       .trim()
       .isLength({ max: 120 })
       .withMessage("Company name is too long"),
+    body("audience")
+      .optional({ checkFalsy: true })
+      .isIn(["sub", "gc"])
+      .withMessage("Invalid audience"),
+    body("planInterest")
+      .optional({ checkFalsy: true })
+      .trim()
+      .isLength({ max: 40 })
+      .withMessage("Invalid plan reference"),
   ],
   validate,
   joinWaitlist,

@@ -12,6 +12,7 @@ import theme from "./styles/theme";
 import { Navbar } from "./ui_comps/navbar/Navbar";
 
 import { Landing } from "./pages/Landing";
+import { Pricing } from "./pages/Pricing";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -38,6 +39,7 @@ function App() {
               <Navbar />
               <Routes>
                 <Route path="/landing" element={<Landing />}></Route>
+                <Route path="/pricing" element={<Pricing />}></Route>
               </Routes>
             </BrowserRouter>
             <Toaster

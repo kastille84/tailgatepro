@@ -2,6 +2,10 @@ export interface WaitlistPayload {
   name: string;
   email: string;
   company?: string;
+  /** Which set of plans the visitor was looking at, when known. */
+  audience?: "sub" | "gc";
+  /** Plan id the visitor clicked through from (e.g. "trade-pro"), when known. */
+  planInterest?: string;
 }
 
 export interface WaitlistResult {

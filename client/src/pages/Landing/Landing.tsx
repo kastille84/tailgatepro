@@ -11,6 +11,7 @@ import {
 import type { IconType } from "react-icons";
 
 import { WaitlistForm } from "./WaitlistForm";
+import { PricingTeaser } from "./PricingTeaser";
 import {
   StyledPage,
   StyledHero,
@@ -174,6 +175,8 @@ export const Landing = () => {
           </StyledCardGrid>
         </StyledContainer>
       </StyledSection>
+
+      <PricingTeaser />
 
       <StyledSection $tone="dark" aria-labelledby="cta-heading">
         <StyledCtaInner>

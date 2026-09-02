@@ -5,10 +5,17 @@ const { AppError } = require("../utility/AppError");
 // Inserts a landing-page waitlist signup. The id is generated here (the table
 // has no DB default, per the project's offline-sync convention). A duplicate
 // email is treated as an idempotent success rather than an error.
-const addToWaitlist = async ({ name, email, company }) => {
+const addToWaitlist = async ({ name, email, company, audience, planInterest }) => {
   const { data, error } = await supabase
     .from("waitlist")
-    .insert({ id: uuidv4(), name, email, company: company || null })
+    .insert({
+      id: uuidv4(),
+      name,
+      email,
+      company: company || null,
+      audience: audience || null,
+      plan_interest: planInterest || null,
+    })
     .select("id, email, created_at")
     .single();
 

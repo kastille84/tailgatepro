@@ -5,6 +5,7 @@ import { HiCheckCircle } from "react-icons/hi2";
 
 import { Button } from "../../ui_comps/button";
 import { useWaitlist } from "../../hooks/useWaitlist";
+import type { Audience } from "../../interfaces/plan";
 import {
   StyledForm,
   StyledFieldRow,
@@ -35,11 +36,17 @@ interface WaitlistFormProps {
   idPrefix: string;
   /** Colour treatment for labels/errors when the form sits on a dark section. */
   tone?: "onDark" | "onLight";
+  /** Plan audience the visitor was viewing, recorded with the signup. */
+  audience?: Audience;
+  /** Plan id the visitor clicked through from, recorded with the signup. */
+  planInterest?: string;
 }
 
 export const WaitlistForm = ({
   idPrefix,
   tone = "onLight",
+  audience,
+  planInterest,
 }: WaitlistFormProps) => {
   const onDark = tone === "onDark";
   const { joinWaitlist, isJoining, hasJoined, joinedEmail } = useWaitlist();
@@ -54,7 +61,7 @@ export const WaitlistForm = ({
   });
 
   const onSubmit = (data: WaitlistValues) => {
-    joinWaitlist(data);
+    joinWaitlist({ ...data, audience, planInterest });
   };
 
   if (hasJoined && joinedEmail) {
