@@ -47,7 +47,8 @@ export const PricingTeaser = () => {
           </StyledSectionTitle>
           <StyledSectionLede>
             Every crew uses TailgatePro free. General contractors pay a flat rate
-            per active site — no per-seat fees, no sub-billing disputes.
+            per active site or portfolio — no per-seat fees, no sub-billing
+            disputes.
           </StyledSectionLede>
         </StyledSectionHead>
 

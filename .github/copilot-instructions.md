@@ -56,4 +56,4 @@ The `docs/` folder contains markdown files that refer to different aspects of th
 | design  | responsive.md                       | This file describes the mobile-first & responsive design standards for TailgatePro. |
 | ui      | ui-inputs.md                        | This file describes the UI input standards for TailgatePro.                         |
 | auth    | auth.md                             | This file describes the authentication standards for TailgatePro.                   |
-| pricing | pricing-and-positioning-strategy.md | This file describes the pricing and positioning strategy for TailgatePro.           |
+| pricing | pricing-and-positioning-strategy_V2.md | This file describes the pricing and positioning strategy for TailgatePro.         |

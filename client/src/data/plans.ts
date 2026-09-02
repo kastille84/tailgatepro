@@ -1,7 +1,7 @@
 import type { Plan } from "../interfaces/plan";
 
 /**
- * Pricing tiers from docs/pricing-and-positioning-strategy.md (§4.1 / §4.2).
+ * Pricing tiers from docs/pricing-and-positioning-strategy_V2.md (§4.1 / §4.2).
  * Shared by the /pricing page and the homepage pricing teaser so the two never
  * drift. Prices are display strings, not numbers — there is no checkout yet.
  */
@@ -66,27 +66,30 @@ export const GC_PLANS: Plan[] = [
   {
     id: "gc-site-pro",
     name: "GC Site Pro",
-    target: "Active multi-trade projects",
+    target: "Single-site GCs or testing the platform",
     price: { monthly: "$149", annual: "$1,490" },
     unit: "/site",
     annualSub: "$1,490 / site billed annually — save 20%",
-    featured: true,
     features: [
-      "Sponsor unlimited subcontractors for free",
-      "Automated SMS nudges — 7:00 AM every Monday",
-      "Procore & Autodesk ACC sync",
-      "1-click OSHA Defense Bundle (indexed ZIP)",
+      "Sponsor unlimited subcontractors on one site",
+      "Automated SMS nudges — 7:00 AM every Monday (single site)",
+      "Procore & Autodesk ACC sync — single project",
+      "1-click OSHA Defense Bundle for the site (indexed ZIP)",
     ],
   },
   {
-    id: "gc-enterprise",
-    name: "GC Enterprise",
-    target: "Regional & national general contractors",
-    price: { monthly: "$999+", annual: "Custom" },
+    id: "gc-portfolio",
+    name: "GC Portfolio",
+    target: "Regional & mid-market GCs running 4+ active projects",
+    price: { monthly: "$499+", annual: "$4,990+" },
+    annualSub: "$4,990/yr up to 10 sites · $7,990/yr unlimited — save 20%",
+    featured: true,
     features: [
-      "Unlimited active jobsites across your portfolio",
-      "Enterprise single sign-on (SSO)",
-      "Custom API access & dedicated success manager",
+      "$499/mo up to 10 sites · $799/mo unlimited",
+      "Cross-project subcontractor safety scorecards",
+      "Top-down corporate policy push across all sites",
+      "Multi-manager roles — Superintendent vs Safety Director",
+      "Custom company safety form & manual builder",
     ],
   },
 ];

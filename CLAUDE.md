@@ -107,7 +107,7 @@ Schema is documented in `Supabase_Schema.md`; the runnable DDL is `Supabase_SQL.
 `docs/` is the source of truth for conventions — **read the relevant file before changing code** (`.github/copilot-instructions.md`). Files: `PRD.md`, `folder-structure.md`, `coding-style.md`, `error-handling.md`, `unit-testing.md`, `ui-styling.md`, `responsive.md`, `ui-inputs.md`, `auth.md`. If code and docs disagree, flag it rather than silently picking one.
 other docs files:
 
-- `pricing-and-positioning-strategy.md`
+- `pricing-and-positioning-strategy_V2.md`
 
 ### Known code/doc mismatches (verify before relying on either)
 

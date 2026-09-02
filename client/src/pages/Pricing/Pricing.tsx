@@ -66,7 +66,11 @@ const FAQ: { q: string; a: string }[] = [
   },
   {
     q: "How does a general contractor sponsor subcontractors for free?",
-    a: "On GC Site Pro you get a project-specific QR code and link. Any trade subcontractor working that site scans it to log talks under your site dashboard at zero cost to them.",
+    a: "On GC Site Pro or GC Portfolio you get project-specific QR codes and links. Any trade subcontractor working those sites scans one to log talks under your dashboard at zero cost to them.",
+  },
+  {
+    q: "What's the difference between GC Site Pro and GC Portfolio?",
+    a: "GC Site Pro covers a single jobsite at $149/site/mo. GC Portfolio is flat-rate multi-site — $499/mo for up to 10 sites, $799/mo unlimited — and adds cross-project subcontractor safety scorecards, top-down corporate policy push, and multi-manager roles (Superintendent vs Safety Director).",
   },
   {
     q: "When can I actually sign up?",
@@ -108,7 +112,7 @@ export const Pricing = () => {
             No app-store downloads. Run offline toolbox talks, collect
             tamper-evident signatures, and send automated compliance logs to any
             GC in under 45 seconds. Subcontractors use TailgatePro free — general
-            contractors pay a flat rate per active jobsite.
+            contractors pay a flat rate per active jobsite or portfolio.
           </StyledLede>
         </StyledHeroInner>
       </StyledHero>
@@ -188,7 +192,8 @@ export const Pricing = () => {
             <StyledCalloutText>
               Legacy platforms charge per user seat, penalizing you for adding
               trade subcontractors to your project. With{" "}
-              <strong>GC Site Pro</strong> you pay a flat rate per site, and{" "}
+              <strong>GC Site Pro</strong> or <strong>GC Portfolio</strong> you
+              pay a flat rate per site or portfolio, and{" "}
               <strong>
                 every subcontractor on your job gets full access for $0
               </strong>{" "}
