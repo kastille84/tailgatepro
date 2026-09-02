@@ -1,7 +1,5 @@
 import styled, { css } from "styled-components";
 
-import { Input } from "../../ui_comps/form";
-
 /* ---------- page + section layout ---------- */
 
 export const StyledPage = styled.main`
@@ -286,59 +284,7 @@ export const StyledFooterText = styled.p`
   font-weight: 500;
 `;
 
-/* ---------- waitlist form ---------- */
-
-export const StyledForm = styled.form<{ $onDark?: boolean }>`
-  display: flex;
-  flex-direction: column;
-  gap: 1.6rem;
-  width: 100%;
-  text-align: left;
-`;
-
-export const StyledFieldRow = styled.div`
-  display: grid;
-  grid-template-columns: 1fr;
-  gap: 1.6rem;
-
-  @media (min-width: ${({ theme }) => theme.breakpoints.md}) {
-    grid-template-columns: repeat(2, 1fr);
-  }
-`;
-
-export const StyledField = styled.div`
-  display: flex;
-  flex-direction: column;
-  gap: 0.6rem;
-`;
-
-export const StyledLabel = styled.label<{ $onDark?: boolean }>`
-  font-size: 1.4rem;
-  font-weight: 700;
-  color: ${({ theme, $onDark }) =>
-    $onDark ? theme.colors.concrete[200] : theme.colors.navy[600]};
-
-  span {
-    font-weight: 500;
-    opacity: 0.7;
-  }
-`;
-
-export const StyledTextInput = styled(Input)`
-  && {
-    font-size: 1.6rem;
-    min-height: 4.8rem;
-    padding: 1.2rem 1.4rem;
-  }
-`;
-
-export const StyledFieldError = styled.p<{ $onDark?: boolean }>`
-  margin: 0;
-  font-size: 1.3rem;
-  font-weight: 600;
-  color: ${({ theme, $onDark }) =>
-    $onDark ? theme.colors.red[200] : theme.colors.red[600]};
-`;
+/* ---------- waitlist success state ---------- */
 
 export const StyledSuccess = styled.div<{ $onDark?: boolean }>`
   display: flex;

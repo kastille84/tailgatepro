@@ -4,17 +4,10 @@ import { z } from "zod";
 import { HiCheckCircle } from "react-icons/hi2";
 
 import { Button } from "../../ui_comps/button";
+import { FieldRow, Form, FormField, TextInput } from "../../ui_comps/form";
 import { useWaitlist } from "../../hooks/useWaitlist";
 import type { Audience } from "../../interfaces/plan";
-import {
-  StyledForm,
-  StyledFieldRow,
-  StyledField,
-  StyledLabel,
-  StyledTextInput,
-  StyledFieldError,
-  StyledSuccess,
-} from "./Landing.styles";
+import { StyledSuccess } from "./Landing.styles";
 
 const waitlistSchema = z.object({
   name: z
@@ -81,13 +74,15 @@ export const WaitlistForm = ({
   const companyId = `${idPrefix}-waitlist-company`;
 
   return (
-    <StyledForm onSubmit={handleSubmit(onSubmit)} noValidate $onDark={onDark}>
-      <StyledFieldRow>
-        <StyledField>
-          <StyledLabel htmlFor={nameId} $onDark={onDark}>
-            Name
-          </StyledLabel>
-          <StyledTextInput
+    <Form onSubmit={handleSubmit(onSubmit)} noValidate $onDark={onDark}>
+      <FieldRow>
+        <FormField
+          id={nameId}
+          label="Name"
+          error={errors.name?.message}
+          onDark={onDark}
+        >
+          <TextInput
             id={nameId}
             type="text"
             autoComplete="name"
@@ -96,22 +91,15 @@ export const WaitlistForm = ({
             aria-describedby={errors.name ? `${nameId}-error` : undefined}
             {...register("name")}
           />
-          {errors.name && (
-            <StyledFieldError
-              id={`${nameId}-error`}
-              role="alert"
-              $onDark={onDark}
-            >
-              {errors.name.message}
-            </StyledFieldError>
-          )}
-        </StyledField>
+        </FormField>
 
-        <StyledField>
-          <StyledLabel htmlFor={emailId} $onDark={onDark}>
-            Work email
-          </StyledLabel>
-          <StyledTextInput
+        <FormField
+          id={emailId}
+          label="Work email"
+          error={errors.email?.message}
+          onDark={onDark}
+        >
+          <TextInput
             id={emailId}
             type="email"
             autoComplete="email"
@@ -120,23 +108,20 @@ export const WaitlistForm = ({
             aria-describedby={errors.email ? `${emailId}-error` : undefined}
             {...register("email")}
           />
-          {errors.email && (
-            <StyledFieldError
-              id={`${emailId}-error`}
-              role="alert"
-              $onDark={onDark}
-            >
-              {errors.email.message}
-            </StyledFieldError>
-          )}
-        </StyledField>
-      </StyledFieldRow>
+        </FormField>
+      </FieldRow>
 
-      <StyledField>
-        <StyledLabel htmlFor={companyId} $onDark={onDark}>
-          Company <span>(optional)</span>
-        </StyledLabel>
-        <StyledTextInput
+      <FormField
+        id={companyId}
+        label={
+          <>
+            Company <span>(optional)</span>
+          </>
+        }
+        error={errors.company?.message}
+        onDark={onDark}
+      >
+        <TextInput
           id={companyId}
           type="text"
           autoComplete="organization"
@@ -145,16 +130,7 @@ export const WaitlistForm = ({
           aria-describedby={errors.company ? `${companyId}-error` : undefined}
           {...register("company")}
         />
-        {errors.company && (
-          <StyledFieldError
-            id={`${companyId}-error`}
-            role="alert"
-            $onDark={onDark}
-          >
-            {errors.company.message}
-          </StyledFieldError>
-        )}
-      </StyledField>
+      </FormField>
 
       <Button
         type="submit"
@@ -165,6 +141,6 @@ export const WaitlistForm = ({
       >
         Join the waitlist
       </Button>
-    </StyledForm>
+    </Form>
   );
 };
