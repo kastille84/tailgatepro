@@ -106,12 +106,12 @@ export const Pricing = () => {
         <StyledHeroInner>
           <StyledEyebrow>Pricing</StyledEyebrow>
           <StyledHeadline id="pricing-hero-heading">
-            Safety compliance built for the field. <span>Free for crews.</span>
+            Safety compliance built for the field. <span>Crews start free.</span>
           </StyledHeadline>
           <StyledLede>
             No app-store downloads. Run offline toolbox talks, collect
             tamper-evident signatures, and send automated compliance logs to any
-            GC in under 45 seconds. Subcontractors use TailgatePro free — general
+            GC in under 45 seconds. Subcontractors can start free — general
             contractors pay a flat rate per active jobsite or portfolio.
           </StyledLede>
         </StyledHeroInner>

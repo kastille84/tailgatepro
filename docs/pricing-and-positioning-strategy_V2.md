@@ -193,7 +193,7 @@ Every PDF generated on the free subcontractor plan includes a footer badge:
 ## 8. On-Page Website Pricing Copy Specifications
 
 ### 8.1 Hero Section Copy
-* **Headline:** Construction Safety Compliance Built for the Field. Free for Crews.
+* **Headline:** Construction Safety Compliance Built for the Field. Crews Start Free.
 * **Subheadline:** Zero app store downloads required. Conduct offline toolbox talks, collect tamper-evident signatures, and send automated compliance logs to any GC in under 45 seconds.
 * **Interactive Switcher:** Toggle between **Subcontractor Plans** and **General Contractor Plans**.
 
