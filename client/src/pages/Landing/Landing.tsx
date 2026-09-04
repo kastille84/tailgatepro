@@ -3,14 +3,21 @@ import {
   HiMagnifyingGlass,
   HiClock,
   HiSun,
+  HiQrCode,
   HiSignalSlash,
-  HiShieldCheck,
-  HiPencilSquare,
+  HiBolt,
   HiChartBar,
+  HiCheck,
 } from "react-icons/hi2";
 import type { IconType } from "react-icons";
 
 import { WaitlistForm } from "./WaitlistForm";
+import { PricingTeaser } from "./PricingTeaser";
+import { HowItWorks } from "./HowItWorks";
+import { ProductShowcase } from "./ProductShowcase";
+import { GcSection } from "./GcSection";
+import { ComparisonTable } from "./ComparisonTable";
+import { LandingFaq } from "./LandingFaq";
 import {
   StyledPage,
   StyledHero,
@@ -34,6 +41,10 @@ import {
   StyledCardTitle,
   StyledCardText,
   StyledCtaInner,
+  StyledCtaMedia,
+  StyledMediaImg,
+  StyledReassureList,
+  StyledReassureItem,
   StyledFooter,
   StyledFooterMark,
   StyledFooterText,
@@ -49,12 +60,12 @@ const PROBLEM_CARDS: InfoCard[] = [
   {
     icon: HiExclamationTriangle,
     title: "Paper doesn't survive the field",
-    body: "Sign-in sheets get rained on, buried in a truck, or filled with signatures nobody can read at audit time.",
+    body: "Sign-in sheets get rained on, buried in a truck, or come back with a column of signatures nobody can read at audit time.",
   },
   {
     icon: HiMagnifyingGlass,
     title: "GCs chase every trade",
-    body: "Safety directors drive site to site collecting talk sheets from each subcontractor, weeks after the meeting.",
+    body: "Safety directors drive site to site collecting talk sheets from each subcontractor, often weeks after the meeting happened.",
   },
   {
     icon: HiClock,
@@ -64,31 +75,37 @@ const PROBLEM_CARDS: InfoCard[] = [
   {
     icon: HiSun,
     title: "Built for the desk, not the site",
-    body: "Clipboards and pens lose to bright sun, concrete dust, and gloved hands every single morning.",
+    body: "Clipboards and pens lose to bright sun, concrete dust and gloved hands every single morning.",
   },
 ];
 
 const SOLUTION_CARDS: InfoCard[] = [
   {
+    icon: HiQrCode,
+    title: "Zero app-store friction",
+    body: "Open the talk from a browser link or QR code. Nothing to install, even five floors underground or on a remote site.",
+  },
+  {
     icon: HiSignalSlash,
-    title: "Works with zero signal",
-    body: "Run the entire talk offline. Attendance and signatures sync automatically once the phone is back on data.",
+    title: "Works offline, always",
+    body: "Run the whole talk with no signal. Attendance, signatures and photos sync automatically once the phone is back on data.",
   },
   {
-    icon: HiShieldCheck,
-    title: "OSHA content, ready to run",
-    body: "A library of compliant toolbox talks sourced from OSHA and state agencies, tagged by trade.",
-  },
-  {
-    icon: HiPencilSquare,
-    title: "Sign-off in seconds",
-    body: "The crew signs on-screen; attendance, a timestamp, and a crew photo attach to the log for you.",
+    icon: HiBolt,
+    title: "Fast to run, every shift",
+    body: "Pick a topic, the crew signs on-screen or you snap a photo, you submit. A timestamp and GPS location lock to the record so it can't be back-dated or redone later.",
   },
   {
     icon: HiChartBar,
     title: "Instant compliance for the GC",
-    body: "Every completed talk lands on the general contractor's dashboard the moment the meeting ends.",
+    body: "Every completed talk lands on the general contractor's dashboard the moment the meeting ends — as a tamper-evident, GPS-verified PDF.",
   },
+];
+
+const REASSURANCES = [
+  "No credit card, no app to install.",
+  "Crews start free — keep your emailed PDFs forever.",
+  "One email when we launch. No spam.",
 ];
 
 export const Landing = () => {
@@ -108,13 +125,15 @@ export const Landing = () => {
           <StyledHeroCopy>
             <StyledEyebrow>Digital Toolbox Safety Talks</StyledEyebrow>
             <StyledHeadline id="landing-hero-heading">
-              Paperless Safety Talks. <span>Instant Compliance.</span>
+              The toolbox talk, done before the crew gears up.{" "}
+              <span>Proof that holds up in an audit.</span>
             </StyledHeadline>
             <StyledLede>
-              OSHA expects a toolbox talk before the shift — every shift. On
-              paper that means lost sign-in sheets, illegible signatures, and
-              general contractors chasing proof across every trade. Move the
-              talk to the phone and the compliance record writes itself.
+              OSHA expects a toolbox talk before every shift. On paper that means
+              lost sign-in sheets, illegible signatures, and GCs chasing proof
+              across every trade. Run the talk on any phone — no app to install,
+              no signal required — and a tamper-evident record reaches the GC the
+              moment you hit send.
             </StyledLede>
             <StyledFormWrap>
               <WaitlistForm idPrefix="hero" tone="onDark" />
@@ -150,7 +169,11 @@ export const Landing = () => {
         </StyledContainer>
       </StyledSection>
 
-      <StyledSection $tone="muted" aria-labelledby="solution-heading">
+      <HowItWorks />
+
+      <ProductShowcase />
+
+      <StyledSection $tone="light" aria-labelledby="solution-heading">
         <StyledContainer>
           <StyledSectionHead>
             <StyledSectionTitle id="solution-heading">
@@ -175,16 +198,44 @@ export const Landing = () => {
         </StyledContainer>
       </StyledSection>
 
+      <GcSection />
+
+      <ComparisonTable />
+
+      <PricingTeaser />
+
+      <LandingFaq />
+
       <StyledSection $tone="dark" aria-labelledby="cta-heading">
         <StyledCtaInner>
+          <StyledCtaMedia>
+            <StyledMediaImg
+              src="/images/crew-morning-huddle.jpg"
+              alt="A crew of construction workers in hard hats gathered together for a morning safety briefing"
+              loading="lazy"
+              decoding="async"
+              width={2400}
+              height={1029}
+              $ratio="21 / 9"
+            />
+          </StyledCtaMedia>
           <StyledSectionTitle id="cta-heading">
             Be ready on day one
           </StyledSectionTitle>
           <StyledSectionLede>
             We're onboarding subcontractors and general contractors for launch.
-            Add your name and we'll be in touch.
+            Add your name and we'll set you up on the right plan the day we go
+            live.
           </StyledSectionLede>
           <WaitlistForm idPrefix="cta" tone="onDark" />
+          <StyledReassureList>
+            {REASSURANCES.map((item) => (
+              <StyledReassureItem key={item}>
+                <HiCheck aria-hidden="true" />
+                <span>{item}</span>
+              </StyledReassureItem>
+            ))}
+          </StyledReassureList>
         </StyledCtaInner>
       </StyledSection>
 

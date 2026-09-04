@@ -83,6 +83,16 @@ CREATE TABLE waitlist (
   name TEXT NOT NULL,
   email TEXT NOT NULL UNIQUE,
   company TEXT,
+  audience TEXT,        -- 'sub' | 'gc' when the signup came from the pricing page
+  plan_interest TEXT,   -- plan id the visitor clicked through from, e.g. 'trade-pro'
   created_at TIMESTAMPTZ DEFAULT NOW()
 );
 CREATE INDEX idx_waitlist_email ON waitlist(email);
+
+-- Server-only table: enable RLS with NO policies so the public anon key is
+-- denied all access. The server's service-role key bypasses RLS and still works.
+ALTER TABLE waitlist ENABLE ROW LEVEL SECURITY;
+
+-- If the table already exists from an earlier run, add the new columns instead:
+-- ALTER TABLE waitlist ADD COLUMN IF NOT EXISTS audience TEXT;
+-- ALTER TABLE waitlist ADD COLUMN IF NOT EXISTS plan_interest TEXT;

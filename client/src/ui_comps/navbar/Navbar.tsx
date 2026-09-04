@@ -24,9 +24,9 @@ export const Navbar: React.FC = () => {
 
       <NavLinks $open={open}>
         <NavAnchor to="/landing">Home</NavAnchor>
-        <NavAnchor to="/faq">FAQ</NavAnchor>
+        {/* <NavAnchor to="/faq">FAQ</NavAnchor> */}
         <NavAnchor to="/pricing">Pricing</NavAnchor>
-        <NavAnchor to="/contact">Contact</NavAnchor>
+        {/* <NavAnchor to="/contact">Contact</NavAnchor>
         <NavAnchor>
           <Button size="sm" variant="outline">
             Login
@@ -34,7 +34,7 @@ export const Navbar: React.FC = () => {
         </NavAnchor>
         <NavAnchor to="/signup">
           <Button size="sm">Sign Up</Button>
-        </NavAnchor>
+        </NavAnchor> */}
       </NavLinks>
 
       <MenuButton

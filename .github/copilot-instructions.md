@@ -45,14 +45,15 @@ Ambiguities / Questions for the maintainer
 
 The `docs/` folder contains markdown files that refer to different aspects of the codebase. **IMPORTANT** always check the `docs/` folder for relevant information before making changes to the codebase. DO NOT SKIP THIS STEP. If you find a discrepancy between the code and the docs, please flag it for review. The table below lists the files in the `docs/` folder and their purpose.
 
-| type    | file                | purpose                                                                             |
-| ------- | ------------------- | ----------------------------------------------------------------------------------- |
-| general | folder-structure.md | This file describes the the folder structure and what files are in each.            |
-| general | prd.md              | This file describes the product requirements and design for TailgatePro.            |
-| error   | error-handling.md   | This file describes the error handling standards for TailgatePro.                   |
-| coding  | coding-style.md     | This file describes the coding standards for TailgatePro.                           |
-| unit    | unit-testing.md     | This file describes the unit testing standards for TailgatePro.                     |
-| design  | ui-styling.md       | This file describes the UI styling standards for TailgatePro.                       |
-| design  | responsive.md       | This file describes the mobile-first & responsive design standards for TailgatePro. |
-| ui      | ui-inputs.md        | This file describes the UI input standards for TailgatePro.                         |
-| auth    | auth.md             | This file describes the authentication standards for TailgatePro.                   |
+| type    | file                                | purpose                                                                             |
+| ------- | ----------------------------------- | ----------------------------------------------------------------------------------- |
+| general | folder-structure.md                 | This file describes the the folder structure and what files are in each.            |
+| general | prd.md                              | This file describes the product requirements and design for TailgatePro.            |
+| error   | error-handling.md                   | This file describes the error handling standards for TailgatePro.                   |
+| coding  | coding-style.md                     | This file describes the coding standards for TailgatePro.                           |
+| unit    | unit-testing.md                     | This file describes the unit testing standards for TailgatePro.                     |
+| design  | ui-styling.md                       | This file describes the UI styling standards for TailgatePro.                       |
+| design  | responsive.md                       | This file describes the mobile-first & responsive design standards for TailgatePro. |
+| ui      | ui-inputs.md                        | This file describes the UI input standards for TailgatePro.                         |
+| auth    | auth.md                             | This file describes the authentication standards for TailgatePro.                   |
+| pricing | pricing-and-positioning-strategy_V2.md | This file describes the pricing and positioning strategy for TailgatePro.         |

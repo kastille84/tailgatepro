@@ -49,6 +49,10 @@ export default defineConfig(({ mode }) => {
       globals: true,
       environment: "jsdom",
       setupFiles: "./setupTests.ts",
+      // The Landing page renders a large tree (device mockups, comparison table,
+      // FAQ); v8 coverage instrumentation pushes the first cold render past the
+      // 5s default.
+      testTimeout: 15000,
       include: ["tests/**/*.test.{ts,tsx}"],
       exclude: [
         ...configDefaults.exclude,
