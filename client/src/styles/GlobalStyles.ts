@@ -65,14 +65,13 @@ const GlobalStyles = createGlobalStyle`
 
   --backdrop-color: rgba(255, 255, 255, 0.1);
   
-  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.04);
-  --shadow-md: 0px 0.6rem 2.4rem rgba(0, 0, 0, 0.06);
+  --shadow-sm: 0 0.1rem 0.2rem rgba(0, 0, 0, 0.04);
+  --shadow-md: 0 0.6rem 2.4rem rgba(0, 0, 0, 0.06);
   --shadow-lg: 0 2.4rem 3.2rem rgba(0, 0, 0, 0.12);
-
-  --border-radius-tiny: 3px;
-  --border-radius-sm: 5px;
-  --border-radius-md: 7px;
-  --border-radius-lg: 9px;
+  --border-radius-tiny: 0.3rem; /* 3px */
+  --border-radius-sm: 0.5rem; /* 5px */
+  --border-radius-md: 0.7rem; /* 7px */
+  --border-radius-lg: 0.9rem; /* 9px */
 }
 
 *,
@@ -90,6 +89,8 @@ body {
   font-optical-sizing: auto;
   font-weight: 600;
   font-style: normal;
+  /* base font-size: 16px == 1.6rem when html font-size is 62.5% */
+  font-size: 1.6rem;
 }`;
 
 export default GlobalStyles;

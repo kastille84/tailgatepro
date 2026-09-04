@@ -10,7 +10,7 @@
 
 ### Component & Styling Structure
 
-- **File Pairing:** Keep styles in the same directory as the component. Use a `.styles.ts` file or define them at the bottom of the component file if short (< 30 lines).
+- **File Pairing:** Keep styles in the same directory as the component. Use a `.styles.ts` file or define them at the top of the component file if short (< 30 lines).
 - **Naming Convention:** Prefix styled elements with `Styled` to clearly separate them from standard React components (e.g., `StyledButton` wrapping a functional `Button`).
 
 ### CSS & Prop Guidelines
@@ -18,6 +18,30 @@
 - **Transient Props:** Prefix props used _only_ for styling with a `$` to prevent them from flushing to the DOM (e.g., `<StyledCard $isActive={true} />`).
 - **Prop Destructuring:** Always destructure `theme` and custom props inside the template literal for readability.
 - **Nesting & Nesting Depth:** Limit CSS nesting to 3 levels deep. Use ampersand (`&`) for pseudo-classes (`&:hover`, `&:focus`).
+
+### Icon Library Requirement
+
+When incorporating icons into the application, ALWAYS use icons from `react-icons/hi2`.
+
+```tsx
+import {
+  HiOutlineArrowsPointingIn,
+  HiOutlineArrowsPointingOut,
+  HiOutlineArrowTopRightOnSquare,
+  HiOutlineBolt,
+  HiOutlineBookmark,
+  HiOutlineBookmarkSlash,
+  HiOutlineCheckBadge,
+  HiOutlineShieldCheck,
+  HiOutlineTrash,
+} from "react-icons/hi2";
+```
+
+```tsx
+<li onClick={handleViewFullFlyer}>
+  <HiOutlineArrowTopRightOnSquare /> View Full Flyer
+</li>
+```
 
 ### Code Examples
 

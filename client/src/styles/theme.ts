@@ -66,12 +66,13 @@ const theme = {
     lg: "var(--border-radius-lg)",
   },
   breakpoints: {
-    xs: '320px',
-    sm: '480px',
-    md: '768px',
-    lg: '1024px',
-    xl: '1280px',
-    '2xl': '1536px',
+    /* breakpoints expressed in rem (1rem = 10px) */
+    xs: "32rem" /* 320px */,
+    sm: "48rem" /* 480px */,
+    md: "76.8rem" /* 768px */,
+    lg: "102.4rem" /* 1024px */,
+    xl: "128rem" /* 1280px */,
+    "2xl": "153.6rem" /* 1536px */,
   },
 } as const;
 

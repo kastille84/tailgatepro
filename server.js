@@ -7,7 +7,11 @@ const bodyParser = require("body-parser");
 const cors = require("cors");
 const cron = require("node-cron");
 
+// middlewares
+const { errorHandler } = require("./server/middlewares/errorHandler");
+
 // routes
+const waitlistRoutes = require("./server/routes/waitlist");
 // const authRoutes = require("./server/routes/auth");
 // const assetRoutes = require("./server/routes/assets");
 // const moderateRoutes = require("./server/routes/moderate");
@@ -43,6 +47,7 @@ if ((process.env.NODE_ENV || "").toLowerCase() === "production") {
 app.use(bodyParser.json());
 app.use(express.urlencoded({ extended: false }));
 
+app.use("/api/waitlist", waitlistRoutes);
 // app.use("/api/auth", authRoutes);
 // app.use("/api/assets", assetRoutes);
 // app.use("/api/moderate", moderateRoutes);
@@ -74,14 +79,7 @@ cron.schedule("0 5 * * *", () => {
 
 // general error handling
 // catches whenever an error is thrown or forwarded with next()
-app.use((error, req, res, next) => {
-  console.log("error - ", error);
-  const status = error.statusCode || 500;
-  const message = error.message;
-  const data = error.data;
-  // return res.status(status).json({ message: message, data: data });
-  return res.status(status).json({ error });
-});
+app.use(errorHandler);
 
 app.use(express.static(path.join(__dirname, "./client/dist")));
 

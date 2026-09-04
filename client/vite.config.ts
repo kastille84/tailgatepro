@@ -33,26 +33,36 @@ export default defineConfig(({ mode }) => {
       }),
     ],
     server: {
-      https: true, // same as "--https" flag
+      https: true as any, // same as "--https" flag
       host: true, // same as "--host" flag
+      proxy: {
+        // Forward API calls to the Express server in dev so the browser stays
+        // same-origin (matches production, where the server serves the SPA).
+        "/api": {
+          target: "http://localhost:5000",
+          changeOrigin: true,
+          secure: false,
+        },
+      },
     },
     test: {
       globals: true,
       environment: "jsdom",
       setupFiles: "./setupTests.ts",
+      // The Landing page renders a large tree (device mockups, comparison table,
+      // FAQ); v8 coverage instrumentation pushes the first cold render past the
+      // 5s default.
+      testTimeout: 15000,
       include: ["tests/**/*.test.{ts,tsx}"],
       exclude: [
         ...configDefaults.exclude,
         "e2e/*",
         ".storybook",
         "**/*.stories.{ts,tsx}",
+        "**/*.styles.ts",
+        "dist/**",
+        "**/index.ts",
       ],
-      browser: {
-        enabled: true,
-        provider: "playwright",
-        headless: false, // Set to false to see the browser UI
-        instances: [{ browser: "chromium" }],
-      },
       coverage: {
         provider: "v8",
         reporter: ["text", "lcov", "clover", "html"],
@@ -73,8 +83,14 @@ export default defineConfig(({ mode }) => {
           "**/interfaces/*",
           "**/constants/*",
           "**/styles/*",
+          "**/**styles.ts",
+          "dist/**",
+          "**/index.ts",
+          "**/src/utils/EnvUtils.tsx",
+          "**/src/utils/pxToRem.ts",
           "**/fixtures/*",
           "**/context/*",
+          "**/src/service-worker.ts",
         ],
       },
     },

@@ -3,3 +3,8 @@
   line-height: 1.5;
   font-weight: 400;
 }
+
+/* 1rem = 10px (62.5% of the browser default 16px) */
+html {
+  font-size: 62.5%;
+}
