@@ -44,13 +44,13 @@ describe("Landing", () => {
 
     expect(
       screen.getByRole("heading", {
-        name: /paperless safety talks\.\s*instant compliance/i,
+        name: /the toolbox talk, done before the crew gears up/i,
       }),
     ).toBeTruthy();
 
     expect(
       screen.getByText(
-        /OSHA expects a toolbox talk before the shift — every shift\./i,
+        /OSHA expects a toolbox talk before every shift\./i,
       ),
     ).toBeTruthy();
   });
@@ -80,6 +80,33 @@ describe("Landing", () => {
     ).toBeTruthy();
   });
 
+  it("renders the how-it-works section and its three steps", () => {
+    renderLanding();
+
+    expect(
+      screen.getByRole("heading", {
+        name: /run the talk without slowing down the morning/i,
+      }),
+    ).toBeTruthy();
+
+    ["Open with a tap", "Run the talk", "Submit"].forEach((title) => {
+      expect(screen.getByRole("heading", { name: title })).toBeTruthy();
+    });
+  });
+
+  it("renders the product showcase with device mockups", () => {
+    renderLanding();
+
+    expect(
+      screen.getByRole("heading", { name: /see it the way the crew does/i }),
+    ).toBeTruthy();
+
+    expect(screen.getByText("What the GC receives")).toBeTruthy();
+    expect(
+      screen.getAllByRole("img", { name: /screen on a phone/i }).length,
+    ).toBe(3);
+  });
+
   it("renders the solution section and all solution cards", () => {
     renderLanding();
 
@@ -90,9 +117,9 @@ describe("Landing", () => {
     ).toBeTruthy();
 
     [
-      "Works with zero signal",
-      "OSHA content, ready to run",
-      "Sign-off in seconds",
+      "Zero app-store friction",
+      "Works offline, always",
+      "Fast to run, every shift",
       "Instant compliance for the GC",
     ].forEach((title) => {
       expect(screen.getByText(title)).toBeTruthy();
@@ -102,6 +129,41 @@ describe("Landing", () => {
       screen.getByText(
         /Same five-minute talk\. A compliance record the GC can see immediately\./i,
       ),
+    ).toBeTruthy();
+  });
+
+  it("renders the general-contractor section and seat-tax callout", () => {
+    renderLanding();
+
+    expect(
+      screen.getByRole("heading", {
+        name: /one dashboard for every trade on the site/i,
+      }),
+    ).toBeTruthy();
+
+    expect(
+      screen.getByRole("heading", { name: /zero subcontractor seat tax/i }),
+    ).toBeTruthy();
+    expect(
+      screen.getByText(
+        /no user-billing disputes, 100% site compliance on day one/i,
+      ),
+    ).toBeTruthy();
+  });
+
+  it("renders the comparison section with both columns and a feature row", () => {
+    renderLanding();
+
+    expect(
+      screen.getByRole("heading", {
+        name: /built for the field, not the office/i,
+      }),
+    ).toBeTruthy();
+
+    expect(screen.getByText("Legacy safety apps")).toBeTruthy();
+    expect(screen.getByText("Effort per talk")).toBeTruthy();
+    expect(
+      screen.getByText("One short routine, the same every shift"),
     ).toBeTruthy();
   });
 
@@ -116,7 +178,18 @@ describe("Landing", () => {
     ).toBeTruthy();
   });
 
-  it("renders the CTA section and footer branding", () => {
+  it("renders the FAQ section", () => {
+    renderLanding();
+
+    expect(
+      screen.getByRole("heading", { name: /questions crews and gcs ask us/i }),
+    ).toBeTruthy();
+    expect(
+      screen.getByText(/When can I actually sign up\?/i),
+    ).toBeTruthy();
+  });
+
+  it("renders the CTA section, reassurances and footer branding", () => {
     renderLanding();
 
     expect(
@@ -127,11 +200,13 @@ describe("Landing", () => {
 
     expect(
       screen.getByText(
-        /We're onboarding subcontractors and general contractors for launch\. Add your name and we'll be in touch\./i,
+        /Add your name and we'll set you up on the right plan the day we go live\./i,
       ),
     ).toBeTruthy();
 
-    expect(screen.getByText(/tailgatepro/i)).toBeTruthy();
+    expect(
+      screen.getByText(/No credit card, no app to install\./i),
+    ).toBeTruthy();
 
     const year = new Date().getFullYear();
     expect(

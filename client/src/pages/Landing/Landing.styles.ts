@@ -1,6 +1,11 @@
 import styled, { css } from "styled-components";
 
-/* ---------- page + section layout ---------- */
+/* ---------- page + section layout ----------
+   Shared section scaffold (StyledSection + $tone, StyledContainer,
+   StyledSectionHead/Title/Lede) is imported by every Landing sub-section
+   (HowItWorks, ProductShowcase, GcSection, ComparisonTable, LandingFaq) and by
+   PricingTeaser. Follow-up: promote Section($tone) / Container / SectionHead /
+   Callout / FaqAccordion into ui_comps/ and refactor Landing + Pricing onto them. */
 
 export const StyledPage = styled.main`
   display: flex;
@@ -255,6 +260,10 @@ export const StyledCtaInner = styled.div`
   gap: 1.6rem;
 `;
 
+export const StyledCtaMedia = styled.div`
+  margin-bottom: 0.8rem;
+`;
+
 export const StyledFooter = styled.footer`
   display: flex;
   flex-direction: column;
@@ -306,4 +315,43 @@ export const StyledSuccess = styled.div<{ $onDark?: boolean }>`
     font-size: 2.2rem;
     color: ${({ theme }) => theme.colors.green[500]};
   }
+`;
+
+/* ---------- closing-CTA reassurance list ---------- */
+
+export const StyledReassureList = styled.ul`
+  list-style: none;
+  margin: 1.6rem 0 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.8rem;
+`;
+
+export const StyledReassureItem = styled.li`
+  display: flex;
+  align-items: center;
+  gap: 0.8rem;
+  font-size: 1.4rem;
+  font-weight: 500;
+  color: ${({ theme }) => theme.colors.navy[200]};
+
+  svg {
+    flex-shrink: 0;
+    font-size: 1.6rem;
+    color: ${({ theme }) => theme.colors.green[500]};
+  }
+`;
+
+/* ---------- shared marketing photo ---------- */
+
+export const StyledMediaImg = styled.img<{ $ratio?: string }>`
+  display: block;
+  width: 100%;
+  height: auto;
+  aspect-ratio: ${({ $ratio }) => $ratio ?? "4 / 3"};
+  object-fit: cover;
+  border-radius: ${({ theme }) => theme.borderRadius.lg};
+  box-shadow: ${({ theme }) => theme.shadows.lg};
 `;

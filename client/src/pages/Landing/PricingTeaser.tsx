@@ -39,7 +39,7 @@ export const PricingTeaser = () => {
   const plans = audience === "sub" ? SUB_PLANS : GC_PLANS;
 
   return (
-    <StyledSection $tone="light" aria-labelledby="pricing-teaser-heading">
+    <StyledSection $tone="muted" aria-labelledby="pricing-teaser-heading">
       <StyledContainer>
         <StyledSectionHead>
           <StyledSectionTitle id="pricing-teaser-heading">

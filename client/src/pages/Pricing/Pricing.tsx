@@ -111,7 +111,7 @@ export const Pricing = () => {
           <StyledLede>
             No app-store downloads. Run offline toolbox talks, collect
             tamper-evident signatures, and send automated compliance logs to any
-            GC in under 45 seconds. Subcontractors can start free — general
+            GC before the crew gears up. Subcontractors can start free — general
             contractors pay a flat rate per active jobsite or portfolio.
           </StyledLede>
         </StyledHeroInner>
