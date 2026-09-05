@@ -1,14 +1,12 @@
 import styled from "styled-components";
 import { Link } from "react-router-dom";
+import { pageContentGrow } from "../../styles/layout";
+import { PageShell } from "../../ui_comps/page-shell";
 
-export const StyledPage = styled.main`
-  display: flex;
-  flex-direction: column;
-  width: 100%;
-  overflow-x: hidden;
-`;
+export const StyledPage = PageShell;
 
 export const StyledHero = styled.section`
+  ${pageContentGrow}
   padding: 4.8rem 1.6rem 5.6rem;
   text-align: center;
   background: linear-gradient(
