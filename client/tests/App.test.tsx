@@ -24,6 +24,37 @@ vi.mock("../src/pages/Pricing", () => ({
   Pricing: () => <div data-testid="pricing-page">Pricing page</div>,
 }));
 
+vi.mock("../src/pages/Login", () => ({
+  Login: () => <div data-testid="login-page">Login page</div>,
+}));
+
+vi.mock("../src/pages/Signup", () => ({
+  Signup: () => <div data-testid="signup-page">Signup page</div>,
+}));
+
+vi.mock("../src/pages/ForgotPassword", () => ({
+  ForgotPassword: () => (
+    <div data-testid="forgot-password-page">Forgot password page</div>
+  ),
+}));
+
+vi.mock("../src/pages/ResetPassword", () => ({
+  ResetPassword: () => (
+    <div data-testid="reset-password-page">Reset password page</div>
+  ),
+}));
+
+vi.mock("../src/pages/Dashboard", () => ({
+  Dashboard: () => <div data-testid="dashboard-page">Dashboard page</div>,
+}));
+
+vi.mock("../src/features/authentication", async () => {
+  const { Outlet } = await vi.importActual<typeof import("react-router-dom")>(
+    "react-router-dom",
+  );
+  return { RequireAuth: () => <Outlet /> };
+});
+
 vi.mock("@tanstack/react-query-devtools", () => ({
   ReactQueryDevtools: () => <div data-testid="react-query-devtools" />,
 }));
@@ -52,5 +83,40 @@ describe("App", () => {
     render(<App />);
 
     expect(screen.getByTestId("pricing-page")).toBeDefined();
+  });
+
+  it("renders the login route shell", () => {
+    window.history.pushState({}, "", "/login");
+    render(<App />);
+
+    expect(screen.getByTestId("login-page")).toBeDefined();
+  });
+
+  it("renders the signup route shell", () => {
+    window.history.pushState({}, "", "/signup");
+    render(<App />);
+
+    expect(screen.getByTestId("signup-page")).toBeDefined();
+  });
+
+  it("renders the forgot-password route shell", () => {
+    window.history.pushState({}, "", "/forgot-password");
+    render(<App />);
+
+    expect(screen.getByTestId("forgot-password-page")).toBeDefined();
+  });
+
+  it("renders the reset-password route shell", () => {
+    window.history.pushState({}, "", "/reset-password");
+    render(<App />);
+
+    expect(screen.getByTestId("reset-password-page")).toBeDefined();
+  });
+
+  it("renders the dashboard route shell behind the RequireAuth layout route", () => {
+    window.history.pushState({}, "", "/dashboard");
+    render(<App />);
+
+    expect(screen.getByTestId("dashboard-page")).toBeDefined();
   });
 });

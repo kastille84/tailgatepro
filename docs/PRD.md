@@ -82,6 +82,6 @@ Allow GCs to push final PDF reports directly into existing Procore project folde
 
 ## 7. Open Questions / Work In Progress (🚧 WIP)
 
-1.  **Viral Loop / Onboarding:** Exactly how will GCs invite Subcontractors into the system? Should Subs have a "freemium" view-only account first?
+1.  **Viral Loop / Onboarding:** Exactly how will GCs invite Subcontractors into the system? Should Subs have a "freemium" view-only account first? *(Update: as of the initial auth/signup feature, self-serve email/password signup always creates a brand-new `companies` row per user — there's no lookup/dedup/merge by name and no "join an existing company" step. See the `// TODO(join-company-flow)` comment at the top of `server/services/users.js`. A real invite/join flow is still a prerequisite for real multi-user companies, not just a nice-to-have.)*
 2.  **Data Retention Policies:** Define how long crew photos will be stored on Supabase to balance GC audit needs with worker privacy.
 3.  **App Store vs. Web PWA:** Confirm if a true native wrapper (Capacitor/React Native) will eventually be needed for push notifications, or if standard PWA service workers suffice for the MVP.

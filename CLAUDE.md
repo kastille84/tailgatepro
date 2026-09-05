@@ -38,7 +38,7 @@ Each package has its own `node_modules` and its own `.env`. Run `npm install` in
 - Unit testing standard is **Vitest only — never Jest** (`.github/copilot-instructions.md`, `docs/unit-testing.md`).
 - Run all: `npx vitest run` (from `client/`). Watch: `npx vitest`. Single file: `npx vitest path/to/file.test.tsx`. By name: `npx vitest -t "should validate password"`. Coverage: `npx vitest run --coverage`.
 - Client Vitest config (in `client/vite.config.ts`) runs in **browser mode** (Playwright, Chromium, `headless: false`), expects specs under `client/tests/**/*.test.{ts,tsx}`, loads `client/setupTests.ts`, and enforces **90% coverage thresholds**. Those test dirs/files do not exist yet — create them when adding the first test.
-- The root `npm test` is still the stub (`exit 1`). Root devDependencies list `mocha`/`chai`/`sinon`, but the documented standard is Vitest; confirm with the maintainer before adding server tests.
+- Server-side tests use Vitest too (confirmed with the maintainer as of the auth feature): a root `vitest.config.js` runs specs matching `server/**/*.test.js` (`npm run test:server`, or `npm test` from root, which runs both server and client suites). Root devDependencies still list `mocha`/`chai`/`sinon` — these are unused legacy leftovers, not the standard. Server test files must be plain CommonJS (`require`/`module.exports`, no `import` statements) — see the note at the top of `server/middlewares/requireAuth.test.js` for why: mixing `import` in a test file with a `require()`-based CJS module under test can produce two separate module instances, silently defeating any mock/spy on the CJS one.
 
 ## Architecture
 

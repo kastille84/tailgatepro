@@ -106,3 +106,55 @@ export function DashboardHeader() {
   );
 }
 ```
+
+### 3. Email/Password, Signup, and Password Reset
+
+`AuthContextType` also carries email/password auth and the current `session` (needed to read `session.access_token` for calling protected API routes — see §4 below). Every method here throws on a Supabase error, unlike `loginWithGoogle`/`logout` above, so page-level `onSubmit` handlers can `try/catch` and drive their own error UI:
+
+```ts
+interface AuthState {
+  user: User | null;
+  session: Session | null;
+  loading: boolean;
+}
+
+interface AuthContextType extends AuthState {
+  loginWithGoogle: () => Promise<void>;
+  loginWithEmail: (email: string, password: string) => Promise<void>;
+  signUpWithEmail: (
+    email: string,
+    password: string,
+  ) => Promise<{ session: Session | null }>;
+  sendPasswordReset: (email: string) => Promise<void>;
+  updatePassword: (newPassword: string) => Promise<void>;
+  logout: () => Promise<void>;
+}
+```
+
+`signUpWithEmail` returns `{ session }` directly (rather than requiring the caller to read it off `useAuth()` afterward) because whether Supabase returned a session immediately depends on the project's "Confirm email" setting, and the caller needs to branch on that synchronously — see `client/src/pages/Signup/Signup.tsx`.
+
+`sendPasswordReset` must pass a `redirectTo` pointing at `/reset-password` (`supabase.auth.resetPasswordForEmail(email, { redirectTo: `${window.location.origin}/reset-password` })`). That route must also be added to the Supabase project's redirect allow-list (Dashboard → Authentication → URL Configuration) for every origin the app runs on (dev and prod) — this is external configuration, not something any code change here can do.
+
+### 4. Server-Side Route Protection (`requireAuth` middleware)
+
+Client-side route guarding (`RequireAuth` in `client/src/features/authentication/`) only protects the UI — an Express API route needs its own server-side check, since the client can't be trusted to enforce anything. `server/middlewares/requireAuth.js` verifies a Supabase access token sent by the client and attaches the verified user id to the request:
+
+```js
+// server/middlewares/requireAuth.js
+const requireAuth = async (req, res, next) => {
+  const header = req.headers.authorization || "";
+  const token = header.startsWith("Bearer ") ? header.slice(7) : null;
+
+  if (!token) return next(new AppError("Authentication required", 401));
+
+  const { data, error } = await supabase.auth.getUser(token);
+  if (error || !data?.user) {
+    return next(new AppError("Invalid or expired session", 401));
+  }
+
+  req.userId = data.user.id;
+  return next();
+};
+```
+
+Client side, send the token from `useAuth().session?.access_token` as `Authorization: Bearer <token>` on the fetch call (see `client/src/services/apiUsers.ts`). Server side, a protected route wires this in ahead of validation: `router.post("/profile", requireAuth, [...validators], validate, controller)`. **The controller must always use the server-verified `req.userId`, never an id read from `req.body`** — otherwise a client could write to another user's row.

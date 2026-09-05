@@ -9,9 +9,21 @@ import {
   MenuButton,
 } from "./styles";
 import { Button } from "../button";
+import { useAuth } from "../../context/auth";
 
 export const Navbar: React.FC = () => {
   const [open, setOpen] = useState(false);
+  const { user, loading, logout } = useAuth();
+  const [isLoggingOut, setIsLoggingOut] = useState(false);
+
+  const handleLogout = async () => {
+    setIsLoggingOut(true);
+    try {
+      await logout();
+    } finally {
+      setIsLoggingOut(false);
+    }
+  };
 
   return (
     <Nav role="navigation" aria-label="Main navigation">
@@ -26,15 +38,34 @@ export const Navbar: React.FC = () => {
         <NavAnchor to="/landing">Home</NavAnchor>
         {/* <NavAnchor to="/faq">FAQ</NavAnchor> */}
         <NavAnchor to="/pricing">Pricing</NavAnchor>
-        {/* <NavAnchor to="/contact">Contact</NavAnchor>
-        <NavAnchor>
-          <Button size="sm" variant="outline">
-            Login
-          </Button>
-        </NavAnchor>
-        <NavAnchor to="/signup">
-          <Button size="sm">Sign Up</Button>
-        </NavAnchor> */}
+        {/* <NavAnchor to="/contact">Contact</NavAnchor> */}
+
+        {!loading && user && (
+          <>
+            <NavAnchor to="/dashboard">Dashboard</NavAnchor>
+            <Button
+              size="sm"
+              variant="outline"
+              onClick={handleLogout}
+              loading={isLoggingOut}
+            >
+              Logout
+            </Button>
+          </>
+        )}
+
+        {!loading && !user && (
+          <>
+            <NavAnchor to="/login">
+              <Button size="sm" variant="outline">
+                Login
+              </Button>
+            </NavAnchor>
+            <NavAnchor to="/signup">
+              <Button size="sm">Sign Up</Button>
+            </NavAnchor>
+          </>
+        )}
       </NavLinks>
 
       <MenuButton

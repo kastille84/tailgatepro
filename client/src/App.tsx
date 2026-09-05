@@ -11,9 +11,15 @@ import theme from "./styles/theme";
 
 import { Navbar } from "./ui_comps/navbar/Navbar";
 import { ScrollToTop } from "./ui_comps/scroll-to-top";
+import { RequireAuth } from "./features/authentication";
 
 import { Landing } from "./pages/Landing";
 import { Pricing } from "./pages/Pricing";
+import { Login } from "./pages/Login";
+import { Signup } from "./pages/Signup";
+import { ForgotPassword } from "./pages/ForgotPassword";
+import { ResetPassword } from "./pages/ResetPassword";
+import { Dashboard } from "./pages/Dashboard";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -42,6 +48,19 @@ function App() {
               <Routes>
                 <Route path="/landing" element={<Landing />}></Route>
                 <Route path="/pricing" element={<Pricing />}></Route>
+                <Route path="/login" element={<Login />}></Route>
+                <Route path="/signup" element={<Signup />}></Route>
+                <Route
+                  path="/forgot-password"
+                  element={<ForgotPassword />}
+                ></Route>
+                <Route
+                  path="/reset-password"
+                  element={<ResetPassword />}
+                ></Route>
+                <Route element={<RequireAuth />}>
+                  <Route path="/dashboard" element={<Dashboard />}></Route>
+                </Route>
               </Routes>
             </BrowserRouter>
             <Toaster

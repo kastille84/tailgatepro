@@ -45,10 +45,8 @@ import {
   StyledMediaImg,
   StyledReassureList,
   StyledReassureItem,
-  StyledFooter,
-  StyledFooterMark,
-  StyledFooterText,
 } from "./Landing.styles";
+import { Footer } from "../../ui_comps/footer";
 
 interface InfoCard {
   icon: IconType;
@@ -109,8 +107,6 @@ const REASSURANCES = [
 ];
 
 export const Landing = () => {
-  const year = new Date().getFullYear();
-
   return (
     <StyledPage>
       <StyledHero aria-labelledby="landing-hero-heading">
@@ -129,11 +125,11 @@ export const Landing = () => {
               <span>Proof that holds up in an audit.</span>
             </StyledHeadline>
             <StyledLede>
-              OSHA expects a toolbox talk before every shift. On paper that means
-              lost sign-in sheets, illegible signatures, and GCs chasing proof
-              across every trade. Run the talk on any phone — no app to install,
-              no signal required — and a tamper-evident record reaches the GC the
-              moment you hit send.
+              OSHA expects a toolbox talk before every shift. On paper that
+              means lost sign-in sheets, illegible signatures, and GCs chasing
+              proof across every trade. Run the talk on any phone — no app to
+              install, no signal required — and a tamper-evident record reaches
+              the GC the moment you hit send.
             </StyledLede>
             <StyledFormWrap>
               <WaitlistForm idPrefix="hero" tone="onDark" />
@@ -239,14 +235,7 @@ export const Landing = () => {
         </StyledCtaInner>
       </StyledSection>
 
-      <StyledFooter>
-        <StyledFooterMark>
-          TAILGATE<span>PRO</span>
-        </StyledFooterMark>
-        <StyledFooterText>
-          Digital Toolbox Safety Talks · © {year} TailgatePro
-        </StyledFooterText>
-      </StyledFooter>
+      <Footer />
     </StyledPage>
   );
 };
