@@ -47,6 +47,13 @@ describe("App", () => {
     expect(screen.getByTestId("toaster")).toBeDefined();
   });
 
+  it("renders the landing page at the root path", () => {
+    window.history.pushState({}, "", "/");
+    render(<App />);
+
+    expect(screen.getByTestId("landing-page")).toBeDefined();
+  });
+
   it("renders the pricing route shell", () => {
     window.history.pushState({}, "", "/pricing");
     render(<App />);
