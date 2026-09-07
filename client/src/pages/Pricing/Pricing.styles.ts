@@ -1,13 +1,9 @@
 import styled from "styled-components";
+import { PageShell } from "../../ui_comps/page-shell";
 
 /* ---------- page + section scaffolding ---------- */
 
-export const StyledPage = styled.main`
-  display: flex;
-  flex-direction: column;
-  width: 100%;
-  overflow-x: hidden;
-`;
+export const StyledPage = PageShell;
 
 export const StyledSection = styled.section`
   padding: 5.6rem 1.6rem;
@@ -158,7 +154,8 @@ export const StyledPlanCard = styled.article<{ $featured?: boolean }>`
     $featured ? theme.shadows.lg : theme.shadows.sm};
 
   @media (min-width: ${({ theme }) => theme.breakpoints.lg}) {
-    transform: ${({ $featured }) => ($featured ? "translateY(-1.2rem)" : "none")};
+    transform: ${({ $featured }) =>
+      $featured ? "translateY(-1.2rem)" : "none"};
   }
 `;
 

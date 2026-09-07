@@ -4,6 +4,7 @@ import { HiCheck } from "react-icons/hi2";
 
 import { WaitlistForm } from "../Landing/WaitlistForm";
 import { SegmentedToggle } from "../../ui_comps/segmented-toggle";
+import { Footer } from "../../ui_comps/footer";
 import { SUB_PLANS, GC_PLANS } from "../../data/plans";
 import { planCadence } from "../../utils/pricing";
 import type { Audience, Billing } from "../../interfaces/plan";
@@ -106,7 +107,8 @@ export const Pricing = () => {
         <StyledHeroInner>
           <StyledEyebrow>Pricing</StyledEyebrow>
           <StyledHeadline id="pricing-hero-heading">
-            Safety compliance built for the field. <span>Crews start free.</span>
+            Safety compliance built for the field.{" "}
+            <span>Crews start free.</span>
           </StyledHeadline>
           <StyledLede>
             No app-store downloads. Run offline toolbox talks, collect
@@ -231,8 +233,8 @@ export const Pricing = () => {
             Lock in your plan for launch
           </StyledSectionTitle>
           <StyledSectionLede>
-            Pricing goes live when we launch. Join the waitlist and we&apos;ll be
-            in touch to get you set up on the plan you picked.
+            Pricing goes live when we launch. Join the waitlist and we&apos;ll
+            be in touch to get you set up on the plan you picked.
           </StyledSectionLede>
           {selectedPlanName && (
             <StyledSelectedNote>
@@ -247,6 +249,7 @@ export const Pricing = () => {
           />
         </StyledCtaInner>
       </StyledCtaSection>
+      <Footer />
     </StyledPage>
   );
 };

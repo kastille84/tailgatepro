@@ -12,6 +12,7 @@ const { errorHandler } = require("./server/middlewares/errorHandler");
 
 // routes
 const waitlistRoutes = require("./server/routes/waitlist");
+const usersRoutes = require("./server/routes/users");
 // const authRoutes = require("./server/routes/auth");
 // const assetRoutes = require("./server/routes/assets");
 // const moderateRoutes = require("./server/routes/moderate");
@@ -48,6 +49,7 @@ app.use(bodyParser.json());
 app.use(express.urlencoded({ extended: false }));
 
 app.use("/api/waitlist", waitlistRoutes);
+app.use("/api/users", usersRoutes);
 // app.use("/api/auth", authRoutes);
 // app.use("/api/assets", assetRoutes);
 // app.use("/api/moderate", moderateRoutes);

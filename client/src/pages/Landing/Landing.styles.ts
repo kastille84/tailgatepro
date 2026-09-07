@@ -1,4 +1,5 @@
 import styled, { css } from "styled-components";
+import { PageShell } from "../../ui_comps/page-shell";
 
 /* ---------- page + section layout ----------
    Shared section scaffold (StyledSection + $tone, StyledContainer,
@@ -7,12 +8,7 @@ import styled, { css } from "styled-components";
    PricingTeaser. Follow-up: promote Section($tone) / Container / SectionHead /
    Callout / FaqAccordion into ui_comps/ and refactor Landing + Pricing onto them. */
 
-export const StyledPage = styled.main`
-  display: flex;
-  flex-direction: column;
-  width: 100%;
-  overflow-x: hidden;
-`;
+export const StyledPage = PageShell;
 
 type SectionTone = "dark" | "light" | "muted";
 

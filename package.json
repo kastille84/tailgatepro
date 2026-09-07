@@ -4,7 +4,8 @@
   "description": "Server for tailgatepro app",
   "main": "server.js",
   "scripts": {
-    "test": "npm --prefix client run test -- --run",
+    "test": "npm run test:server && npm --prefix client run test -- --run",
+    "test:server": "vitest run",
     "server": "nodemon server.js",
     "client": "npm run dev --prefix client",
     "dev": "concurrently \"npm run server\" \"npm run client\"",
@@ -36,7 +37,8 @@
     "chai": "^4.3.7",
     "mocha": "^10.2.0",
     "nodemon": "^3.1.10",
-    "sinon": "^15.0.1"
+    "sinon": "^15.0.1",
+    "vitest": "^3.1.4"
   },
   "repository": {
     "type": "git",
