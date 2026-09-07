@@ -109,6 +109,7 @@ other docs files:
 
 - `pricing-and-positioning-strategy_V2.md`
 - `offline-todo.md`
+- `wcag.md`
 
 ### Known code/doc mismatches (verify before relying on either)
 

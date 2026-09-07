@@ -11,6 +11,7 @@ import { useCreateProfile } from "../../hooks/useCreateProfile";
 import { Button } from "../../ui_comps/button";
 import { Footer } from "../../ui_comps/footer";
 import { Form, FormField, TextInput } from "../../ui_comps/form";
+import { PasswordInput } from "../../ui_comps/password-input";
 import {
   StyledPage,
   StyledHero,
@@ -153,9 +154,8 @@ export const Login = () => {
               error={errors.password?.message}
               onDark
             >
-              <TextInput
+              <PasswordInput
                 id={passwordId}
-                type="password"
                 autoComplete="current-password"
                 hasError={!!errors.password}
                 aria-describedby={

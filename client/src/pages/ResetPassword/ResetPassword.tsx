@@ -7,7 +7,8 @@ import toast from "react-hot-toast";
 
 import { useAuth } from "../../context/auth";
 import { Button } from "../../ui_comps/button";
-import { Form, FormField, TextInput } from "../../ui_comps/form";
+import { Form, FormField } from "../../ui_comps/form";
+import { PasswordInput } from "../../ui_comps/password-input";
 import {
   StyledPage,
   StyledHero,
@@ -114,9 +115,8 @@ export const ResetPassword = () => {
               error={errors.password?.message}
               onDark
             >
-              <TextInput
+              <PasswordInput
                 id={passwordId}
-                type="password"
                 autoComplete="new-password"
                 hasError={!!errors.password}
                 aria-describedby={
@@ -132,9 +132,8 @@ export const ResetPassword = () => {
               error={errors.confirmPassword?.message}
               onDark
             >
-              <TextInput
+              <PasswordInput
                 id={confirmPasswordId}
-                type="password"
                 autoComplete="new-password"
                 hasError={!!errors.confirmPassword}
                 aria-describedby={

@@ -11,6 +11,7 @@ import { useCreateProfile } from "../../hooks/useCreateProfile";
 import { Button } from "../../ui_comps/button";
 import { Footer } from "../../ui_comps/footer";
 import { Form, FieldRow, FormField, TextInput } from "../../ui_comps/form";
+import { PasswordInput } from "../../ui_comps/password-input";
 import { SegmentedToggle } from "../../ui_comps/segmented-toggle";
 import type { CompanyType } from "../../interfaces/company";
 import {
@@ -223,10 +224,10 @@ export const Signup = () => {
               error={errors.password?.message}
               onDark
             >
-              <TextInput
+              <PasswordInput
                 id={passwordId}
-                type="password"
                 autoComplete="new-password"
+                defaultVisible
                 hasError={!!errors.password}
                 aria-describedby={
                   errors.password ? `${passwordId}-error` : undefined

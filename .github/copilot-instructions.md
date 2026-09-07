@@ -58,3 +58,4 @@ The `docs/` folder contains markdown files that refer to different aspects of th
 | auth         | auth.md                                | This file describes the authentication standards for TailgatePro.                                     |
 | pricing      | pricing-and-positioning-strategy_V2.md | This file describes the pricing and positioning strategy for TailgatePro.                             |
 | offline-todo | offline-todo.md                        | This file describes the offline todo management standards for TailgatePro before going to production. |
+| wcag         | wcag.md                                | This file describes the Web Content Accessibility Guidelines (WCAG) standards for TailgatePro.        |
