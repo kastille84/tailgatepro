@@ -70,7 +70,7 @@ Folder conventions (`docs/folder-structure.md`) — most of these are planned, n
 - One Supabase client only, created in `client/src/context/auth/auth-provider.ts`. Never call `createClient` or `supabase.auth.getUser()` elsewhere.
 - Consume auth via the `useAuth()` hook (`client/src/context/auth/use-auth.ts`), which uses the React 19 `use()` API and throws if used outside `<AuthProvider>`.
 - `AuthProvider` seeds state from `getSession()` and subscribes to `onAuthStateChange` (unsubscribes on unmount). It exposes `user`, `loading`, `loginWithGoogle` (Google OAuth), and `logout`.
-- Protected routes should redirect unauthenticated users at the routing layer (not yet implemented).
+- Protected routes should redirect unauthenticated users at the routing layer (it is now implemented via RequireAuth).
 
 ### Environment config
 
@@ -108,6 +108,7 @@ Schema is documented in `Supabase_Schema.md`; the runnable DDL is `Supabase_SQL.
 other docs files:
 
 - `pricing-and-positioning-strategy_V2.md`
+- `offline-todo.md`
 
 ### Known code/doc mismatches (verify before relying on either)
 

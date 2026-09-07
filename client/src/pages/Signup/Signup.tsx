@@ -65,6 +65,7 @@ export const Signup = () => {
     handleSubmit,
     control,
     formState: { errors },
+    getValues,
   } = useForm<SignupValues>({
     resolver: zodResolver(signupSchema),
     mode: "onTouched",
@@ -74,20 +75,20 @@ export const Signup = () => {
   const onSubmit = async (values: SignupValues) => {
     setIsSubmitting(true);
     try {
-      const { session } = await signUpWithEmail(values.email, values.password);
+      const { session } = await signUpWithEmail(values.email, values.password, {
+        name: values.name,
+        companyName: values.companyName,
+        companyType: values.companyType,
+      });
 
       if (session) {
-        await createProfile({
-          name: values.name,
-          companyName: values.companyName,
-          companyType: values.companyType,
-          accessToken: session.access_token,
-        });
+        await createProfile({ accessToken: session.access_token });
         navigate("/dashboard");
       } else {
-        // Supabase "Confirm email" is on for this project — no session yet,
-        // so there's no authenticated request to create the profile with.
-        // Deferred profile creation on first login is a future follow-up.
+        // Supabase "Confirm email" is on for this project — no session yet, so
+        // there's no authenticated request to create the profile with. The
+        // fields entered here are stored as `user_metadata` and the profile is
+        // created on first login (see Login.tsx).
         setAwaitingConfirmation(true);
       }
     } catch (error) {
@@ -106,7 +107,7 @@ export const Signup = () => {
           <StyledHeroInner>
             <StyledEyebrow>Sign up</StyledEyebrow>
             <StyledHeadline id="signup-hero-heading">
-              Check your email
+              Check your email: {getValues("email")}
             </StyledHeadline>
             <StyledSuccess role="status">
               <HiCheckCircle aria-hidden="true" />

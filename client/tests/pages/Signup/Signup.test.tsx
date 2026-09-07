@@ -135,11 +135,13 @@ describe("Signup page", () => {
       expect(signUpWithEmail).toHaveBeenCalledWith(
         "alex@example.com",
         "supersecret",
+        {
+          name: "Alex Builder",
+          companyName: "Rivera Electric",
+          companyType: "subcontractor",
+        },
       );
       expect(mockCreateProfile).toHaveBeenCalledWith({
-        name: "Alex Builder",
-        companyName: "Rivera Electric",
-        companyType: "subcontractor",
         accessToken: "token-123",
       });
       expect(mockNavigate).toHaveBeenCalledWith("/dashboard");

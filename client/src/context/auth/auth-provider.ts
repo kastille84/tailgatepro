@@ -3,7 +3,11 @@ import React, { useState, useEffect, type ReactNode } from "react";
 import { createClient, SupabaseClient } from "@supabase/supabase-js";
 import { keysBasedOnEnv } from "../../utils/EnvUtils";
 
-import { AuthContext, type AuthState } from "./auth-context";
+import {
+  AuthContext,
+  type AuthState,
+  type SignupProfile,
+} from "./auth-context";
 
 const supabase: SupabaseClient = createClient(
   keysBasedOnEnv().supabase.url,
@@ -41,15 +45,33 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   // every method below throws on a Supabase error so page-level onSubmit
   // handlers can try/catch and drive their own error UI.
   const loginWithEmail = async (email: string, password: string) => {
-    const { error } = await supabase.auth.signInWithPassword({
+    const { data, error } = await supabase.auth.signInWithPassword({
       email,
       password,
     });
     if (error) throw error;
+    return { session: data.session };
   };
 
-  const signUpWithEmail = async (email: string, password: string) => {
-    const { data, error } = await supabase.auth.signUp({ email, password });
+  const signUpWithEmail = async (
+    email: string,
+    password: string,
+    profile: SignupProfile,
+  ) => {
+    const { data, error } = await supabase.auth.signUp({
+      email,
+      password,
+      // Stored on the auth user as `user_metadata`; the server reads these
+      // back (token-verified) to create the profile on first login when
+      // "Confirm email" means no session is returned here.
+      options: {
+        data: {
+          name: profile.name,
+          companyName: profile.companyName,
+          companyType: profile.companyType,
+        },
+      },
+    });
     if (error) throw error;
     return { session: data.session };
   };

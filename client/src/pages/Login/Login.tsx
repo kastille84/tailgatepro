@@ -7,6 +7,7 @@ import { FcGoogle } from "react-icons/fc";
 import toast from "react-hot-toast";
 
 import { useAuth } from "../../context/auth";
+import { useCreateProfile } from "../../hooks/useCreateProfile";
 import { Button } from "../../ui_comps/button";
 import { Footer } from "../../ui_comps/footer";
 import { Form, FormField, TextInput } from "../../ui_comps/form";
@@ -35,6 +36,7 @@ type LoginValues = z.infer<typeof loginSchema>;
 
 export const Login = () => {
   const { user, loading, loginWithGoogle, loginWithEmail } = useAuth();
+  const { createProfile, isCreating } = useCreateProfile();
   const navigate = useNavigate();
   const [isConnecting, setIsConnecting] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -61,7 +63,20 @@ export const Login = () => {
   const onSubmit = async (values: LoginValues) => {
     setIsSubmitting(true);
     try {
-      await loginWithEmail(values.email, values.password);
+      const { session } = await loginWithEmail(values.email, values.password);
+
+      // First login after email confirmation: create the profile from the
+      // signup details Supabase stored as `user_metadata`. A repeat login
+      // resolves `null` (409 — profile already exists); a failure here is
+      // non-fatal since auth succeeded and it retries on the next login.
+      if (session) {
+        try {
+          await createProfile({ accessToken: session.access_token });
+        } catch {
+          // useCreateProfile already surfaces a toast.
+        }
+      }
+
       navigate("/dashboard");
     } catch (error) {
       toast.error(error instanceof Error ? error.message : "Could not log in.");
@@ -155,7 +170,7 @@ export const Login = () => {
               variant="primary"
               size="lg"
               fullWidth
-              loading={isSubmitting}
+              loading={isSubmitting || isCreating}
             >
               Sign in
             </Button>

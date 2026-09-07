@@ -21,6 +21,11 @@ const requireAuth = async (req, res, next) => {
   }
 
   req.userId = data.user.id;
+  // `user_metadata` is set by the client at sign-up and is user-editable, so
+  // it's only safe for non-authorization display fields (name, company). The
+  // row id still comes from req.userId, and privileged fields like `role` are
+  // server-defaulted — never trust anything in here for access control.
+  req.userMetadata = data.user.user_metadata ?? {};
   return next();
 };
 

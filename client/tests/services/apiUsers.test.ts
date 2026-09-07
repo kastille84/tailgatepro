@@ -8,9 +8,10 @@ describe("createProfile", () => {
     vi.unstubAllGlobals();
   });
 
-  it("should POST the body (without accessToken) and send it as a Bearer header", async () => {
+  it("should POST an empty body with the access token as a Bearer header", async () => {
     const fetchMock = vi.fn().mockResolvedValue({
       ok: true,
+      status: 201,
       json: async () => ({
         success: true,
         data: {
@@ -24,14 +25,7 @@ describe("createProfile", () => {
 
     vi.stubGlobal("fetch", fetchMock);
 
-    const payload = {
-      name: "Alex Builder",
-      companyName: "Rivera Electric",
-      companyType: "subcontractor" as const,
-      accessToken: "token-123",
-    };
-
-    await expect(createProfile(payload)).resolves.toEqual({
+    await expect(createProfile({ accessToken: "token-123" })).resolves.toEqual({
       id: "user-1",
       name: "Alex Builder",
       role: "foreman",
@@ -44,19 +38,16 @@ describe("createProfile", () => {
         "Content-Type": "application/json",
         Authorization: "Bearer token-123",
       },
-      body: JSON.stringify({
-        name: "Alex Builder",
-        companyName: "Rivera Electric",
-        companyType: "subcontractor",
-      }),
+      body: JSON.stringify({}),
     });
   });
 
-  it("should reject with the backend error message when the API responds with an error", async () => {
+  it("should resolve null when the profile already exists (HTTP 409)", async () => {
     vi.stubGlobal(
       "fetch",
       vi.fn().mockResolvedValue({
         ok: false,
+        status: 409,
         json: async () => ({
           success: false,
           error: "Profile already exists for this account",
@@ -65,13 +56,26 @@ describe("createProfile", () => {
     );
 
     await expect(
-      createProfile({
-        name: "Alex Builder",
-        companyName: "Rivera Electric",
-        companyType: "gc",
-        accessToken: "token-123",
+      createProfile({ accessToken: "token-123" }),
+    ).resolves.toBeNull();
+  });
+
+  it("should reject with the backend error message on a non-409 error response", async () => {
+    vi.stubGlobal(
+      "fetch",
+      vi.fn().mockResolvedValue({
+        ok: false,
+        status: 422,
+        json: async () => ({
+          success: false,
+          error: "Profile details are incomplete",
+        }),
       }),
-    ).rejects.toThrow("Profile already exists for this account");
+    );
+
+    await expect(
+      createProfile({ accessToken: "token-123" }),
+    ).rejects.toThrow("Profile details are incomplete");
   });
 
   it("should reject with the generic error when the HTTP response is unsuccessful without a backend message", async () => {
@@ -79,17 +83,13 @@ describe("createProfile", () => {
       "fetch",
       vi.fn().mockResolvedValue({
         ok: false,
+        status: 500,
         json: async () => ({ success: false }),
       }),
     );
 
     await expect(
-      createProfile({
-        name: "Alex Builder",
-        companyName: "Rivera Electric",
-        companyType: "gc",
-        accessToken: "token-123",
-      }),
+      createProfile({ accessToken: "token-123" }),
     ).rejects.toThrow("Could not finish setting up your account.");
   });
 
@@ -98,17 +98,13 @@ describe("createProfile", () => {
       "fetch",
       vi.fn().mockResolvedValue({
         ok: true,
+        status: 200,
         json: async () => null,
       }),
     );
 
     await expect(
-      createProfile({
-        name: "Alex Builder",
-        companyName: "Rivera Electric",
-        companyType: "gc",
-        accessToken: "token-123",
-      }),
+      createProfile({ accessToken: "token-123" }),
     ).rejects.toThrow("Could not finish setting up your account.");
   });
 
@@ -117,6 +113,7 @@ describe("createProfile", () => {
       "fetch",
       vi.fn().mockResolvedValue({
         ok: true,
+        status: 200,
         json: async () => {
           throw new Error("Invalid JSON");
         },
@@ -124,12 +121,7 @@ describe("createProfile", () => {
     );
 
     await expect(
-      createProfile({
-        name: "Alex Builder",
-        companyName: "Rivera Electric",
-        companyType: "gc",
-        accessToken: "token-123",
-      }),
+      createProfile({ accessToken: "token-123" }),
     ).rejects.toThrow("Could not finish setting up your account.");
   });
 });

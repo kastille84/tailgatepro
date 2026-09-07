@@ -13,11 +13,12 @@ describe("users controller: createProfile", () => {
     createProfileSpy.mockReset();
     req = {
       userId: "auth-user-1",
-      body: {
+      profile: {
         name: "Alex Builder",
         companyName: "Rivera Electric",
         companyType: "subcontractor",
       },
+      body: {},
     };
     res = {
       status: vi.fn().mockReturnThis(),
@@ -26,7 +27,7 @@ describe("users controller: createProfile", () => {
     next = vi.fn();
   });
 
-  it("should call the service with req.userId, never a body-supplied id, and respond 201", async () => {
+  it("should call the service with req.userId and req.profile fields, and respond 201", async () => {
     // Arrange
     createProfileSpy.mockResolvedValue({
       id: "auth-user-1",
@@ -58,9 +59,10 @@ describe("users controller: createProfile", () => {
     expect(next).not.toHaveBeenCalled();
   });
 
-  it("should ignore any id present in req.body and still use req.userId", async () => {
+  it("should ignore any id present in req.body or req.profile and still use req.userId", async () => {
     // Arrange
     req.body.id = "attacker-supplied-id";
+    req.profile.id = "attacker-supplied-id";
     createProfileSpy.mockResolvedValue({
       id: "auth-user-1",
       name: "Alex Builder",

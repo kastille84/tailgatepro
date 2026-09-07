@@ -1,11 +1,7 @@
-import type { CompanyType } from "../interfaces/company";
-
 export interface CreateProfilePayload {
-  name: string;
-  companyName: string;
-  companyType: CompanyType;
-  /** The current Supabase session's access token, sent as a Bearer header —
-   *  never part of the JSON body. */
+  /** The current Supabase session's access token, sent as a Bearer header.
+   *  The server reads the profile fields (name, company) from the verified
+   *  token's `user_metadata`, so the request body is empty. */
   accessToken: string;
 }
 
@@ -16,11 +12,16 @@ export interface CreateProfileResult {
   companyId: string;
 }
 
-/** POST a self-serve signup's profile (and its new company) to the Express API. */
+/**
+ * POST a self-serve signup's profile (and its new company) to the Express API.
+ *
+ * Resolves `null` on HTTP 409 — the profile already exists, which is the normal
+ * outcome on every login after the first, so callers treat it as a no-op.
+ */
 export const createProfile = async (
   payload: CreateProfilePayload,
-): Promise<CreateProfileResult> => {
-  const { accessToken, ...body } = payload;
+): Promise<CreateProfileResult | null> => {
+  const { accessToken } = payload;
 
   const res = await fetch("/api/users/profile", {
     method: "POST",
@@ -28,8 +29,12 @@ export const createProfile = async (
       "Content-Type": "application/json",
       Authorization: `Bearer ${accessToken}`,
     },
-    body: JSON.stringify(body),
+    body: JSON.stringify({}),
   });
+
+  if (res.status === 409) {
+    return null;
+  }
 
   const responseBody = await res.json().catch(() => null);
 

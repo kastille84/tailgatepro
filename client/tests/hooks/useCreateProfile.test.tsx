@@ -26,12 +26,7 @@ describe("useCreateProfile", () => {
     <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
   );
 
-  const payload = {
-    name: "Alex Builder",
-    companyName: "Rivera Electric",
-    companyType: "subcontractor" as const,
-    accessToken: "token-123",
-  };
+  const payload = { accessToken: "token-123" };
 
   it("should initialize with isCreating false", () => {
     const { result } = renderHook(() => useCreateProfile(), { wrapper });
@@ -61,6 +56,15 @@ describe("useCreateProfile", () => {
       payload,
       expect.anything(),
     );
+  });
+
+  it("should resolve null without an error toast when the profile already exists (409)", async () => {
+    vi.mocked(apiUsersModule.createProfile).mockResolvedValue(null);
+
+    const { result } = renderHook(() => useCreateProfile(), { wrapper });
+
+    await expect(result.current.createProfile(payload)).resolves.toBeNull();
+    expect(toast.error).not.toHaveBeenCalled();
   });
 
   it("should set isCreating to true while the mutation is pending", async () => {

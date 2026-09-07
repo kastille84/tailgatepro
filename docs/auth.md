@@ -20,7 +20,7 @@ import { createClient, User } from "@supabase/supabase-js";
 // Initialize Client (Typically inside a config/supabase.ts file)
 export const supabase = createClient(
   import.meta.env.VITE_SUPABASE_URL,
-  import.meta.env.VITE_SUPABASE_ANON_KEY,
+  import.meta.env.VITE_SUPABASE_API_KEY,
 );
 
 interface AuthContextType {
@@ -118,12 +118,22 @@ interface AuthState {
   loading: boolean;
 }
 
+interface SignupProfile {
+  name: string;
+  companyName: string;
+  companyType: CompanyType; // "gc" | "subcontractor"
+}
+
 interface AuthContextType extends AuthState {
   loginWithGoogle: () => Promise<void>;
-  loginWithEmail: (email: string, password: string) => Promise<void>;
+  loginWithEmail: (
+    email: string,
+    password: string,
+  ) => Promise<{ session: Session | null }>;
   signUpWithEmail: (
     email: string,
     password: string,
+    profile: SignupProfile,
   ) => Promise<{ session: Session | null }>;
   sendPasswordReset: (email: string) => Promise<void>;
   updatePassword: (newPassword: string) => Promise<void>;
@@ -131,7 +141,9 @@ interface AuthContextType extends AuthState {
 }
 ```
 
-`signUpWithEmail` returns `{ session }` directly (rather than requiring the caller to read it off `useAuth()` afterward) because whether Supabase returned a session immediately depends on the project's "Confirm email" setting, and the caller needs to branch on that synchronously — see `client/src/pages/Signup/Signup.tsx`.
+Both `signUpWithEmail` and `loginWithEmail` return `{ session }` directly (rather than requiring the caller to read it off `useAuth()` afterward). For signup, whether Supabase returned a session immediately depends on the project's "Confirm email" setting; for login, the first login after email confirmation needs the token synchronously to create the profile (below).
+
+**Deferred profile creation.** "Confirm email" is ON for this project, so `signUpWithEmail` returns `session: null` and `client/src/pages/Signup/Signup.tsx` shows a "check your email" screen without creating the `companies`/`users` rows. The three signup fields are instead passed as `options.data` to `supabase.auth.signUp`, which stores them on the auth user as `user_metadata`. On the user's first successful `loginWithEmail`, `client/src/pages/Login/Login.tsx` calls `createProfile({ accessToken: session.access_token })`; the server reads the fields from the token-verified `user_metadata` and inserts the rows. Every later login re-POSTs and the server returns `409` (profile exists), which `apiUsers.createProfile` swallows by resolving `null`. The Supabase **Confirm signup** email template should redirect to `/login` so this path runs (external configuration).
 
 `sendPasswordReset` must pass a `redirectTo` pointing at `/reset-password` (`supabase.auth.resetPasswordForEmail(email, { redirectTo: `${window.location.origin}/reset-password` })`). That route must also be added to the Supabase project's redirect allow-list (Dashboard → Authentication → URL Configuration) for every origin the app runs on (dev and prod) — this is external configuration, not something any code change here can do.
 
@@ -153,8 +165,11 @@ const requireAuth = async (req, res, next) => {
   }
 
   req.userId = data.user.id;
+  // Non-authorization display fields only (name, company). user_metadata is
+  // client-set and user-editable — never trust it for access control.
+  req.userMetadata = data.user.user_metadata ?? {};
   return next();
 };
 ```
 
-Client side, send the token from `useAuth().session?.access_token` as `Authorization: Bearer <token>` on the fetch call (see `client/src/services/apiUsers.ts`). Server side, a protected route wires this in ahead of validation: `router.post("/profile", requireAuth, [...validators], validate, controller)`. **The controller must always use the server-verified `req.userId`, never an id read from `req.body`** — otherwise a client could write to another user's row.
+Client side, send the token from `useAuth().session?.access_token` as `Authorization: Bearer <token>` on the fetch call (see `client/src/services/apiUsers.ts`). Server side, `router.post("/profile", requireAuth, requireProfileMetadata, controller)`: `requireProfileMetadata` (`server/middlewares/requireProfileMetadata.js`) normalizes `name` / `companyName` / `companyType` out of `req.userMetadata` into `req.profile`, or fails with a `422` if any are missing/invalid — it replaces an `express-validator` body chain because the deferred first-login request carries an empty body. **The controller must always use the server-verified `req.userId` and `req.profile`, never anything from `req.body`** — otherwise a client could write to another user's row.
