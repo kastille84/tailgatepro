@@ -25,17 +25,20 @@ export const StyledOption = styled.button<{ $active: boolean }>`
     box-shadow 0.15s ease;
 
   background-color: ${({ theme, $active }) =>
-    $active ? theme.colors.concrete[100] : "transparent"};
+    $active ? theme.colors.orange[500] : "transparent"};
   color: ${({ theme, $active }) =>
-    $active ? theme.colors.navy[700] : theme.colors.navy[400]};
-  box-shadow: ${({ theme, $active }) => ($active ? theme.shadows.sm : "none")};
+    $active ? theme.colors.concrete[100] : theme.colors.navy[600]};
+  box-shadow: ${({ theme, $active }) => ($active ? theme.shadows.md : "none")};
 
   &:hover {
-    color: ${({ theme }) => theme.colors.navy[700]};
+    background-color: ${({ theme, $active }) =>
+      $active ? theme.colors.orange[600] : "transparent"};
+    color: ${({ theme, $active }) =>
+      $active ? theme.colors.concrete[100] : theme.colors.navy[700]};
   }
 
   &:focus-visible {
-    outline: 0.2rem solid ${({ theme }) => theme.colors.orange[500]};
+    outline: 0.2rem solid ${({ theme }) => theme.colors.navy[700]};
     outline-offset: 0.2rem;
   }
 `;
