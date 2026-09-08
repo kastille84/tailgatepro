@@ -9,7 +9,7 @@ Full rationale and phase feasibility notes live in the plan at
 
 ---
 
-## Phase 0 — Foundations  ·  status: in progress
+## Phase 0 — Foundations  ·  status: code complete (manual device smokes + pwa_icon.jpg cleanup pending)
 
 - [x] 0a. Register the service worker via `virtual:pwa-register` in `client/src/main.tsx`
       (guarded to production so it is a no-op in dev and tests)
@@ -40,6 +40,26 @@ Full rationale and phase feasibility notes live in the plan at
 - [x] 0b. `ui_comps/radio/` (`RadioGroup` + `Radio`) + test
 - [x] 0b. `ui_comps/select/` + test
 - [x] 0c. Document the data-access model in `docs/data-access.md` (server-brokered, RLS deny-all)
+- [x] 0d. PWA install UX — a Navbar "Install app" button that fires the native prompt on
+      Chromium and opens platform-specific instructions everywhere else:
+      - `client/src/utils/pwa.ts` — `initInstallCapture()` (module singleton for the
+        `beforeinstallprompt` event, wired in `main.tsx`), `isStandalone()`, `detectPlatform()`,
+        `getInstallability()`.
+      - `client/src/interfaces/pwa.ts` — `BeforeInstallPromptEvent`, `InstallPlatform`,
+        `Installability`, `InstallGuide`.
+      - `client/src/data/installInstructions.ts` — per-platform step copy + button/toast strings.
+      - `client/src/context/pwa-install/` — provider/context/hook trio (mirrors `context/auth`);
+        `promptInstall()`, `dismiss()`/`wasDismissed` with a 7-day localStorage TTL (reserved for
+        a future banner), `appinstalled` → success toast + hide UI.
+      - `client/src/features/pwa-install/` — `InstallButton` + `InstallInstructionsModal`
+        (uses the `ui_comps/modal` primitive; adaptive glyphs).
+      - Wired: `PwaInstallProvider` in `App.tsx`, `initInstallCapture()` in `main.tsx`,
+        `<InstallButton>` in `Navbar.tsx`. `Navbar.test.tsx` stubs the feature module.
+      - Tests: `tests/utils/pwa.test.ts` (~10 UA strings), `tests/features/pwa-install/*`,
+        `tests/context/pwa-install/*`. 223 tests pass, coverage ~99%.
+- [ ] 0d. Manual smoke: in `npm run preview`, desktop Chrome shows a working native install
+      button; an iPhone UA (DevTools emulation or a real phone) shows the Safari Share steps
+      modal; a Firefox UA shows the "open in Chrome/Edge/Safari" hint.
 
 ## Phase 1 — Projects module  ·  status: not started
 
