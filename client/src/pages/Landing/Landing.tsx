@@ -47,6 +47,9 @@ import {
   StyledReassureItem,
 } from "./Landing.styles";
 import { Footer } from "../../ui_comps/footer";
+import { Spinner } from "../../ui_comps/spinner";
+import { Checkbox } from "../../ui_comps/checkbox";
+import { Modal } from "../../ui_comps/modal";
 
 interface InfoCard {
   icon: IconType;

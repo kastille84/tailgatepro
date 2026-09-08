@@ -26,10 +26,38 @@ export default defineConfig(({ mode }) => {
         filename: "service-worker.ts",
         injectManifest: {
           globPatterns: ["**/*.{js,css,html,ico,png,svg,json}"],
-          globIgnores: ["**/images/flyer-hero-2-big.png"],
+          globIgnores: [
+            "**/images/flyer-hero-2-big.png",
+            // 1 MB PWA-icon master — the generated pwa-*.png are precached, not this.
+            "logo.png",
+          ],
         },
         registerType: "autoUpdate",
-        includeAssets: ["favicon.ico", "robots.txt", "apple-touch-icon.png"],
+        // The SW is registered manually in src/main.tsx (production only).
+        injectRegister: false,
+        // Keep the SW out of `npm run dev` — it is registered only in prod builds.
+        devOptions: { enabled: false },
+        // Icons come from pwa-assets.config.ts (@vite-pwa/assets-generator):
+        // it fills `manifest.icons`. The <head> <link> tags are written by hand
+        // in index.html, so injection is turned off here to avoid duplicate
+        // tags in the built HTML.
+        pwaAssets: {
+          config: true,
+          includeHtmlHeadLinks: false,
+          injectThemeColor: false,
+        },
+        manifest: {
+          name: "TailgatePro — Digital Toolbox Safety Talks",
+          short_name: "TailgatePro",
+          description:
+            "Run OSHA toolbox safety talks in the field, online or offline.",
+          theme_color: "#ff5f15",
+          background_color: "#ffffff",
+          display: "standalone",
+          orientation: "portrait",
+          scope: "/",
+          start_url: "/",
+        },
       }),
     ],
     server: {
