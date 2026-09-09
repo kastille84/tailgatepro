@@ -1,5 +1,4 @@
-import styled, { css } from "styled-components";
-import { Link } from "react-router-dom";
+import styled from "styled-components";
 
 import { pageContentGrow } from "../../styles/layout";
 import { PageShell } from "../../ui_comps/page-shell";
@@ -53,10 +52,6 @@ export const StyledLede = styled.p`
   line-height: 1.6;
   font-weight: 500;
   color: ${({ theme }) => theme.colors.navy[200]};
-
-  strong {
-    color: ${({ theme }) => theme.colors.concrete[100]};
-  }
 `;
 
 export const StyledSection = styled.section`
@@ -68,64 +63,23 @@ export const StyledSection = styled.section`
 
 export const StyledContainer = styled.div`
   width: 100%;
-  max-width: 80rem;
+  max-width: 72rem;
   margin: 0 auto;
 `;
 
-export const StyledCardGrid = styled.div`
-  display: grid;
-  grid-template-columns: 1fr;
-  gap: 1.6rem;
-  text-align: left;
-
-  @media (min-width: ${({ theme }) => theme.breakpoints.md}) {
-    grid-template-columns: repeat(2, 1fr);
-  }
-`;
-
-const cardBase = css`
+export const StyledToolbar = styled.div`
   display: flex;
-  flex-direction: column;
-  gap: 0.8rem;
-  min-height: 4.8rem;
-  padding: 2rem;
-  border-radius: ${({ theme }) => theme.borderRadius.md};
-  border: 0.1rem solid ${({ theme }) => theme.colors.navy[100]};
-  background-color: ${({ theme }) => theme.colors.concrete[100]};
+  justify-content: flex-end;
+  margin-bottom: 2.4rem;
 `;
 
-export const StyledCard = styled(Link)`
-  ${cardBase};
-  text-decoration: none;
-  color: inherit;
-  transition:
-    border-color 0.2s ease,
-    box-shadow 0.2s ease;
-
-  &:hover {
-    border-color: ${({ theme }) => theme.colors.orange[400]};
-    box-shadow: ${({ theme }) => theme.shadows.md};
-  }
-`;
-
-export const StyledCardSoon = styled.div`
-  ${cardBase};
-  opacity: 0.55;
-  cursor: not-allowed;
-`;
-
-export const StyledCardTitle = styled.h2`
+export const StyledError = styled.p`
   margin: 0;
-  font-size: 1.8rem;
-  font-weight: 700;
-  color: ${({ theme }) => theme.colors.navy[600]};
-`;
-
-export const StyledCardText = styled.p`
-  margin: 0;
-  font-size: 1.4rem;
-  line-height: 1.5;
-  color: ${({ theme }) => theme.colors.navy[400]};
+  padding: 2.4rem 1.6rem;
+  text-align: center;
+  font-size: 1.5rem;
+  font-weight: 600;
+  color: ${({ theme }) => theme.colors.red[600]};
 `;
 
 export const StyledStatus = styled.div`

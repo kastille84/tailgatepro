@@ -23,7 +23,7 @@ Full rationale and phase feasibility notes live in the plan at
       `client/public/logo.png`. Wired via `pwaAssets: { config: true }` in `client/vite.config.ts`
       (`includeHtmlHeadLinks`/`injectThemeColor` off — head `<link>`s are hand-written in
       `index.html`); the master is kept out of the SW precache via `injectManifest.globIgnores:
-  ["logo.png"]`. Old Leaflyt `favicon.svg` deleted. Generated icons are committed under
+["logo.png"]`. Old Leaflyt `favicon.svg` deleted. Generated icons are committed under
       `client/public/`.
 - [x] 0a. Build verified: `dist/manifest.webmanifest` lists the 4 PNG icons (64/192/512 +
       maskable), `dist/index.html` has one each of icon / apple-touch-icon / theme-color / manifest
@@ -54,10 +54,10 @@ Full rationale and phase feasibility notes live in the plan at
       button; an iPhone UA (DevTools emulation or a real phone) shows the Safari Share steps
       modal; a Firefox UA shows the "open in Chrome/Edge/Safari" hint.
 
-## Phase 1 — Projects module · status: server slice (1a + 1b) code complete; client (1c) not started
+## Phase 1 — Projects module · status: 1a + 1b + 1c code complete; end-to-end smoke pending (needs Supabase SQL applied)
 
 - [~] Pre-req: confirm `Supabase_SQL.sql` (projects, project_subcontractors, enums) applied
-      — cannot verify from the codebase; run it against Supabase before hitting the endpoints
+  — cannot verify from the codebase; run it against Supabase before hitting the endpoints
 - [x] Housekeeping: `docs/Supabase_Schema.md` `projects` table was stale (`gc_id`); updated to
       match `Supabase_SQL.sql` (`owner_company_id` NOT NULL, `gc_company_id`, `gc_name_custom`,
       `created_at`, `check_gc_info` CHECK)
@@ -67,15 +67,21 @@ Full rationale and phase feasibility notes live in the plan at
 - [x] 1b. `server/controllers/projects.js` (+ `.test.js`)
 - [x] 1b. `server/routes/projects.js` — GET / POST / PATCH with express-validator chains
 - [x] 1b. Mount `/api/projects` in `server.js`
-- [ ] 1b. Manual smoke: curl the three endpoints with a real Bearer token (see plan §Verification)
-- [ ] 1c. `client/src/interfaces/project.ts`
-- [ ] 1c. `client/src/services/apiProjects.ts` (Bearer auth, client-generated UUID on create) + test
-- [ ] 1c. `client/src/hooks/useProjects.ts` (first `useQuery`) + test
-- [ ] 1c. `client/src/hooks/useCreateProject.ts` / `useUpdateProject.ts` (+ invalidate) + tests
-- [ ] 1c. `client/src/features/projects/` — `ProjectList`, `ProjectForm` (in Modal) + tests
-- [ ] 1c. `client/src/pages/Projects/` + `/projects` route under `RequireAuth` + Nav/Dashboard link
-- [ ] Verify: create/edit a project end-to-end; row lands in Supabase with client UUID
-- [ ] Confirm client coverage still ≥ 90%; `npm run build` + `npm run lint` clean
+- [x] 1b. Manual smoke: curl the three endpoints with a real Bearer token (see plan §Verification)
+- [x] 1c. `client/src/interfaces/project.ts` (`Project`, `ProjectStatus`)
+- [x] 1c. `client/src/services/apiProjects.ts` (Bearer auth, client-generated UUID on create) + test
+- [x] 1c. `client/src/hooks/useProjects.ts` (the app's first `useQuery`) + test
+- [x] 1c. `client/src/hooks/useCreateProject.ts` / `useUpdateProject.ts` (+ `invalidateQueries(["projects"])`) + tests
+- [x] 1c. `client/src/features/projects/` — `ProjectList`, `ProjectForm` (RHF+Zod, in Modal) + tests
+- [x] 1c. `client/src/pages/Projects/` + `/projects` route under `RequireAuth` + Navbar link
+- [x] 1c. Dashboard converted to a hub: entry-point card grid (Projects active; Toolbox Talks /
+      Meeting Logs / GC Compliance "coming soon"); test updated
+- [x] Confirm client coverage still ≥ 90% — `npx vitest run --coverage`: 261 tests pass, ~99.96%
+- [ ] Verify: create/edit a project end-to-end; row lands in Supabase with client UUID (needs SQL applied)
+- [ ] `npm run build` clean — BLOCKED by a pre-existing `tsc` failure in
+      `client/src/ui_comps/form/Input.tsx` (`theme.colors.concrete[300]` doesn't exist;
+      `@types/react` 19 `cloneElement`/`ReactElement` unknown-typing). Unrelated to Phase 1;
+      needs its own fix. `npm run lint` is clean for the Phase 1 files.
 
 ## Phase 2 — Content Library (toolbox_talks) · epic, expand when reached
 

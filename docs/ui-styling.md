@@ -13,6 +13,15 @@
 - **File Pairing:** Keep styles in the same directory as the component. Use a `.styles.ts` file or define them at the top of the component file if short (< 30 lines).
 - **Naming Convention:** Prefix styled elements with `Styled` to clearly separate them from standard React components (e.g., `StyledButton` wrapping a functional `Button`).
 
+### Page Composition
+
+Every routed page component (`client/src/pages/*/`) is composed the same way:
+
+- **Footer:** render the shared `<Footer />` (`client/src/ui_comps/footer`) as the **last child of the page's top-level `StyledPage`**. Never build a per-page footer.
+- **Shell:** `StyledPage` must be the shared `PageShell` (`client/src/ui_comps/page-shell`) — i.e. `export const StyledPage = PageShell;` in the page's `.styles.ts`. Give the page's primary content region (the section that should absorb extra vertical space) the `pageContentGrow` mixin from `client/src/styles/layout.ts` so the footer stays pinned to the bottom of the viewport on short pages.
+- **Navbar:** rendered once globally in `client/src/App.tsx`. Never render `<Navbar />` inside a page.
+- **Guard branches:** a transient early return that renders only `<StyledPage><StyledStatus/></StyledPage>` (e.g. while auth is still resolving) may omit the footer; any branch that renders real page content must include it.
+
 ### CSS & Prop Guidelines
 
 - **Transient Props:** Prefix props used _only_ for styling with a `$` to prevent them from flushing to the DOM (e.g., `<StyledCard $isActive={true} />`).

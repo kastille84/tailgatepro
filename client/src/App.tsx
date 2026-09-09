@@ -21,6 +21,7 @@ import { Signup } from "./pages/Signup";
 import { ForgotPassword } from "./pages/ForgotPassword";
 import { ResetPassword } from "./pages/ResetPassword";
 import { Dashboard } from "./pages/Dashboard";
+import { Projects } from "./pages/Projects";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -63,6 +64,7 @@ function App() {
                   ></Route>
                   <Route element={<RequireAuth />}>
                     <Route path="/dashboard" element={<Dashboard />}></Route>
+                    <Route path="/projects" element={<Projects />}></Route>
                   </Route>
                 </Routes>
               </BrowserRouter>

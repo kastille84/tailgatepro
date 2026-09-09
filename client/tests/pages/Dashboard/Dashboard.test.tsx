@@ -2,6 +2,7 @@ import React from "react";
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { render, screen, fireEvent, waitFor } from "@testing-library/react";
 import { ThemeProvider } from "styled-components";
+import { MemoryRouter } from "react-router-dom";
 
 import { Dashboard } from "../../../src/pages/Dashboard/Dashboard";
 import theme from "../../../src/styles/theme";
@@ -13,9 +14,11 @@ vi.mock("../../../src/context/auth", () => ({
 
 const renderDashboard = () =>
   render(
-    <ThemeProvider theme={theme}>
-      <Dashboard />
-    </ThemeProvider>,
+    <MemoryRouter>
+      <ThemeProvider theme={theme}>
+        <Dashboard />
+      </ThemeProvider>
+    </MemoryRouter>,
   );
 
 describe("Dashboard page", () => {
@@ -39,7 +42,7 @@ describe("Dashboard page", () => {
     expect(screen.getByText(/access denied/i)).toBeDefined();
   });
 
-  it("shows the signed-in user's email and placeholder copy", () => {
+  it("shows the signed-in user's email and an active Projects card linking to /projects", () => {
     mockUseAuth.mockReturnValue({
       user: { email: "alex@example.com" },
       loading: false,
@@ -49,9 +52,23 @@ describe("Dashboard page", () => {
     renderDashboard();
 
     expect(screen.getByText("alex@example.com")).toBeDefined();
+
+    const projectsCard = screen
+      .getByRole("heading", { name: /^projects$/i })
+      .closest("a");
+    expect(projectsCard?.getAttribute("href")).toBe("/projects");
+
+    // The not-yet-built areas are shown but are not links.
+    expect(screen.getByText(/toolbox talks/i).closest("a")).toBeNull();
+    expect(screen.getByText(/meeting logs/i).closest("a")).toBeNull();
+    expect(screen.getByText(/gc compliance/i).closest("a")).toBeNull();
+
+    // Shared footer is rendered (branding line, mirrors the Landing test).
     expect(
-      screen.getByText(/toolbox talks, meeting logs/i),
-    ).toBeDefined();
+      screen.getByText(
+        new RegExp(`© ${new Date().getFullYear()} TailgatePro`, "i"),
+      ),
+    ).toBeTruthy();
   });
 
   it("calls logout when the Logout button is clicked", async () => {
