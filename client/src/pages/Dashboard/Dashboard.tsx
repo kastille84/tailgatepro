@@ -24,17 +24,17 @@ import {
  *  only Projects is live today, the rest are "coming soon" placeholders. Reached
  *  only through the RequireAuth route guard, but stays defensive on its own. */
 export const Dashboard = () => {
-  const { user, loading, logout } = useAuth();
-  const [isLoggingOut, setIsLoggingOut] = useState(false);
+  const { user, loading, /*logout*/ } = useAuth();
+  // const [isLoggingOut, setIsLoggingOut] = useState(false);
 
-  const handleLogout = async () => {
-    setIsLoggingOut(true);
-    try {
-      await logout();
-    } finally {
-      setIsLoggingOut(false);
-    }
-  };
+  // const handleLogout = async () => {
+  //   setIsLoggingOut(true);
+  //   try {
+  //     await logout();
+  //   } finally {
+  //     setIsLoggingOut(false);
+  //   }
+  // };
 
   if (loading) {
     return (
@@ -65,14 +65,14 @@ export const Dashboard = () => {
           <StyledLede>
             Signed in as <strong>{user.email}</strong>
           </StyledLede>
-          <Button
+          {/* <Button
             variant="outline"
-            size="md"
+            size="sm"
             onClick={handleLogout}
             loading={isLoggingOut}
           >
             Logout
-          </Button>
+          </Button> */}
         </StyledHeroInner>
       </StyledHero>
 

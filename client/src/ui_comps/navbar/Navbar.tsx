@@ -45,10 +45,14 @@ export const Navbar: React.FC = () => {
       </Logo>
 
       <NavLinks $open={open} onClick={handleNavLinksClick}>
-        <NavAnchor to="/landing">Home</NavAnchor>
-        {/* <NavAnchor to="/faq">FAQ</NavAnchor> */}
-        <NavAnchor to="/pricing">Pricing</NavAnchor>
-        {/* <NavAnchor to="/contact">Contact</NavAnchor> */}
+        {!user && (
+          <>
+            <NavAnchor to="/landing">Home</NavAnchor>
+            {/* <NavAnchor to="/faq">FAQ</NavAnchor> */}
+            <NavAnchor to="/pricing">Pricing</NavAnchor>
+            {/* <NavAnchor to="/contact">Contact</NavAnchor> */}
+          </>
+        )}
 
         {!loading && user && (
           <>
