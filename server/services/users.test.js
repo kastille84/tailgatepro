@@ -4,7 +4,7 @@
 // these tests assert the company id it generates is a real UUID and that the
 // same id links both inserts, rather than pinning an exact fake value.
 const { supabase } = require("../utility/supabaseClient");
-const { createProfile } = require("./users");
+const { createProfile, getUserContext } = require("./users");
 
 const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
@@ -132,5 +132,62 @@ describe("users service: createProfile", () => {
     expect(companiesDelete).toHaveBeenCalledTimes(1);
     const deletedCompanyId = companiesInsert.mock.calls[0][0].id;
     expect(companiesEq).toHaveBeenCalledWith("id", deletedCompanyId);
+  });
+});
+
+describe("users service: getUserContext", () => {
+  let usersSingle;
+  let usersEq;
+  let usersSelect;
+
+  beforeEach(() => {
+    usersSingle = vi.fn().mockResolvedValue({
+      data: {
+        id: "auth-user-1",
+        name: "Alex Builder",
+        role: "foreman",
+        company_id: "company-1",
+      },
+      error: null,
+    });
+    usersEq = vi.fn(() => ({ single: usersSingle }));
+    usersSelect = vi.fn(() => ({ eq: usersEq }));
+
+    fromSpy.mockReset();
+    fromSpy.mockImplementation((table) => {
+      if (table === "users") {
+        return { select: usersSelect };
+      }
+      throw new Error(`Unexpected table: ${table}`);
+    });
+  });
+
+  it("should look up the user row by id and return the mapped identity fields", async () => {
+    // Act
+    const result = await getUserContext("auth-user-1");
+
+    // Assert
+    expect(usersSelect).toHaveBeenCalledWith("id, name, role, company_id");
+    expect(usersEq).toHaveBeenCalledWith("id", "auth-user-1");
+    expect(result).toEqual({
+      id: "auth-user-1",
+      name: "Alex Builder",
+      role: "foreman",
+      companyId: "company-1",
+    });
+  });
+
+  it("should throw a 404 AppError when no profile row exists for the auth user", async () => {
+    // Arrange
+    usersSingle.mockResolvedValue({
+      data: null,
+      error: { code: "PGRST116", message: "no rows" },
+    });
+
+    // Act & Assert
+    await expect(getUserContext("auth-user-1")).rejects.toMatchObject({
+      statusCode: 404,
+      message: "Profile not found",
+    });
   });
 });

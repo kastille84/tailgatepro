@@ -64,4 +64,30 @@ const createProfile = async ({ id, name, companyName, companyType }) => {
   };
 };
 
-module.exports = { createProfile };
+// Resolves an authenticated user's row in `users` into the identity fields that
+// downstream authorization needs. `requireAuth` only proves *who* the caller is
+// (the auth UID); anything that authorizes by company or role calls this — via
+// the `loadUserContext` middleware — to get `companyId` / `role`. Throws a 404
+// when the auth user has no profile row yet (deferred first-login path).
+const getUserContext = async (id) => {
+  const { data, error } = await supabase
+    .from("users")
+    .select("id, name, role, company_id")
+    .eq("id", id)
+    .single();
+
+  if (error || !data) {
+    throw new AppError("Profile not found", 404, {
+      cause: error ?? undefined,
+    });
+  }
+
+  return {
+    id: data.id,
+    name: data.name,
+    role: data.role,
+    companyId: data.company_id,
+  };
+};
+
+module.exports = { createProfile, getUserContext };

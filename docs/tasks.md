@@ -23,7 +23,7 @@ Full rationale and phase feasibility notes live in the plan at
       `client/public/logo.png`. Wired via `pwaAssets: { config: true }` in `client/vite.config.ts`
       (`includeHtmlHeadLinks`/`injectThemeColor` off — head `<link>`s are hand-written in
       `index.html`); the master is kept out of the SW precache via `injectManifest.globIgnores:
-    ["logo.png"]`. Old Leaflyt `favicon.svg` deleted. Generated icons are committed under
+  ["logo.png"]`. Old Leaflyt `favicon.svg` deleted. Generated icons are committed under
       `client/public/`.
 - [x] 0a. Build verified: `dist/manifest.webmanifest` lists the 4 PNG icons (64/192/512 +
       maskable), `dist/index.html` has one each of icon / apple-touch-icon / theme-color / manifest
@@ -50,19 +50,24 @@ Full rationale and phase feasibility notes live in the plan at
       (uses the `ui_comps/modal` primitive; adaptive glyphs). - Wired: `PwaInstallProvider` in `App.tsx`, `initInstallCapture()` in `main.tsx`,
       `<InstallButton>` in `Navbar.tsx`. `Navbar.test.tsx` stubs the feature module. - Tests: `tests/utils/pwa.test.ts` (~10 UA strings), `tests/features/pwa-install/*`,
       `tests/context/pwa-install/*`. 223 tests pass, coverage ~99%.
-- [ ] 0d. Manual smoke: in `npm run preview`, desktop Chrome shows a working native install
+- [x] 0d. Manual smoke: in `npm run preview`, desktop Chrome shows a working native install
       button; an iPhone UA (DevTools emulation or a real phone) shows the Safari Share steps
       modal; a Firefox UA shows the "open in Chrome/Edge/Safari" hint.
 
-## Phase 1 — Projects module · status: not started
+## Phase 1 — Projects module · status: server slice (1a + 1b) code complete; client (1c) not started
 
-- [ ] Pre-req: confirm `Supabase_SQL.sql` (projects, project_subcontractors, enums) applied
-- [ ] 1a. `usersService.getUserContext(id)` in `server/services/users.js`
-- [ ] 1a. `server/middlewares/loadUserContext.js` (+ `.test.js`)
-- [ ] 1b. `server/services/projects.js` — `listForCompany` / `create` / `update` (+ `.test.js`)
-- [ ] 1b. `server/controllers/projects.js` (+ `.test.js`)
-- [ ] 1b. `server/routes/projects.js` — GET / POST / PATCH with express-validator chains
-- [ ] 1b. Mount `/api/projects` in `server.js`
+- [~] Pre-req: confirm `Supabase_SQL.sql` (projects, project_subcontractors, enums) applied
+      — cannot verify from the codebase; run it against Supabase before hitting the endpoints
+- [x] Housekeeping: `docs/Supabase_Schema.md` `projects` table was stale (`gc_id`); updated to
+      match `Supabase_SQL.sql` (`owner_company_id` NOT NULL, `gc_company_id`, `gc_name_custom`,
+      `created_at`, `check_gc_info` CHECK)
+- [x] 1a. `usersService.getUserContext(id)` in `server/services/users.js` (+ tests in `users.test.js`)
+- [x] 1a. `server/middlewares/loadUserContext.js` (+ `.test.js`) — sets `req.user = { id, companyId, role }`
+- [x] 1b. `server/services/projects.js` — `listForCompany` / `create` / `update` (+ `.test.js`)
+- [x] 1b. `server/controllers/projects.js` (+ `.test.js`)
+- [x] 1b. `server/routes/projects.js` — GET / POST / PATCH with express-validator chains
+- [x] 1b. Mount `/api/projects` in `server.js`
+- [ ] 1b. Manual smoke: curl the three endpoints with a real Bearer token (see plan §Verification)
 - [ ] 1c. `client/src/interfaces/project.ts`
 - [ ] 1c. `client/src/services/apiProjects.ts` (Bearer auth, client-generated UUID on create) + test
 - [ ] 1c. `client/src/hooks/useProjects.ts` (first `useQuery`) + test
