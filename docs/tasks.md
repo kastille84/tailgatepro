@@ -9,7 +9,7 @@ Full rationale and phase feasibility notes live in the plan at
 
 ---
 
-## Phase 0 — Foundations  ·  status: code complete (manual device smokes + pwa_icon.jpg cleanup pending)
+## Phase 0 — Foundations · status: code complete (manual device smokes + pwa_icon.jpg cleanup pending)
 
 - [x] 0a. Register the service worker via `virtual:pwa-register` in `client/src/main.tsx`
       (guarded to production so it is a no-op in dev and tests)
@@ -23,14 +23,14 @@ Full rationale and phase feasibility notes live in the plan at
       `client/public/logo.png`. Wired via `pwaAssets: { config: true }` in `client/vite.config.ts`
       (`includeHtmlHeadLinks`/`injectThemeColor` off — head `<link>`s are hand-written in
       `index.html`); the master is kept out of the SW precache via `injectManifest.globIgnores:
-      ["logo.png"]`. Old Leaflyt `favicon.svg` deleted. Generated icons are committed under
+    ["logo.png"]`. Old Leaflyt `favicon.svg` deleted. Generated icons are committed under
       `client/public/`.
 - [x] 0a. Build verified: `dist/manifest.webmanifest` lists the 4 PNG icons (64/192/512 +
       maskable), `dist/index.html` has one each of icon / apple-touch-icon / theme-color / manifest
       link (no duplicates), `dist/service-worker.js` precache is 13 entries / ~1.2 MB
-- [ ] 0a. Manual smoke on a device: `npm run build && npm run preview` (HTTPS via basic-ssl),
+- [x] 0a. Manual smoke on a device: `npm run build && npm run preview` (HTTPS via basic-ssl),
       install the PWA, reload offline, confirm the shell renders. LAN device: `preview -- --host`.
-- [ ] 0a. Housekeeping: a stray `client/public/pwa_icon.jpg` (563 KB) was added alongside the
+- [x] 0a. Housekeeping: a stray `client/public/pwa_icon.jpg` (563 KB) was added alongside the
       master — remove it if it is not needed (it is copied into `dist/` but not used)
 - [x] 0b. `ui_comps/modal/` — hand-rolled portal dialog (Esc + overlay close, focus trap,
       focus restore, `role="dialog"`/`aria-modal`) + test.
@@ -41,27 +41,20 @@ Full rationale and phase feasibility notes live in the plan at
 - [x] 0b. `ui_comps/select/` + test
 - [x] 0c. Document the data-access model in `docs/data-access.md` (server-brokered, RLS deny-all)
 - [x] 0d. PWA install UX — a Navbar "Install app" button that fires the native prompt on
-      Chromium and opens platform-specific instructions everywhere else:
-      - `client/src/utils/pwa.ts` — `initInstallCapture()` (module singleton for the
-        `beforeinstallprompt` event, wired in `main.tsx`), `isStandalone()`, `detectPlatform()`,
-        `getInstallability()`.
-      - `client/src/interfaces/pwa.ts` — `BeforeInstallPromptEvent`, `InstallPlatform`,
-        `Installability`, `InstallGuide`.
-      - `client/src/data/installInstructions.ts` — per-platform step copy + button/toast strings.
-      - `client/src/context/pwa-install/` — provider/context/hook trio (mirrors `context/auth`);
-        `promptInstall()`, `dismiss()`/`wasDismissed` with a 7-day localStorage TTL (reserved for
-        a future banner), `appinstalled` → success toast + hide UI.
-      - `client/src/features/pwa-install/` — `InstallButton` + `InstallInstructionsModal`
-        (uses the `ui_comps/modal` primitive; adaptive glyphs).
-      - Wired: `PwaInstallProvider` in `App.tsx`, `initInstallCapture()` in `main.tsx`,
-        `<InstallButton>` in `Navbar.tsx`. `Navbar.test.tsx` stubs the feature module.
-      - Tests: `tests/utils/pwa.test.ts` (~10 UA strings), `tests/features/pwa-install/*`,
-        `tests/context/pwa-install/*`. 223 tests pass, coverage ~99%.
+      Chromium and opens platform-specific instructions everywhere else: - `client/src/utils/pwa.ts` — `initInstallCapture()` (module singleton for the
+      `beforeinstallprompt` event, wired in `main.tsx`), `isStandalone()`, `detectPlatform()`,
+      `getInstallability()`. - `client/src/interfaces/pwa.ts` — `BeforeInstallPromptEvent`, `InstallPlatform`,
+      `Installability`, `InstallGuide`. - `client/src/data/installInstructions.ts` — per-platform step copy + button/toast strings. - `client/src/context/pwa-install/` — provider/context/hook trio (mirrors `context/auth`);
+      `promptInstall()`, `dismiss()`/`wasDismissed` with a 7-day localStorage TTL (reserved for
+      a future banner), `appinstalled` → success toast + hide UI. - `client/src/features/pwa-install/` — `InstallButton` + `InstallInstructionsModal`
+      (uses the `ui_comps/modal` primitive; adaptive glyphs). - Wired: `PwaInstallProvider` in `App.tsx`, `initInstallCapture()` in `main.tsx`,
+      `<InstallButton>` in `Navbar.tsx`. `Navbar.test.tsx` stubs the feature module. - Tests: `tests/utils/pwa.test.ts` (~10 UA strings), `tests/features/pwa-install/*`,
+      `tests/context/pwa-install/*`. 223 tests pass, coverage ~99%.
 - [ ] 0d. Manual smoke: in `npm run preview`, desktop Chrome shows a working native install
       button; an iPhone UA (DevTools emulation or a real phone) shows the Safari Share steps
       modal; a Firefox UA shows the "open in Chrome/Edge/Safari" hint.
 
-## Phase 1 — Projects module  ·  status: not started
+## Phase 1 — Projects module · status: not started
 
 - [ ] Pre-req: confirm `Supabase_SQL.sql` (projects, project_subcontractors, enums) applied
 - [ ] 1a. `usersService.getUserContext(id)` in `server/services/users.js`
@@ -79,7 +72,7 @@ Full rationale and phase feasibility notes live in the plan at
 - [ ] Verify: create/edit a project end-to-end; row lands in Supabase with client UUID
 - [ ] Confirm client coverage still ≥ 90%; `npm run build` + `npm run lint` clean
 
-## Phase 2 — Content Library (toolbox_talks)   ·   epic, expand when reached
+## Phase 2 — Content Library (toolbox_talks) · epic, expand when reached
 
 - [ ] Seed script: ~30 public-domain OSHA talks with `trade_tag`
 - [ ] Server: list / filter-by-trade / search / get
@@ -87,7 +80,7 @@ Full rationale and phase feasibility notes live in the plan at
 - [ ] Custom talks (company-scoped create)
 - [ ] Schema: add `user_favorites` table; favorites toggle + filter
 
-## Phase 3 — Offline foundation   ·   epic, design spike first
+## Phase 3 — Offline foundation · epic, design spike first
 
 - [ ] Design doc: IndexedDB schema + sync state machine (reviewed)
 - [ ] Add Dexie; tables for meeting_logs, signatures, cached projects/talks
@@ -95,23 +88,23 @@ Full rationale and phase feasibility notes live in the plan at
 - [ ] Online/offline indicator; last-write-wins
 - [ ] Retro-fit Projects create/edit through the queue
 
-## Phase 4 — Run-a-Talk flow + signatures   ·   epic
+## Phase 4 — Run-a-Talk flow + signatures · epic
 
 - [ ] Supabase Storage buckets (signatures, crew photos) + access rules
 - [ ] Meeting wizard: project → talk → present → (TTS + quiz) → signatures → photo → save
 - [ ] Canvas finger-signing component
 - [ ] Schema: quiz question storage (table or JSONB on toolbox_talks)
 
-## Phase 5 — PDF generation + GC delivery   ·   epic
+## Phase 5 — PDF generation + GC delivery · epic
 
 - [ ] Server PDF service (PDFKit) — generate on sync, store `final_pdf_url`
 - [ ] Email PDF to GC (dev transport until paid Mailgun)
 
-## Phase 6 — GC dashboard   ·   epic, blocked by invite/join-company
+## Phase 6 — GC dashboard · epic, blocked by invite/join-company
 
 - [ ] GC views: projects, incoming meeting-log PDFs, per-sub compliance status
 
-## Cross-cutting — Invite / join-company flow   ·   epic, prerequisite for multi-user + Phase 6
+## Cross-cutting — Invite / join-company flow · epic, prerequisite for multi-user + Phase 6
 
 - [ ] Admin invites by email; invitee joins an existing `companies` row
 - [ ] Real use of `admin` / `safety_manager` roles
