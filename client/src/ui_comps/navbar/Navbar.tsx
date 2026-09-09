@@ -10,6 +10,7 @@ import {
 } from "./styles";
 import { Button } from "../button";
 import { useAuth } from "../../context/auth";
+import { InstallButton } from "../../features/pwa-install";
 
 export const Navbar: React.FC = () => {
   const [open, setOpen] = useState(false);
@@ -66,6 +67,8 @@ export const Navbar: React.FC = () => {
             </NavAnchor>
           </>
         )}
+
+        <InstallButton size="sm" variant="success" />
       </NavLinks>
 
       <MenuButton

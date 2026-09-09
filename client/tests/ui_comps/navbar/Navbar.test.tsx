@@ -12,6 +12,12 @@ vi.mock("../../../src/context/auth", () => ({
   useAuth: () => mockUseAuth(),
 }));
 
+// The install button has its own provider + tests; stub it here so Navbar
+// tests stay isolated from PWA-install context.
+vi.mock("../../../src/features/pwa-install", () => ({
+  InstallButton: () => <button type="button">Install app</button>,
+}));
+
 const renderNavbar = () =>
   render(
     <MemoryRouter>
