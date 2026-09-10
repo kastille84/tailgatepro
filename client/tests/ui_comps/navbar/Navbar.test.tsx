@@ -89,6 +89,9 @@ describe("Navbar", () => {
     expect(
       screen.getByRole("link", { name: /dashboard/i }).getAttribute("href"),
     ).toBe("/dashboard");
+    expect(
+      screen.getByRole("link", { name: /projects/i }).getAttribute("href"),
+    ).toBe("/projects");
     expect(screen.queryByRole("button", { name: /^login$/i })).toBeNull();
 
     fireEvent.click(screen.getByRole("button", { name: /logout/i }));
@@ -96,5 +99,40 @@ describe("Navbar", () => {
     await waitFor(() => {
       expect(logout).toHaveBeenCalledTimes(1);
     });
+  });
+
+  it("closes the collapsed menu when a nav link inside it is clicked", () => {
+    renderNavbar();
+    const toggle = screen.getByLabelText(/toggle menu/i);
+
+    fireEvent.click(toggle);
+    expect(toggle.getAttribute("aria-expanded")).toBe("true");
+
+    fireEvent.click(screen.getByRole("link", { name: /pricing/i }));
+    expect(toggle.getAttribute("aria-expanded")).toBe("false");
+  });
+
+  it("closes the collapsed menu when a button inside the links is clicked", () => {
+    renderNavbar();
+    const toggle = screen.getByLabelText(/toggle menu/i);
+
+    fireEvent.click(toggle);
+    expect(toggle.getAttribute("aria-expanded")).toBe("true");
+
+    fireEvent.click(screen.getByRole("button", { name: /^login$/i }));
+    expect(toggle.getAttribute("aria-expanded")).toBe("false");
+  });
+
+  it("leaves the collapsed menu open when a click misses a link or button", () => {
+    renderNavbar();
+    const toggle = screen.getByLabelText(/toggle menu/i);
+
+    fireEvent.click(toggle);
+    expect(toggle.getAttribute("aria-expanded")).toBe("true");
+
+    // Click the NavLinks container itself, not one of its items.
+    const navLinks = screen.getByRole("link", { name: /home/i }).parentElement;
+    fireEvent.click(navLinks!);
+    expect(toggle.getAttribute("aria-expanded")).toBe("true");
   });
 });

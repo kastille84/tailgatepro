@@ -43,6 +43,10 @@ for simple CRUD. It was not chosen because:
 
 - Add a `routes/ → controllers/ → services/` trio per domain. The service does all Supabase
   calls and all "does this belong to the caller's company?" checks.
+- Relational guards live in the service too: e.g. `projects` hard-delete
+  (`server/services/projects.js` `remove`) first checks for child `meeting_logs`
+  and refuses with a `409` when any exist, so cascading FK deletes can never
+  destroy OSHA records — archiving (`archived_at`) is the path once talks are logged.
 - Never add a Supabase call to the client outside `context/auth/`.
 - Do not write RLS policies. If a future feature genuinely needs client-direct access (e.g. a
   Supabase Realtime subscription), that is a deliberate revisit of this decision, documented here.

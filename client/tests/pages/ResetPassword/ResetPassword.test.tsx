@@ -71,6 +71,11 @@ describe("ResetPassword page", () => {
     expect(
       screen.getByRole("link", { name: /request a new link/i }),
     ).toBeDefined();
+    expect(
+      screen.getByText(
+        new RegExp(`© ${new Date().getFullYear()} TailgatePro`, "i"),
+      ),
+    ).toBeTruthy();
   });
 
   it("shows the password field's own validation error when it's too short", async () => {

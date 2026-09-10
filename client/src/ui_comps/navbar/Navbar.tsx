@@ -26,6 +26,15 @@ export const Navbar: React.FC = () => {
     }
   };
 
+  // When the navbar is collapsed into the mobile dropdown, collapse it again as
+  // soon as any link / button inside it is activated. Harmless no-op on wide
+  // viewports where the links are always visible.
+  const handleNavLinksClick = (event: React.MouseEvent<HTMLElement>) => {
+    if ((event.target as HTMLElement).closest("a, button")) {
+      setOpen(false);
+    }
+  };
+
   return (
     <Nav role="navigation" aria-label="Main navigation">
       <Logo to="/">
@@ -35,15 +44,20 @@ export const Navbar: React.FC = () => {
         </LogoText>
       </Logo>
 
-      <NavLinks $open={open}>
-        <NavAnchor to="/landing">Home</NavAnchor>
-        {/* <NavAnchor to="/faq">FAQ</NavAnchor> */}
-        <NavAnchor to="/pricing">Pricing</NavAnchor>
-        {/* <NavAnchor to="/contact">Contact</NavAnchor> */}
+      <NavLinks $open={open} onClick={handleNavLinksClick}>
+        {!user && (
+          <>
+            <NavAnchor to="/landing">Home</NavAnchor>
+            {/* <NavAnchor to="/faq">FAQ</NavAnchor> */}
+            <NavAnchor to="/pricing">Pricing</NavAnchor>
+            {/* <NavAnchor to="/contact">Contact</NavAnchor> */}
+          </>
+        )}
 
         {!loading && user && (
           <>
             <NavAnchor to="/dashboard">Dashboard</NavAnchor>
+            <NavAnchor to="/projects">Projects</NavAnchor>
             <Button
               size="sm"
               variant="outline"

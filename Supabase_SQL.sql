@@ -30,12 +30,17 @@ CREATE TABLE projects (
   gc_company_id UUID REFERENCES companies(id) ON DELETE SET NULL,
   gc_name_custom TEXT,
   status project_status DEFAULT 'active',
+  -- Soft-delete / visibility state, orthogonal to `status`: NULL = live,
+  -- a timestamp = archived (hidden from the default list, still restorable).
+  archived_at TIMESTAMPTZ,
   created_at TIMESTAMPTZ DEFAULT NOW(),
   -- Ensure either a registered GC ID or a custom GC name is provided
   CONSTRAINT check_gc_info CHECK (
     gc_company_id IS NOT NULL OR gc_name_custom IS NOT NULL
   )
 );
+-- If the table already exists from an earlier run, add the new column instead:
+-- ALTER TABLE projects ADD COLUMN IF NOT EXISTS archived_at TIMESTAMPTZ;
 -- 4. Project Subcontractors (Many-to-Many)
 CREATE TABLE project_subcontractors (
   project_id UUID REFERENCES projects(id) ON DELETE CASCADE,

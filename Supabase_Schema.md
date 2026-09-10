@@ -23,14 +23,19 @@
 | Table: `projects` | Type | Constraints | Description |
 | :--- | :--- | :--- | :--- |
 | `id` | UUID | Primary Key | Client-generated UUID |
-| `gc_id` | UUID | FK -> `companies.id` | The GC who owns the site |
+| `owner_company_id` | UUID | Not Null, FK -> `companies.id` (ON DELETE CASCADE) | The company that created the project (the subcontractor in the sub-led flow) |
 | `name` | Text | Not Null | E.g., "Downtown Highrise" |
-| `status` | Enum | Default 'active' | `active`, `completed` |
+| `gc_company_id` | UUID | Nullable, FK -> `companies.id` (ON DELETE SET NULL) | The GC as a registered company, once one is linked |
+| `gc_name_custom` | Text | Nullable | Free-text GC name, used before a GC company is linked |
+| `status` | Enum | Default `active` | `active`, `completed` |
+| `archived_at` | Timestamptz | Nullable | `NULL` = live; a timestamp = archived (hidden from the default list, still restorable). Orthogonal to `status`. |
+| `created_at` | Timestamptz | Default `now()` | |
+| **CHECK** `check_gc_info` | | `gc_company_id IS NOT NULL OR gc_name_custom IS NOT NULL` | At least one GC identifier must be present |
 
 | Table: `project_subcontractors` | Type | Constraints | Description |
 | :--- | :--- | :--- | :--- |
-| `project_id` | UUID | FK -> `projects.id` | |
-| `sub_id` | UUID | FK -> `companies.id` | Subcontractor assigned to site |
+| `project_id` | UUID | FK -> `projects.id` (ON DELETE CASCADE) | |
+| `sub_id` | UUID | FK -> `companies.id` (ON DELETE CASCADE) | Subcontractor assigned to site |
 | **PK** | | **Composite** | `(project_id, sub_id)` |
 
 ### 3. Content Library

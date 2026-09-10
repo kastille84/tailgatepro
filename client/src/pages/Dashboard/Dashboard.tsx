@@ -2,6 +2,7 @@ import { useState } from "react";
 
 import { useAuth } from "../../context/auth";
 import { Button } from "../../ui_comps/button";
+import { Footer } from "../../ui_comps/footer";
 import {
   StyledPage,
   StyledHero,
@@ -11,25 +12,29 @@ import {
   StyledLede,
   StyledSection,
   StyledContainer,
-  StyledPlaceholder,
+  StyledCardGrid,
+  StyledCard,
+  StyledCardSoon,
+  StyledCardTitle,
+  StyledCardText,
   StyledStatus,
 } from "./Dashboard.styles";
 
-/** Minimal authenticated shell — a placeholder for future product features
- *  (toolbox talks, meeting logs, the GC dashboard) to attach to. Reached only
- *  through the RequireAuth route guard, but stays defensive on its own. */
+/** The authenticated hub. Renders entry-point cards for the product areas;
+ *  only Projects is live today, the rest are "coming soon" placeholders. Reached
+ *  only through the RequireAuth route guard, but stays defensive on its own. */
 export const Dashboard = () => {
-  const { user, loading, logout } = useAuth();
-  const [isLoggingOut, setIsLoggingOut] = useState(false);
+  const { user, loading, /*logout*/ } = useAuth();
+  // const [isLoggingOut, setIsLoggingOut] = useState(false);
 
-  const handleLogout = async () => {
-    setIsLoggingOut(true);
-    try {
-      await logout();
-    } finally {
-      setIsLoggingOut(false);
-    }
-  };
+  // const handleLogout = async () => {
+  //   setIsLoggingOut(true);
+  //   try {
+  //     await logout();
+  //   } finally {
+  //     setIsLoggingOut(false);
+  //   }
+  // };
 
   if (loading) {
     return (
@@ -60,25 +65,49 @@ export const Dashboard = () => {
           <StyledLede>
             Signed in as <strong>{user.email}</strong>
           </StyledLede>
-          <Button
+          {/* <Button
             variant="outline"
-            size="md"
+            size="sm"
             onClick={handleLogout}
             loading={isLoggingOut}
           >
             Logout
-          </Button>
+          </Button> */}
         </StyledHeroInner>
       </StyledHero>
 
       <StyledSection>
         <StyledContainer>
-          <StyledPlaceholder>
-            Toolbox talks, meeting logs, and your GC dashboard will live here
-            soon.
-          </StyledPlaceholder>
+          <StyledCardGrid>
+            <StyledCard to="/projects">
+              <StyledCardTitle>Projects</StyledCardTitle>
+              <StyledCardText>
+                Manage your job sites and the GCs you report to.
+              </StyledCardText>
+            </StyledCard>
+            <StyledCardSoon aria-disabled="true">
+              <StyledCardTitle>Toolbox Talks</StyledCardTitle>
+              <StyledCardText>
+                Browse the OSHA safety-talk library. Coming soon.
+              </StyledCardText>
+            </StyledCardSoon>
+            <StyledCardSoon aria-disabled="true">
+              <StyledCardTitle>Meeting Logs</StyledCardTitle>
+              <StyledCardText>
+                Review and sync completed talks. Coming soon.
+              </StyledCardText>
+            </StyledCardSoon>
+            <StyledCardSoon aria-disabled="true">
+              <StyledCardTitle>GC Compliance</StyledCardTitle>
+              <StyledCardText>
+                Audit subcontractor safety logs. Coming soon.
+              </StyledCardText>
+            </StyledCardSoon>
+          </StyledCardGrid>
         </StyledContainer>
       </StyledSection>
+
+      <Footer />
     </StyledPage>
   );
 };

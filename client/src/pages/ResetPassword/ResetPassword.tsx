@@ -7,6 +7,7 @@ import toast from "react-hot-toast";
 
 import { useAuth } from "../../context/auth";
 import { Button } from "../../ui_comps/button";
+import { Footer } from "../../ui_comps/footer";
 import { Form, FormField } from "../../ui_comps/form";
 import { PasswordInput } from "../../ui_comps/password-input";
 import {
@@ -92,6 +93,7 @@ export const ResetPassword = () => {
             </StyledLinkRow>
           </StyledHeroInner>
         </StyledHero>
+        <Footer />
       </StyledPage>
     );
   }
@@ -157,6 +159,7 @@ export const ResetPassword = () => {
           </Form>
         </StyledHeroInner>
       </StyledHero>
+      <Footer />
     </StyledPage>
   );
 };
