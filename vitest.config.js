@@ -15,6 +15,6 @@ module.exports = defineConfig({
   test: {
     globals: true,
     environment: "node",
-    include: ["server/**/*.test.js"],
+    include: ["server/**/*.test.js", "scripts/**/*.test.js"],
   },
 });

@@ -116,3 +116,17 @@ other docs files:
 - `docs/coding-style.md` says the server uses ES Modules (`import/export`); `server.js` and `server/utility/envUtils.js` are CommonJS (`require`/`exports`).
 - Docs reference client primitives at `src/components/ui-comps/`; the actual path is `client/src/ui_comps/`.
 - `docs/ui-styling.md` mentions `theme.spacing`, `theme.typography`, and named breakpoints (`mobile`/`tablet`/`desktop`); `theme.ts` currently defines `colors`, `shadows`, `borderRadius`, and numeric `breakpoints` keys (`xs`–`2xl`) only.
+
+## Constructing and Gathering Content Library
+
+When user asks to create or add to the safety talk library, you will work with 3 agents to get the work done.
+| agent | src | task |
+| safety-collector | .claude/agents/talks/safety-collector.md | harvest raw safet talks |
+| safety-structurer | .claude/agents/talks/safety-structurer.md | convert raw files into standardized JSON |
+| safety-auditor | .claude/agents/talks/safety-auditor.md | audit the processed files |
+
+### How to Run This Workflow in Claude Code
+
+1. **Step 1:** Run `@safety-collector` to harvest raw safety talks into `data/raw/`.
+2. **Step 2:** Run `@safety-structurer` to convert raw files into standardized JSON in `data/processed/`.
+3. **Step 3:** Run `@safety-auditor` to audit the processed files and append compliance flags or approval status.

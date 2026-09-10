@@ -103,19 +103,67 @@ default list.
       zone (archive/restore + delete) (+ tests)
 - [x] `ui_comps/confirm-dialog/` — generic confirm-before-acting dialog (built on
       `Modal` + `Button`), used by the `ProjectForm` delete flow (+ test)
-- [ ] Pre-req: apply `archived_at` to Supabase before hitting the endpoints
-- [ ] Verify end-to-end: create → delete a talk-less project; archive → toggle
+- [x] Pre-req: apply `archived_at` to Supabase before hitting the endpoints
+- [x] Verify end-to-end: create → delete a talk-less project; archive → toggle
       "Show archived" → restore; other-company bearer token → 404
 - [ ] Phase 3 offline: route archive (PATCH) and delete (DELETE) through the
       IndexedDB replay queue alongside create/edit
 
-## Phase 2 — Content Library (toolbox_talks) · epic, expand when reached
+## Phase 2 — Content Library (toolbox_talks)
 
-- [ ] Seed script: ~30 public-domain OSHA talks with `trade_tag`
-- [ ] Server: list / filter-by-trade / search / get
-- [ ] Client: browse + trade filter + search + talk detail
-- [ ] Custom talks (company-scoped create)
-- [ ] Schema: add `user_favorites` table; favorites toggle + filter
+Plan: `~/.claude/plans/what-s-next-on-our-scalable-blossom.md`. Sequenced as
+harvest → schema → loader (this round), then server API, then client browse,
+then favorites + custom talks.
+
+### 2a — Harvest + schema + loader · status: schema + loader code complete; harvest + Supabase apply pending
+
+- [~] Run the harvest pipeline (`@safety-collector` → `@safety-structurer` →
+      `@safety-auditor`) → `data/raw/**` + `data/processed/<trade>/<slug>.json`
+      (~30 approved public-domain talks). BLOCKED: the `.claude/agents/talks/`
+      subagents are new/untracked and are not loaded until Claude Code restarts.
+- [x] Schema (`Supabase_SQL.sql`, `Supabase_Schema.md`): `toolbox_talks` +
+      `slug TEXT UNIQUE`, `structured JSONB`, `trade_tags TEXT[]` + GIN index;
+      compose `content` Markdown from the structured parts; keep `trade_tag` =
+      primary trade
+- [x] Schema: `ALTER TABLE toolbox_talks ENABLE ROW LEVEL SECURITY` — closes a
+      `docs/data-access.md` gap (only `waitlist` had RLS enabled). NOTE: the
+      other core tables (`companies`, `users`, `projects`,
+      `project_subcontractors`, `meeting_logs`, `signatures`) still lack it —
+      separate cleanup.
+- [x] Loader: `scripts/seed-talks.js` + pure `scripts/lib/talkRow.js`
+      (`buildRow` / `composeMarkdown` / `isApproved`, deterministic
+      `uuidv5(slug)` id, `.upsert(onConflict: "slug")`) + `talkRow.test.js`
+      (9 tests). Root `seed:talks` script; `vitest.config.js` include widened
+      to `scripts/**/*.test.js`
+- [ ] Pre-req: apply the `toolbox_talks` column/index/RLS changes to Supabase
+- [ ] Verify: `npm run seed:talks` → rows land with `slug` / `structured` /
+      `trade_tags` populated; re-run is a no-op (count stable, ids unchanged)
+- [ ] Decide: commit `data/raw/**` (provenance) or `.gitignore` it (size)
+
+### 2b — Server read API
+
+- [ ] `server/services|controllers|routes/talks.js` — `GET /api/talks` (all
+      global talks) + `GET /api/talks/:id`, behind `requireAuth` +
+      `loadUserContext`; CJS tests. Mount `/api/talks` in `server.js`
+      (trade filter + search run client-side, so no `?q=`/`?trade=` params)
+
+### 2c — Client browse feature
+
+- [ ] `interfaces/talk.ts`, `services/apiTalks.ts`, `hooks/useTalks.ts`
+- [ ] `features/content-library/` (`TalkList`, `TalkDetail`) +
+      `pages/ContentLibrary/` + `/talks` route under `RequireAuth`
+- [ ] Trade filter (`Select`/`SegmentedToggle`) + title search — client-side
+      `useMemo` over the one `useTalks()` fetch
+- [ ] Navbar link; activate the Dashboard "Toolbox Talks" card
+      (`StyledCardSoon` → `StyledCard to="/talks"`)
+- [ ] Client coverage stays 100%
+
+### 2d — Favorites + custom talks
+
+- [ ] Schema: `user_favorites` (composite PK `(user_id, talk_id)`, both
+      `ON DELETE CASCADE`); favorites toggle + filter
+- [ ] Custom talks (company-scoped create; `is_global = false`,
+      `company_id = req.user.companyId`)
 
 ## Phase 3 — Offline foundation · epic, design spike first
 

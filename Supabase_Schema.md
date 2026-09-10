@@ -42,12 +42,17 @@
 
 | Table: `toolbox_talks` | Type | Constraints | Description |
 | :--- | :--- | :--- | :--- |
-| `id` | UUID | Primary Key | Client-generated UUID |
+| `id` | UUID | Primary Key | Client-generated UUID (seed loader derives it deterministically from `slug`) |
+| `slug` | Text | Unique (Nullable) | Stable natural key from the content pipeline (`data/processed/**`); the loader's upsert target |
 | `title` | Text | Not Null | E.g., "Fall Protection Basics" |
-| `trade_tag` | Text | Indexed | E.g., `Roofing`, `Electrical` |
-| `content` | Text | Not Null | Markdown or HTML payload |
+| `trade_tag` | Text | Indexed | Primary trade, e.g. `Roofing`, `Electrical` |
+| `trade_tags` | Text[] | GIN Indexed (Nullable) | All applicable trades (primary + secondary) for multi-trade filtering |
+| `content` | Text | Not Null | Markdown payload (loader composes it from the structured fields) |
+| `structured` | JSONB | Nullable | `{ summary, talking_points, site_hazards_to_check, discussion_questions, osha_standards, estimated_minutes }` from the pipeline |
 | `is_global` | Boolean | Default `true` | True if public domain library |
 | `company_id` | UUID | FK (Nullable) | Populated if a sub writes a custom talk |
+
+> RLS: enabled with no policies (server-brokered, deny-all) — see `docs/data-access.md`.
 
 ### 4. Meeting & Attendance Logs
 
