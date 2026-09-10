@@ -2,10 +2,10 @@
 // `supabase.from` is looked up fresh at call time (not destructured), so a
 // single module-scope spy reconfigured per test is enough — no re-spying.
 const { supabase } = require("../utility/supabaseClient");
-const { listForCompany, create, update } = require("./projects");
+const { listForCompany, create, update, remove } = require("./projects");
 
 const PROJECT_COLUMNS =
-  "id, owner_company_id, name, gc_company_id, gc_name_custom, status, created_at";
+  "id, owner_company_id, name, gc_company_id, gc_name_custom, status, archived_at, created_at";
 
 const dbRow = {
   id: "project-1",
@@ -14,6 +14,7 @@ const dbRow = {
   gc_company_id: null,
   gc_name_custom: "Acme GC",
   status: "active",
+  archived_at: null,
   created_at: "2026-09-09T00:00:00.000Z",
 };
 
@@ -24,6 +25,7 @@ const mappedProject = {
   gcCompanyId: null,
   gcNameCustom: "Acme GC",
   status: "active",
+  archivedAt: null,
   createdAt: "2026-09-09T00:00:00.000Z",
 };
 
@@ -31,12 +33,14 @@ const fromSpy = vi.spyOn(supabase, "from");
 
 describe("projects service: listForCompany", () => {
   let order;
+  let is;
   let or;
   let select;
 
   beforeEach(() => {
     order = vi.fn().mockResolvedValue({ data: [dbRow], error: null });
-    or = vi.fn(() => ({ order }));
+    is = vi.fn(() => ({ order }));
+    or = vi.fn(() => ({ is, order }));
     select = vi.fn(() => ({ or }));
 
     fromSpy.mockReset();
@@ -46,7 +50,7 @@ describe("projects service: listForCompany", () => {
     });
   });
 
-  it("should query owned-or-GC projects newest first and map rows to camelCase", async () => {
+  it("should query owned-or-GC live projects newest first and map rows to camelCase", async () => {
     // Act
     const result = await listForCompany("company-1");
 
@@ -55,8 +59,18 @@ describe("projects service: listForCompany", () => {
     expect(or).toHaveBeenCalledWith(
       "owner_company_id.eq.company-1,gc_company_id.eq.company-1",
     );
+    expect(is).toHaveBeenCalledWith("archived_at", null);
     expect(order).toHaveBeenCalledWith("created_at", { ascending: false });
     expect(result).toEqual([mappedProject]);
+  });
+
+  it("should not filter out archived projects when includeArchived is set", async () => {
+    // Act
+    await listForCompany("company-1", { includeArchived: true });
+
+    // Assert
+    expect(is).not.toHaveBeenCalled();
+    expect(order).toHaveBeenCalledWith("created_at", { ascending: false });
   });
 
   it("should throw a 502 AppError when the query fails", async () => {
@@ -208,6 +222,32 @@ describe("projects service: update", () => {
     });
   });
 
+  it("should stamp archived_at when archived is true", async () => {
+    // Act
+    await update({
+      id: "project-1",
+      companyId: "company-1",
+      patch: { archived: true },
+    });
+
+    // Assert
+    const written = updateFn.mock.calls[0][0];
+    expect(typeof written.archived_at).toBe("string");
+    expect(Number.isNaN(Date.parse(written.archived_at))).toBe(false);
+  });
+
+  it("should clear archived_at when archived is false (restore)", async () => {
+    // Act
+    await update({
+      id: "project-1",
+      companyId: "company-1",
+      patch: { archived: false },
+    });
+
+    // Assert
+    expect(updateFn).toHaveBeenCalledWith({ archived_at: null });
+  });
+
   it("should throw a 404 AppError when no row matches the id and owning company", async () => {
     // Arrange
     single.mockResolvedValue({
@@ -254,6 +294,107 @@ describe("projects service: update", () => {
     ).rejects.toMatchObject({
       statusCode: 502,
       message: "Could not update the project",
+    });
+  });
+});
+
+describe("projects service: remove", () => {
+  let limit;
+  let logsEq;
+  let logsSelect;
+  let single;
+  let deleteSelect;
+  let eqOwner;
+  let eqId;
+  let deleteFn;
+
+  beforeEach(() => {
+    // meeting_logs guard chain: .select("id").eq("project_id", id).limit(1)
+    limit = vi.fn().mockResolvedValue({ data: [], error: null });
+    logsEq = vi.fn(() => ({ limit }));
+    logsSelect = vi.fn(() => ({ eq: logsEq }));
+
+    // projects delete chain: .delete().eq("id").eq("owner_company_id").select("id").single()
+    single = vi.fn().mockResolvedValue({ data: { id: "project-1" }, error: null });
+    deleteSelect = vi.fn(() => ({ single }));
+    eqOwner = vi.fn(() => ({ select: deleteSelect }));
+    eqId = vi.fn(() => ({ eq: eqOwner }));
+    deleteFn = vi.fn(() => ({ eq: eqId }));
+
+    fromSpy.mockReset();
+    fromSpy.mockImplementation((table) => {
+      if (table === "meeting_logs") return { select: logsSelect };
+      if (table === "projects") return { delete: deleteFn };
+      throw new Error(`Unexpected table: ${table}`);
+    });
+  });
+
+  it("should delete a project with no meeting logs, scoped to the owning company", async () => {
+    // Act
+    const result = await remove({ id: "project-1", companyId: "company-1" });
+
+    // Assert
+    expect(logsSelect).toHaveBeenCalledWith("id");
+    expect(logsEq).toHaveBeenCalledWith("project_id", "project-1");
+    expect(eqId).toHaveBeenCalledWith("id", "project-1");
+    expect(eqOwner).toHaveBeenCalledWith("owner_company_id", "company-1");
+    expect(result).toEqual({ id: "project-1" });
+  });
+
+  it("should throw a 409 AppError when the project has logged safety talks", async () => {
+    // Arrange
+    limit.mockResolvedValue({ data: [{ id: "log-1" }], error: null });
+
+    // Act & Assert
+    await expect(
+      remove({ id: "project-1", companyId: "company-1" }),
+    ).rejects.toMatchObject({
+      statusCode: 409,
+      message:
+        "This project has logged safety talks and can't be deleted. Archive it instead.",
+    });
+    expect(deleteFn).not.toHaveBeenCalled();
+  });
+
+  it("should throw a 502 AppError when the meeting_logs guard query fails", async () => {
+    // Arrange
+    limit.mockResolvedValue({ data: null, error: new Error("db down") });
+
+    // Act & Assert
+    await expect(
+      remove({ id: "project-1", companyId: "company-1" }),
+    ).rejects.toMatchObject({
+      statusCode: 502,
+      message: "Could not delete the project",
+    });
+  });
+
+  it("should throw a 404 AppError when no row matches the id and owning company", async () => {
+    // Arrange
+    single.mockResolvedValue({
+      data: null,
+      error: { code: "PGRST116", message: "no rows" },
+    });
+
+    // Act & Assert
+    await expect(
+      remove({ id: "project-1", companyId: "company-1" }),
+    ).rejects.toMatchObject({ statusCode: 404, message: "Project not found" });
+  });
+
+  it("should throw a 502 AppError on any other delete failure", async () => {
+    // Arrange
+    single.mockResolvedValue({
+      data: null,
+      error: { code: "OTHER", message: "unexpected" },
+    });
+
+    // Act & Assert
+    await expect(
+      remove({ id: "project-1", companyId: "company-1" }),
+    ).rejects.toMatchObject({
+      statusCode: 502,
+      message: "Could not delete the project",
     });
   });
 });

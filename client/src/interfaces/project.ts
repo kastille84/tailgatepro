@@ -12,6 +12,9 @@ export interface Project {
   /** Free-text GC name, used before a GC company is linked (the invite/join flow). */
   gcNameCustom: string | null;
   status: ProjectStatus;
+  /** ISO timestamp when the project was archived, or `null` while it is live.
+   *  Archived projects are hidden from the default list but can be restored. */
+  archivedAt: string | null;
   /** ISO timestamp. */
   createdAt: string;
 }

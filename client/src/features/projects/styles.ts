@@ -61,6 +61,18 @@ export const StyledStatusBadge = styled.span<{ $status: ProjectStatus }>`
       : theme.colors.concrete[400]};
 `;
 
+export const StyledArchivedBadge = styled.span`
+  flex-shrink: 0;
+  padding: 0.4rem 0.9rem;
+  border-radius: ${({ theme }) => theme.borderRadius.sm};
+  font-size: 1.2rem;
+  font-weight: 700;
+  text-transform: capitalize;
+  color: ${({ theme }) => theme.colors.navy[500]};
+  background-color: ${({ theme }) => theme.colors.concrete[400]};
+  border: 0.1rem dashed ${({ theme }) => theme.colors.navy[200]};
+`;
+
 export const StyledEmpty = styled.p`
   margin: 0;
   padding: 3.2rem 1.6rem;
@@ -76,4 +88,24 @@ export const StyledActions = styled.div`
   justify-content: flex-end;
   gap: 1.2rem;
   margin-top: 0.8rem;
+`;
+
+/** "Danger zone" footer inside the edit modal: archive/restore + delete. */
+export const StyledDangerZone = styled.div`
+  margin-top: 2.4rem;
+  padding-top: 1.6rem;
+  border-top: 0.1rem solid ${({ theme }) => theme.colors.navy[100]};
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1.2rem;
+`;
+
+export const StyledDangerZoneTitle = styled.h4`
+  flex-basis: 100%;
+  margin: 0;
+  font-size: 1.3rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: ${({ theme }) => theme.colors.navy[400]};
 `;

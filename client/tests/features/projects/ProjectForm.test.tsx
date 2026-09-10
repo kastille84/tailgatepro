@@ -9,12 +9,20 @@ import type { Project } from "../../../src/interfaces/project";
 
 const mockCreate = vi.fn();
 const mockUpdate = vi.fn();
+const mockArchive = vi.fn();
+const mockDelete = vi.fn();
 
 vi.mock("../../../src/hooks/useCreateProject", () => ({
   useCreateProject: () => ({ createProject: mockCreate, isCreating: false }),
 }));
 vi.mock("../../../src/hooks/useUpdateProject", () => ({
   useUpdateProject: () => ({ updateProject: mockUpdate, isUpdating: false }),
+}));
+vi.mock("../../../src/hooks/useArchiveProject", () => ({
+  useArchiveProject: () => ({ archiveProject: mockArchive, isArchiving: false }),
+}));
+vi.mock("../../../src/hooks/useDeleteProject", () => ({
+  useDeleteProject: () => ({ deleteProject: mockDelete, isDeleting: false }),
 }));
 
 const renderForm = (
@@ -33,6 +41,7 @@ const editProject: Project = {
   gcCompanyId: null,
   gcNameCustom: "Old GC",
   status: "active",
+  archivedAt: null,
   createdAt: "x",
 };
 
@@ -41,6 +50,8 @@ describe("ProjectForm", () => {
     vi.clearAllMocks();
     mockCreate.mockResolvedValue(undefined);
     mockUpdate.mockResolvedValue(undefined);
+    mockArchive.mockResolvedValue(undefined);
+    mockDelete.mockResolvedValue(undefined);
   });
 
   it("renders nothing when closed", () => {
@@ -122,5 +133,55 @@ describe("ProjectForm", () => {
         },
       }),
     );
+  });
+
+  it("has no danger zone in create mode", () => {
+    renderForm();
+    expect(
+      screen.queryByRole("button", { name: /archive project/i }),
+    ).toBeNull();
+    expect(screen.queryByRole("button", { name: /delete project/i })).toBeNull();
+  });
+
+  it("archives the project and closes when Archive is clicked in edit mode", async () => {
+    const onClose = vi.fn();
+    renderForm({ project: editProject, onClose });
+
+    fireEvent.click(screen.getByRole("button", { name: /archive project/i }));
+
+    await waitFor(() =>
+      expect(mockArchive).toHaveBeenCalledWith({ id: "p1", archived: true }),
+    );
+    await waitFor(() => expect(onClose).toHaveBeenCalled());
+  });
+
+  it("offers Restore instead of Archive for an already-archived project", async () => {
+    renderForm({
+      project: { ...editProject, archivedAt: "2026-09-09T00:00:00.000Z" },
+    });
+
+    fireEvent.click(screen.getByRole("button", { name: /restore project/i }));
+
+    await waitFor(() =>
+      expect(mockArchive).toHaveBeenCalledWith({ id: "p1", archived: false }),
+    );
+  });
+
+  it("deletes only after the confirm dialog is confirmed", async () => {
+    const onClose = vi.fn();
+    renderForm({ project: editProject, onClose });
+
+    // Opening the danger-zone Delete button does not delete on its own.
+    fireEvent.click(screen.getByRole("button", { name: /delete project/i }));
+    expect(mockDelete).not.toHaveBeenCalled();
+
+    // The confirm dialog's own confirm button does.
+    const confirmButtons = screen.getAllByRole("button", {
+      name: /delete project/i,
+    });
+    fireEvent.click(confirmButtons[confirmButtons.length - 1]);
+
+    await waitFor(() => expect(mockDelete).toHaveBeenCalledWith("p1"));
+    await waitFor(() => expect(onClose).toHaveBeenCalled());
   });
 });

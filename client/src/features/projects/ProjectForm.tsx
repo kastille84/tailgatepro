@@ -1,15 +1,23 @@
+import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 
 import { Button } from "../../ui_comps/button";
+import { ConfirmDialog } from "../../ui_comps/confirm-dialog";
 import { Form, FormField, TextInput } from "../../ui_comps/form";
 import { Modal } from "../../ui_comps/modal";
 import { Select } from "../../ui_comps/select";
 import { useCreateProject } from "../../hooks/useCreateProject";
 import { useUpdateProject } from "../../hooks/useUpdateProject";
+import { useArchiveProject } from "../../hooks/useArchiveProject";
+import { useDeleteProject } from "../../hooks/useDeleteProject";
 import type { Project } from "../../interfaces/project";
-import { StyledActions } from "./styles";
+import {
+  StyledActions,
+  StyledDangerZone,
+  StyledDangerZoneTitle,
+} from "./styles";
 
 // Mirrors the express-validator chains in server/routes/projects.js. Only the
 // free-text GC name is offered for now — linking a registered GC company waits
@@ -40,8 +48,35 @@ interface ProjectFormProps {
 
 export const ProjectForm = ({ isOpen, onClose, project }: ProjectFormProps) => {
   const isEdit = Boolean(project);
+  const isArchived = Boolean(project?.archivedAt);
   const { createProject, isCreating } = useCreateProject();
   const { updateProject, isUpdating } = useUpdateProject();
+  const { archiveProject, isArchiving } = useArchiveProject();
+  const { deleteProject, isDeleting } = useDeleteProject();
+
+  const [isConfirmingDelete, setIsConfirmingDelete] = useState(false);
+
+  const handleArchiveToggle = async () => {
+    if (!project) return;
+    try {
+      await archiveProject({ id: project.id, archived: !isArchived });
+      onClose();
+    } catch {
+      // useArchiveProject surfaces the failure as a toast.
+    }
+  };
+
+  const handleDelete = async () => {
+    if (!project) return;
+    try {
+      await deleteProject(project.id);
+      setIsConfirmingDelete(false);
+      onClose();
+    } catch {
+      // useDeleteProject surfaces the failure (incl. the 409 "archive instead").
+      setIsConfirmingDelete(false);
+    }
+  };
 
   const {
     register,
@@ -143,6 +178,43 @@ export const ProjectForm = ({ isOpen, onClose, project }: ProjectFormProps) => {
           </Button>
         </StyledActions>
       </Form>
+
+      {isEdit && (
+        <StyledDangerZone>
+          <StyledDangerZoneTitle>Danger zone</StyledDangerZoneTitle>
+          <Button
+            type="button"
+            variant="outline"
+            size="md"
+            loading={isArchiving}
+            onClick={handleArchiveToggle}
+          >
+            {isArchived ? "Restore project" : "Archive project"}
+          </Button>
+          <Button
+            type="button"
+            variant="danger"
+            size="md"
+            onClick={() => setIsConfirmingDelete(true)}
+          >
+            Delete project
+          </Button>
+        </StyledDangerZone>
+      )}
+
+      <ConfirmDialog
+        isOpen={isConfirmingDelete}
+        title="Delete project"
+        confirmLabel="Delete project"
+        confirmVariant="danger"
+        isBusy={isDeleting}
+        onConfirm={handleDelete}
+        onClose={() => setIsConfirmingDelete(false)}
+      >
+        Delete <strong>{project?.name}</strong>? This can't be undone. If the
+        project has logged safety talks, archive it instead — those OSHA records
+        must be kept.
+      </ConfirmDialog>
     </Modal>
   );
 };

@@ -15,6 +15,7 @@ const projects: Project[] = [
     gcCompanyId: null,
     gcNameCustom: "Acme GC",
     status: "active",
+    archivedAt: null,
     createdAt: "x",
   },
   {
@@ -24,6 +25,7 @@ const projects: Project[] = [
     gcCompanyId: null,
     gcNameCustom: "Skyline GC",
     status: "completed",
+    archivedAt: null,
     createdAt: "x",
   },
 ];
@@ -60,5 +62,13 @@ describe("ProjectList", () => {
       screen.getByRole("button", { name: /edit downtown highrise/i }),
     );
     expect(onEdit).toHaveBeenCalledWith(projects[0]);
+  });
+
+  it("shows an Archived badge instead of the status badge for an archived project", () => {
+    renderList({
+      projects: [{ ...projects[0], archivedAt: "2026-09-09T00:00:00.000Z" }],
+    });
+    expect(screen.getByText(/archived/i)).toBeDefined();
+    expect(screen.queryByText("active")).toBeNull();
   });
 });

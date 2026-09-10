@@ -20,6 +20,7 @@ const project = {
   gcCompanyId: null,
   gcNameCustom: "Acme GC",
   status: "active" as const,
+  archivedAt: null,
   createdAt: "2026-09-09T00:00:00.000Z",
 };
 
@@ -38,15 +39,28 @@ describe("useProjects", () => {
     <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
   );
 
-  it("fetches projects with the session token and exposes them", async () => {
+  it("fetches live projects with the session token and exposes them", async () => {
     vi.mocked(apiProjects.listProjects).mockResolvedValue([project]);
 
     const { result } = renderHook(() => useProjects(), { wrapper });
 
     await waitFor(() => expect(result.current.isLoading).toBe(false));
-    expect(apiProjects.listProjects).toHaveBeenCalledWith("token-123");
+    expect(apiProjects.listProjects).toHaveBeenCalledWith("token-123", {
+      includeArchived: false,
+    });
     expect(result.current.projects).toEqual([project]);
     expect(result.current.isError).toBe(false);
+  });
+
+  it("passes includeArchived through when asked to show archived projects", async () => {
+    vi.mocked(apiProjects.listProjects).mockResolvedValue([project]);
+
+    const { result } = renderHook(() => useProjects(true), { wrapper });
+
+    await waitFor(() => expect(result.current.isLoading).toBe(false));
+    expect(apiProjects.listProjects).toHaveBeenCalledWith("token-123", {
+      includeArchived: true,
+    });
   });
 
   it("defaults projects to an empty array and reports query errors", async () => {

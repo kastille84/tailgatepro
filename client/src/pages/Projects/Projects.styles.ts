@@ -69,7 +69,9 @@ export const StyledContainer = styled.div`
 
 export const StyledToolbar = styled.div`
   display: flex;
-  justify-content: flex-end;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1.6rem;
   margin-bottom: 2.4rem;
 `;
 

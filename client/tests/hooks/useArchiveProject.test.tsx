@@ -4,7 +4,7 @@ import { renderHook, waitFor } from "@testing-library/react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import toast from "react-hot-toast";
 
-import { useUpdateProject } from "../../src/hooks/useUpdateProject";
+import { useArchiveProject } from "../../src/hooks/useArchiveProject";
 import * as apiProjects from "../../src/services/apiProjects";
 
 vi.mock("react-hot-toast");
@@ -21,12 +21,12 @@ const project = {
   name: "Site",
   gcCompanyId: null,
   gcNameCustom: "GC",
-  status: "completed" as const,
+  status: "active" as const,
   archivedAt: null,
   createdAt: "2026-09-09",
 };
 
-describe("useUpdateProject", () => {
+describe("useArchiveProject", () => {
   let queryClient: QueryClient;
 
   beforeEach(() => {
@@ -44,26 +44,27 @@ describe("useUpdateProject", () => {
     <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
   );
 
-  it("initializes with isUpdating false", () => {
-    const { result } = renderHook(() => useUpdateProject(), { wrapper });
-    expect(result.current.isUpdating).toBe(false);
-  });
-
-  it("calls updateProject with the token, id and patch, then invalidates the projects query", async () => {
+  it("patches archived:true, toasts 'archived', and invalidates the projects query", async () => {
     vi.mocked(apiProjects.updateProject).mockResolvedValue(project);
     const invalidateSpy = vi.spyOn(queryClient, "invalidateQueries");
 
-    const { result } = renderHook(() => useUpdateProject(), { wrapper });
-
-    await result.current.updateProject({
-      id: "p1",
-      patch: { status: "completed" },
-    });
+    const { result } = renderHook(() => useArchiveProject(), { wrapper });
+    await result.current.archiveProject({ id: "p1", archived: true });
 
     expect(apiProjects.updateProject).toHaveBeenCalledWith("token-123", "p1", {
-      status: "completed",
+      archived: true,
     });
+    expect(toast.success).toHaveBeenCalledWith("Project archived");
     expect(invalidateSpy).toHaveBeenCalledWith({ queryKey: ["projects"] });
+  });
+
+  it("toasts 'restored' when archived is false", async () => {
+    vi.mocked(apiProjects.updateProject).mockResolvedValue(project);
+
+    const { result } = renderHook(() => useArchiveProject(), { wrapper });
+    await result.current.archiveProject({ id: "p1", archived: false });
+
+    expect(toast.success).toHaveBeenCalledWith("Project restored");
   });
 
   it("toasts the error and rejects when the mutation fails", async () => {
@@ -71,12 +72,11 @@ describe("useUpdateProject", () => {
       new Error("Project not found"),
     );
 
-    const { result } = renderHook(() => useUpdateProject(), { wrapper });
+    const { result } = renderHook(() => useArchiveProject(), { wrapper });
 
     await expect(
-      result.current.updateProject({ id: "missing", patch: { name: "x" } }),
+      result.current.archiveProject({ id: "missing", archived: true }),
     ).rejects.toThrow("Project not found");
-
     await waitFor(() =>
       expect(toast.error).toHaveBeenCalledWith("Project not found"),
     );

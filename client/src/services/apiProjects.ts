@@ -11,12 +11,14 @@ export interface CreateProjectInput {
 }
 
 /** Fields that can be patched on an existing project. Only the keys present are
- *  sent, and the server only touches the columns it receives. */
+ *  sent, and the server only touches the columns it receives. `archived: true`
+ *  archives the project; `false` restores it. */
 export interface UpdateProjectPatch {
   name?: string;
   status?: ProjectStatus;
   gcCompanyId?: string | null;
   gcNameCustom?: string | null;
+  archived?: boolean;
 }
 
 const GENERIC_ERROR = "Something went wrong. Please try again.";
@@ -26,11 +28,14 @@ const authHeaders = (accessToken: string) => ({
   Authorization: `Bearer ${accessToken}`,
 });
 
-/** GET /api/projects — every project the caller's company owns or is the GC on. */
+/** GET /api/projects — every project the caller's company owns or is the GC on.
+ *  Archived projects are omitted unless `includeArchived` is set. */
 export const listProjects = async (
   accessToken: string,
+  { includeArchived = false }: { includeArchived?: boolean } = {},
 ): Promise<Project[]> => {
-  const res = await fetch("/api/projects", {
+  const query = includeArchived ? "?includeArchived=true" : "";
+  const res = await fetch(`/api/projects${query}`, {
     method: "GET",
     headers: authHeaders(accessToken),
   });
@@ -69,7 +74,7 @@ export const createProject = async (
 };
 
 /** PATCH /api/projects/:id — patch name / status / GC fields on a project the
- *  caller's company owns. */
+ *  caller's company owns. `patch.archived` archives (`true`) or restores (`false`). */
 export const updateProject = async (
   accessToken: string,
   id: string,
@@ -88,4 +93,25 @@ export const updateProject = async (
   }
 
   return body.data as Project;
+};
+
+/** DELETE /api/projects/:id — hard-delete a project the caller's company owns.
+ *  The server rejects this with a 409 (surfaced as the thrown message) once the
+ *  project has logged safety talks; archive it instead. */
+export const deleteProject = async (
+  accessToken: string,
+  id: string,
+): Promise<{ id: string }> => {
+  const res = await fetch(`/api/projects/${id}`, {
+    method: "DELETE",
+    headers: authHeaders(accessToken),
+  });
+
+  const body = await res.json().catch(() => null);
+
+  if (!res.ok || !body?.success) {
+    throw new Error(body?.error ?? GENERIC_ERROR);
+  }
+
+  return body.data as { id: string };
 };

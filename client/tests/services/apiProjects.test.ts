@@ -2,6 +2,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import {
   createProject,
+  deleteProject,
   listProjects,
   updateProject,
 } from "../../src/services/apiProjects";
@@ -16,6 +17,7 @@ const project = {
   gcCompanyId: null,
   gcNameCustom: "Acme GC",
   status: "active",
+  archivedAt: null,
   createdAt: "2026-09-09T00:00:00.000Z",
 };
 
@@ -44,6 +46,22 @@ describe("apiProjects", () => {
           Authorization: "Bearer token-123",
         },
       });
+    });
+
+    it("appends ?includeArchived=true when asked to include archived projects", async () => {
+      const fetchMock = vi.fn().mockResolvedValue({
+        ok: true,
+        status: 200,
+        json: async () => ({ success: true, data: [project] }),
+      });
+      vi.stubGlobal("fetch", fetchMock);
+
+      await listProjects("token-123", { includeArchived: true });
+
+      expect(fetchMock).toHaveBeenCalledWith(
+        "/api/projects?includeArchived=true",
+        expect.objectContaining({ method: "GET" }),
+      );
     });
 
     it("rejects with the backend error message on an error response", async () => {
@@ -203,6 +221,68 @@ describe("apiProjects", () => {
       await expect(
         updateProject("token-123", "project-1", { name: "x" }),
       ).rejects.toThrow(GENERIC);
+    });
+
+    it("sends an archived flag in the patch body", async () => {
+      const fetchMock = vi.fn().mockResolvedValue({
+        ok: true,
+        status: 200,
+        json: async () => ({
+          success: true,
+          data: { ...project, archivedAt: "2026-09-09T12:00:00.000Z" },
+        }),
+      });
+      vi.stubGlobal("fetch", fetchMock);
+
+      await updateProject("token-123", "project-1", { archived: true });
+
+      expect(fetchMock).toHaveBeenCalledWith(
+        "/api/projects/project-1",
+        expect.objectContaining({
+          method: "PATCH",
+          body: JSON.stringify({ archived: true }),
+        }),
+      );
+    });
+  });
+
+  describe("deleteProject", () => {
+    it("DELETEs /api/projects/:id with the bearer token and returns the id", async () => {
+      const fetchMock = vi.fn().mockResolvedValue({
+        ok: true,
+        status: 200,
+        json: async () => ({ success: true, data: { id: "project-1" } }),
+      });
+      vi.stubGlobal("fetch", fetchMock);
+
+      await expect(deleteProject("token-123", "project-1")).resolves.toEqual({
+        id: "project-1",
+      });
+      expect(fetchMock).toHaveBeenCalledWith("/api/projects/project-1", {
+        method: "DELETE",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: "Bearer token-123",
+        },
+      });
+    });
+
+    it("rejects with the backend message on the 409 archive-instead guard", async () => {
+      vi.stubGlobal(
+        "fetch",
+        vi.fn().mockResolvedValue({
+          ok: false,
+          status: 409,
+          json: async () => ({
+            success: false,
+            error:
+              "This project has logged safety talks and can't be deleted. Archive it instead.",
+          }),
+        }),
+      );
+      await expect(deleteProject("token-123", "project-1")).rejects.toThrow(
+        "Archive it instead.",
+      );
     });
   });
 });

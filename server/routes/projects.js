@@ -8,6 +8,7 @@ const {
   listProjects,
   createProject,
   updateProject,
+  deleteProject,
 } = require("../controllers/projects");
 
 const router = express.Router();
@@ -54,7 +55,7 @@ router.post(
 );
 
 // PATCH /api/projects/:id — patch name / status / GC fields on a project the
-// caller's company owns.
+// caller's company owns. `archived: true|false` archives / restores it.
 router.patch(
   "/:id",
   requireAuth,
@@ -81,9 +82,25 @@ router.patch(
       .trim()
       .isLength({ max: 120 })
       .withMessage("GC name is too long"),
+    body("archived")
+      .optional()
+      .isBoolean()
+      .withMessage("Invalid archived flag")
+      .toBoolean(),
   ],
   validate,
   updateProject,
+);
+
+// DELETE /api/projects/:id — hard-delete a project the caller's company owns.
+// Rejected with 409 once the project has logged safety talks (archive instead).
+router.delete(
+  "/:id",
+  requireAuth,
+  loadUserContext,
+  [param("id").isUUID().withMessage("A valid project id is required")],
+  validate,
+  deleteProject,
 );
 
 module.exports = router;

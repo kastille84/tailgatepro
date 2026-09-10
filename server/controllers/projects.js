@@ -5,7 +5,10 @@ const projectsService = require("../services/projects");
 
 exports.listProjects = async (req, res, next) => {
   try {
-    const data = await projectsService.listForCompany(req.user.companyId);
+    const includeArchived = req.query.includeArchived === "true";
+    const data = await projectsService.listForCompany(req.user.companyId, {
+      includeArchived,
+    });
     return res.status(200).json({ success: true, data });
   } catch (error) {
     return next(error);
@@ -31,11 +34,25 @@ exports.createProject = async (req, res, next) => {
 
 exports.updateProject = async (req, res, next) => {
   try {
-    const { name, status, gcCompanyId, gcNameCustom } = req.body;
+    const { name, status, gcCompanyId, gcNameCustom, archived } = req.body;
     const data = await projectsService.update({
       id: req.params.id,
       companyId: req.user.companyId,
-      patch: { name, status, gcCompanyId, gcNameCustom },
+      patch: { name, status, gcCompanyId, gcNameCustom, archived },
+    });
+    return res.status(200).json({ success: true, data });
+  } catch (error) {
+    return next(error);
+  }
+};
+
+// TODO(roles): once `admin` / `safety_manager` are real, restrict delete (and
+// archive/restore) to those roles rather than any member of the owning company.
+exports.deleteProject = async (req, res, next) => {
+  try {
+    const data = await projectsService.remove({
+      id: req.params.id,
+      companyId: req.user.companyId,
     });
     return res.status(200).json({ success: true, data });
   } catch (error) {

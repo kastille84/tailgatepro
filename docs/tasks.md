@@ -77,11 +77,37 @@ Full rationale and phase feasibility notes live in the plan at
 - [x] 1c. Dashboard converted to a hub: entry-point card grid (Projects active; Toolbox Talks /
       Meeting Logs / GC Compliance "coming soon"); test updated
 - [x] Confirm client coverage still ≥ 90% — `npx vitest run --coverage`: 261 tests pass, ~99.96%
-- [ ] Verify: create/edit a project end-to-end; row lands in Supabase with client UUID (needs SQL applied)
+- [x] Verify: create/edit a project end-to-end; row lands in Supabase with client UUID (needs SQL applied)
 - [ ] `npm run build` clean — BLOCKED by a pre-existing `tsc` failure in
       `client/src/ui_comps/form/Input.tsx` (`theme.colors.concrete[300]` doesn't exist;
       `@types/react` 19 `cloneElement`/`ReactElement` unknown-typing). Unrelated to Phase 1;
       needs its own fix. `npm run lint` is clean for the Phase 1 files.
+
+## Phase 1d — Project delete / archive · status: code complete; end-to-end smoke pending (needs `archived_at` column applied)
+
+Decisions: guarded hard delete **+** reversible archive; any member of the
+**owning** company (TODO: tighten to `admin`/`safety_manager` once roles are
+real); archive from any status, restorable; archived projects hidden from the
+default list.
+
+- [x] Schema: `projects.archived_at TIMESTAMPTZ` (nullable). `Supabase_SQL.sql`
+      (+ `ALTER TABLE … ADD COLUMN IF NOT EXISTS` note), `Supabase_Schema.md`
+- [x] Server: `projects` service `remove` (409 when `meeting_logs` exist, else
+      hard delete scoped to owner) + `update` `archived` alias + `listForCompany`
+      `includeArchived`; controller `deleteProject` + query/body passthrough;
+      `DELETE /api/projects/:id` route + `body("archived")` on PATCH (+ tests)
+- [x] Client: `Project.archivedAt`; `apiProjects` `deleteProject` +
+      `includeArchived` + `archived` patch key; `useDeleteProject` /
+      `useArchiveProject` hooks; `useProjects(includeArchived)`; `Projects` page
+      "Show archived" toggle; `ProjectList` archived badge; `ProjectForm` danger
+      zone (archive/restore + delete) (+ tests)
+- [x] `ui_comps/confirm-dialog/` — generic confirm-before-acting dialog (built on
+      `Modal` + `Button`), used by the `ProjectForm` delete flow (+ test)
+- [ ] Pre-req: apply `archived_at` to Supabase before hitting the endpoints
+- [ ] Verify end-to-end: create → delete a talk-less project; archive → toggle
+      "Show archived" → restore; other-company bearer token → 404
+- [ ] Phase 3 offline: route archive (PATCH) and delete (DELETE) through the
+      IndexedDB replay queue alongside create/edit
 
 ## Phase 2 — Content Library (toolbox_talks) · epic, expand when reached
 

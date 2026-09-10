@@ -3,6 +3,7 @@ import { useState } from "react";
 import { useAuth } from "../../context/auth";
 import { useProjects } from "../../hooks/useProjects";
 import { Button } from "../../ui_comps/button";
+import { Checkbox } from "../../ui_comps/checkbox";
 import { Footer } from "../../ui_comps/footer";
 import { Spinner } from "../../ui_comps/spinner";
 import { ProjectForm, ProjectList } from "../../features/projects";
@@ -26,7 +27,9 @@ import {
  *  Re-checks the session defensively even though it sits behind `RequireAuth`. */
 export const Projects = () => {
   const { user, loading } = useAuth();
-  const { projects, isLoading, isError } = useProjects();
+
+  const [showArchived, setShowArchived] = useState(false);
+  const { projects, isLoading, isError } = useProjects(showArchived);
 
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [editing, setEditing] = useState<Project | undefined>(undefined);
@@ -79,6 +82,11 @@ export const Projects = () => {
       <StyledSection>
         <StyledContainer>
           <StyledToolbar>
+            <Checkbox
+              label="Show archived"
+              checked={showArchived}
+              onChange={(event) => setShowArchived(event.target.checked)}
+            />
             <Button variant="primary" size="md" onClick={openCreate}>
               New project
             </Button>

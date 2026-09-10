@@ -13,7 +13,7 @@ vi.mock("../../../src/context/auth", () => ({
   useAuth: () => mockUseAuth(),
 }));
 vi.mock("../../../src/hooks/useProjects", () => ({
-  useProjects: () => mockUseProjects(),
+  useProjects: (...args: unknown[]) => mockUseProjects(...args),
 }));
 
 // The feature components have their own tests; stub them so the page test
@@ -135,5 +135,15 @@ describe("Projects page", () => {
 
     fireEvent.click(screen.getByRole("button", { name: /stub-edit/i }));
     expect(screen.getByRole("dialog").textContent).toContain("edit p1");
+  });
+
+  it("asks useProjects to include archived projects when the toggle is checked", () => {
+    renderPage();
+
+    expect(mockUseProjects).toHaveBeenLastCalledWith(false);
+
+    fireEvent.click(screen.getByLabelText(/show archived/i));
+
+    expect(mockUseProjects).toHaveBeenLastCalledWith(true);
   });
 });

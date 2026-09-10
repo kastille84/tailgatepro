@@ -1,6 +1,7 @@
 import { Button } from "../../ui_comps/button";
 import type { Project } from "../../interfaces/project";
 import {
+  StyledArchivedBadge,
   StyledCard,
   StyledCardMain,
   StyledEmpty,
@@ -37,9 +38,13 @@ export const ProjectList = ({ projects, onEdit }: ProjectListProps) => {
               GC: {project.gcNameCustom ?? project.gcCompanyId ?? "—"}
             </StyledMeta>
           </StyledCardMain>
-          <StyledStatusBadge $status={project.status}>
-            {project.status}
-          </StyledStatusBadge>
+          {project.archivedAt ? (
+            <StyledArchivedBadge>Archived</StyledArchivedBadge>
+          ) : (
+            <StyledStatusBadge $status={project.status}>
+              {project.status}
+            </StyledStatusBadge>
+          )}
           <Button
             variant="outline"
             size="sm"
