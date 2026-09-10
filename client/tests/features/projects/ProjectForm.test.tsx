@@ -167,6 +167,19 @@ describe("ProjectForm", () => {
     );
   });
 
+  it("keeps the modal open when archiving fails", async () => {
+    const onClose = vi.fn();
+    mockArchive.mockRejectedValue(new Error("archive failed"));
+    renderForm({ project: editProject, onClose });
+
+    fireEvent.click(screen.getByRole("button", { name: /archive project/i }));
+
+    await waitFor(() =>
+      expect(mockArchive).toHaveBeenCalledWith({ id: "p1", archived: true }),
+    );
+    expect(onClose).not.toHaveBeenCalled();
+  });
+
   it("deletes only after the confirm dialog is confirmed", async () => {
     const onClose = vi.fn();
     renderForm({ project: editProject, onClose });
@@ -183,5 +196,20 @@ describe("ProjectForm", () => {
 
     await waitFor(() => expect(mockDelete).toHaveBeenCalledWith("p1"));
     await waitFor(() => expect(onClose).toHaveBeenCalled());
+  });
+
+  it("keeps the form open when delete fails after confirmation", async () => {
+    const onClose = vi.fn();
+    mockDelete.mockRejectedValue(new Error("delete failed"));
+    renderForm({ project: editProject, onClose });
+
+    fireEvent.click(screen.getByRole("button", { name: /delete project/i }));
+    const confirmButtons = screen.getAllByRole("button", {
+      name: /delete project/i,
+    });
+    fireEvent.click(confirmButtons[confirmButtons.length - 1]);
+
+    await waitFor(() => expect(mockDelete).toHaveBeenCalledWith("p1"));
+    expect(onClose).not.toHaveBeenCalled();
   });
 });

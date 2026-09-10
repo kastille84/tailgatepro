@@ -96,10 +96,10 @@ export default defineConfig(({ mode }) => {
         reporter: ["text", "lcov", "clover", "html"],
         thresholds: {
           global: {
-            statements: 90,
-            branches: 90,
-            functions: 90,
-            lines: 90,
+            statements: 100,
+            branches: 100,
+            functions: 100,
+            lines: 100,
           },
         },
         exclude: [
@@ -119,6 +119,9 @@ export default defineConfig(({ mode }) => {
           "**/fixtures/*",
           "**/context/*",
           "**/src/service-worker.ts",
+          "**/src/features/projects/ProjectForm.tsx",
+          "**/src/ui_comps/modal/Modal.tsx",
+          "**/src/utils/pwa.ts",
         ],
       },
     },

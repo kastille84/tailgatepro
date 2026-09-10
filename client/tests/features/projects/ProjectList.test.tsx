@@ -71,4 +71,12 @@ describe("ProjectList", () => {
     expect(screen.getByText(/archived/i)).toBeDefined();
     expect(screen.queryByText("active")).toBeNull();
   });
+
+  it("renders a dash when there are no GC details to show", () => {
+    renderList({
+      projects: [{ ...projects[0], gcCompanyId: null, gcNameCustom: null }],
+    });
+
+    expect(screen.getByText("GC: —")).toBeDefined();
+  });
 });

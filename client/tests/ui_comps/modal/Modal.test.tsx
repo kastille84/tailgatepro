@@ -81,6 +81,39 @@ describe("Modal", () => {
     expect(screen.queryByRole("button", { name: /close dialog/i })).toBeNull();
   });
 
+  it("ignores non-Tab key presses while the modal is open", () => {
+    const onClose = vi.fn();
+    renderWithTheme(
+      <Modal isOpen onClose={onClose} title="New project">
+        <button type="button">Action</button>
+      </Modal>,
+    );
+
+    fireEvent.keyDown(screen.getByTestId("modal-overlay"), { key: "a" });
+
+    expect(onClose).not.toHaveBeenCalled();
+  });
+
+  it("wraps focus to the last element when Shift+Tab starts from the dialog panel", () => {
+    renderWithTheme(
+      <Modal isOpen onClose={() => {}} title="New project">
+        <button type="button">First inside</button>
+        <button type="button">Last inside</button>
+      </Modal>,
+    );
+
+    const dialog = screen.getByRole("dialog");
+    const lastButton = screen.getByRole("button", { name: "Last inside" });
+
+    dialog.focus();
+    fireEvent.keyDown(screen.getByTestId("modal-overlay"), {
+      key: "Tab",
+      shiftKey: true,
+    });
+
+    expect(document.activeElement).toBe(lastButton);
+  });
+
   it("moves focus into the dialog on open and restores it to the trigger on close", () => {
     const Harness = () => {
       const [open, setOpen] = useState(false);

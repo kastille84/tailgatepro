@@ -69,6 +69,11 @@ describe("detectPlatform", () => {
     expect(detectPlatform(UA.macSafari, 0)).toBe("macos-safari");
   });
 
+  it("uses the default touch-point fallback when no maxTouchPoints is provided", () => {
+    expect(detectPlatform(UA.ipadOsSafari, 0)).toBe("macos-safari");
+    expect(detectPlatform(UA.macSafari)).toBe("macos-safari");
+  });
+
   it("returns 'unknown' for an empty or unrecognised UA", () => {
     expect(detectPlatform("", 0)).toBe("unknown");
     expect(detectPlatform("SomeCrawler/1.0", 0)).toBe("unknown");

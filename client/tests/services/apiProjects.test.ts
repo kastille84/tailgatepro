@@ -284,5 +284,20 @@ describe("apiProjects", () => {
         "Archive it instead.",
       );
     });
+
+    it("rejects with the generic message when the response body has no error field", async () => {
+      vi.stubGlobal(
+        "fetch",
+        vi.fn().mockResolvedValue({
+          ok: false,
+          status: 500,
+          json: async () => ({ success: false }),
+        }),
+      );
+
+      await expect(deleteProject("token-123", "project-1")).rejects.toThrow(
+        GENERIC,
+      );
+    });
   });
 });
