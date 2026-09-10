@@ -19,7 +19,10 @@ vi.mock("../../../src/hooks/useUpdateProject", () => ({
   useUpdateProject: () => ({ updateProject: mockUpdate, isUpdating: false }),
 }));
 vi.mock("../../../src/hooks/useArchiveProject", () => ({
-  useArchiveProject: () => ({ archiveProject: mockArchive, isArchiving: false }),
+  useArchiveProject: () => ({
+    archiveProject: mockArchive,
+    isArchiving: false,
+  }),
 }));
 vi.mock("../../../src/hooks/useDeleteProject", () => ({
   useDeleteProject: () => ({ deleteProject: mockDelete, isDeleting: false }),
@@ -140,7 +143,9 @@ describe("ProjectForm", () => {
     expect(
       screen.queryByRole("button", { name: /archive project/i }),
     ).toBeNull();
-    expect(screen.queryByRole("button", { name: /delete project/i })).toBeNull();
+    expect(
+      screen.queryByRole("button", { name: /delete project/i }),
+    ).toBeNull();
   });
 
   it("archives the project and closes when Archive is clicked in edit mode", async () => {

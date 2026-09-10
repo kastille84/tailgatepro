@@ -122,7 +122,11 @@ describe("Modal", () => {
           <button type="button" onClick={() => setOpen(true)}>
             Open
           </button>
-          <Modal isOpen={open} onClose={() => setOpen(false)} title="New project">
+          <Modal
+            isOpen={open}
+            onClose={() => setOpen(false)}
+            title="New project"
+          >
             <button type="button">Inside</button>
           </Modal>
         </>
