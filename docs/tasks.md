@@ -159,13 +159,13 @@ then favorites + custom talks.
       `uuidv5(slug)` id, `.upsert(onConflict: "slug")`) + `talkRow.test.js`
       (12 tests). Root `seed:talks` script; `vitest.config.js` include widened
       to `scripts/**/*.test.js`
-- [ ] Pre-req: apply the `toolbox_talks` column/index/RLS changes to Supabase
+- [x] Pre-req: apply the `toolbox_talks` column/index/RLS changes to Supabase
       (now includes `attribution JSONB` — see the `ADD COLUMN IF NOT EXISTS`
       block in `Supabase_SQL.sql`)
-- [ ] Verify: `npm run seed:talks` → 34 rows land with `slug` / `structured` /
+- [x] Verify: `npm run seed:talks` → 34 rows land with `slug` / `structured` /
       `trade_tags` / `attribution` populated; re-run is a no-op (count stable,
       ids unchanged)
-- [ ] Decide: commit `data/raw/**` (provenance) or `.gitignore` it (size)
+- [x] Decide: commit `data/raw/**` (provenance) or `.gitignore` it (size)
 
 ### 2b — Server read API
 
