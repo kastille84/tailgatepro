@@ -1,0 +1,49 @@
+{
+  "id": "electrical-safety-power",
+  "title": "Electrical Power Safety: De-Energize, Lock Out, Tag",
+  "primary_trade": "Electrical",
+  "trade_tags": [
+    "Electrical"
+  ],
+  "osha_standards": [
+    "29 CFR 1926.416",
+    "29 CFR 1926.417"
+  ],
+  "estimated_minutes": 5,
+  "summary": "Contact with live circuits causes shock, burns, falls, and electrocution, even for experienced electricians. This talk covers verifying de-energization, lockout devices, and tags.",
+  "talking_points": [
+    "Make sure circuits are de-energized before any work on or near them. Test with an AC voltage detector to confirm.",
+    "Use lockout devices so the circuit cannot be turned back on.",
+    "Put a tag on the locked circuit to warn others not to energize it.",
+    "Never assume a labeled breaker is off. Others, including the utility, may energize a circuit without your knowledge.",
+    "Treat equipment marked high-voltage as dangerous even when disconnected. It can store lethal energy."
+  ],
+  "site_hazards_to_check": [
+    "Circuits worked on without a voltage test to confirm they are dead",
+    "Breakers or disconnects labeled but not locked out",
+    "Missing warning tags on locked-out equipment",
+    "High-voltage equipment assumed safe because it is unplugged",
+    "Other crews or utility workers able to energize the same circuit"
+  ],
+  "discussion_questions": [
+    "How do you confirm a circuit is really dead before you touch it?",
+    "Who else could energize this circuit while we are working on it?",
+    "Why can high-voltage equipment still hurt you after it is disconnected?"
+  ],
+  "attribution": {
+    "source": "NIOSH",
+    "publisher": "National Institute for Occupational Safety and Health (NIOSH)",
+    "copyright": "U.S. Government work — public domain.",
+    "license": "public-domain",
+    "source_url": "https://www.cdc.gov/niosh/docs/2022-141/2022-141.pdf",
+    "notice": "Adapted from a NIOSH Toolbox Talk (co-developed with CPWR). Public-domain source; not an endorsement by NIOSH or CPWR."
+  },
+  "audit": {
+    "status": "approved",
+    "audited_at": "2026-09-10T18:21:19Z",
+    "osha_accuracy_verified": true,
+    "flags": [
+      "OSHA mapping verified accurate: 1926.416 (general requirements - de-energize/protect employees) and 1926.417 (lockout and tagging of circuits). Verify-dead-with-a-tester, lockout devices, warning tags, do not trust labels, treat disconnected high-voltage equipment as still able to store lethal energy - all consistent with the standard. No tolerance issues."
+    ]
+  }
+}

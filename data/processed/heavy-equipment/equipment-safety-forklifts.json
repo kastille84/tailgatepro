@@ -1,0 +1,51 @@
+{
+  "id": "equipment-safety-forklifts",
+  "title": "Forklift Safety on Construction Sites",
+  "primary_trade": "Heavy Equipment",
+  "trade_tags": [
+    "Heavy Equipment",
+    "General Construction"
+  ],
+  "osha_standards": [
+    "29 CFR 1926.602",
+    "29 CFR 1910.178"
+  ],
+  "estimated_minutes": 5,
+  "summary": "Forklifts cause many injuries and deaths each year through tip-overs, falling loads, and struck-by incidents. This talk covers training, daily inspection, travel, and load handling.",
+  "talking_points": [
+    "Only trained and certified workers operate a forklift.",
+    "Inspect the forklift every day before use. Report any damage or problems during the shift to your supervisor.",
+    "Wear the seat belt if the forklift has one. On a stand-up, rear-entry forklift, exit by stepping backward if it starts to tip sideways.",
+    "Use extreme caution on grades and ramps. Tilt the load back and raise it only enough to clear the surface.",
+    "Do not raise or lower the forks while the forklift is moving.",
+    "Travel with a clear view of the path - drive in reverse if the load blocks your view. Sound the horn at corners and blind spots. Band or secure loads that could fall."
+  ],
+  "site_hazards_to_check": [
+    "Untrained or uncertified workers operating the forklift",
+    "Skipped daily inspection, or known defects not tagged out",
+    "Steep grades, ramps, soft ground, or floor openings on the travel route",
+    "Loads that are loose, unbanded, or too tall to see over",
+    "Pedestrians in the forklift travel path or at blind corners"
+  ],
+  "discussion_questions": [
+    "What do you check during the daily forklift inspection?",
+    "What do you do when the load blocks your forward view?",
+    "How do we keep foot traffic separated from the forklift today?"
+  ],
+  "attribution": {
+    "source": "NIOSH",
+    "publisher": "National Institute for Occupational Safety and Health (NIOSH)",
+    "copyright": "U.S. Government work — public domain.",
+    "license": "public-domain",
+    "source_url": "https://www.cdc.gov/niosh/docs/2022-147/2022-147.pdf",
+    "notice": "Adapted from a NIOSH Toolbox Talk (co-developed with CPWR). Public-domain source; not an endorsement by NIOSH or CPWR."
+  },
+  "audit": {
+    "status": "approved",
+    "audited_at": "2026-09-10T18:21:19Z",
+    "osha_accuracy_verified": true,
+    "flags": [
+      "OSHA mapping verified accurate: 29 CFR 1926.602 (material handling equipment - 602(c) covers powered industrial trucks and references 1910.178) and 1910.178 (powered industrial trucks). Operator training/certification (1910.178(l)), daily pre-use inspection (1910.178(q)(7)), seat belt use, caution on grades, load tilted back and low, no raising/lowering forks while moving, drive in reverse when the load blocks the view, horn at blind corners - all consistent with the standard."
+    ]
+  }
+}

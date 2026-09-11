@@ -1,0 +1,49 @@
+{
+  "id": "cold-environments",
+  "title": "Working Safely in Cold Environments",
+  "primary_trade": "General Construction",
+  "trade_tags": [
+    "General Construction"
+  ],
+  "osha_standards": [
+    "OSH Act Section 5(a)(1) General Duty Clause"
+  ],
+  "estimated_minutes": 5,
+  "summary": "Long hours in freezing or cold weather can cause trench foot, frostbite, and hypothermia. This talk covers dressing for the cold, the buddy system, and spotting danger signs.",
+  "talking_points": [
+    "Dress in loose-fitting layers made for cold, wet, and windy weather. Wear a hat, gloves, warm socks, and outerwear that keeps you dry.",
+    "Work in pairs so you and your coworker can watch each other for danger signs.",
+    "Drink warm, sweet drinks like sugar water or sports drinks. Avoid caffeine and alcohol.",
+    "Take breaks often in a heated area to warm up.",
+    "Know the danger signs: uncontrolled shivering, slurred speech, clumsiness, fatigue, and confusion.",
+    "Get medical help right away if you or a coworker shows signs of hypothermia. Your risk is higher with some medications, poor physical condition, or diabetes, high blood pressure, or heart disease."
+  ],
+  "site_hazards_to_check": [
+    "Workers without hats, gloves, or dry, layered clothing",
+    "No heated break area on or near the site",
+    "Wet or windy conditions that speed up body heat loss",
+    "Workers assigned to work alone in the cold",
+    "Icy walking and working surfaces"
+  ],
+  "discussion_questions": [
+    "Is everyone dressed for today's temperature and wind? Who is missing gear?",
+    "Who is your buddy today, and what signs are you watching for in each other?",
+    "Where is the warm-up area, and how often will we take breaks?"
+  ],
+  "attribution": {
+    "source": "NIOSH",
+    "publisher": "National Institute for Occupational Safety and Health (NIOSH)",
+    "copyright": "U.S. Government work — public domain.",
+    "license": "public-domain",
+    "source_url": "https://www.cdc.gov/niosh/docs/2022-132/2022-132.pdf",
+    "notice": "Adapted from a NIOSH Toolbox Talk (co-developed with CPWR). Public-domain source; not an endorsement by NIOSH or CPWR."
+  },
+  "audit": {
+    "status": "approved",
+    "audited_at": "2026-09-10T18:21:19Z",
+    "osha_accuracy_verified": true,
+    "flags": [
+      "OSHA authority correctly stated as the General Duty Clause - there is no specific federal cold-stress standard as of the audit date. NIOSH-sourced (raw file data/raw/niosh-cold-environments.md), U.S. Government work, public domain. Content - layered dry clothing, buddy system, warm sweet drinks, avoid caffeine/alcohol, frequent warm-up breaks, recognize hypothermia signs, higher risk with certain conditions/medications - is technically accurate. No tolerance issues."
+    ]
+  }
+}

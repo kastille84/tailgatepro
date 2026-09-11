@@ -63,6 +63,11 @@ CREATE TABLE toolbox_talks (
   -- Structured talk body from the content pipeline: { summary, talking_points,
   -- site_hazards_to_check, discussion_questions, osha_standards, estimated_minutes }.
   structured JSONB,
+  -- Source credit from the content pipeline: { source, publisher, copyright,
+  -- license, source_url, notice }. Shown in the app + generated PDF so the
+  -- CPWR/NIOSH copyright markings and no-endorsement notice travel with the
+  -- talk (a CPWR licensing condition). See docs/content-attribution.md.
+  attribution JSONB,
   is_global BOOLEAN DEFAULT true,
   company_id UUID REFERENCES companies(id) ON DELETE CASCADE,
   created_at TIMESTAMPTZ DEFAULT NOW()
@@ -78,6 +83,7 @@ ALTER TABLE toolbox_talks ENABLE ROW LEVEL SECURITY;
 -- ALTER TABLE toolbox_talks ADD COLUMN IF NOT EXISTS slug TEXT UNIQUE;
 -- ALTER TABLE toolbox_talks ADD COLUMN IF NOT EXISTS trade_tags TEXT[];
 -- ALTER TABLE toolbox_talks ADD COLUMN IF NOT EXISTS structured JSONB;
+-- ALTER TABLE toolbox_talks ADD COLUMN IF NOT EXISTS attribution JSONB;
 -- CREATE INDEX IF NOT EXISTS idx_toolbox_talks_trades ON toolbox_talks USING GIN (trade_tags);
 -- ALTER TABLE toolbox_talks ENABLE ROW LEVEL SECURITY;
 

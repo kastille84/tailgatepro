@@ -14,6 +14,16 @@ const baseJson = {
   talking_points: ["De-energize before work", "Wear arc-rated PPE"],
   site_hazards_to_check: ["Exposed energized parts", "Missing lockout devices"],
   discussion_questions: ["What PPE is required for this panel?"],
+  attribution: {
+    source: "NIOSH",
+    publisher: "National Institute for Occupational Safety and Health (NIOSH)",
+    copyright: "U.S. Government work — public domain.",
+    license: "public-domain",
+    source_url: "https://www.cdc.gov/niosh/docs/2022-136/2022-136.pdf",
+    notice:
+      "Adapted from a NIOSH Toolbox Talk (co-developed with CPWR). " +
+      "Public-domain source; not an endorsement by NIOSH or CPWR.",
+  },
   audit: {
     status: "approved",
     audited_at: "2026-01-01T00:00:00Z",
@@ -50,6 +60,12 @@ describe("buildRow", () => {
       estimated_minutes: 5,
     });
     expect(row.content).toContain("Arc Flash Safety");
+    expect(row.attribution).toEqual(baseJson.attribution);
+  });
+
+  it("passes attribution straight through, defaulting to null when absent", () => {
+    expect(buildRow({ id: "x", title: "X", audit: { status: "approved" } }).attribution).toBeNull();
+    expect(buildRow(baseJson).attribution).toEqual(baseJson.attribution);
   });
 
   it("derives a deterministic v5 UUID from the slug", () => {
@@ -97,6 +113,18 @@ describe("composeMarkdown", () => {
     expect(md).toContain("- What PPE is required for this panel?");
     expect(md).toContain("_OSHA: 29 CFR 1926.416 · 29 CFR 1910.333 · ~5 min_");
     expect(md.endsWith("\n")).toBe(true);
+  });
+
+  it("appends a source-credit footer when attribution is present", () => {
+    const md = composeMarkdown(baseJson);
+    expect(md).toContain("---");
+    expect(md).toContain("_Source: U.S. Government work — public domain.");
+    expect(md).toContain("not an endorsement by NIOSH or CPWR._");
+  });
+
+  it("has no source-credit footer when attribution is absent", () => {
+    const md = composeMarkdown({ id: "x", title: "No Credit", estimated_minutes: 5 });
+    expect(md).not.toContain("_Source:");
   });
 
   it("omits sections whose source array is empty or missing", () => {

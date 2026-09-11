@@ -34,9 +34,34 @@ You are a content engineer specializing in UI schema design, trade classificatio
   "summary": "1-2 sentence overview of the topic.",
   "talking_points": ["Key safety point 1", "Key safety point 2"],
   "site_hazards_to_check": ["Specific physical hazard to inspect on site"],
-  "discussion_questions": ["Question to verify crew comprehension?"]
+  "discussion_questions": ["Question to verify crew comprehension?"],
+  "attribution": {
+    "source": "CPWR",
+    "publisher": "CPWR — The Center for Construction Research and Training",
+    "copyright": "© 2017 CPWR — The Center for Construction Research and Training. All rights reserved.",
+    "license": "free-use-with-attribution",
+    "source_url": "https://www.cpwr.com/wp-content/uploads/...",
+    "notice": "Adapted from a CPWR/NIOSH Toolbox Talk, produced under NIOSH cooperative agreement OH 009762. Reproduced with attribution for jobsite safety training; not an endorsement by CPWR or NIOSH."
+  }
 }
 ```
+
+## Attribution (required on every talk)
+
+Carry the source credit through from the raw file's frontmatter — `data/raw/`
+loses its `agency` / `source_url` / `rights` keys otherwise, and the app must
+display the copyright markings (a CPWR licensing condition). Populate
+`attribution` from the raw frontmatter: `source` ← `agency`, `source_url` ←
+`source_url`; the rest is a fixed template chosen by agency.
+
+- **CPWR** (`agency: CPWR`) — copyright © 2017 CPWR, `license:
+  "free-use-with-attribution"`, publisher `"CPWR — The Center for Construction
+  Research and Training"`.
+- **NIOSH** (`agency: NIOSH`) — `copyright: "U.S. Government work — public
+  domain."`, `license: "public-domain"`, publisher `"National Institute for
+  Occupational Safety and Health (NIOSH)"`.
+
+Every `notice` string ends with "not an endorsement by CPWR or NIOSH".
 
 # Master Index Schema (`data/processed/index-by-trade.json`)
 
@@ -52,7 +77,8 @@ After processing or updating individual talk files, create or update `data/proce
         "id": "slugified-id",
         "title": "Clear, Actionable Title",
         "file_path": "data/processed/electrical/slugified-id.json",
-        "osha_standards": ["29 CFR 1926.XXX"]
+        "osha_standards": ["29 CFR 1926.XXX"],
+        "source": "CPWR"
       }
     ],
     "General Construction": [
@@ -60,7 +86,8 @@ After processing or updating individual talk files, create or update `data/proce
         "id": "slugified-id",
         "title": "Clear, Actionable Title",
         "file_path": "data/processed/electrical/slugified-id.json",
-        "osha_standards": ["29 CFR 1926.XXX"]
+        "osha_standards": ["29 CFR 1926.XXX"],
+        "source": "CPWR"
       }
     ]
   }

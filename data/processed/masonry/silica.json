@@ -1,0 +1,54 @@
+{
+  "id": "silica",
+  "title": "Controlling Silica Dust Exposure",
+  "primary_trade": "Masonry",
+  "trade_tags": [
+    "Masonry",
+    "General Construction"
+  ],
+  "osha_standards": [
+    "29 CFR 1926.1153"
+  ],
+  "estimated_minutes": 5,
+  "summary": "Cutting, grinding, and jackhammering concrete, brick, mortar, and rock release crystalline silica dust that causes silicosis, lung cancer, COPD, and kidney disease. This talk covers water, vacuums, and respiratory protection.",
+  "talking_points": [
+    "Use water or vacuum dust collection to control dust at the source before it becomes airborne. When that is not enough, add respiratory protection.",
+    "Keep dust control systems working. Check vacuum filters and hoses often so they do not clog.",
+    "Do not use sand or other material with more than 1% crystalline silica for abrasive blasting. Substitute a less hazardous material.",
+    "If a safer material is not available, use the correct respiratory protection.",
+    "Do not eat, drink, or smoke in dusty areas. Leave the area and wash your hands and face first.",
+    "Do not carry dust home. Vacuum your clothes or change into clean clothes before you leave. Never brush or blow dust off."
+  ],
+  "site_hazards_to_check": [
+    "Dry cutting, grinding, or drilling of concrete, masonry, or stone with no water or vacuum",
+    "Clogged or damaged vacuum filters and hoses, or empty water tanks",
+    "Sand or high-silica media used for abrasive blasting",
+    "Visible dust clouds drifting toward other workers nearby",
+    "Workers brushing or blowing dust off clothing"
+  ],
+  "discussion_questions": [
+    "What silica-generating tasks are happening today, and what dust controls are set up?",
+    "Who nearby could be exposed to dust that drifts from your task?",
+    "How do you clean up so you do not bring silica dust home to your family?"
+  ],
+  "attribution": {
+    "source": "CPWR",
+    "publisher": "CPWR — The Center for Construction Research and Training",
+    "copyright": "© 2017 CPWR — The Center for Construction Research and Training. All rights reserved.",
+    "license": "free-use-with-attribution",
+    "source_url": "https://www.cpwr.com/wp-content/uploads/publications/45-silica.pdf",
+    "notice": "Adapted from a CPWR/NIOSH Toolbox Talk, produced under NIOSH cooperative agreement OH 009762. Reproduced with attribution for jobsite safety training; not an endorsement by CPWR or NIOSH."
+  },
+  "audit": {
+    "status": "approved",
+    "audited_at": "2026-09-10T23:15:30Z",
+    "osha_accuracy_verified": true,
+    "flags": [
+      "LICENSING RESOLVED (2026-09-10): CPWR Toolbox Talk content is used under free-use-with-attribution. Permitted here because (1) the talk is one bundled feature of a subscription product and is never sold as a standalone paid product, (2) CPWR/NIOSH copyright markings and the no-endorsement notice are retained - held in this file's `attribution` object and appended to the rendered Markdown `content` by scripts/lib/talkRow.js `composeMarkdown` - and (3) no CPWR or NIOSH endorsement is claimed or implied (attribution.notice ends 'not an endorsement by CPWR or NIOSH'). No written CPWR redistribution permission is required; the prior LICENSING BLOCKER is cleared.",
+      "Attribution object verified: source 'CPWR', copyright '(c) 2017 CPWR', license 'free-use-with-attribution', source_url and publisher present, notice carries the no-endorsement clause.",
+      "OSHA mapping accurate: 29 CFR 1926.1153 (respirable crystalline silica) is the correct and current standard. Content - water or vacuum dust control at the source, keep controls maintained, respirators when controls are insufficient, no silica sand for abrasive blasting, hygiene and no take-home dust - aligns with the standard. No technical defects.",
+      "Non-blocking (technical): could also reference the written exposure control plan (1926.1153(g)) and medical surveillance (1926.1153(i)).",
+      "Non-blocking: Display obligation: docs/content-attribution.md records that TalkDetail (Phase 2c) and the generated PDF (Phase 5) must surface attribution.copyright + attribution.notice. Today the credit is rendered into the Markdown content body by the loader; the UI/PDF display path is tracked in docs/tasks.md."
+    ]
+  }
+}

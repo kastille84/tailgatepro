@@ -110,6 +110,8 @@ other docs files:
 - `pricing-and-positioning-strategy_V2.md`
 - `offline-todo.md`
 - `wcag.md`
+- `data-access.md`
+- `content-attribution.md` (toolbox-talk source credit + CPWR licensing conditions)
 
 ### Known code/doc mismatches (verify before relying on either)
 

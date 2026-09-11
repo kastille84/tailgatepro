@@ -41,6 +41,16 @@ const composeMarkdown = (json) => {
   if (json.estimated_minutes) footer.push(`~${json.estimated_minutes} min`);
   if (footer.length) lines.push(`_${footer.join(" · ")}_`);
 
+  // Source credit rides inside the body too, so the Phase 5 PDF and any plain
+  // reader carry the CPWR/NIOSH copyright markings + no-endorsement notice.
+  const attribution = json.attribution;
+  if (attribution && (attribution.copyright || attribution.notice)) {
+    const credit = [attribution.copyright, attribution.notice]
+      .filter(Boolean)
+      .join(" ");
+    lines.push("", "---", `_Source: ${credit}_`);
+  }
+
   return `${lines.join("\n").trim()}\n`;
 };
 
@@ -72,6 +82,10 @@ const buildRow = (json) => {
       osha_standards: json.osha_standards ?? [],
       estimated_minutes: json.estimated_minutes ?? null,
     },
+    // Source credit for display in the app (CPWR licensing requires the
+    // copyright markings be shown). Populated by the content pipeline from the
+    // raw file's frontmatter; see scripts/backfill-attribution.js.
+    attribution: json.attribution ?? null,
     is_global: true,
     company_id: null,
   };

@@ -1,0 +1,53 @@
+{
+  "id": "prevent-falls-scaffolds",
+  "title": "Preventing Falls From Scaffolds",
+  "primary_trade": "General Construction",
+  "trade_tags": [
+    "General Construction",
+    "Masonry"
+  ],
+  "osha_standards": [
+    "29 CFR 1926.451",
+    "29 CFR 1926.454"
+  ],
+  "estimated_minutes": 5,
+  "summary": "Scaffolds that are not plumb, tied off, or fully planked let workers fall. This talk covers tie-offs, safe access, planking, guardrails, and the 14-inch gap rule.",
+  "talking_points": [
+    "Make sure the scaffold is properly tied off to the building before you start work.",
+    "Reach the scaffold by ladder, stair tower, or ramp. Do not climb the scaffold frame.",
+    "Use only scaffold-grade lumber for planks. Keep the platform within 14 inches of the building face.",
+    "Install guardrails and toeboards on scaffolds 10 feet or more above the ground.",
+    "The scaffold must support four times the maximum intended load, including its own weight. Keep it level and plumb using screw jacks on base plates and mudsills.",
+    "Your employer must provide fall protection for every worker on a scaffold more than 10 feet (3.1 m) above a lower level. A qualified person decides on fall protection during scaffold erection and dismantling."
+  ],
+  "site_hazards_to_check": [
+    "Scaffold not tied off, or pulling away from the building",
+    "Platform more than 14 inches from the wall face",
+    "Missing guardrails or toeboards at 10 feet or higher",
+    "Non-scaffold-grade planks, gaps in planking, or unsecured planks",
+    "Scaffold out of level or plumb, or base plates and mudsills missing on soft ground",
+    "Workers climbing the frame instead of using a ladder or stair tower"
+  ],
+  "discussion_questions": [
+    "Is this scaffold tied off, level, and fully planked before anyone gets on?",
+    "How do you get up and down without climbing the frame?",
+    "At what height do guardrails and toeboards become required?"
+  ],
+  "attribution": {
+    "source": "NIOSH",
+    "publisher": "National Institute for Occupational Safety and Health (NIOSH)",
+    "copyright": "U.S. Government work — public domain.",
+    "license": "public-domain",
+    "source_url": "https://www.cdc.gov/niosh/media/pdfs/2026/08/2026-111.pdf",
+    "notice": "Adapted from a NIOSH Toolbox Talk (co-developed with CPWR). Public-domain source; not an endorsement by NIOSH or CPWR."
+  },
+  "audit": {
+    "status": "approved",
+    "audited_at": "2026-09-10T18:21:19Z",
+    "osha_accuracy_verified": true,
+    "flags": [
+      "OSHA mapping and tolerances verified accurate: 29 CFR 1926.451 (general scaffold requirements) and 1926.454 (training). Platform front edge within 14 in of the work face (1926.451(b)(3)); scaffold capable of supporting its own weight plus at least 4x the maximum intended load (1926.451(a)(1)); fall protection required above 10 ft (1926.451(g)(1)); scaffold-grade planking; access by ladder/stair tower/ramp, not by climbing the frame (1926.451(e)).",
+      "Non-blocking notes: the 14 in limit has codified exceptions (18 in for outrigger scaffolds; up to 3 ft for plastering/lathing) not mentioned - acceptable for a general talk. Consider citing 1926.452 for additional type-specific requirements."
+    ]
+  }
+}

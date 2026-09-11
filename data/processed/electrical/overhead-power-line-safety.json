@@ -1,0 +1,62 @@
+{
+  "id": "overhead-power-line-safety",
+  "title": "Working Safely Near Overhead Power Lines",
+  "primary_trade": "Electrical",
+  "trade_tags": [
+    "Electrical",
+    "Heavy Equipment",
+    "General Construction"
+  ],
+  "osha_standards": [
+    "29 CFR 1926.1408",
+    "29 CFR 1926.416",
+    "29 CFR 1926.600(a)(6)",
+    "29 CFR 1926.453(a)(1)",
+    "29 CFR 1926.1053(b)(12)"
+  ],
+  "estimated_minutes": 5,
+  "summary": "Cranes, aerial lifts, high lifts, and ladders that contact overhead power lines cause serious injury and death. This talk covers looking up, keeping 20 feet of clearance, and using spotters.",
+  "talking_points": [
+    "Look up and locate all overhead power lines before starting work.",
+    "Ask your supervisor to confirm the power company has de-energized and grounded the lines. When in doubt, treat every line as energized.",
+    "Keep machinery, equipment, and loads at least 20 feet from energized, uncovered power lines. Stay at least 20 feet from covered lines too.",
+    "Use only nonconductive or insulated tag lines. Never store materials or equipment under or near power lines.",
+    "Use a spotter and run machines slower than normal near lines. Wind can sway lines and cut clearance.",
+    "Never touch or approach a person or machine that is in contact with a power line. Call 911."
+  ],
+  "site_hazards_to_check": [
+    "Overhead power lines not identified or flagged before work starts",
+    "Cranes, lifts, ladders, or loads within 20 feet of power lines",
+    "Conductive tag lines in use near energized lines",
+    "Material or equipment stored under power lines",
+    "No spotter assigned when equipment works near lines, or uneven ground that could make a machine sway"
+  ],
+  "discussion_questions": [
+    "Where are the overhead lines on this site, and are they confirmed de-energized?",
+    "How do we keep every part of the machine and load 20 feet away?",
+    "What do you do if a machine contacts a line and the operator is still on it?"
+  ],
+  "attribution": {
+    "source": "NIOSH",
+    "publisher": "National Institute for Occupational Safety and Health (NIOSH)",
+    "copyright": "U.S. Government work — public domain.",
+    "license": "public-domain",
+    "source_url": "https://www.cdc.gov/niosh/media/pdfs/2026/08/2026-110.pdf",
+    "notice": "Adapted from a NIOSH Toolbox Talk (co-developed with CPWR). Public-domain source; not an endorsement by NIOSH or CPWR."
+  },
+  "audit": {
+    "status": "approved",
+    "audited_at": "2026-09-10T19:32:00Z",
+    "osha_accuracy_verified": true,
+    "flags": [
+      "RESOLVED: The nonexistent 29 CFR 1926.453(b)(3)(i) citation has been removed. All five citations in osha_standards now exist and are on point.",
+      "CITATION VERIFIED - 29 CFR 1926.1408: 'Power line safety (up to 350 kV) - equipment operations.' Correct primary standard for cranes/derricks near overhead lines; Table A / 1408(a)(2)(ii) sets the 20 ft minimum clearance when line voltage is unknown for lines up to 350 kV.",
+      "CITATION VERIFIED - 29 CFR 1926.416: 'General requirements' (Subpart K). 416(a)(1) prohibits work near energized parts unless the employee is protected; supports the 'treat every line as energized' point.",
+      "CITATION VERIFIED - 29 CFR 1926.600(a)(6): equipment working, traveling, or parking near overhead lines must keep clearance and may only reduce it after the utility confirms lines de-energized and visibly grounded. Matches the de-energize/ground and clearance talking points.",
+      "CITATION VERIFIED - 29 CFR 1926.453(a)(1): 'Aerial lifts.' Incorporates ANSI A92.2-1969 (including appendix), the source of aerial-lift minimum approach distances from energized lines. Legitimate hook for the aerial/high-lift portion. Minor note (non-blocking): (a)(1) is worded as a design-and-construction conformance requirement; the operational approach distances it pulls in come from the referenced ANSI standard rather than the CFR text itself.",
+      "CITATION VERIFIED - 29 CFR 1926.1053(b)(12): ladders used where the employee or ladder could contact exposed energized electrical equipment must have nonconductive side rails. Directly supports the ladder-contact hazard and talking points.",
+      "TOLERANCE CHECK PASSED: 20 ft minimum clearance is correct for lines of unknown voltage up to 350 kV per 1926.1408 Table A. Treating lines as energized until the utility confirms de-energized and visibly grounded, nonconductive/insulated tag lines, spotters, slower equipment operation near lines, no storage under lines, and do-not-approach/-touch a machine in contact with a line are all accurate. No numeric errors.",
+      "LEGAL/LIABILITY CHECK PASSED: guidance directs foremen to have the supervisor/utility confirm de-energization rather than making definitive safety guarantees; emergency instruction (do not approach, call 911) is appropriate. No overreaching claims."
+    ]
+  }
+}

@@ -49,7 +49,8 @@
 | `trade_tags` | Text[] | GIN Indexed (Nullable) | All applicable trades (primary + secondary) for multi-trade filtering |
 | `content` | Text | Not Null | Markdown payload (loader composes it from the structured fields) |
 | `structured` | JSONB | Nullable | `{ summary, talking_points, site_hazards_to_check, discussion_questions, osha_standards, estimated_minutes }` from the pipeline |
-| `is_global` | Boolean | Default `true` | True if public domain library |
+| `attribution` | JSONB | Nullable | `{ source, publisher, copyright, license, source_url, notice }` from the pipeline — CPWR/NIOSH source credit shown in the app + PDF (see `docs/content-attribution.md`) |
+| `is_global` | Boolean | Default `true` | True for the shared global library; false for a company's custom talk |
 | `company_id` | UUID | FK (Nullable) | Populated if a sub writes a custom talk |
 
 > RLS: enabled with no policies (server-brokered, deny-all) — see `docs/data-access.md`.

@@ -1,0 +1,52 @@
+{
+  "id": "boom-truck-safety",
+  "title": "Boom Truck Crane Safety",
+  "primary_trade": "Heavy Equipment",
+  "trade_tags": [
+    "Heavy Equipment",
+    "General Construction"
+  ],
+  "osha_standards": [
+    "29 CFR 1926.1412",
+    "29 CFR 1926.1417"
+  ],
+  "estimated_minutes": 5,
+  "summary": "Boom trucks tip over or collapse when loads exceed the load chart or the machine is not set up right. This talk covers inspections, load limits, outriggers, and communication.",
+  "talking_points": [
+    "Confirm the boom truck has been inspected and is certified for use, then do the required operational inspection before the shift.",
+    "Set outriggers and check that support blocking is firm and secure.",
+    "Always verify the weight of the load and rigging. Never lift more than the crane's capacity or go outside the manufacturer's load chart.",
+    "Only trained, authorized workers operate the crane or give hand signals.",
+    "Keep the operator and the signal person in clear view of each other or on headset. Never lift or swing a load over people, and never walk under a suspended load.",
+    "Check that wind speed is safe for the lift. Warn others when loads are moving or overhead."
+  ],
+  "site_hazards_to_check": [
+    "Missing or expired inspection or certification for the boom truck",
+    "Outriggers not fully deployed or blocking on soft or uneven ground",
+    "Load or rigging weight unknown or over the load chart rating",
+    "Workers positioned under or in the swing path of a suspended load",
+    "High or gusting wind, or blocked line of sight between operator and signal person"
+  ],
+  "discussion_questions": [
+    "What does today's load weigh, and where does that fall on the load chart?",
+    "Who is giving signals, and how will you communicate if you lose sight of each other?",
+    "What is the wind speed limit for this lift, and who is checking it?"
+  ],
+  "attribution": {
+    "source": "NIOSH",
+    "publisher": "National Institute for Occupational Safety and Health (NIOSH)",
+    "copyright": "U.S. Government work — public domain.",
+    "license": "public-domain",
+    "source_url": "https://www.cdc.gov/niosh/media/pdfs/2026/08/2026-108.pdf",
+    "notice": "Adapted from a NIOSH Toolbox Talk (co-developed with CPWR). Public-domain source; not an endorsement by NIOSH or CPWR."
+  },
+  "audit": {
+    "status": "approved",
+    "audited_at": "2026-09-10T18:21:19Z",
+    "osha_accuracy_verified": true,
+    "flags": [
+      "OSHA mapping accurate: 29 CFR 1926.1412 (inspections) and 1926.1417 (operation), Subpart CC. Content - confirm annual inspection/certification then do the pre-shift operational inspection, deploy outriggers on firm blocking, verify load and rigging weight against the load chart, only trained/authorized operators and signalers, keep operator and signal person in view or on radio, never lift or swing over people, check wind - is sound.",
+      "Non-blocking enhancement: consider adding 29 CFR 1926.1427 (operator qualification/certification) and 1926.1428 (qualified signal person) to match the talking points on trained/authorized personnel."
+    ]
+  }
+}

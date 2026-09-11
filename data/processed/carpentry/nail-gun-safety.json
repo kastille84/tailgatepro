@@ -1,0 +1,55 @@
+{
+  "id": "nail-gun-safety",
+  "title": "Nail Gun Safety",
+  "primary_trade": "Carpentry",
+  "trade_tags": [
+    "Carpentry",
+    "Roofing",
+    "General Construction"
+  ],
+  "osha_standards": [
+    "29 CFR 1926.302",
+    "29 CFR 1926.102"
+  ],
+  "estimated_minutes": 5,
+  "summary": "Understanding the trigger is the key to nail gun safety. Sequential triggers cut injuries; contact (bump) triggers cause about twice as many. This talk covers trigger choice, muzzle control, and disconnecting air.",
+  "talking_points": [
+    "Use a nail gun with a full sequential trigger: press the nose against the workpiece first, then pull the trigger. Contact (bump) triggers cause about twice as many injuries and do not save time overall.",
+    "Keep the nail gun pointed away from your body and other people, especially with the air connected.",
+    "Disconnect the compressed air when you leave the gun unattended, move up or down a ladder or stairs, hand it to a coworker, clear a jam, or do maintenance.",
+    "Use a hammer when you cannot reach the work while holding the gun in your dominant hand. When toe-nailing, do not force the gun flush against the workpiece.",
+    "Wear Z87+ safety glasses, hearing protection, and steel-toe footwear. Get training on safe nail gun use.",
+    "Never use a gun with a broken or modified trigger or contact spring. Never hold the trigger down unless you mean to fire, and never fire until the nose is firmly on the workpiece."
+  ],
+  "site_hazards_to_check": [
+    "Contact/bump triggers in use where sequential triggers should be used",
+    "Broken, modified, or taped triggers or workpiece contact springs",
+    "Air left connected while clearing jams, climbing, or passing the tool",
+    "Workers without Z87+ glasses, hearing protection, or steel-toe boots",
+    "Crew crowded close together during nailing, risking nails driven through or ricocheting off material"
+  ],
+  "discussion_questions": [
+    "What trigger type is on the guns we are using, and is it right for this work?",
+    "When exactly do you disconnect the air line?",
+    "Why is holding the trigger down while carrying the gun dangerous?"
+  ],
+  "attribution": {
+    "source": "CPWR",
+    "publisher": "CPWR — The Center for Construction Research and Training",
+    "copyright": "© 2017 CPWR — The Center for Construction Research and Training. All rights reserved.",
+    "license": "free-use-with-attribution",
+    "source_url": "https://www.cpwr.com/wp-content/uploads/TT-Nail_Guns.pdf",
+    "notice": "Adapted from a CPWR/NIOSH Toolbox Talk, produced under NIOSH cooperative agreement OH 009762. Reproduced with attribution for jobsite safety training; not an endorsement by CPWR or NIOSH."
+  },
+  "audit": {
+    "status": "approved",
+    "audited_at": "2026-09-10T23:15:30Z",
+    "osha_accuracy_verified": true,
+    "flags": [
+      "LICENSING RESOLVED (2026-09-10): CPWR Toolbox Talk content is used under free-use-with-attribution. Permitted here because (1) the talk is one bundled feature of a subscription product and is never sold as a standalone paid product, (2) CPWR/NIOSH copyright markings and the no-endorsement notice are retained - held in this file's `attribution` object and appended to the rendered Markdown `content` by scripts/lib/talkRow.js `composeMarkdown` - and (3) no CPWR or NIOSH endorsement is claimed or implied (attribution.notice ends 'not an endorsement by CPWR or NIOSH'). No written CPWR redistribution permission is required; the prior LICENSING BLOCKER is cleared.",
+      "Attribution object verified: source 'CPWR', copyright '(c) 2017 CPWR', license 'free-use-with-attribution', source_url and publisher present, notice carries the no-endorsement clause.",
+      "No technical or regulatory defects found: 1926.302(b) (pneumatic power tools) and 1926.102 (eye/face protection) accurately reflect the content; full sequential trigger, disconnect air before climbing/passing/clearing jams, and Z87+ guidance are sound. No tolerance errors.",
+      "Non-blocking: Display obligation: docs/content-attribution.md records that TalkDetail (Phase 2c) and the generated PDF (Phase 5) must surface attribution.copyright + attribution.notice. Today the credit is rendered into the Markdown content body by the loader; the UI/PDF display path is tracked in docs/tasks.md."
+    ]
+  }
+}

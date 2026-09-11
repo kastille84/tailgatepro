@@ -1,0 +1,52 @@
+{
+  "id": "biohazards",
+  "title": "Biohazards From Sewage and Infectious Waste",
+  "primary_trade": "Plumbing",
+  "trade_tags": [
+    "Plumbing",
+    "General Construction"
+  ],
+  "osha_standards": [
+    "29 CFR 1926.28",
+    "29 CFR 1910.1030"
+  ],
+  "estimated_minutes": 5,
+  "summary": "Workers near wastewater, sewer lines, or medical waste should treat every surface as contaminated. This talk covers protective gear, hygiene, and wound care to prevent infection.",
+  "talking_points": [
+    "Assume all surfaces are contaminated when you work around sewage, wastewater, or medical waste. Avoid direct contact.",
+    "Wear waterproof gloves, boots, and face protection for direct contact with sewage. Add a face shield if splashing is possible.",
+    "Wash your hands well before eating or drinking and when the job is done.",
+    "Clean, treat, and report any cut or wound right away.",
+    "Keep contaminated gloves, boots, and gear away from areas where food is eaten or stored. Remove contaminated clothing at the site if you can.",
+    "Wash contaminated clothing at 160 degrees F or hotter. Use robotic cameras for pipe inspections when possible to cut human contact."
+  ],
+  "site_hazards_to_check": [
+    "Standing sewage, wastewater, or sludge in the work area",
+    "Missing waterproof gloves, boots, or face and splash protection",
+    "No handwashing station or clean water near the work area",
+    "Food or drink stored or eaten near contaminated gear",
+    "Open cuts or wounds on workers about to enter the area"
+  ],
+  "discussion_questions": [
+    "What protective gear do you need before you touch anything in this space?",
+    "Where will you wash your hands and store your contaminated boots and gloves?",
+    "What do you do if you get a cut while working around raw sewage?"
+  ],
+  "attribution": {
+    "source": "NIOSH",
+    "publisher": "National Institute for Occupational Safety and Health (NIOSH)",
+    "copyright": "U.S. Government work — public domain.",
+    "license": "public-domain",
+    "source_url": "https://www.cdc.gov/niosh/docs/2022-129/2022-129.pdf",
+    "notice": "Adapted from a NIOSH Toolbox Talk (co-developed with CPWR). Public-domain source; not an endorsement by NIOSH or CPWR."
+  },
+  "audit": {
+    "status": "approved",
+    "audited_at": "2026-09-10T18:21:19Z",
+    "osha_accuracy_verified": true,
+    "flags": [
+      "OSHA mapping adequate: 29 CFR 1910.1030 (bloodborne pathogens) applies to the infectious / medical-waste content; for raw sewage without blood or OPIM the operative authority is 29 CFR 1926.28 (PPE) plus the General Duty Clause - both are reasonable cites. Content - treat all surfaces as contaminated, waterproof gloves/boots/face and splash protection, hand hygiene before eating and after work, prompt cut/wound care and reporting, keep contaminated gear away from food areas, hot-water laundering, use robotic cameras to cut contact - is sound. The 160 F laundry-disinfection figure matches CDC guidance.",
+      "Non-blocking enhancement: add 29 CFR 1926.51(f) (washing facilities) and 1926.51(a) (potable water) given the emphasis on handwashing stations."
+    ]
+  }
+}

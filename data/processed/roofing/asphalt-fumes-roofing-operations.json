@@ -1,0 +1,52 @@
+{
+  "id": "asphalt-fumes-roofing-operations",
+  "title": "Asphalt Fumes During Roofing Operations",
+  "primary_trade": "Roofing",
+  "trade_tags": [
+    "Roofing",
+    "General Construction"
+  ],
+  "osha_standards": [
+    "29 CFR 1926.59",
+    "29 CFR 1926.55"
+  ],
+  "estimated_minutes": 5,
+  "summary": "Asphalt kettle fumes cause headaches, nausea, and drowsiness and are linked to lung cancer. Hotter asphalt makes more fumes. This talk covers kettle placement, temperature control, and PPE.",
+  "talking_points": [
+    "Place the kettle downwind on firm, level ground where the operator and others get the least fume exposure. Keep plenty of cross-breeze.",
+    "Never set the kettle in a confined space where fumes can build up. Keep the lid closed as much as possible and fill through the loading door, not the lid.",
+    "Keep the asphalt at the lowest temperature needed. Do not turn it up for a faster melt. Stay at least 25 degrees below the asphalt's flash point.",
+    "Pre-chop asphalt into small, easy-to-melt pieces before loading.",
+    "Wear a hard hat, face shield, goggles, long sleeves, gloves, and leather boots.",
+    "Have the supervisor rope off the area around the kettle with tape, cones, or signs. Keep a fully charged ABC fire extinguisher nearby and clear fire hazards from the area."
+  ],
+  "site_hazards_to_check": [
+    "Kettle placed upwind, in a low spot, or in an enclosed area where fumes collect",
+    "Damaged or leaking kettle lid, or broken temperature controls",
+    "Kettle temperature within 25 degrees of the asphalt flash point",
+    "Fire hazards near the kettle and missing or discharged ABC extinguisher",
+    "Unmarked area around the kettle with no cones, tape, or signs"
+  ],
+  "discussion_questions": [
+    "Which way is the wind blowing today, and where should the kettle go?",
+    "What is the flash point of the asphalt we are using, and what temperature will we hold?",
+    "What symptoms tell you that you have had too much fume exposure, and what do you do then?"
+  ],
+  "attribution": {
+    "source": "NIOSH",
+    "publisher": "National Institute for Occupational Safety and Health (NIOSH)",
+    "copyright": "U.S. Government work — public domain.",
+    "license": "public-domain",
+    "source_url": "https://www.cdc.gov/niosh/docs/2022-138/2022-138.pdf",
+    "notice": "Adapted from a NIOSH Toolbox Talk (co-developed with CPWR). Public-domain source; not an endorsement by NIOSH or CPWR."
+  },
+  "audit": {
+    "status": "approved",
+    "audited_at": "2026-09-10T18:21:19Z",
+    "osha_accuracy_verified": true,
+    "flags": [
+      "OSHA mapping adequate: 29 CFR 1926.55 (gases, vapors, fumes, dusts, and mists) is correctly cited for the fume-exposure hazard. Content - place the kettle downwind on firm level ground with good cross-breeze, never in a confined space, keep the lid closed and load through the door, hold the lowest workable temperature and stay at least 25 F below the flash point, pre-chop asphalt, wear hard hat/face shield/goggles/long sleeves/gloves/leather boots, rope off the kettle area, keep a charged ABC extinguisher and clear fire hazards - is consistent with NIOSH asphalt-roofing recommendations.",
+      "Non-blocking: 29 CFR 1926.59 is a pointer section that adopts 29 CFR 1910.1200 (Hazard Communication); cite 1910.1200 directly for clarity."
+    ]
+  }
+}

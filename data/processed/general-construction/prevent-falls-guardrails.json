@@ -1,0 +1,52 @@
+{
+  "id": "prevent-falls-guardrails",
+  "title": "Preventing Falls With Guardrails",
+  "primary_trade": "General Construction",
+  "trade_tags": [
+    "General Construction",
+    "Roofing"
+  ],
+  "osha_standards": [
+    "29 CFR 1926.501",
+    "29 CFR 1926.502",
+    "29 CFR 1926.503"
+  ],
+  "estimated_minutes": 5,
+  "summary": "Falls are a leading cause of construction deaths. Guardrails stop falls from edges, roofs, and platforms. This talk covers where guardrails are required and the 42-inch height rule.",
+  "talking_points": [
+    "Your employer must train every worker to recognize fall hazards and use fall protection.",
+    "Guardrails, safety nets, or personal fall-arrest systems must be in place wherever there is a fall risk.",
+    "Guardrails are required on work surfaces where workers could fall more than 6 feet.",
+    "Top rails must be 42 inches high, plus or minus 3 inches, with a mid-rail in between.",
+    "When guardrails cannot be used, wear a body harness with a lanyard tied to a secure anchor point provided by your employer."
+  ],
+  "site_hazards_to_check": [
+    "Open edges, platforms, or roofs with falls over 6 feet and no guardrail",
+    "Top rails outside the 42-inch, plus or minus 3-inch, range",
+    "Missing mid-rails or damaged, loose guardrail sections",
+    "Guardrail removed for access and not replaced",
+    "No anchor points or harnesses where guardrails are not feasible"
+  ],
+  "discussion_questions": [
+    "Where on this site could someone fall more than 6 feet today?",
+    "How do you check that a guardrail is at the right height and strength?",
+    "What is your backup if a guardrail has to come down for material handling?"
+  ],
+  "attribution": {
+    "source": "NIOSH",
+    "publisher": "National Institute for Occupational Safety and Health (NIOSH)",
+    "copyright": "U.S. Government work — public domain.",
+    "license": "public-domain",
+    "source_url": "https://www.cdc.gov/niosh/docs/2022-146/2022-146.pdf",
+    "notice": "Adapted from a NIOSH Toolbox Talk (co-developed with CPWR). Public-domain source; not an endorsement by NIOSH or CPWR."
+  },
+  "audit": {
+    "status": "approved",
+    "audited_at": "2026-09-10T18:21:19Z",
+    "osha_accuracy_verified": true,
+    "flags": [
+      "OSHA mapping and tolerances verified accurate: 29 CFR 1926.501 (fall protection duty), 1926.502 (systems criteria), 1926.503 (training). Top rail 42 in plus or minus 3 in (1926.502(b)(1)); 6 ft fall-height trigger for construction (1926.501(b)(1)); midrail when there is no wall/structural member at least 21 in high (1926.502(b)(2)).",
+      "Non-blocking enhancement: a discussion question asks how to check guardrail 'strength' but no talking point states the 1926.502(b)(3)-(5) load criteria (200 lb outward/downward on the top rail, 150 lb on the midrail); consider adding."
+    ]
+  }
+}

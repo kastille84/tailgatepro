@@ -41,7 +41,8 @@ The Digital Toolbox Safety Talks application called "TailgatePro", digitizes man
 
 ### 4.2 Automated Content Library
 
-- **Data Source:** Bootstrapped via an LLM script that cleans, formats, and parses public-domain materials from Federal OSHA and state agencies (e.g., Texas Dept of Insurance, Ohio BWC).
+- **Data Source:** Bootstrapped via an LLM script that cleans, formats, and parses safety materials from Federal OSHA / NIOSH (public domain) and CPWR (free-to-use with attribution) and state agencies (e.g., Texas Dept of Insurance, Ohio BWC).
+- **Attribution:** Each talk stores a source-credit block (`attribution`) and displays the publisher, copyright line, and a "not an endorsement" notice on the talk view and generated PDF. See `docs/content-attribution.md` for the CPWR licensing conditions.
 - **Tagging & Filtering:** Content must be tagged by trade (e.g., Roofing, Electrical, Demolition, Excavation) allowing instant filtering.
 - **Favorites System:** Foremen can bookmark their "Top 10" most-used topics for two-tap access.
 - **Custom Talks:** Users must have the ability to author and save their own site-specific safety talks.
