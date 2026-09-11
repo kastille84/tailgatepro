@@ -1,0 +1,54 @@
+{
+  "id": "falls-extension-ladders",
+  "title": "Extension Ladder Fall Prevention",
+  "primary_trade": "General Construction",
+  "trade_tags": [
+    "General Construction",
+    "Roofing"
+  ],
+  "osha_standards": [
+    "29 CFR 1926.1053",
+    "29 CFR 1926.1060"
+  ],
+  "estimated_minutes": 5,
+  "summary": "Most ladder falls in construction involve extension ladders that slip, shift, or throw the worker off balance. This talk covers inspection, the 4-to-1 angle, tie-offs, and the 3-foot extension.",
+  "talking_points": [
+    "When you can, use an aerial lift or scaffold instead of a ladder for work at height.",
+    "Inspect the rails, rungs, feet, and rung locks or spreaders every time you use the ladder. Tag any damaged ladder 'do not use' and get another.",
+    "Check the ladder's duty rating so it holds you plus your tools and tool belt.",
+    "Set the ladder on a solid, stable base at a 4-to-1 angle: for every 4 feet of working height, move the base 1 foot out. Check it by standing on the feet with your arms straight out - your palms should just reach a rung.",
+    "Screw a 2-by-4 cleat to the ground behind the feet to stop it sliding back. Tie off the top, and the bottom if possible, to stop it sliding sideways.",
+    "Extend the ladder 3 feet above the landing. Use both hands when climbing up and down."
+  ],
+  "site_hazards_to_check": [
+    "Damaged rails, rungs, feet, or rung locks, or a ladder over or under its duty rating",
+    "Ladder set steeper or flatter than the 4-to-1 angle",
+    "Soft, uneven, or slippery base with no cleat behind the feet",
+    "Ladder top not tied off, or resting less than 3 feet above the landing",
+    "Ladder used where a lift or scaffold would be safer"
+  ],
+  "discussion_questions": [
+    "How do you set and check the 4-to-1 angle on this ladder?",
+    "How is the ladder secured top and bottom so it cannot slip?",
+    "How far above the landing should the ladder rails stick up?"
+  ],
+  "attribution": {
+    "source": "CPWR",
+    "publisher": "CPWR — The Center for Construction Research and Training",
+    "copyright": "© 2017 CPWR — The Center for Construction Research and Training. All rights reserved.",
+    "license": "free-use-with-attribution",
+    "source_url": "https://www.cpwr.com/wp-content/uploads/publications/CPWR_Falls_Extension_Ladders_1.pdf",
+    "notice": "Adapted from a CPWR/NIOSH Toolbox Talk, produced under NIOSH cooperative agreement OH 009762. Reproduced with attribution for jobsite safety training; not an endorsement by CPWR or NIOSH."
+  },
+  "audit": {
+    "status": "approved",
+    "audited_at": "2026-09-10T23:15:30Z",
+    "osha_accuracy_verified": true,
+    "flags": [
+      "LICENSING RESOLVED (2026-09-10): CPWR Toolbox Talk content is used under free-use-with-attribution. Permitted here because (1) the talk is one bundled feature of a subscription product and is never sold as a standalone paid product, (2) CPWR/NIOSH copyright markings and the no-endorsement notice are retained - held in this file's `attribution` object and appended to the rendered Markdown `content` by scripts/lib/talkRow.js `composeMarkdown` - and (3) no CPWR or NIOSH endorsement is claimed or implied (attribution.notice ends 'not an endorsement by CPWR or NIOSH'). No written CPWR redistribution permission is required; the prior LICENSING BLOCKER is cleared.",
+      "Attribution object verified: source 'CPWR', copyright '(c) 2017 CPWR', license 'free-use-with-attribution', source_url and publisher present, notice carries the no-endorsement clause.",
+      "OSHA mapping and all numeric tolerances re-verified accurate: 1926.1053 and 1926.1060; 4:1 pitch for non-self-supporting ladders (1926.1053(b)(5)(i)); side rails extend at least 3 ft above the landing (1926.1053(b)(1)); secure top and bottom against displacement (1926.1053(b)(6)-(8)); check duty rating; the palms-to-rung / arms-straight method is a recognized field check of the 4:1 angle. No technical defects.",
+      "Non-blocking: Display obligation: docs/content-attribution.md records that TalkDetail (Phase 2c) and the generated PDF (Phase 5) must surface attribution.copyright + attribution.notice. Today the credit is rendered into the Markdown content body by the loader; the UI/PDF display path is tracked in docs/tasks.md."
+    ]
+  }
+}

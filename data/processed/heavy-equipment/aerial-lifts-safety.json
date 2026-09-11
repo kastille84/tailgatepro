@@ -1,0 +1,55 @@
+{
+  "id": "aerial-lifts-safety",
+  "title": "Aerial Lift Safety: Fall Protection, Stability, and Power Lines",
+  "primary_trade": "Heavy Equipment",
+  "trade_tags": [
+    "Heavy Equipment",
+    "General Construction"
+  ],
+  "osha_standards": [
+    "29 CFR 1926.453",
+    "29 CFR 1926.451"
+  ],
+  "estimated_minutes": 5,
+  "summary": "Aerial lifts such as scissor lifts, boom lifts, and bucket trucks kill workers every year through falls, tip-overs, and electrocution. This talk covers how to set up, inspect, and work from a lift safely.",
+  "talking_points": [
+    "Inspect the lift before every use: operating and emergency controls, guardrails, fall protection gear, and any leaks of air, hydraulic fluid, or fuel.",
+    "Set outriggers, brakes, and wheel chocks every time, even on level ground. Never exceed the manufacturer's slope limit.",
+    "On a boom-type lift (articulating or telescoping boom, bucket truck), wear a full-body harness with a lanyard clipped to the manufacturer's anchor point. On a scissor lift, the guardrails are your fall protection: keep them and the gate closed, and wear a harness only if the manufacturer's manual calls for one.",
+    "On any lift, stand on the platform floor. Do not climb, sit, or lean over the rails, and never use a ladder or planks to gain height.",
+    "Keep the platform gate, chains, or bars closed while working.",
+    "Stay clear of overhead power lines and wires. Ask your supervisor to confirm nearby lines are de-energized before you go up.",
+    "Do not exceed the rated load. Do not drive with the platform raised unless the lift is built for it."
+  ],
+  "site_hazards_to_check": [
+    "Potholes, bumps, soft ground, curbs, or debris in the lift's travel and set-up area",
+    "Overhead power lines, energized wires, or other obstructions above the work zone",
+    "Missing or damaged guardrails, gates, or platform chains (the fall protection on a scissor lift)",
+    "Damaged or missing harness, lanyard, or anchor point on a boom-type lift",
+    "Air, hydraulic, or fuel leaks on the machine"
+  ],
+  "discussion_questions": [
+    "Is today's lift a boom lift or a scissor lift, and what does that mean for the fall protection we use?",
+    "What overhead hazards are in our work area, and how far will we stay from them?",
+    "What do you do if the lift starts to tip or a control stops responding?"
+  ],
+  "attribution": {
+    "source": "NIOSH",
+    "publisher": "National Institute for Occupational Safety and Health (NIOSH)",
+    "copyright": "U.S. Government work — public domain.",
+    "license": "public-domain",
+    "source_url": "https://www.cdc.gov/niosh/docs/2022-127/2022-127.pdf",
+    "notice": "Adapted from a NIOSH Toolbox Talk (co-developed with CPWR). Public-domain source; not an endorsement by NIOSH or CPWR."
+  },
+  "audit": {
+    "status": "approved",
+    "audited_at": "2026-09-10T18:45:20Z",
+    "osha_accuracy_verified": true,
+    "flags": [
+      "RESOLVED: 29 CFR 1926.451 added. Scissor lifts are regulated by OSHA as mobile scaffolds under 1926.451 (guardrail systems in 1926.451(g)), while 1926.453 (via ANSI A92.2-1969) covers the boom-type lifts and bucket trucks in scope. Both standards are now correctly mapped to the content.",
+      "RESOLVED: the blanket harness instruction has been split correctly - boom-type lifts require a full-body harness with lanyard to the manufacturer's anchor point (1926.453(b)(2)(v), as modified by Subpart M), and scissor lifts rely on an intact guardrail system as fall protection with a harness only where the manufacturer's manual requires it. Accurate.",
+      "VERIFIED accurate: pre-use inspection of controls, guardrails, fall gear and leaks; set brakes/outriggers/chocks and observe the manufacturer's slope limit (1926.453(b)(2)(vii)); stand on the platform floor, no ladders or planks (1926.453(b)(2)(iv)); keep the gate/chains closed; do not exceed rated load; do not travel elevated unless the lift is designed for it (1926.453(b)(2)(viii)); maintain clearance from overhead lines and confirm de-energized before going up. No numeric tolerances are stated in the talk, so none are in error.",
+      "OPTIONAL (non-blocking): consider also citing 29 CFR 1926.452(w) for the mobile-scaffold specifics behind the elevated-travel and caster/brake talking points on scissor lifts."
+    ]
+  }
+}

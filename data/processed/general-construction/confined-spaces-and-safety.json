@@ -1,0 +1,52 @@
+{
+  "id": "confined-spaces-and-safety",
+  "title": "Confined Space Entry Safety",
+  "primary_trade": "General Construction",
+  "trade_tags": [
+    "General Construction",
+    "Plumbing"
+  ],
+  "osha_standards": [
+    "29 CFR 1926.1203",
+    "29 CFR 1926.1204"
+  ],
+  "estimated_minutes": 5,
+  "summary": "Manholes, crawl spaces, and tunnels can hold low oxygen, toxic or explosive gas, water, and other hazards, and would-be rescuers die too. This talk covers testing, monitoring, and never entering unprepared.",
+  "talking_points": [
+    "Treat every confined space as hazardous. Ask your supervisor to walk through the written confined space program and emergency plan.",
+    "Get the training your employer is required to provide before you enter.",
+    "Test the air for oxygen level, flammable gases and vapors, and toxic contaminants before anyone goes in.",
+    "Check for water and electrical hazards, and inspect the structure so it will not collapse or drop material.",
+    "Never enter without an attendant monitoring you and a reliable way to communicate with someone outside.",
+    "Use the PPE your employer provides for the known hazards, such as a self-contained breathing apparatus. Leave right away if you see an unsafe condition."
+  ],
+  "site_hazards_to_check": [
+    "Space not tested for oxygen, flammable gas, or toxic contaminants before entry",
+    "No attendant stationed outside and no communication method",
+    "No rescue plan or rescue equipment on site",
+    "Signs of structural weakness or loose material overhead inside the space",
+    "Standing water, energized equipment, or engine exhaust near the opening"
+  ],
+  "discussion_questions": [
+    "What could be in the air in this space, and who tests it before we enter?",
+    "Who is the attendant, and how do you signal them if something goes wrong?",
+    "If someone collapses inside, what is the rescue plan, and why should you not rush in?"
+  ],
+  "attribution": {
+    "source": "NIOSH",
+    "publisher": "National Institute for Occupational Safety and Health (NIOSH)",
+    "copyright": "U.S. Government work — public domain.",
+    "license": "public-domain",
+    "source_url": "https://www.cdc.gov/niosh/media/pdfs/2026/08/2026-109.pdf",
+    "notice": "Adapted from a NIOSH Toolbox Talk (co-developed with CPWR). Public-domain source; not an endorsement by NIOSH or CPWR."
+  },
+  "audit": {
+    "status": "approved",
+    "audited_at": "2026-09-10T18:21:19Z",
+    "osha_accuracy_verified": true,
+    "flags": [
+      "OSHA mapping verified accurate: 29 CFR 1926.1203 (permit-required confined spaces - general requirements) and 1926.1204 (permit-required confined space program), Subpart AA. Content - treat every confined space as hazardous, written program and training before entry, pre-entry atmospheric testing (oxygen, flammables, toxics), attendant plus reliable communication, rescue plan/equipment, employer-provided PPE incl. SCBA, evacuate on any warning sign - aligns with the standard.",
+      "Non-blocking enhancement: consider adding forced-air ventilation/purging as a listed control and continuous atmospheric monitoring during entry (not only pre-entry testing), and citing 29 CFR 1926.1211 (rescue) given the talk's emphasis on would-be rescuer fatalities."
+    ]
+  }
+}

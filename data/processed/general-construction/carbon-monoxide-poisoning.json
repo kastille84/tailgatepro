@@ -1,0 +1,49 @@
+{
+  "id": "carbon-monoxide-poisoning",
+  "title": "Preventing Carbon Monoxide Poisoning",
+  "primary_trade": "General Construction",
+  "trade_tags": [
+    "General Construction"
+  ],
+  "osha_standards": [
+    "29 CFR 1926.55"
+  ],
+  "estimated_minutes": 5,
+  "summary": "Every fuel-burning engine makes carbon monoxide, an invisible gas with no smell that builds up fast in enclosed spaces. This talk covers keeping engines out, monitoring, and reacting to symptoms.",
+  "talking_points": [
+    "Never run a gas, diesel, or propane engine - generator, mixer, trowel, pressure washer, or forklift - indoors or in a garage, crawl space, or basement.",
+    "Before work, find every possible source of carbon monoxide on the site.",
+    "Use electric tools, or keep the engine outside and away from air intakes.",
+    "Wear a carbon monoxide monitor when exposure risk is high. Your employer should provide one. It alarms when levels get unsafe.",
+    "Know the warning signs: headache, faintness, dizziness, confusion, nausea, and irregular heartbeat.",
+    "If you or a coworker shows signs, shut off the equipment, get outside, and call 911."
+  ],
+  "site_hazards_to_check": [
+    "Fuel-powered engines running inside enclosed or partly enclosed areas",
+    "Poor or no ventilation where engines are operating",
+    "Engine exhaust near building air intakes, doors, or windows",
+    "No carbon monoxide monitor where several engines run",
+    "Workers showing headache, dizziness, or nausea"
+  ],
+  "discussion_questions": [
+    "What equipment on this site gives off carbon monoxide, and where is it running?",
+    "How is this enclosed area being ventilated, and is it enough?",
+    "What are the early warning signs, and what do we do if someone feels them?"
+  ],
+  "attribution": {
+    "source": "NIOSH",
+    "publisher": "National Institute for Occupational Safety and Health (NIOSH)",
+    "copyright": "U.S. Government work — public domain.",
+    "license": "public-domain",
+    "source_url": "https://www.cdc.gov/niosh/docs/2022-130/2022-130.pdf",
+    "notice": "Adapted from a NIOSH Toolbox Talk (co-developed with CPWR). Public-domain source; not an endorsement by NIOSH or CPWR."
+  },
+  "audit": {
+    "status": "approved",
+    "audited_at": "2026-09-10T18:21:19Z",
+    "osha_accuracy_verified": true,
+    "flags": [
+      "OSHA mapping verified accurate: 29 CFR 1926.55 (gases, vapors, fumes, dusts, and mists) is the correct construction authority for the CO exposure limit (Appendix A lists CO). Content - never run fuel-burning engines in enclosed/partly enclosed areas, substitute electric tools, keep engines outside and away from air intakes, use a CO monitor/alarm where risk is high, recognize symptoms, evacuate and call 911 - is accurate and complete for a 5-minute talk. No tolerance issues."
+    ]
+  }
+}

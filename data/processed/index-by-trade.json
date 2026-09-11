@@ -1,0 +1,693 @@
+{
+  "last_updated": "2026-09-10T23:12:57Z",
+  "total_talks": 34,
+  "trades": {
+    "Carpentry": [
+      {
+        "id": "housekeeping",
+        "title": "Jobsite Housekeeping",
+        "file_path": "data/processed/general-construction/housekeeping.json",
+        "osha_standards": [
+          "29 CFR 1926.25"
+        ],
+        "source": "CPWR"
+      },
+      {
+        "id": "nail-gun-safety",
+        "title": "Nail Gun Safety",
+        "file_path": "data/processed/carpentry/nail-gun-safety.json",
+        "osha_standards": [
+          "29 CFR 1926.302",
+          "29 CFR 1926.102"
+        ],
+        "source": "CPWR"
+      },
+      {
+        "id": "power-saw-safety",
+        "title": "Power Saw Safety",
+        "file_path": "data/processed/carpentry/power-saw-safety.json",
+        "osha_standards": [
+          "29 CFR 1926.302",
+          "29 CFR 1926.304"
+        ],
+        "source": "CPWR"
+      }
+    ],
+    "Drywall": [
+      {
+        "id": "materials-handling-drywall",
+        "title": "Safe Drywall Handling and Lifting",
+        "file_path": "data/processed/drywall/materials-handling-drywall.json",
+        "osha_standards": [
+          "OSH Act Section 5(a)(1) General Duty Clause",
+          "29 CFR 1926.250"
+        ],
+        "source": "NIOSH"
+      }
+    ],
+    "Electrical": [
+      {
+        "id": "buried-utilities-and-safety",
+        "title": "Digging Safely Around Buried Utilities",
+        "file_path": "data/processed/excavation/buried-utilities-and-safety.json",
+        "osha_standards": [
+          "29 CFR 1926.651",
+          "29 CFR 1926.652",
+          "29 CFR 1926.416(a)(1)"
+        ],
+        "source": "NIOSH"
+      },
+      {
+        "id": "electrical-safety-power",
+        "title": "Electrical Power Safety: De-Energize, Lock Out, Tag",
+        "file_path": "data/processed/electrical/electrical-safety-power.json",
+        "osha_standards": [
+          "29 CFR 1926.416",
+          "29 CFR 1926.417"
+        ],
+        "source": "NIOSH"
+      },
+      {
+        "id": "electrical-safety-wiring",
+        "title": "Electrical Wiring Safety",
+        "file_path": "data/processed/electrical/electrical-safety-wiring.json",
+        "osha_standards": [
+          "29 CFR 1926.416",
+          "29 CFR 1926.417"
+        ],
+        "source": "NIOSH"
+      },
+      {
+        "id": "electrical-safety-extension-cords",
+        "title": "Extension Cord Safety on the Jobsite",
+        "file_path": "data/processed/electrical/electrical-safety-extension-cords.json",
+        "osha_standards": [
+          "29 CFR 1926.404",
+          "29 CFR 1926.405"
+        ],
+        "source": "NIOSH"
+      },
+      {
+        "id": "overhead-power-line-safety",
+        "title": "Working Safely Near Overhead Power Lines",
+        "file_path": "data/processed/electrical/overhead-power-line-safety.json",
+        "osha_standards": [
+          "29 CFR 1926.1408",
+          "29 CFR 1926.416",
+          "29 CFR 1926.600(a)(6)",
+          "29 CFR 1926.453(a)(1)",
+          "29 CFR 1926.1053(b)(12)"
+        ],
+        "source": "NIOSH"
+      }
+    ],
+    "Excavation": [
+      {
+        "id": "buried-utilities-and-safety",
+        "title": "Digging Safely Around Buried Utilities",
+        "file_path": "data/processed/excavation/buried-utilities-and-safety.json",
+        "osha_standards": [
+          "29 CFR 1926.651",
+          "29 CFR 1926.652",
+          "29 CFR 1926.416(a)(1)"
+        ],
+        "source": "NIOSH"
+      },
+      {
+        "id": "skid-steer-loader-safety",
+        "title": "Skid Steer Loader Safety",
+        "file_path": "data/processed/heavy-equipment/skid-steer-loader-safety.json",
+        "osha_standards": [
+          "29 CFR 1926.600",
+          "29 CFR 1926.602"
+        ],
+        "source": "NIOSH"
+      },
+      {
+        "id": "trench-safety",
+        "title": "Trench Cave-In Prevention",
+        "file_path": "data/processed/excavation/trench-safety.json",
+        "osha_standards": [
+          "29 CFR 1926.651",
+          "29 CFR 1926.652"
+        ],
+        "source": "CPWR"
+      }
+    ],
+    "General Construction": [
+      {
+        "id": "aerial-lifts-safety",
+        "title": "Aerial Lift Safety: Fall Protection, Stability, and Power Lines",
+        "file_path": "data/processed/heavy-equipment/aerial-lifts-safety.json",
+        "osha_standards": [
+          "29 CFR 1926.453",
+          "29 CFR 1926.451"
+        ],
+        "source": "NIOSH"
+      },
+      {
+        "id": "arc-welding-and-fire-safety",
+        "title": "Arc Welding and Fire Prevention",
+        "file_path": "data/processed/welding/arc-welding-and-fire-safety.json",
+        "osha_standards": [
+          "29 CFR 1926.351",
+          "29 CFR 1926.352"
+        ],
+        "source": "NIOSH"
+      },
+      {
+        "id": "asphalt-fumes-roofing-operations",
+        "title": "Asphalt Fumes During Roofing Operations",
+        "file_path": "data/processed/roofing/asphalt-fumes-roofing-operations.json",
+        "osha_standards": [
+          "29 CFR 1926.59",
+          "29 CFR 1926.55"
+        ],
+        "source": "NIOSH"
+      },
+      {
+        "id": "biohazards",
+        "title": "Biohazards From Sewage and Infectious Waste",
+        "file_path": "data/processed/plumbing/biohazards.json",
+        "osha_standards": [
+          "29 CFR 1926.28",
+          "29 CFR 1910.1030"
+        ],
+        "source": "NIOSH"
+      },
+      {
+        "id": "boom-truck-safety",
+        "title": "Boom Truck Crane Safety",
+        "file_path": "data/processed/heavy-equipment/boom-truck-safety.json",
+        "osha_standards": [
+          "29 CFR 1926.1412",
+          "29 CFR 1926.1417"
+        ],
+        "source": "NIOSH"
+      },
+      {
+        "id": "confined-spaces-and-safety",
+        "title": "Confined Space Entry Safety",
+        "file_path": "data/processed/general-construction/confined-spaces-and-safety.json",
+        "osha_standards": [
+          "29 CFR 1926.1203",
+          "29 CFR 1926.1204"
+        ],
+        "source": "NIOSH"
+      },
+      {
+        "id": "silica",
+        "title": "Controlling Silica Dust Exposure",
+        "file_path": "data/processed/masonry/silica.json",
+        "osha_standards": [
+          "29 CFR 1926.1153"
+        ],
+        "source": "CPWR"
+      },
+      {
+        "id": "crane-safety-stability-and-tipping",
+        "title": "Crane Stability and Tip-Over Prevention",
+        "file_path": "data/processed/heavy-equipment/crane-safety-stability-and-tipping.json",
+        "osha_standards": [
+          "29 CFR 1926.1402",
+          "29 CFR 1926.1417"
+        ],
+        "source": "NIOSH"
+      },
+      {
+        "id": "buried-utilities-and-safety",
+        "title": "Digging Safely Around Buried Utilities",
+        "file_path": "data/processed/excavation/buried-utilities-and-safety.json",
+        "osha_standards": [
+          "29 CFR 1926.651",
+          "29 CFR 1926.652",
+          "29 CFR 1926.416(a)(1)"
+        ],
+        "source": "NIOSH"
+      },
+      {
+        "id": "electrical-safety-extension-cords",
+        "title": "Extension Cord Safety on the Jobsite",
+        "file_path": "data/processed/electrical/electrical-safety-extension-cords.json",
+        "osha_standards": [
+          "29 CFR 1926.404",
+          "29 CFR 1926.405"
+        ],
+        "source": "NIOSH"
+      },
+      {
+        "id": "falls-extension-ladders",
+        "title": "Extension Ladder Fall Prevention",
+        "file_path": "data/processed/general-construction/falls-extension-ladders.json",
+        "osha_standards": [
+          "29 CFR 1926.1053",
+          "29 CFR 1926.1060"
+        ],
+        "source": "CPWR"
+      },
+      {
+        "id": "eye-protection",
+        "title": "Eye Protection on the Jobsite",
+        "file_path": "data/processed/general-construction/eye-protection.json",
+        "osha_standards": [
+          "29 CFR 1926.102"
+        ],
+        "source": "NIOSH"
+      },
+      {
+        "id": "equipment-safety-forklifts",
+        "title": "Forklift Safety on Construction Sites",
+        "file_path": "data/processed/heavy-equipment/equipment-safety-forklifts.json",
+        "osha_standards": [
+          "29 CFR 1926.602",
+          "29 CFR 1910.178"
+        ],
+        "source": "NIOSH"
+      },
+      {
+        "id": "equipment-safety-getting-on-and-off",
+        "title": "Getting On and Off Equipment Safely",
+        "file_path": "data/processed/heavy-equipment/equipment-safety-getting-on-and-off.json",
+        "osha_standards": [
+          "29 CFR 1926.600",
+          "29 CFR 1926.602",
+          "29 CFR 1926.20"
+        ],
+        "source": "NIOSH"
+      },
+      {
+        "id": "housekeeping",
+        "title": "Jobsite Housekeeping",
+        "file_path": "data/processed/general-construction/housekeeping.json",
+        "osha_standards": [
+          "29 CFR 1926.25"
+        ],
+        "source": "CPWR"
+      },
+      {
+        "id": "nail-gun-safety",
+        "title": "Nail Gun Safety",
+        "file_path": "data/processed/carpentry/nail-gun-safety.json",
+        "osha_standards": [
+          "29 CFR 1926.302",
+          "29 CFR 1926.102"
+        ],
+        "source": "CPWR"
+      },
+      {
+        "id": "power-saw-safety",
+        "title": "Power Saw Safety",
+        "file_path": "data/processed/carpentry/power-saw-safety.json",
+        "osha_standards": [
+          "29 CFR 1926.302",
+          "29 CFR 1926.304"
+        ],
+        "source": "CPWR"
+      },
+      {
+        "id": "carbon-monoxide-poisoning",
+        "title": "Preventing Carbon Monoxide Poisoning",
+        "file_path": "data/processed/general-construction/carbon-monoxide-poisoning.json",
+        "osha_standards": [
+          "29 CFR 1926.55"
+        ],
+        "source": "NIOSH"
+      },
+      {
+        "id": "preventing-falling-objects",
+        "title": "Preventing Falling Objects and Struck-By Injuries",
+        "file_path": "data/processed/general-construction/preventing-falling-objects.json",
+        "osha_standards": [
+          "29 CFR 1926.501",
+          "29 CFR 1926.100"
+        ],
+        "source": "NIOSH"
+      },
+      {
+        "id": "prevent-falls-scaffolds",
+        "title": "Preventing Falls From Scaffolds",
+        "file_path": "data/processed/general-construction/prevent-falls-scaffolds.json",
+        "osha_standards": [
+          "29 CFR 1926.451",
+          "29 CFR 1926.454"
+        ],
+        "source": "NIOSH"
+      },
+      {
+        "id": "prevent-falls-through-holes",
+        "title": "Preventing Falls Through Floor and Roof Holes",
+        "file_path": "data/processed/general-construction/prevent-falls-through-holes.json",
+        "osha_standards": [
+          "29 CFR 1926.501",
+          "29 CFR 1926.502"
+        ],
+        "source": "NIOSH"
+      },
+      {
+        "id": "prevent-falls-guardrails",
+        "title": "Preventing Falls With Guardrails",
+        "file_path": "data/processed/general-construction/prevent-falls-guardrails.json",
+        "osha_standards": [
+          "29 CFR 1926.501",
+          "29 CFR 1926.502",
+          "29 CFR 1926.503"
+        ],
+        "source": "NIOSH"
+      },
+      {
+        "id": "hot-environments",
+        "title": "Preventing Heat Illness in Hot Environments",
+        "file_path": "data/processed/general-construction/hot-environments.json",
+        "osha_standards": [
+          "OSH Act Section 5(a)(1) General Duty Clause"
+        ],
+        "source": "CPWR"
+      },
+      {
+        "id": "wet-concrete",
+        "title": "Protecting Skin From Wet Concrete",
+        "file_path": "data/processed/masonry/wet-concrete.json",
+        "osha_standards": [
+          "29 CFR 1926.95",
+          "29 CFR 1926.102"
+        ],
+        "source": "CPWR"
+      },
+      {
+        "id": "repetitive-motion-carpal-tunnel-syndrome",
+        "title": "Repetitive Motion and Carpal Tunnel Syndrome",
+        "file_path": "data/processed/general-construction/repetitive-motion-carpal-tunnel-syndrome.json",
+        "osha_standards": [
+          "OSH Act Section 5(a)(1) General Duty Clause"
+        ],
+        "source": "NIOSH"
+      },
+      {
+        "id": "respiratory-protection",
+        "title": "Respiratory Protection Basics",
+        "file_path": "data/processed/general-construction/respiratory-protection.json",
+        "osha_standards": [
+          "29 CFR 1926.103",
+          "29 CFR 1910.134"
+        ],
+        "source": "NIOSH"
+      },
+      {
+        "id": "materials-handling-drywall",
+        "title": "Safe Drywall Handling and Lifting",
+        "file_path": "data/processed/drywall/materials-handling-drywall.json",
+        "osha_standards": [
+          "OSH Act Section 5(a)(1) General Duty Clause",
+          "29 CFR 1926.250"
+        ],
+        "source": "NIOSH"
+      },
+      {
+        "id": "equipment-safety-maintenance",
+        "title": "Safe Equipment Maintenance and Lockout/Tagout",
+        "file_path": "data/processed/heavy-equipment/equipment-safety-maintenance.json",
+        "osha_standards": [
+          "29 CFR 1926.600",
+          "29 CFR 1926.431",
+          "29 CFR 1926.417"
+        ],
+        "source": "NIOSH"
+      },
+      {
+        "id": "skid-steer-loader-safety",
+        "title": "Skid Steer Loader Safety",
+        "file_path": "data/processed/heavy-equipment/skid-steer-loader-safety.json",
+        "osha_standards": [
+          "29 CFR 1926.600",
+          "29 CFR 1926.602"
+        ],
+        "source": "NIOSH"
+      },
+      {
+        "id": "trench-safety",
+        "title": "Trench Cave-In Prevention",
+        "file_path": "data/processed/excavation/trench-safety.json",
+        "osha_standards": [
+          "29 CFR 1926.651",
+          "29 CFR 1926.652"
+        ],
+        "source": "CPWR"
+      },
+      {
+        "id": "overhead-power-line-safety",
+        "title": "Working Safely Near Overhead Power Lines",
+        "file_path": "data/processed/electrical/overhead-power-line-safety.json",
+        "osha_standards": [
+          "29 CFR 1926.1408",
+          "29 CFR 1926.416",
+          "29 CFR 1926.600(a)(6)",
+          "29 CFR 1926.453(a)(1)",
+          "29 CFR 1926.1053(b)(12)"
+        ],
+        "source": "NIOSH"
+      },
+      {
+        "id": "cold-environments",
+        "title": "Working Safely in Cold Environments",
+        "file_path": "data/processed/general-construction/cold-environments.json",
+        "osha_standards": [
+          "OSH Act Section 5(a)(1) General Duty Clause"
+        ],
+        "source": "NIOSH"
+      }
+    ],
+    "Heavy Equipment": [
+      {
+        "id": "aerial-lifts-safety",
+        "title": "Aerial Lift Safety: Fall Protection, Stability, and Power Lines",
+        "file_path": "data/processed/heavy-equipment/aerial-lifts-safety.json",
+        "osha_standards": [
+          "29 CFR 1926.453",
+          "29 CFR 1926.451"
+        ],
+        "source": "NIOSH"
+      },
+      {
+        "id": "boom-truck-safety",
+        "title": "Boom Truck Crane Safety",
+        "file_path": "data/processed/heavy-equipment/boom-truck-safety.json",
+        "osha_standards": [
+          "29 CFR 1926.1412",
+          "29 CFR 1926.1417"
+        ],
+        "source": "NIOSH"
+      },
+      {
+        "id": "crane-safety-stability-and-tipping",
+        "title": "Crane Stability and Tip-Over Prevention",
+        "file_path": "data/processed/heavy-equipment/crane-safety-stability-and-tipping.json",
+        "osha_standards": [
+          "29 CFR 1926.1402",
+          "29 CFR 1926.1417"
+        ],
+        "source": "NIOSH"
+      },
+      {
+        "id": "equipment-safety-forklifts",
+        "title": "Forklift Safety on Construction Sites",
+        "file_path": "data/processed/heavy-equipment/equipment-safety-forklifts.json",
+        "osha_standards": [
+          "29 CFR 1926.602",
+          "29 CFR 1910.178"
+        ],
+        "source": "NIOSH"
+      },
+      {
+        "id": "equipment-safety-getting-on-and-off",
+        "title": "Getting On and Off Equipment Safely",
+        "file_path": "data/processed/heavy-equipment/equipment-safety-getting-on-and-off.json",
+        "osha_standards": [
+          "29 CFR 1926.600",
+          "29 CFR 1926.602",
+          "29 CFR 1926.20"
+        ],
+        "source": "NIOSH"
+      },
+      {
+        "id": "equipment-safety-maintenance",
+        "title": "Safe Equipment Maintenance and Lockout/Tagout",
+        "file_path": "data/processed/heavy-equipment/equipment-safety-maintenance.json",
+        "osha_standards": [
+          "29 CFR 1926.600",
+          "29 CFR 1926.431",
+          "29 CFR 1926.417"
+        ],
+        "source": "NIOSH"
+      },
+      {
+        "id": "skid-steer-loader-safety",
+        "title": "Skid Steer Loader Safety",
+        "file_path": "data/processed/heavy-equipment/skid-steer-loader-safety.json",
+        "osha_standards": [
+          "29 CFR 1926.600",
+          "29 CFR 1926.602"
+        ],
+        "source": "NIOSH"
+      },
+      {
+        "id": "overhead-power-line-safety",
+        "title": "Working Safely Near Overhead Power Lines",
+        "file_path": "data/processed/electrical/overhead-power-line-safety.json",
+        "osha_standards": [
+          "29 CFR 1926.1408",
+          "29 CFR 1926.416",
+          "29 CFR 1926.600(a)(6)",
+          "29 CFR 1926.453(a)(1)",
+          "29 CFR 1926.1053(b)(12)"
+        ],
+        "source": "NIOSH"
+      }
+    ],
+    "Masonry": [
+      {
+        "id": "silica",
+        "title": "Controlling Silica Dust Exposure",
+        "file_path": "data/processed/masonry/silica.json",
+        "osha_standards": [
+          "29 CFR 1926.1153"
+        ],
+        "source": "CPWR"
+      },
+      {
+        "id": "prevent-falls-scaffolds",
+        "title": "Preventing Falls From Scaffolds",
+        "file_path": "data/processed/general-construction/prevent-falls-scaffolds.json",
+        "osha_standards": [
+          "29 CFR 1926.451",
+          "29 CFR 1926.454"
+        ],
+        "source": "NIOSH"
+      },
+      {
+        "id": "hot-environments",
+        "title": "Preventing Heat Illness in Hot Environments",
+        "file_path": "data/processed/general-construction/hot-environments.json",
+        "osha_standards": [
+          "OSH Act Section 5(a)(1) General Duty Clause"
+        ],
+        "source": "CPWR"
+      },
+      {
+        "id": "wet-concrete",
+        "title": "Protecting Skin From Wet Concrete",
+        "file_path": "data/processed/masonry/wet-concrete.json",
+        "osha_standards": [
+          "29 CFR 1926.95",
+          "29 CFR 1926.102"
+        ],
+        "source": "CPWR"
+      },
+      {
+        "id": "respiratory-protection",
+        "title": "Respiratory Protection Basics",
+        "file_path": "data/processed/general-construction/respiratory-protection.json",
+        "osha_standards": [
+          "29 CFR 1926.103",
+          "29 CFR 1910.134"
+        ],
+        "source": "NIOSH"
+      }
+    ],
+    "Plumbing": [
+      {
+        "id": "biohazards",
+        "title": "Biohazards From Sewage and Infectious Waste",
+        "file_path": "data/processed/plumbing/biohazards.json",
+        "osha_standards": [
+          "29 CFR 1926.28",
+          "29 CFR 1910.1030"
+        ],
+        "source": "NIOSH"
+      },
+      {
+        "id": "confined-spaces-and-safety",
+        "title": "Confined Space Entry Safety",
+        "file_path": "data/processed/general-construction/confined-spaces-and-safety.json",
+        "osha_standards": [
+          "29 CFR 1926.1203",
+          "29 CFR 1926.1204"
+        ],
+        "source": "NIOSH"
+      }
+    ],
+    "Roofing": [
+      {
+        "id": "asphalt-fumes-roofing-operations",
+        "title": "Asphalt Fumes During Roofing Operations",
+        "file_path": "data/processed/roofing/asphalt-fumes-roofing-operations.json",
+        "osha_standards": [
+          "29 CFR 1926.59",
+          "29 CFR 1926.55"
+        ],
+        "source": "NIOSH"
+      },
+      {
+        "id": "falls-extension-ladders",
+        "title": "Extension Ladder Fall Prevention",
+        "file_path": "data/processed/general-construction/falls-extension-ladders.json",
+        "osha_standards": [
+          "29 CFR 1926.1053",
+          "29 CFR 1926.1060"
+        ],
+        "source": "CPWR"
+      },
+      {
+        "id": "nail-gun-safety",
+        "title": "Nail Gun Safety",
+        "file_path": "data/processed/carpentry/nail-gun-safety.json",
+        "osha_standards": [
+          "29 CFR 1926.302",
+          "29 CFR 1926.102"
+        ],
+        "source": "CPWR"
+      },
+      {
+        "id": "prevent-falls-through-holes",
+        "title": "Preventing Falls Through Floor and Roof Holes",
+        "file_path": "data/processed/general-construction/prevent-falls-through-holes.json",
+        "osha_standards": [
+          "29 CFR 1926.501",
+          "29 CFR 1926.502"
+        ],
+        "source": "NIOSH"
+      },
+      {
+        "id": "prevent-falls-guardrails",
+        "title": "Preventing Falls With Guardrails",
+        "file_path": "data/processed/general-construction/prevent-falls-guardrails.json",
+        "osha_standards": [
+          "29 CFR 1926.501",
+          "29 CFR 1926.502",
+          "29 CFR 1926.503"
+        ],
+        "source": "NIOSH"
+      }
+    ],
+    "Welding": [
+      {
+        "id": "arc-welding-and-fire-safety",
+        "title": "Arc Welding and Fire Prevention",
+        "file_path": "data/processed/welding/arc-welding-and-fire-safety.json",
+        "osha_standards": [
+          "29 CFR 1926.351",
+          "29 CFR 1926.352"
+        ],
+        "source": "NIOSH"
+      },
+      {
+        "id": "eye-protection",
+        "title": "Eye Protection on the Jobsite",
+        "file_path": "data/processed/general-construction/eye-protection.json",
+        "osha_standards": [
+          "29 CFR 1926.102"
+        ],
+        "source": "NIOSH"
+      }
+    ]
+  }
+}

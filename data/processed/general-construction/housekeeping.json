@@ -1,0 +1,53 @@
+{
+  "id": "housekeeping",
+  "title": "Jobsite Housekeeping",
+  "primary_trade": "General Construction",
+  "trade_tags": [
+    "General Construction",
+    "Carpentry"
+  ],
+  "osha_standards": [
+    "29 CFR 1926.25"
+  ],
+  "estimated_minutes": 5,
+  "summary": "Poor housekeeping causes trips, falls, fires, and struck-by injuries, plus delays and damage. This talk covers keeping walkways clear, managing cords and waste, and protecting exits.",
+  "talking_points": [
+    "Keep floors, walkways, and stairs dry, clean, and clear of waste and scrap.",
+    "Keep the workplace well lit.",
+    "Route hoses, power cords, and welding leads out of walkways and travel paths.",
+    "Keep material away from floor openings, roof edges, excavations, and trenches. Stack and store material where it cannot fall on anyone.",
+    "Do not let scrap or garbage pile up - remove unused material as you go.",
+    "Never block emergency exits, fire equipment, or first aid stations. Keep chemicals and gases away from heat sources and electrical equipment. Use separate covered containers for trash, oily rags, and flammable or hazardous waste."
+  ],
+  "site_hazards_to_check": [
+    "Scrap, offcuts, sawdust, or debris built up in work areas and on stairs",
+    "Cords, hoses, and leads run across walkways",
+    "Material stacked near openings, edges, or trenches, or piled where it can topple",
+    "Blocked exits, fire extinguishers, or first aid stations",
+    "Oily rags or flammable waste in open or shared containers near heat"
+  ],
+  "discussion_questions": [
+    "Which walkways and stairs on this site are cluttered right now?",
+    "Where do cords and hoses cross paths, and how do we reroute them?",
+    "Are our exits and fire equipment clear and easy to reach?"
+  ],
+  "attribution": {
+    "source": "CPWR",
+    "publisher": "CPWR — The Center for Construction Research and Training",
+    "copyright": "© 2017 CPWR — The Center for Construction Research and Training. All rights reserved.",
+    "license": "free-use-with-attribution",
+    "source_url": "https://www.cpwr.com/wp-content/uploads/TT-Housekeeping.pdf",
+    "notice": "Adapted from a CPWR/NIOSH Toolbox Talk, produced under NIOSH cooperative agreement OH 009762. Reproduced with attribution for jobsite safety training; not an endorsement by CPWR or NIOSH."
+  },
+  "audit": {
+    "status": "approved",
+    "audited_at": "2026-09-10T23:15:30Z",
+    "osha_accuracy_verified": true,
+    "flags": [
+      "LICENSING RESOLVED (2026-09-10): CPWR Toolbox Talk content is used under free-use-with-attribution. Permitted here because (1) the talk is one bundled feature of a subscription product and is never sold as a standalone paid product, (2) CPWR/NIOSH copyright markings and the no-endorsement notice are retained - held in this file's `attribution` object and appended to the rendered Markdown `content` by scripts/lib/talkRow.js `composeMarkdown` - and (3) no CPWR or NIOSH endorsement is claimed or implied (attribution.notice ends 'not an endorsement by CPWR or NIOSH'). No written CPWR redistribution permission is required; the prior LICENSING BLOCKER is cleared.",
+      "Attribution object verified: source 'CPWR', copyright '(c) 2017 CPWR', license 'free-use-with-attribution', source_url and publisher present, notice carries the no-endorsement clause.",
+      "OSHA mapping accurate: 29 CFR 1926.25 (housekeeping). Content - keep floors/walkways/stairs clear and dry, adequate lighting, route cords/hoses/leads out of paths, keep material back from openings and edges and stacked so it cannot topple, remove scrap as work proceeds, never block exits/fire equipment/first-aid, separate covered containers for trash vs. oily rags vs. flammable waste - is sound and complete for a 5-minute talk. No technical defects.",
+      "Non-blocking: Display obligation: docs/content-attribution.md records that TalkDetail (Phase 2c) and the generated PDF (Phase 5) must surface attribution.copyright + attribution.notice. Today the credit is rendered into the Markdown content body by the loader; the UI/PDF display path is tracked in docs/tasks.md."
+    ]
+  }
+}

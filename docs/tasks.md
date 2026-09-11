@@ -103,19 +103,119 @@ default list.
       zone (archive/restore + delete) (+ tests)
 - [x] `ui_comps/confirm-dialog/` — generic confirm-before-acting dialog (built on
       `Modal` + `Button`), used by the `ProjectForm` delete flow (+ test)
-- [ ] Pre-req: apply `archived_at` to Supabase before hitting the endpoints
-- [ ] Verify end-to-end: create → delete a talk-less project; archive → toggle
+- [x] Pre-req: apply `archived_at` to Supabase before hitting the endpoints
+- [x] Verify end-to-end: create → delete a talk-less project; archive → toggle
       "Show archived" → restore; other-company bearer token → 404
 - [ ] Phase 3 offline: route archive (PATCH) and delete (DELETE) through the
       IndexedDB replay queue alongside create/edit
 
-## Phase 2 — Content Library (toolbox_talks) · epic, expand when reached
+## Phase 2 — Content Library (toolbox_talks)
 
-- [ ] Seed script: ~30 public-domain OSHA talks with `trade_tag`
-- [ ] Server: list / filter-by-trade / search / get
-- [ ] Client: browse + trade filter + search + talk detail
-- [ ] Custom talks (company-scoped create)
-- [ ] Schema: add `user_favorites` table; favorites toggle + filter
+Plan: `~/.claude/plans/what-s-next-on-our-scalable-blossom.md`. Sequenced as
+harvest → schema → loader (this round), then server API, then client browse,
+then favorites + custom talks.
+
+### 2a — Harvest + schema + loader · status: harvest done (34/34 approved w/ attribution); Supabase apply + seed run pending
+
+- [x] Run the harvest pipeline (`@safety-collector` → `@safety-structurer` →
+      `@safety-auditor`) → `data/raw/**` (34 raw talks) +
+      `data/processed/<trade>/<slug>.json` (34 files, 10 trade dirs,
+      `index-by-trade.json`).
+- [x] Audit follow-up: fixed + re-audited the 3 NIOSH OSHA-mapping defects —
+      `electrical/overhead-power-line-safety` (dropped Subpart-V `1926.955`;
+      added `1926.600(a)(6)` / `1926.453(a)(1)` / `1926.1053(b)(12)`),
+      `excavation/buried-utilities-and-safety` (dropped crane-only `1926.1408`;
+      added `1926.416(a)(1)`), `heavy-equipment/aerial-lifts-safety` (added
+      scaffold-standard `1926.451`; split boom-lift vs. scissor-lift fall
+      protection; retitled). `index-by-trade.json` synced; `talkRow` tests green.
+      Audit was 26 approved / 8 needs_revision at this point.
+- [x] CPWR licensing decided: **keep all 8 CPWR talks.** CPWR's free Toolbox
+      Talks are usable in-app given (1) no standalone resale, (2) attribution
+      kept with the content, (3) no implied endorsement — all satisfied (bundled
+      subscription feature; per-talk `attribution` block; "not an endorsement"
+      notice). Full rationale in `docs/content-attribution.md`.
+- [x] Attribution plumbed end to end: new `toolbox_talks.attribution JSONB`
+      column (`Supabase_SQL.sql` + `Supabase_Schema.md`); `buildRow` forwards it
+      and `composeMarkdown` appends the copyright + notice to `content`;
+      structurer schema doc updated. `scripts/backfill-attribution.js` (one-shot,
+      idempotent) recovered `source` / `source_url` / rights from
+      `data/raw/*.md` frontmatter into all 34 processed files + `source` on each
+      `index-by-trade.json` entry. `talkRow.test.js` 9 → 12 tests, green.
+- [x] `power-saw-safety` kickback content gap closed (structurer added a
+      cause+prevention talking point and a matching site-hazard entry).
+- [x] Re-audited the 8 CPWR files → **all approved. Audit now 34 approved / 0
+      needs_revision**; all 34 rows will seed (`isApproved` gate).
+- [x] Schema (`Supabase_SQL.sql`, `Supabase_Schema.md`): `toolbox_talks` +
+      `slug TEXT UNIQUE`, `structured JSONB`, `trade_tags TEXT[]` + GIN index;
+      compose `content` Markdown from the structured parts; keep `trade_tag` =
+      primary trade
+- [x] Schema: `ALTER TABLE toolbox_talks ENABLE ROW LEVEL SECURITY` — closes a
+      `docs/data-access.md` gap (only `waitlist` had RLS enabled). NOTE: the
+      other core tables (`companies`, `users`, `projects`,
+      `project_subcontractors`, `meeting_logs`, `signatures`) still lack it —
+      separate cleanup.
+- [x] Loader: `scripts/seed-talks.js` + pure `scripts/lib/talkRow.js`
+      (`buildRow` / `composeMarkdown` / `isApproved`, deterministic
+      `uuidv5(slug)` id, `.upsert(onConflict: "slug")`) + `talkRow.test.js`
+      (12 tests). Root `seed:talks` script; `vitest.config.js` include widened
+      to `scripts/**/*.test.js`
+- [x] Pre-req: apply the `toolbox_talks` column/index/RLS changes to Supabase
+      (now includes `attribution JSONB` — see the `ADD COLUMN IF NOT EXISTS`
+      block in `Supabase_SQL.sql`)
+- [x] Verify: `npm run seed:talks` → 34 rows land with `slug` / `structured` /
+      `trade_tags` / `attribution` populated; re-run is a no-op (count stable,
+      ids unchanged)
+- [x] Decide: commit `data/raw/**` (provenance) or `.gitignore` it (size)
+
+### 2b — Server read API · status: code complete; manual smoke pending (needs Phase 2a Supabase apply + seed)
+
+- [x] `server/services/talks.js` — `listGlobal()` (`is_global.eq.true`, title
+      ascending) + `getById(id)` (404 on `PGRST116`, 502 otherwise); camelCase
+      `toTalk` mapper incl. `structured`/`attribution` passthrough. TODO(2d)
+      left in place: `getById` must be company-scoped once custom talks exist.
+- [x] `server/controllers/talks.js` — `listTalks` / `getTalk`, same
+      try/catch → `next(error)` + `{ success, data }` shape as `projects`
+- [x] `server/routes/talks.js` — `GET /` + `GET /:id` (`param("id").isUUID()`),
+      both behind `requireAuth` + `loadUserContext`; no `?q=`/`?trade=` params
+- [x] Mounted `/api/talks` in `server.js`
+- [x] CJS tests: `services/talks.test.js` (6) + `controllers/talks.test.js` (4)
+      — full root suite now 73 passing, no regressions
+- [x] Manual smoke: curl `GET /api/talks` / `GET /api/talks/:id` with a real
+      Bearer token (needs the pending 2a Supabase apply + `npm run seed:talks`
+      first) — expect 34 talks, a 400 on a non-UUID id, a 404 on an unknown id
+
+### 2c — Client browse feature · status: code complete, 100% coverage
+
+- [x] `interfaces/talk.ts` (`Talk`, `TalkStructured`, `TalkAttribution` —
+      `structured`/`attribution` keep the pipeline's original field names,
+      e.g. `source_url`, not camelCased), `services/apiTalks.ts` (`listTalks`),
+      `hooks/useTalks.ts` (`["talks"]` query, disabled without a session)
+- [x] `features/content-library/` — `TalkList` (presentational cards; empty
+      state) + `TalkDetail` (shown in a `Modal` from the page). `TalkDetail`
+      renders `attribution.copyright` + `attribution.notice` whenever
+      `attribution` is present (CPWR licensing requirement — see
+      `docs/content-attribution.md`)
+- [x] `pages/ContentLibrary/` + `/talks` route under `RequireAuth` in `App.tsx`
+- [x] Trade filter (`Select`, chosen over `SegmentedToggle` — up to ~10 trades
+      is too many for a segmented control) + title search (`TextInput`), both
+      wrapped in `FormField` for visible labels; `useMemo` over the one
+      `useTalks()` fetch, matching on any tag in `tradeTags` (not just the
+      primary `tradeTag`)
+- [x] Navbar link (`Toolbox Talks` → `/talks`); Dashboard card activated
+      (`StyledCardSoon` → `StyledCard to="/talks"`, "Coming soon" copy dropped)
+- [x] Client coverage: `npx vitest run --coverage` — 324 tests pass, 100%
+      statements/branches/functions/lines (repo enforces 100% globally today,
+      not the 90% `CLAUDE.md` describes — flagging that doc/code mismatch)
+- [x] Manual smoke: sign in, open `/talks`, confirm the library loads (needs
+      the pending 2a Supabase apply + seed), filter by trade, search by title,
+      open a CPWR-sourced talk and confirm its copyright/notice line renders
+
+### 2d — Favorites + custom talks
+
+- [ ] Schema: `user_favorites` (composite PK `(user_id, talk_id)`, both
+      `ON DELETE CASCADE`); favorites toggle + filter
+- [ ] Custom talks (company-scoped create; `is_global = false`,
+      `company_id = req.user.companyId`)
 
 ## Phase 3 — Offline foundation · epic, design spike first
 
@@ -134,7 +234,10 @@ default list.
 
 ## Phase 5 — PDF generation + GC delivery · epic
 
-- [ ] Server PDF service (PDFKit) — generate on sync, store `final_pdf_url`
+- [ ] Server PDF service (PDFKit) — generate on sync, store `final_pdf_url`.
+      Print the talk's source credit (`toolbox_talks.attribution` `copyright` +
+      `notice`, already carried in the composed `content`) on the PDF — CPWR
+      licensing requirement, see `docs/content-attribution.md`
 - [ ] Email PDF to GC (dev transport until paid Mailgun)
 
 ## Phase 6 — GC dashboard · epic, blocked by invite/join-company

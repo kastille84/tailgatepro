@@ -1,0 +1,55 @@
+{
+  "id": "wet-concrete",
+  "title": "Protecting Skin From Wet Concrete",
+  "primary_trade": "Masonry",
+  "trade_tags": [
+    "Masonry",
+    "General Construction"
+  ],
+  "osha_standards": [
+    "29 CFR 1926.95",
+    "29 CFR 1926.102"
+  ],
+  "estimated_minutes": 5,
+  "summary": "Wet concrete is caustic and can burn skin on contact, and chromium in cement can cause career-ending allergic reactions. This talk covers protective clothing, sealing gaps, and washing exposed skin.",
+  "talking_points": [
+    "Wear protective clothing and gear: long-sleeve coveralls, waterproof boots tall enough to keep concrete out, alkali-resistant gloves, and safety glasses.",
+    "Pull sleeves down over gloves and tuck pants into boots. Tape the top of the boots to keep concrete out.",
+    "Use ready-mixed concrete instead of mixing on site when possible to cut contact during mixing.",
+    "Kneel on a dry board or waterproof kneepads on fresh concrete.",
+    "Remove rings and watches - wet concrete collects under them and burns the skin.",
+    "If concrete gets on your skin, wash it right away with pH-neutral soap and clean water. Do not use the water in the bucket or hand sanitizer. Wash work clothes separately at home."
+  ],
+  "site_hazards_to_check": [
+    "Workers without waterproof boots, alkali-resistant gloves, or eye protection",
+    "Gaps at sleeve cuffs and boot tops where concrete can get in",
+    "No clean water and pH-neutral soap on site for washing exposed skin",
+    "Rings, watches, or wristbands worn during concrete work",
+    "Kneeling directly on fresh concrete with no board or waterproof kneepads"
+  ],
+  "discussion_questions": [
+    "What PPE keeps wet concrete off your skin, and is everyone wearing it?",
+    "Where is the clean water and pH-neutral soap if concrete gets on your skin?",
+    "Why should you not rinse concrete off using the water in the mixing bucket?"
+  ],
+  "attribution": {
+    "source": "CPWR",
+    "publisher": "CPWR — The Center for Construction Research and Training",
+    "copyright": "© 2017 CPWR — The Center for Construction Research and Training. All rights reserved.",
+    "license": "free-use-with-attribution",
+    "source_url": "https://www.cpwr.com/wp-content/uploads/publications/CPWR_Wet_Concrete_1.pdf",
+    "notice": "Adapted from a CPWR/NIOSH Toolbox Talk, produced under NIOSH cooperative agreement OH 009762. Reproduced with attribution for jobsite safety training; not an endorsement by CPWR or NIOSH."
+  },
+  "audit": {
+    "status": "approved",
+    "audited_at": "2026-09-10T23:15:30Z",
+    "osha_accuracy_verified": true,
+    "flags": [
+      "LICENSING RESOLVED (2026-09-10): CPWR Toolbox Talk content is used under free-use-with-attribution. Permitted here because (1) the talk is one bundled feature of a subscription product and is never sold as a standalone paid product, (2) CPWR/NIOSH copyright markings and the no-endorsement notice are retained - held in this file's `attribution` object and appended to the rendered Markdown `content` by scripts/lib/talkRow.js `composeMarkdown` - and (3) no CPWR or NIOSH endorsement is claimed or implied (attribution.notice ends 'not an endorsement by CPWR or NIOSH'). No written CPWR redistribution permission is required; the prior LICENSING BLOCKER is cleared.",
+      "Attribution object verified: source 'CPWR', copyright '(c) 2017 CPWR', license 'free-use-with-attribution', source_url and publisher present, notice carries the no-endorsement clause.",
+      "OSHA mapping accurate: 29 CFR 1926.95 (PPE criteria) and 1926.102 (eye/face protection). Content - alkali-resistant gloves, waterproof boots tall enough and taped at the top, close sleeve/boot gaps, remove rings and watches, kneel on a dry board or waterproof pads, wash promptly with pH-neutral soap and clean water (not bucket water or hand sanitizer), launder work clothes separately - is technically sound. No technical defects.",
+      "Non-blocking (technical): could add 29 CFR 1926.28 and the General Duty Clause for the caustic-burn and hexavalent-chromium dermatitis hazard.",
+      "Non-blocking: Display obligation: docs/content-attribution.md records that TalkDetail (Phase 2c) and the generated PDF (Phase 5) must surface attribution.copyright + attribution.notice. Today the credit is rendered into the Markdown content body by the loader; the UI/PDF display path is tracked in docs/tasks.md."
+    ]
+  }
+}

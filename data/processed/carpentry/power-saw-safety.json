@@ -1,0 +1,57 @@
+{
+  "id": "power-saw-safety",
+  "title": "Power Saw Safety",
+  "primary_trade": "Carpentry",
+  "trade_tags": [
+    "Carpentry",
+    "General Construction"
+  ],
+  "osha_standards": [
+    "29 CFR 1926.302",
+    "29 CFR 1926.304"
+  ],
+  "estimated_minutes": 5,
+  "summary": "Power saws cause thousands of serious injuries a year - shocks, cuts, and lacerations - and can kill. This talk covers blade and guard checks, kickback, entanglement, and electrical protection.",
+  "talking_points": [
+    "Read the owner's manual before first use. Check that movable guards work. Keep blades sharp, clean, oiled, and free of cracks.",
+    "Wear goggles or safety glasses with side shields even under a face shield, and wear proper shoes.",
+    "Prevent entanglement: no jewelry or chains, no loose clothing, and tie long hair back inside your hard hat.",
+    "Cut only with a clear work area and solid footing. Check that the cutting path is free of nails and other objects, and set blade depth so it does not strike sawhorses or supports.",
+    "Kickback happens when the blade binds or pinches in the cut - the stock is not held on both sides, the offcut closes on the blade, the blade is dull or wrong for the material, or you force the cut. Prevent it: support the workpiece on both sides so the kerf cannot close, keep the upper and lower blade guards working, use a sharp blade rated for the material, let the blade reach full speed before you cut, never overreach, and stand to the side of the line of the cut - never directly behind the saw.",
+    "Make sure a corded electric saw is double-insulated with a 3-prong plug in a grounded outlet. Use a GFCI cord in damp conditions.",
+    "Let the blade spin down on its own - never stop it with your hand. Unplug the saw before changing a blade and keep control of the plug so no one else energizes it."
+  ],
+  "site_hazards_to_check": [
+    "Missing, jammed, or tied-back blade guards",
+    "Dull, cracked, or dirty blades, or blade depth set to hit sawhorses or supports",
+    "Unsupported or pinching stock or offcut that can bind the blade, a missing or stuck lower blade guard, or dull, cracked, or wrong-type blades still in use",
+    "Nails, screws, or debris in the cutting path, or unstable footing or workpiece",
+    "Two-prong plugs, damaged cords, or no GFCI in damp areas",
+    "Loose clothing, chains, or untied hair near the blade"
+  ],
+  "discussion_questions": [
+    "How do you check the blade guard and blade before a cut?",
+    "What causes kickback, and how do you set up the cut to avoid it?",
+    "How do you make sure no one plugs the saw back in while you change the blade?"
+  ],
+  "attribution": {
+    "source": "CPWR",
+    "publisher": "CPWR — The Center for Construction Research and Training",
+    "copyright": "© 2017 CPWR — The Center for Construction Research and Training. All rights reserved.",
+    "license": "free-use-with-attribution",
+    "source_url": "https://www.cpwr.com/wp-content/uploads/TT-Power_Saw_Safety.pdf",
+    "notice": "Adapted from a CPWR/NIOSH Toolbox Talk, produced under NIOSH cooperative agreement OH 009762. Reproduced with attribution for jobsite safety training; not an endorsement by CPWR or NIOSH."
+  },
+  "audit": {
+    "status": "approved",
+    "audited_at": "2026-09-10T23:15:30Z",
+    "osha_accuracy_verified": true,
+    "flags": [
+      "LICENSING RESOLVED (2026-09-10): CPWR Toolbox Talk content is used under free-use-with-attribution. Permitted here because (1) the talk is one bundled feature of a subscription product and is never sold as a standalone paid product, (2) CPWR/NIOSH copyright markings and the no-endorsement notice are retained - held in this file's `attribution` object and appended to the rendered Markdown `content` by scripts/lib/talkRow.js `composeMarkdown` - and (3) no CPWR or NIOSH endorsement is claimed or implied (attribution.notice ends 'not an endorsement by CPWR or NIOSH'). No written CPWR redistribution permission is required; the prior LICENSING BLOCKER is cleared.",
+      "Attribution object verified: source 'CPWR', copyright '(c) 2017 CPWR', license 'free-use-with-attribution', source_url and publisher present, notice carries the no-endorsement clause.",
+      "CONTENT GAP CLOSED: kickback is now covered in talking_points ('Kickback happens when the blade binds or pinches in the cut...' - support the workpiece on both sides so the kerf cannot close, keep upper and lower blade guards working, use a sharp blade rated for the material, let the blade reach full speed before cutting, never overreach, stand to the side of the line of cut). site_hazards_to_check adds unsupported/pinching stock and a missing or stuck lower guard; discussion_questions asks what causes kickback and how to set up the cut. Guard-based phrasing is correct for portable circular saws (riving-knife/anti-kickback-pawl language applies to table saws). Gap resolved.",
+      "OSHA mapping accurate: 1926.302 (power-operated hand tools) and 1926.304 (woodworking tools). Double-insulation / 3-prong / GFCI-in-damp guidance is sound; no tolerance errors.",
+      "Non-blocking: Display obligation: docs/content-attribution.md records that TalkDetail (Phase 2c) and the generated PDF (Phase 5) must surface attribution.copyright + attribution.notice. Today the credit is rendered into the Markdown content body by the loader; the UI/PDF display path is tracked in docs/tasks.md."
+    ]
+  }
+}

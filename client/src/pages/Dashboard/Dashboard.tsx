@@ -85,12 +85,12 @@ export const Dashboard = () => {
                 Manage your job sites and the GCs you report to.
               </StyledCardText>
             </StyledCard>
-            <StyledCardSoon aria-disabled="true">
+            <StyledCard to="/talks">
               <StyledCardTitle>Toolbox Talks</StyledCardTitle>
               <StyledCardText>
-                Browse the OSHA safety-talk library. Coming soon.
+                Browse the OSHA safety-talk library.
               </StyledCardText>
-            </StyledCardSoon>
+            </StyledCard>
             <StyledCardSoon aria-disabled="true">
               <StyledCardTitle>Meeting Logs</StyledCardTitle>
               <StyledCardText>

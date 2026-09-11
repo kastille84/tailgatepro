@@ -1,0 +1,52 @@
+{
+  "id": "crane-safety-stability-and-tipping",
+  "title": "Crane Stability and Tip-Over Prevention",
+  "primary_trade": "Heavy Equipment",
+  "trade_tags": [
+    "Heavy Equipment",
+    "General Construction"
+  ],
+  "osha_standards": [
+    "29 CFR 1926.1402",
+    "29 CFR 1926.1417"
+  ],
+  "estimated_minutes": 5,
+  "summary": "A crane tips when the load exceeds capacity, goes outside the load chart, or the machine is not set up level on firm ground. This talk covers load weight, outriggers, and ground conditions.",
+  "talking_points": [
+    "Know or calculate the weight of every load before you lift it.",
+    "Use the manufacturer's load chart for that crane and stay inside the safe operating range. Watch the load sensors on newer cranes.",
+    "Follow the manufacturer's outrigger procedure. Support outrigger pads on firm, stable ground and level the crane. Use crane mats or pads when needed.",
+    "Check the manufacturer's maximum wind speed and confirm it is safe to lift.",
+    "Check hoist brakes when making repeated heavy lifts from one spot.",
+    "Warn others of moving and overhead loads. Never carry a load over people or let people pass underneath. Never use visible tipping as a gauge of capacity."
+  ],
+  "site_hazards_to_check": [
+    "Load weight unknown or not checked against the load chart",
+    "Outriggers not fully extended or pads on soft, sloped, or backfilled ground",
+    "Crane not level or not set up per the manufacturer's procedure",
+    "Wind at or above the crane's maximum rated speed",
+    "Workers walking or working under the load path"
+  ],
+  "discussion_questions": [
+    "What does this lift weigh, and where does it fall on the load chart?",
+    "Is the ground under the outriggers firm enough, and do we need mats?",
+    "Why is watching for the crane to start tipping a dangerous way to judge capacity?"
+  ],
+  "attribution": {
+    "source": "NIOSH",
+    "publisher": "National Institute for Occupational Safety and Health (NIOSH)",
+    "copyright": "U.S. Government work — public domain.",
+    "license": "public-domain",
+    "source_url": "https://www.cdc.gov/niosh/docs/2022-133/2022-133.pdf",
+    "notice": "Adapted from a NIOSH Toolbox Talk (co-developed with CPWR). Public-domain source; not an endorsement by NIOSH or CPWR."
+  },
+  "audit": {
+    "status": "approved",
+    "audited_at": "2026-09-10T18:21:19Z",
+    "osha_accuracy_verified": true,
+    "flags": [
+      "OSHA mapping accurate: 29 CFR 1926.1402 (ground conditions - firm, drained, graded support) and 1926.1417 (operation), Subpart CC. Content - know/calculate every load weight, stay inside the load chart, follow the manufacturer's outrigger procedure on firm level ground with mats/pads as needed, observe the manufacturer's maximum wind speed, check hoist brakes on repeated heavy lifts, never carry loads over people, never use visible tipping as a capacity gauge - is accurate.",
+      "Non-blocking enhancement: consider adding 29 CFR 1926.1433 (rated capacity / load chart limits) alongside the ground-conditions and operation cites."
+    ]
+  }
+}

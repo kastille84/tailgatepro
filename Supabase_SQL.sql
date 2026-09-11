@@ -51,14 +51,41 @@ CREATE TABLE project_subcontractors (
 -- 5. Toolbox Talks (Content Library)
 CREATE TABLE toolbox_talks (
   id UUID PRIMARY KEY,
+  -- Stable natural key carried from the content pipeline (data/processed/**).
+  -- The seed loader upserts on this; later rounds expose it to the client.
+  slug TEXT UNIQUE,
   title TEXT NOT NULL,
+  -- Primary trade (kept for the existing single-trade index).
   trade_tag TEXT,
+  -- Every applicable trade (primary + secondary), for multi-trade filtering.
+  trade_tags TEXT[],
   content TEXT NOT NULL,
+  -- Structured talk body from the content pipeline: { summary, talking_points,
+  -- site_hazards_to_check, discussion_questions, osha_standards, estimated_minutes }.
+  structured JSONB,
+  -- Source credit from the content pipeline: { source, publisher, copyright,
+  -- license, source_url, notice }. Shown in the app + generated PDF so the
+  -- CPWR/NIOSH copyright markings and no-endorsement notice travel with the
+  -- talk (a CPWR licensing condition). See docs/content-attribution.md.
+  attribution JSONB,
   is_global BOOLEAN DEFAULT true,
   company_id UUID REFERENCES companies(id) ON DELETE CASCADE,
   created_at TIMESTAMPTZ DEFAULT NOW()
 );
 CREATE INDEX idx_toolbox_talks_trade ON toolbox_talks(trade_tag);
+CREATE INDEX IF NOT EXISTS idx_toolbox_talks_trades ON toolbox_talks USING GIN (trade_tags);
+
+-- Server-only table: enable RLS with NO policies so the public anon key is
+-- denied all access. The server's service-role key bypasses RLS and still works.
+ALTER TABLE toolbox_talks ENABLE ROW LEVEL SECURITY;
+
+-- If the table already exists from an earlier run, add the new columns instead:
+-- ALTER TABLE toolbox_talks ADD COLUMN IF NOT EXISTS slug TEXT UNIQUE;
+-- ALTER TABLE toolbox_talks ADD COLUMN IF NOT EXISTS trade_tags TEXT[];
+-- ALTER TABLE toolbox_talks ADD COLUMN IF NOT EXISTS structured JSONB;
+-- ALTER TABLE toolbox_talks ADD COLUMN IF NOT EXISTS attribution JSONB;
+-- CREATE INDEX IF NOT EXISTS idx_toolbox_talks_trades ON toolbox_talks USING GIN (trade_tags);
+-- ALTER TABLE toolbox_talks ENABLE ROW LEVEL SECURITY;
 
 -- 6. Meeting Logs
 CREATE TABLE meeting_logs (

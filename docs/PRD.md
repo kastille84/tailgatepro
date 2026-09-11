@@ -6,7 +6,7 @@
 
 ## 1. Executive Summary
 
-The Digital Toolbox Safety Talks application digitizes mandatory safety meetings (toolbox/tailgate talks) for the construction industry. By transitioning from paper-based logs to an offline-capable digital platform, it ensures strict OSHA compliance, guarantees persistent record-keeping, and provides real-time oversight for General Contractors over their active job sites.
+The Digital Toolbox Safety Talks application called "TailgatePro", digitizes mandatory safety meetings (toolbox/tailgate talks) for the construction industry. By transitioning from paper-based logs to an offline-capable digital platform, it ensures strict OSHA compliance, guarantees persistent record-keeping, and provides real-time oversight for General Contractors over their active job sites.
 
 ## 2. Target Audience & Monetization Strategy
 
@@ -41,7 +41,8 @@ The Digital Toolbox Safety Talks application digitizes mandatory safety meetings
 
 ### 4.2 Automated Content Library
 
-- **Data Source:** Bootstrapped via an LLM script that cleans, formats, and parses public-domain materials from Federal OSHA and state agencies (e.g., Texas Dept of Insurance, Ohio BWC).
+- **Data Source:** Bootstrapped via an LLM script that cleans, formats, and parses safety materials from Federal OSHA / NIOSH (public domain) and CPWR (free-to-use with attribution) and state agencies (e.g., Texas Dept of Insurance, Ohio BWC).
+- **Attribution:** Each talk stores a source-credit block (`attribution`) and displays the publisher, copyright line, and a "not an endorsement" notice on the talk view and generated PDF. See `docs/content-attribution.md` for the CPWR licensing conditions.
 - **Tagging & Filtering:** Content must be tagged by trade (e.g., Roofing, Electrical, Demolition, Excavation) allowing instant filtering.
 - **Favorites System:** Foremen can bookmark their "Top 10" most-used topics for two-tap access.
 - **Custom Talks:** Users must have the ability to author and save their own site-specific safety talks.
@@ -82,6 +83,6 @@ Allow GCs to push final PDF reports directly into existing Procore project folde
 
 ## 7. Open Questions / Work In Progress (🚧 WIP)
 
-1.  **Viral Loop / Onboarding:** Exactly how will GCs invite Subcontractors into the system? Should Subs have a "freemium" view-only account first? *(Update: as of the initial auth/signup feature, self-serve email/password signup always creates a brand-new `companies` row per user — there's no lookup/dedup/merge by name and no "join an existing company" step. See the `// TODO(join-company-flow)` comment at the top of `server/services/users.js`. A real invite/join flow is still a prerequisite for real multi-user companies, not just a nice-to-have.)*
+1.  **Viral Loop / Onboarding:** Exactly how will GCs invite Subcontractors into the system? Should Subs have a "freemium" view-only account first? _(Update: as of the initial auth/signup feature, self-serve email/password signup always creates a brand-new `companies` row per user — there's no lookup/dedup/merge by name and no "join an existing company" step. See the `// TODO(join-company-flow)` comment at the top of `server/services/users.js`. A real invite/join flow is still a prerequisite for real multi-user companies, not just a nice-to-have.)_
 2.  **Data Retention Policies:** Define how long crew photos will be stored on Supabase to balance GC audit needs with worker privacy.
 3.  **App Store vs. Web PWA:** Confirm if a true native wrapper (Capacitor/React Native) will eventually be needed for push notifications, or if standard PWA service workers suffice for the MVP.

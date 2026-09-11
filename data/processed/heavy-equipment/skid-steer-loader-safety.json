@@ -1,0 +1,52 @@
+{
+  "id": "skid-steer-loader-safety",
+  "title": "Skid Steer Loader Safety",
+  "primary_trade": "Heavy Equipment",
+  "trade_tags": [
+    "Heavy Equipment",
+    "Excavation",
+    "General Construction"
+  ],
+  "osha_standards": [
+    "29 CFR 1926.600",
+    "29 CFR 1926.602"
+  ],
+  "estimated_minutes": 5,
+  "summary": "Skid steer loaders put operators and nearby workers at risk of falls, crushing, pinning, and struck-by injuries. This talk covers safety devices, staying in the cab, and keeping others clear.",
+  "talking_points": [
+    "Use and maintain the manufacturer's safety devices: interlocked controls, backup alarms, seat belts, Roll Over Protective Structure (ROPS), and lift arm supports.",
+    "Run the loader only from the operator's compartment, never from outside. Stay seated with the seat belt fastened and the restraint bar in place.",
+    "Keep your arms, legs, and head inside the cab while operating.",
+    "Never leave the machine with the engine running or the lift arms raised unless the lift arm supports are in place.",
+    "Load, unload, and turn on level, stable ground when possible.",
+    "Keep other workers out of the work area while you lift a load."
+  ],
+  "site_hazards_to_check": [
+    "Bypassed or broken interlocks, backup alarm, or ROPS",
+    "Operator reaching in from outside the cab to work the controls",
+    "Lift arms raised with no lift arm supports installed",
+    "Sloped, soft, or uneven ground where the loader is lifting or turning",
+    "Workers standing in front of or beside the loader during a lift"
+  ],
+  "discussion_questions": [
+    "Which safety devices on this loader must work before it goes into service?",
+    "Why is operating the controls from outside the cab so dangerous?",
+    "How do we keep ground workers clear of the loader today?"
+  ],
+  "attribution": {
+    "source": "NIOSH",
+    "publisher": "National Institute for Occupational Safety and Health (NIOSH)",
+    "copyright": "U.S. Government work — public domain.",
+    "license": "public-domain",
+    "source_url": "https://www.cdc.gov/niosh/media/pdfs/2026/08/2026-112.pdf",
+    "notice": "Adapted from a NIOSH Toolbox Talk (co-developed with CPWR). Public-domain source; not an endorsement by NIOSH or CPWR."
+  },
+  "audit": {
+    "status": "approved",
+    "audited_at": "2026-09-10T18:21:19Z",
+    "osha_accuracy_verified": true,
+    "flags": [
+      "OSHA mapping accurate: 29 CFR 1926.600 (equipment - general) and 1926.602 (material handling equipment). Content - keep interlocks, backup alarm, seat belt/restraint bar and ROPS working; operate only from the seated position inside the cab; keep limbs and head inside; never leave the machine running or the lift arms raised without the lift-arm supports installed; load/unload/turn on level stable ground; keep others out of the work area during a lift - is sound and aligns with manufacturer and OSHA guidance. No tolerance issues."
+    ]
+  }
+}

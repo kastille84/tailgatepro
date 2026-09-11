@@ -92,6 +92,9 @@ describe("Navbar", () => {
     expect(
       screen.getByRole("link", { name: /projects/i }).getAttribute("href"),
     ).toBe("/projects");
+    expect(
+      screen.getByRole("link", { name: /toolbox talks/i }).getAttribute("href"),
+    ).toBe("/talks");
     expect(screen.queryByRole("button", { name: /^login$/i })).toBeNull();
 
     fireEvent.click(screen.getByRole("button", { name: /logout/i }));

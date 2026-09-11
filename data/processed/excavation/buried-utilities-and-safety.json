@@ -1,0 +1,56 @@
+{
+  "id": "buried-utilities-and-safety",
+  "title": "Digging Safely Around Buried Utilities",
+  "primary_trade": "Excavation",
+  "trade_tags": [
+    "Excavation",
+    "General Construction",
+    "Electrical"
+  ],
+  "osha_standards": [
+    "29 CFR 1926.651",
+    "29 CFR 1926.652",
+    "29 CFR 1926.416(a)(1)"
+  ],
+  "estimated_minutes": 5,
+  "summary": "Hitting a buried gas line, power cable, or other utility can cause explosions, electrocution, and death. This talk covers locating, verifying, and hand-digging near marked lines.",
+  "talking_points": [
+    "Before digging, confirm with your supervisor that utility companies were notified and all lines are marked. On public land with no markings, call 811.",
+    "On private property, ask the supervisor or owner to bring in a private utility locating service before you dig.",
+    "Know the color code: red marks electrical lines, yellow marks gas lines. Look for paint, flags, or stakes.",
+    "Treat mark-outs as approximate. Dig by hand within 2 feet of any mark-out. If markings are unclear, stop and verify with the utility company.",
+    "While digging, watch for signs of past digging, changes in soil, asphalt patches, depressions, or buried concrete, plastic, or gravel.",
+    "If you hit a line, report it right away. For a gas line, evacuate everyone, secure the area, and call the fire department and gas utility."
+  ],
+  "site_hazards_to_check": [
+    "No utility markings, or markings that do not match the dig plan",
+    "Heavy equipment digging within 2 feet of a mark-out instead of hand digging",
+    "Signs of previous excavation: soil color changes, asphalt patches, or depressions",
+    "Exposed or nicked conduit, cable, or pipe in the excavation",
+    "No evacuation or emergency plan if a gas line is struck"
+  ],
+  "discussion_questions": [
+    "Which utilities are marked in our dig area today, and what do the colors mean?",
+    "How close to a mark-out can we use the machine before we switch to hand digging?",
+    "What is the plan if someone hits a gas line?"
+  ],
+  "attribution": {
+    "source": "NIOSH",
+    "publisher": "National Institute for Occupational Safety and Health (NIOSH)",
+    "copyright": "U.S. Government work — public domain.",
+    "license": "public-domain",
+    "source_url": "https://www.cdc.gov/niosh/docs/2022-139/2022-139.pdf",
+    "notice": "Adapted from a NIOSH Toolbox Talk (co-developed with CPWR). Public-domain source; not an endorsement by NIOSH or CPWR."
+  },
+  "audit": {
+    "status": "approved",
+    "audited_at": "2026-09-10T18:45:20Z",
+    "osha_accuracy_verified": true,
+    "flags": [
+      "RESOLVED: 29 CFR 1926.1408 (cranes/equipment near overhead lines) has been removed - it did not fit a buried-utility talk.",
+      "RESOLVED: 29 CFR 1926.416(a)(1) added - correct for the struck-energized-line electrocution hazard (no employee may work where they could contact an electric power circuit unless it is de-energized and grounded or effectively guarded).",
+      "VERIFIED: 1926.651 (underground installations at 651(b) - determine location before opening, notify utilities / the one-call/811 system, protect and support exposed lines, and excavate by safe/acceptable means near the estimated location) and 1926.652 (protective systems) are correctly cited and match the talking points.",
+      "TOLERANCE NOTE (not a defect): the 'hand-dig within 2 feet of a mark-out' figure is a state/one-call tolerance-zone convention (commonly 18-24 in), not a federal number; 1926.651(b)(4) requires safe and acceptable means (generally hand excavation) when approaching the estimated location. Acceptable as practice guidance. APWA color code (red = electric, yellow = gas) is stated correctly."
+    ]
+  }
+}

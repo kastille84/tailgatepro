@@ -1,0 +1,51 @@
+{
+  "id": "materials-handling-drywall",
+  "title": "Safe Drywall Handling and Lifting",
+  "primary_trade": "Drywall",
+  "trade_tags": [
+    "Drywall",
+    "General Construction"
+  ],
+  "osha_standards": [
+    "OSH Act Section 5(a)(1) General Duty Clause",
+    "29 CFR 1926.250"
+  ],
+  "estimated_minutes": 5,
+  "summary": "Drywall sheets are heavy and bulky, so bending, twisting, and lifting them causes serious overexertion injuries. This talk covers staging, team lifts, lifting tools, and the 50-pound limit.",
+  "talking_points": [
+    "Stage drywall as close as possible to where it will be installed.",
+    "Lift with your leg muscles and do not twist while carrying. Plan the lift, clear the path, and face the direction you are walking.",
+    "Lift only one sheet at a time. Never lift more than 50 pounds by yourself - use two workers for larger, thicker, heavier sheets.",
+    "Use lifting tools, carts, or a panel hoist instead of carrying sheets by hand.",
+    "Use a vertical lift to hold drywall against the ceiling so you can screw it off more safely.",
+    "For vertical hanging: raise the sheet, shift your grip to opposite sides, rotate it upright, then secure it to the wall. Keep material and tools stored neatly to prevent trips."
+  ],
+  "site_hazards_to_check": [
+    "Drywall stacked far from the install area, forcing long carries",
+    "Stairs, ramps, or cluttered paths on the carry route",
+    "Single workers carrying large or ceiling sheets alone",
+    "No carts, panel hoist, or lifting tools available",
+    "Material and offcuts piled in walkways"
+  ],
+  "discussion_questions": [
+    "How close can we stage the board to where it is going?",
+    "Which sheets today need two people or a lift?",
+    "What lifting tools are on site, and who knows how to use them?"
+  ],
+  "attribution": {
+    "source": "NIOSH",
+    "publisher": "National Institute for Occupational Safety and Health (NIOSH)",
+    "copyright": "U.S. Government work — public domain.",
+    "license": "public-domain",
+    "source_url": "https://www.cdc.gov/niosh/docs/2022-140/2022-140.pdf",
+    "notice": "Adapted from a NIOSH Toolbox Talk (co-developed with CPWR). Public-domain source; not an endorsement by NIOSH or CPWR."
+  },
+  "audit": {
+    "status": "approved",
+    "audited_at": "2026-09-10T18:21:19Z",
+    "osha_accuracy_verified": true,
+    "flags": [
+      "Non-blocking: the 50-lb single-person figure is NIOSH lifting guidance, not an OSHA regulatory limit. Wording ('Never lift more than 50 pounds by yourself') is acceptable as a rule of thumb. OSHA authority is correctly the General Duty Clause (no specific manual-handling standard) plus 1926.250 for material storage/staging."
+    ]
+  }
+}
