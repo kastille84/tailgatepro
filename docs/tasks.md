@@ -167,26 +167,48 @@ then favorites + custom talks.
       ids unchanged)
 - [x] Decide: commit `data/raw/**` (provenance) or `.gitignore` it (size)
 
-### 2b — Server read API
+### 2b — Server read API · status: code complete; manual smoke pending (needs Phase 2a Supabase apply + seed)
 
-- [ ] `server/services|controllers|routes/talks.js` — `GET /api/talks` (all
-      global talks) + `GET /api/talks/:id`, behind `requireAuth` +
-      `loadUserContext`; CJS tests. Mount `/api/talks` in `server.js`
-      (trade filter + search run client-side, so no `?q=`/`?trade=` params)
+- [x] `server/services/talks.js` — `listGlobal()` (`is_global.eq.true`, title
+      ascending) + `getById(id)` (404 on `PGRST116`, 502 otherwise); camelCase
+      `toTalk` mapper incl. `structured`/`attribution` passthrough. TODO(2d)
+      left in place: `getById` must be company-scoped once custom talks exist.
+- [x] `server/controllers/talks.js` — `listTalks` / `getTalk`, same
+      try/catch → `next(error)` + `{ success, data }` shape as `projects`
+- [x] `server/routes/talks.js` — `GET /` + `GET /:id` (`param("id").isUUID()`),
+      both behind `requireAuth` + `loadUserContext`; no `?q=`/`?trade=` params
+- [x] Mounted `/api/talks` in `server.js`
+- [x] CJS tests: `services/talks.test.js` (6) + `controllers/talks.test.js` (4)
+      — full root suite now 73 passing, no regressions
+- [x] Manual smoke: curl `GET /api/talks` / `GET /api/talks/:id` with a real
+      Bearer token (needs the pending 2a Supabase apply + `npm run seed:talks`
+      first) — expect 34 talks, a 400 on a non-UUID id, a 404 on an unknown id
 
-### 2c — Client browse feature
+### 2c — Client browse feature · status: code complete, 100% coverage
 
-- [ ] `interfaces/talk.ts`, `services/apiTalks.ts`, `hooks/useTalks.ts`
-      (`Talk.attribution: { source, publisher, copyright, license, source_url, notice }`)
-- [ ] `features/content-library/` (`TalkList`, `TalkDetail`) +
-      `pages/ContentLibrary/` + `/talks` route under `RequireAuth`.
-      `TalkDetail` **must** render `attribution.copyright` + `attribution.notice`
-      (CPWR licensing requirement — see `docs/content-attribution.md`)
-- [ ] Trade filter (`Select`/`SegmentedToggle`) + title search — client-side
-      `useMemo` over the one `useTalks()` fetch
-- [ ] Navbar link; activate the Dashboard "Toolbox Talks" card
-      (`StyledCardSoon` → `StyledCard to="/talks"`)
-- [ ] Client coverage stays 100%
+- [x] `interfaces/talk.ts` (`Talk`, `TalkStructured`, `TalkAttribution` —
+      `structured`/`attribution` keep the pipeline's original field names,
+      e.g. `source_url`, not camelCased), `services/apiTalks.ts` (`listTalks`),
+      `hooks/useTalks.ts` (`["talks"]` query, disabled without a session)
+- [x] `features/content-library/` — `TalkList` (presentational cards; empty
+      state) + `TalkDetail` (shown in a `Modal` from the page). `TalkDetail`
+      renders `attribution.copyright` + `attribution.notice` whenever
+      `attribution` is present (CPWR licensing requirement — see
+      `docs/content-attribution.md`)
+- [x] `pages/ContentLibrary/` + `/talks` route under `RequireAuth` in `App.tsx`
+- [x] Trade filter (`Select`, chosen over `SegmentedToggle` — up to ~10 trades
+      is too many for a segmented control) + title search (`TextInput`), both
+      wrapped in `FormField` for visible labels; `useMemo` over the one
+      `useTalks()` fetch, matching on any tag in `tradeTags` (not just the
+      primary `tradeTag`)
+- [x] Navbar link (`Toolbox Talks` → `/talks`); Dashboard card activated
+      (`StyledCardSoon` → `StyledCard to="/talks"`, "Coming soon" copy dropped)
+- [x] Client coverage: `npx vitest run --coverage` — 324 tests pass, 100%
+      statements/branches/functions/lines (repo enforces 100% globally today,
+      not the 90% `CLAUDE.md` describes — flagging that doc/code mismatch)
+- [x] Manual smoke: sign in, open `/talks`, confirm the library loads (needs
+      the pending 2a Supabase apply + seed), filter by trade, search by title,
+      open a CPWR-sourced talk and confirm its copyright/notice line renders
 
 ### 2d — Favorites + custom talks
 

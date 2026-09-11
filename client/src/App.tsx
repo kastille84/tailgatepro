@@ -22,6 +22,7 @@ import { ForgotPassword } from "./pages/ForgotPassword";
 import { ResetPassword } from "./pages/ResetPassword";
 import { Dashboard } from "./pages/Dashboard";
 import { Projects } from "./pages/Projects";
+import { ContentLibrary } from "./pages/ContentLibrary";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -65,6 +66,7 @@ function App() {
                   <Route element={<RequireAuth />}>
                     <Route path="/dashboard" element={<Dashboard />}></Route>
                     <Route path="/projects" element={<Projects />}></Route>
+                    <Route path="/talks" element={<ContentLibrary />}></Route>
                   </Route>
                 </Routes>
               </BrowserRouter>

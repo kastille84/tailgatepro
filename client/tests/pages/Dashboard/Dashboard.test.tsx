@@ -65,7 +65,7 @@ describe("Dashboard page", () => {
     expect(projectsCard?.getAttribute("href")).toBe("/projects");
   });
 
-  it("renders the placeholder cards without links", () => {
+  it("shows the live Toolbox Talks card link", () => {
     mockUseAuth.mockReturnValue({
       user: { email: "alex@example.com" },
       loading: false,
@@ -73,7 +73,22 @@ describe("Dashboard page", () => {
 
     renderDashboard();
 
-    expect(screen.getByText(/toolbox talks/i).closest("a")).toBeNull();
+    const talksCard = screen
+      .getByRole("heading", { name: /^toolbox talks$/i })
+      .closest("a");
+
+    expect(talksCard).not.toBeNull();
+    expect(talksCard?.getAttribute("href")).toBe("/talks");
+  });
+
+  it("renders the remaining placeholder cards without links", () => {
+    mockUseAuth.mockReturnValue({
+      user: { email: "alex@example.com" },
+      loading: false,
+    });
+
+    renderDashboard();
+
     expect(screen.getByText(/meeting logs/i).closest("a")).toBeNull();
     expect(screen.getByText(/gc compliance/i).closest("a")).toBeNull();
   });

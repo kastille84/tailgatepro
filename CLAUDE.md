@@ -118,6 +118,7 @@ other docs files:
 - `docs/coding-style.md` says the server uses ES Modules (`import/export`); `server.js` and `server/utility/envUtils.js` are CommonJS (`require`/`exports`).
 - Docs reference client primitives at `src/components/ui-comps/`; the actual path is `client/src/ui_comps/`.
 - `docs/ui-styling.md` mentions `theme.spacing`, `theme.typography`, and named breakpoints (`mobile`/`tablet`/`desktop`); `theme.ts` currently defines `colors`, `shadows`, `borderRadius`, and numeric `breakpoints` keys (`xs`–`2xl`) only.
+- This file (above) says client Vitest runs in **browser mode** (Playwright, Chromium) with **90%** coverage thresholds; `client/vite.config.ts` actually configures `environment: "jsdom"` and 100% global coverage thresholds (statements/branches/functions/lines). Write new client tests against the real jsdom config and expect full coverage, not 90%.
 
 ## Constructing and Gathering Content Library
 
