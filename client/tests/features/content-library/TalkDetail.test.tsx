@@ -7,6 +7,12 @@ import { TalkDetail } from "../../../src/features/content-library";
 import theme from "../../../src/styles/theme";
 import type { Talk } from "../../../src/interfaces/talk";
 
+// FavoriteButton (rendered in the title row) owns its own tests; stub its
+// mutation hook here so this file doesn't need an AuthProvider/QueryClient.
+vi.mock("../../../src/hooks/useToggleFavorite", () => ({
+  useToggleFavorite: () => ({ toggleFavorite: vi.fn(), isToggling: false }),
+}));
+
 const fullTalk: Talk = {
   id: "t1",
   slug: "eye-protection",
@@ -41,7 +47,12 @@ const renderDetail = (
 ) =>
   render(
     <ThemeProvider theme={theme}>
-      <TalkDetail talk={fullTalk} onClose={vi.fn()} {...props} />
+      <TalkDetail
+        talk={fullTalk}
+        favoriteIds={new Set()}
+        onClose={vi.fn()}
+        {...props}
+      />
     </ThemeProvider>,
   );
 
@@ -49,6 +60,16 @@ describe("TalkDetail", () => {
   it("renders nothing when no talk is selected", () => {
     renderDetail({ talk: undefined });
     expect(screen.queryByRole("dialog")).toBeNull();
+  });
+
+  it("renders the favorite toggle in the title row, reflecting favoriteIds", () => {
+    renderDetail({ favoriteIds: new Set(["t1"]) });
+
+    expect(
+      screen.getByRole("button", {
+        name: /remove eye protection on the jobsite from favorites/i,
+      }),
+    ).toBeDefined();
   });
 
   it("renders the title, trade badges, summary and every content section", () => {

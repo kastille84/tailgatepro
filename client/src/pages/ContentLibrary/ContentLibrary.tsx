@@ -2,7 +2,9 @@ import { useMemo, useState } from "react";
 
 import { useAuth } from "../../context/auth";
 import { useTalks } from "../../hooks/useTalks";
+import { useFavorites } from "../../hooks/useFavorites";
 import { TalkDetail, TalkList } from "../../features/content-library";
+import { Checkbox } from "../../ui_comps/checkbox";
 import { FormField, TextInput } from "../../ui_comps/form";
 import { Footer } from "../../ui_comps/footer";
 import { Select } from "../../ui_comps/select";
@@ -32,9 +34,11 @@ const ALL_TRADES = "all";
 export const ContentLibrary = () => {
   const { user, loading } = useAuth();
   const { talks, isLoading, isError } = useTalks();
+  const { favoriteIds } = useFavorites();
 
   const [trade, setTrade] = useState(ALL_TRADES);
   const [search, setSearch] = useState("");
+  const [favoritesOnly, setFavoritesOnly] = useState(false);
   const [selected, setSelected] = useState<Talk | undefined>(undefined);
 
   const tradeOptions = useMemo(() => {
@@ -53,9 +57,10 @@ export const ContentLibrary = () => {
     return talks.filter((talk) => {
       const matchesTrade = trade === ALL_TRADES || talk.tradeTags.includes(trade);
       const matchesSearch = !query || talk.title.toLowerCase().includes(query);
-      return matchesTrade && matchesSearch;
+      const matchesFavorite = !favoritesOnly || favoriteIds.has(talk.id);
+      return matchesTrade && matchesSearch && matchesFavorite;
     });
-  }, [talks, trade, search]);
+  }, [talks, trade, search, favoritesOnly, favoriteIds]);
 
   if (loading) {
     return (
@@ -108,6 +113,11 @@ export const ContentLibrary = () => {
                 onChange={(event) => setSearch(event.target.value)}
               />
             </FormField>
+            <Checkbox
+              label="Favorites only"
+              checked={favoritesOnly}
+              onChange={(event) => setFavoritesOnly(event.target.checked)}
+            />
           </StyledToolbar>
 
           {isLoading && <Spinner center message="Loading the talk library…" />}
@@ -117,14 +127,22 @@ export const ContentLibrary = () => {
             </StyledError>
           )}
           {!isLoading && !isError && (
-            <TalkList talks={visibleTalks} onSelect={setSelected} />
+            <TalkList
+              talks={visibleTalks}
+              favoriteIds={favoriteIds}
+              onSelect={setSelected}
+            />
           )}
         </StyledContainer>
       </StyledSection>
 
       <Footer />
 
-      <TalkDetail talk={selected} onClose={() => setSelected(undefined)} />
+      <TalkDetail
+        talk={selected}
+        favoriteIds={favoriteIds}
+        onClose={() => setSelected(undefined)}
+      />
     </StyledPage>
   );
 };

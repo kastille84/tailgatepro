@@ -135,10 +135,31 @@ export const StyledButtonContainer = styled.div`
   display: flex;
   justify-content: flex-end;
   align-items: flex-end;
+  gap: 0.8rem;
   width: 100%;
 
   @media (min-width: ${({ theme }) => theme.breakpoints.sm}) {
     width: inherit;
     margin-top: 0;
   }
+`;
+
+/** Colors just the bookmark icon inside FavoriteButton — Button's "outline"
+ *  variant is orange-on-transparent by default (no neutral/gray variant
+ *  exists in this app), so the fill has to carry the favorited/unfavorited
+ *  distinction instead of the button chrome. */
+export const StyledFavoriteIcon = styled.span<{ $isFavorited: boolean }>`
+  display: inline-flex;
+  color: ${({ theme, $isFavorited }) =>
+    $isFavorited ? theme.colors.orange[600] : theme.colors.navy[400]};
+`;
+
+/** TalkDetail's modal title row: the talk title plus its favorite toggle,
+ *  spaced to opposite ends of the header. */
+export const StyledDetailTitleRow = styled.div`
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1.2rem;
+  width: 100%;
 `;

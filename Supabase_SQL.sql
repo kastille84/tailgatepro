@@ -87,7 +87,24 @@ ALTER TABLE toolbox_talks ENABLE ROW LEVEL SECURITY;
 -- CREATE INDEX IF NOT EXISTS idx_toolbox_talks_trades ON toolbox_talks USING GIN (trade_tags);
 -- ALTER TABLE toolbox_talks ENABLE ROW LEVEL SECURITY;
 
--- 6. Meeting Logs
+-- 6. User Favorites (Phase 2d) — a foreman's bookmarked talks for two-tap
+-- access (docs/PRD.md: "bookmark their 'Top 10' most-used topics"). Both FKs
+-- cascade: deleting a user or a talk silently drops the bookmark.
+CREATE TABLE user_favorites (
+  user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  talk_id UUID NOT NULL REFERENCES toolbox_talks(id) ON DELETE CASCADE,
+  created_at TIMESTAMPTZ DEFAULT NOW(),
+  PRIMARY KEY (user_id, talk_id)
+);
+
+-- Server-only table: enable RLS with NO policies so the public anon key is
+-- denied all access. The server's service-role key bypasses RLS and still
+-- works (docs/data-access.md). This is a new table, so it gets RLS enabled
+-- at creation instead of joining the pre-existing gap tracked in
+-- docs/tasks.md for projects/companies/users/etc.
+ALTER TABLE user_favorites ENABLE ROW LEVEL SECURITY;
+
+-- 7. Meeting Logs
 CREATE TABLE meeting_logs (
   id UUID PRIMARY KEY,
   project_id UUID REFERENCES projects(id) ON DELETE CASCADE,
@@ -99,7 +116,7 @@ CREATE TABLE meeting_logs (
   created_at TIMESTAMPTZ DEFAULT NOW()
 );
 
--- 7. Signatures
+-- 8. Signatures
 CREATE TABLE signatures (
   id UUID PRIMARY KEY,
   meeting_id UUID REFERENCES meeting_logs(id) ON DELETE CASCADE,
@@ -109,7 +126,7 @@ CREATE TABLE signatures (
   created_at TIMESTAMPTZ DEFAULT NOW()
 );
 
--- 8. Waitlist (landing-page early-access signups)
+-- 9. Waitlist (landing-page early-access signups)
 CREATE TABLE waitlist (
   id UUID PRIMARY KEY,
   name TEXT NOT NULL,

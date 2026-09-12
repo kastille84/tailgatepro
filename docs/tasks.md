@@ -212,8 +212,33 @@ then favorites + custom talks.
 
 ### 2d — Favorites + custom talks
 
-- [ ] Schema: `user_favorites` (composite PK `(user_id, talk_id)`, both
-      `ON DELETE CASCADE`); favorites toggle + filter
+- [x] Schema: `user_favorites` (composite PK `(user_id, talk_id)`, both
+      `ON DELETE CASCADE`); favorites toggle + filter · status: code
+      complete; manual smoke pending (needs the table applied to Supabase)
+      - `Supabase_SQL.sql` + `Supabase_Schema.md`: `user_favorites` table,
+        RLS enabled with no policies at creation (unlike most core tables,
+        this new table doesn't inherit the pre-existing RLS gap)
+      - Server: `server/services/favorites.js` (`listForUser` / `add` /
+        `remove` — idempotent add via `upsert(..., { ignoreDuplicates: true })`
+        + a re-fetch on the skipped-duplicate branch, idempotent no-op
+        remove, FK violation on `talk_id` -> 404), `server/controllers/favorites.js`,
+        `server/routes/favorites.js` (`GET /`, `POST /`, `DELETE /:talkId`),
+        mounted `/api/favorites` in `server.js` (+ service/controller tests,
+        15 passing)
+      - Client: `interfaces/favorite.ts`, `services/apiFavorites.ts`,
+        `hooks/useFavorites.ts` (`["favorites"]` query -> `Set<string>`),
+        `hooks/useToggleFavorite.ts` (one hook, `{ talkId, isFavorited }`,
+        mirrors `useArchiveProject`'s boolean-branch shape), `features/
+        content-library/FavoriteButton.tsx` (react-icons/hi2
+        `HiBookmark`/`HiOutlineBookmark`) wired into `TalkList` cards and the
+        `TalkDetail` modal title row; `ContentLibrary` "Favorites only"
+        `Checkbox` in the toolbar + `visibleTalks` `useMemo` filter (+ tests,
+        351 client tests passing, 100% coverage maintained)
+      - Pre-req: apply `user_favorites` to Supabase before hitting the
+        endpoints
+      - Verify: `POST`/`DELETE`/`GET /api/favorites` via curl; toggle a
+        favorite on `/talks`, reload, confirm it persists; toggle "Favorites
+        only"
 - [ ] Custom talks (company-scoped create; `is_global = false`,
       `company_id = req.user.companyId`)
 

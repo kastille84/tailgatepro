@@ -8,12 +8,16 @@ import theme from "../../../src/styles/theme";
 
 const mockUseAuth = vi.fn();
 const mockUseTalks = vi.fn();
+const mockUseFavorites = vi.fn();
 
 vi.mock("../../../src/context/auth", () => ({
   useAuth: () => mockUseAuth(),
 }));
 vi.mock("../../../src/hooks/useTalks", () => ({
   useTalks: (...args: unknown[]) => mockUseTalks(...args),
+}));
+vi.mock("../../../src/hooks/useFavorites", () => ({
+  useFavorites: (...args: unknown[]) => mockUseFavorites(...args),
 }));
 
 // The feature components have their own tests; stub them so the page test
@@ -69,6 +73,7 @@ describe("ContentLibrary page", () => {
     vi.clearAllMocks();
     mockUseAuth.mockReturnValue({ user: { email: "a@b.com" }, loading: false });
     mockUseTalks.mockReturnValue({ talks, isLoading: false, isError: false });
+    mockUseFavorites.mockReturnValue({ favoriteIds: new Set() });
   });
 
   it("shows a loading status while auth resolves", () => {
@@ -121,6 +126,40 @@ describe("ContentLibrary page", () => {
     });
 
     expect(screen.getByTestId("talk-list").textContent).toContain("1 talks");
+  });
+
+  it("narrows the list to only favorited talks when 'Favorites only' is checked", () => {
+    mockUseFavorites.mockReturnValue({ favoriteIds: new Set(["t2"]) });
+    renderPage();
+
+    fireEvent.click(screen.getByLabelText(/favorites only/i));
+
+    expect(screen.getByTestId("talk-list").textContent).toContain("1 talks");
+  });
+
+  it("combines the favorites filter with the trade filter", () => {
+    mockUseFavorites.mockReturnValue({ favoriteIds: new Set(["t1"]) });
+    renderPage();
+
+    fireEvent.click(screen.getByLabelText(/favorites only/i));
+    fireEvent.change(screen.getByLabelText(/^trade$/i), {
+      target: { value: "Masonry" },
+    });
+
+    // t1 is favorited but not Masonry; t2 is Masonry but not favorited.
+    expect(screen.getByTestId("talk-list").textContent).toContain("0 talks");
+  });
+
+  it("restores the full list when 'Favorites only' is unchecked", () => {
+    mockUseFavorites.mockReturnValue({ favoriteIds: new Set(["t2"]) });
+    renderPage();
+
+    const checkbox = screen.getByLabelText(/favorites only/i);
+    fireEvent.click(checkbox);
+    expect(screen.getByTestId("talk-list").textContent).toContain("1 talks");
+
+    fireEvent.click(checkbox);
+    expect(screen.getByTestId("talk-list").textContent).toContain("2 talks");
   });
 
   it("shows the empty result set when the trade and search filters both exclude everything", () => {

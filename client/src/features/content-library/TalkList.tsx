@@ -1,5 +1,6 @@
 import { Button } from "../../ui_comps/button";
 import type { Talk } from "../../interfaces/talk";
+import { FavoriteButton } from "./FavoriteButton";
 import {
   StyledCard,
   StyledCardMain,
@@ -13,12 +14,14 @@ import {
 
 interface TalkListProps {
   talks: Talk[];
+  favoriteIds: Set<string>;
   onSelect: (talk: Talk) => void;
 }
 
-/** Presentational list of talk cards. The page owns the fetch and the trade
- *  filter / search state; this component only renders and reports selection. */
-export const TalkList = ({ talks, onSelect }: TalkListProps) => {
+/** Presentational list of talk cards. The page owns the fetch, favorites, and
+ *  the trade filter / search state; this component only renders and reports
+ *  selection (and the favorite toggle, via FavoriteButton). */
+export const TalkList = ({ talks, favoriteIds, onSelect }: TalkListProps) => {
   if (talks.length === 0) {
     return (
       <StyledEmpty>
@@ -41,6 +44,7 @@ export const TalkList = ({ talks, onSelect }: TalkListProps) => {
             <StyledTradeBadge>{talk.tradeTag}</StyledTradeBadge>
           )}
           <StyledButtonContainer>
+            <FavoriteButton talk={talk} isFavorited={favoriteIds.has(talk.id)} />
             <Button
               variant="outline"
               size="sm"

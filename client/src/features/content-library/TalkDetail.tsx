@@ -1,8 +1,10 @@
 import { Modal } from "../../ui_comps/modal";
 import type { Talk } from "../../interfaces/talk";
+import { FavoriteButton } from "./FavoriteButton";
 import {
   StyledAttribution,
   StyledBadgeRow,
+  StyledDetailTitleRow,
   StyledOshaLine,
   StyledSection,
   StyledSectionTitle,
@@ -13,6 +15,7 @@ import {
 interface TalkDetailProps {
   /** The selected talk, or `undefined` when the modal should be closed. */
   talk: Talk | undefined;
+  favoriteIds: Set<string>;
   onClose: () => void;
 }
 
@@ -21,14 +24,24 @@ interface TalkDetailProps {
  * ContentLibrary page. Always renders `attribution.copyright` +
  * `attribution.notice` when present — a CPWR licensing condition (keep the
  * source's copyright markings with the content, no implied endorsement), see
- * docs/content-attribution.md.
+ * docs/content-attribution.md. The title row also carries the favorite
+ * toggle — this is the natural read-then-decide moment for bookmarking.
  */
-export const TalkDetail = ({ talk, onClose }: TalkDetailProps) => {
+export const TalkDetail = ({ talk, favoriteIds, onClose }: TalkDetailProps) => {
   const structured = talk?.structured;
   const oshaStandards = structured?.osha_standards ?? [];
 
+  const title = talk ? (
+    <StyledDetailTitleRow>
+      <span>{talk.title}</span>
+      <FavoriteButton talk={talk} isFavorited={favoriteIds.has(talk.id)} />
+    </StyledDetailTitleRow>
+  ) : (
+    ""
+  );
+
   return (
-    <Modal isOpen={Boolean(talk)} onClose={onClose} title={talk?.title ?? ""} size="lg">
+    <Modal isOpen={Boolean(talk)} onClose={onClose} title={title} size="lg">
       {talk && (
         <>
           <StyledBadgeRow>
