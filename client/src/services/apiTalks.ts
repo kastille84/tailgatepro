@@ -63,3 +63,51 @@ export const createTalk = async (
 
   return body.data as Talk;
 };
+
+/**
+ * PATCH /api/talks/:id — full-replace the editable fields of a custom talk
+ * the caller's company owns. The server rejects this (409, surfaced as the
+ * thrown message) once the talk has been used in a logged safety talk.
+ */
+export const updateTalk = async (
+  accessToken: string,
+  id: string,
+  input: CreateTalkInput,
+): Promise<Talk> => {
+  const res = await fetch(`/api/talks/${id}`, {
+    method: "PATCH",
+    headers: authHeaders(accessToken),
+    body: JSON.stringify(input),
+  });
+
+  const body = await res.json().catch(() => null);
+
+  if (!res.ok || !body?.success) {
+    throw new Error(body?.error ?? GENERIC_ERROR);
+  }
+
+  return body.data as Talk;
+};
+
+/**
+ * DELETE /api/talks/:id — hard-delete a custom talk the caller's company owns.
+ * The server rejects this (409, surfaced as the thrown message) once the talk
+ * has been used in a logged safety talk.
+ */
+export const deleteTalk = async (
+  accessToken: string,
+  id: string,
+): Promise<{ id: string }> => {
+  const res = await fetch(`/api/talks/${id}`, {
+    method: "DELETE",
+    headers: authHeaders(accessToken),
+  });
+
+  const body = await res.json().catch(() => null);
+
+  if (!res.ok || !body?.success) {
+    throw new Error(body?.error ?? GENERIC_ERROR);
+  }
+
+  return body.data as { id: string };
+};

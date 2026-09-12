@@ -5,12 +5,21 @@ import { ThemeProvider } from "styled-components";
 
 import { TalkForm } from "../../../src/features/content-library/TalkForm";
 import theme from "../../../src/styles/theme";
+import type { Talk } from "../../../src/interfaces/talk";
 
 const mockCreate = vi.fn();
+const mockUpdate = vi.fn();
+const mockDelete = vi.fn();
 const mockUseTalks = vi.fn();
 
 vi.mock("../../../src/hooks/useCreateTalk", () => ({
   useCreateTalk: () => ({ createTalk: mockCreate, isCreating: false }),
+}));
+vi.mock("../../../src/hooks/useUpdateTalk", () => ({
+  useUpdateTalk: () => ({ updateTalk: mockUpdate, isUpdating: false }),
+}));
+vi.mock("../../../src/hooks/useDeleteTalk", () => ({
+  useDeleteTalk: () => ({ deleteTalk: mockDelete, isDeleting: false }),
 }));
 vi.mock("../../../src/hooks/useTalks", () => ({
   useTalks: (...args: unknown[]) => mockUseTalks(...args),
@@ -55,10 +64,33 @@ const renderForm = (
     </ThemeProvider>,
   );
 
+const editTalk: Talk = {
+  id: "talk-1",
+  slug: null,
+  title: "Ladder Safety Refresher",
+  tradeTag: "Roofing",
+  tradeTags: ["Roofing"],
+  content: "# Ladder Safety Refresher\n",
+  structured: {
+    summary: "Keep three points of contact.",
+    talking_points: ["Inspect rungs before use"],
+    site_hazards_to_check: ["Uneven ground"],
+    discussion_questions: ["What PPE is required?"],
+    osha_standards: ["29 CFR 1926.1053"],
+    estimated_minutes: 5,
+  },
+  attribution: null,
+  isGlobal: false,
+  companyId: "company-1",
+  createdAt: "2026-09-12T00:00:00.000Z",
+};
+
 describe("TalkForm", () => {
   beforeEach(() => {
     vi.clearAllMocks();
     mockCreate.mockResolvedValue(undefined);
+    mockUpdate.mockResolvedValue(undefined);
+    mockDelete.mockResolvedValue(undefined);
     mockUseTalks.mockReturnValue({
       talks: [],
       tradeOptions: [
@@ -285,5 +317,86 @@ describe("TalkForm", () => {
 
     expect(onClose).toHaveBeenCalled();
     expect(mockCreate).not.toHaveBeenCalled();
+  });
+
+  it("shows the meeting-log lock notice in create mode", () => {
+    renderForm();
+    expect(
+      screen.getByText(/can no longer be edited or deleted/i),
+    ).toBeDefined();
+  });
+
+  it("pre-fills fields and updates with the id in edit mode", async () => {
+    renderForm({ talk: editTalk });
+
+    expect(screen.getByText("Edit talk")).toBeDefined();
+    expect(
+      screen.getByText(/can no longer be edited or deleted/i),
+    ).toBeDefined();
+    expect((screen.getByLabelText(/^title$/i) as HTMLInputElement).value).toBe(
+      "Ladder Safety Refresher",
+    );
+    expect((screen.getByLabelText(/^trade/i) as HTMLInputElement).value).toBe(
+      "Roofing",
+    );
+
+    fireEvent.change(screen.getByLabelText(/^title$/i), {
+      target: { value: "Ladder Safety Refresher (Updated)" },
+    });
+    fireEvent.click(screen.getByRole("button", { name: /save changes/i }));
+
+    await waitFor(() =>
+      expect(mockUpdate).toHaveBeenCalledWith({
+        id: "talk-1",
+        input: expect.objectContaining({
+          title: "Ladder Safety Refresher (Updated)",
+          tradeTag: "Roofing",
+          summary: "Keep three points of contact.",
+          talkingPoints: ["Inspect rungs before use"],
+          siteHazardsToCheck: ["Uneven ground"],
+          discussionQuestions: ["What PPE is required?"],
+          oshaStandards: ["29 CFR 1926.1053"],
+          estimatedMinutes: 5,
+        }),
+      }),
+    );
+  });
+
+  it("has no danger zone in create mode", () => {
+    renderForm();
+    expect(screen.queryByRole("button", { name: /delete talk/i })).toBeNull();
+  });
+
+  it("deletes only after the confirm dialog is confirmed", async () => {
+    const onClose = vi.fn();
+    renderForm({ talk: editTalk, onClose });
+
+    // Opening the danger-zone Delete button does not delete on its own.
+    fireEvent.click(screen.getByRole("button", { name: /delete talk/i }));
+    expect(mockDelete).not.toHaveBeenCalled();
+
+    // The confirm dialog's own confirm button does.
+    const confirmButtons = screen.getAllByRole("button", {
+      name: /delete talk/i,
+    });
+    fireEvent.click(confirmButtons[confirmButtons.length - 1]);
+
+    await waitFor(() => expect(mockDelete).toHaveBeenCalledWith("talk-1"));
+    await waitFor(() => expect(onClose).toHaveBeenCalled());
+  });
+
+  it("keeps the form open when delete fails after confirmation", async () => {
+    const onClose = vi.fn();
+    mockDelete.mockRejectedValue(new Error("delete failed"));
+    renderForm({ talk: editTalk, onClose });
+
+    fireEvent.click(screen.getByRole("button", { name: /delete talk/i }));
+    const confirmButtons = screen.getAllByRole("button", {
+      name: /delete talk/i,
+    });
+    fireEvent.click(confirmButtons[confirmButtons.length - 1]);
+
+    await waitFor(() => expect(mockDelete).toHaveBeenCalledWith("talk-1"));
+    expect(onClose).not.toHaveBeenCalled();
   });
 });

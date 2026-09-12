@@ -1,9 +1,11 @@
+import { useState } from "react";
 import { Controller, useFieldArray, useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 
 import { Button } from "../../ui_comps/button";
 import { BulletListEditor } from "../../ui_comps/bullet-list-editor";
+import { ConfirmDialog } from "../../ui_comps/confirm-dialog";
 import {
   Field,
   FieldError,
@@ -15,8 +17,18 @@ import {
 } from "../../ui_comps/form";
 import { Modal } from "../../ui_comps/modal";
 import { useCreateTalk } from "../../hooks/useCreateTalk";
+import { useDeleteTalk } from "../../hooks/useDeleteTalk";
 import { useTalks } from "../../hooks/useTalks";
-import { StyledActions, StyledListRow } from "./styles";
+import { useUpdateTalk } from "../../hooks/useUpdateTalk";
+import type { Talk } from "../../interfaces/talk";
+import {
+  StyledActions,
+  StyledDangerZone,
+  StyledDangerZoneTitle,
+  StyledListRow,
+  StyledLockNotice,
+} from "./styles";
+import { HiOutlineInformationCircle } from "react-icons/hi2";
 
 // Mirrors the express-validator chains in server/routes/talks.js.
 // `talkingPoints`/`siteHazardsToCheck`/`discussionQuestions` are plain
@@ -26,7 +38,11 @@ import { StyledActions, StyledListRow } from "./styles";
 // on useFieldArray + plain add/remove rows (short codes, little benefit from
 // rich editing), which is why it alone needs that wrapper shape.
 const talkSchema = z.object({
-  title: z.string().trim().min(1, "Title is required").max(200, "Title is too long"),
+  title: z
+    .string()
+    .trim()
+    .min(1, "Title is required")
+    .max(200, "Title is too long"),
   tradeTag: z.string().trim().max(60, "Trade is too long").optional(),
   summary: z.string().trim().max(1000, "Summary is too long").optional(),
   talkingPoints: z.array(z.string()).min(1, "Add at least one talking point"),
@@ -43,7 +59,8 @@ const talkSchema = z.object({
     .optional()
     .refine(
       (value) =>
-        !value || (/^\d+$/.test(value) && Number(value) >= 1 && Number(value) <= 480),
+        !value ||
+        (/^\d+$/.test(value) && Number(value) >= 1 && Number(value) <= 480),
       { message: "Estimated minutes must be a positive number" },
     ),
 });
@@ -53,17 +70,27 @@ type TalkFormValues = z.infer<typeof talkSchema>;
 interface TalkFormProps {
   isOpen: boolean;
   onClose: () => void;
+  /** Present ⇒ edit mode; absent ⇒ create mode. */
+  talk?: Talk;
 }
 
 /**
- * Create a company-scoped custom talk. Create-only — no edit/delete this
- * round (docs/tasks.md 2d). No `talk` prop or remount-`key` trick like
- * ProjectForm's edit mode needs: Modal doesn't render closed children, so
- * this form always starts fresh from the same empty `defaultValues`.
+ * Create or edit a company-scoped custom talk. No `key` remount trick like
+ * ProjectForm's edit mode needs: `ContentLibrary` only mounts this component
+ * while `isFormOpen` is true (`{isFormOpen && <Suspense><TalkForm/></Suspense>}`),
+ * so it fully unmounts on close and remounts fresh — with whichever `talk` the
+ * next open passes in — every time.
  */
-export const TalkForm = ({ isOpen, onClose }: TalkFormProps) => {
+export const TalkForm = ({ isOpen, onClose, talk }: TalkFormProps) => {
+  const isEdit = Boolean(talk);
   const { createTalk, isCreating } = useCreateTalk();
+  const { updateTalk, isUpdating } = useUpdateTalk();
+  const { deleteTalk, isDeleting } = useDeleteTalk();
   const { tradeOptions } = useTalks();
+
+  const [isConfirmingDelete, setIsConfirmingDelete] = useState(false);
+
+  const structured = talk?.structured;
 
   const {
     register,
@@ -74,14 +101,18 @@ export const TalkForm = ({ isOpen, onClose }: TalkFormProps) => {
     resolver: zodResolver(talkSchema),
     mode: "onTouched",
     defaultValues: {
-      title: "",
-      tradeTag: "",
-      summary: "",
-      talkingPoints: [],
-      siteHazardsToCheck: [],
-      discussionQuestions: [],
-      oshaStandards: [],
-      estimatedMinutes: "",
+      title: talk?.title ?? "",
+      tradeTag: talk?.tradeTag ?? "",
+      summary: structured?.summary ?? "",
+      talkingPoints: structured?.talking_points ?? [],
+      siteHazardsToCheck: structured?.site_hazards_to_check ?? [],
+      discussionQuestions: structured?.discussion_questions ?? [],
+      oshaStandards: (structured?.osha_standards ?? []).map((value) => ({
+        value,
+      })),
+      estimatedMinutes: structured?.estimated_minutes
+        ? String(structured.estimated_minutes)
+        : "",
     },
   });
 
@@ -92,26 +123,45 @@ export const TalkForm = ({ isOpen, onClose }: TalkFormProps) => {
   } = useFieldArray({ control, name: "oshaStandards" });
 
   const onSubmit = async (values: TalkFormValues) => {
+    const input = {
+      title: values.title,
+      tradeTag: values.tradeTag?.trim() || undefined,
+      summary: values.summary?.trim() || undefined,
+      talkingPoints: values.talkingPoints,
+      siteHazardsToCheck: values.siteHazardsToCheck,
+      discussionQuestions: values.discussionQuestions,
+      // Zod's per-item `.trim().min(1)` already guarantees every row here
+      // is a non-blank, trimmed string (a blank row blocks submission
+      // instead — see the "Can't be blank" schema message) — no need to
+      // re-trim or filter here.
+      oshaStandards: values.oshaStandards.map((standard) => standard.value),
+      estimatedMinutes: values.estimatedMinutes
+        ? Number(values.estimatedMinutes)
+        : undefined,
+    };
+
     try {
-      await createTalk({
-        title: values.title,
-        tradeTag: values.tradeTag?.trim() || undefined,
-        summary: values.summary?.trim() || undefined,
-        talkingPoints: values.talkingPoints,
-        siteHazardsToCheck: values.siteHazardsToCheck,
-        discussionQuestions: values.discussionQuestions,
-        // Zod's per-item `.trim().min(1)` already guarantees every row here
-        // is a non-blank, trimmed string (a blank row blocks submission
-        // instead — see the "Can't be blank" schema message) — no need to
-        // re-trim or filter here.
-        oshaStandards: values.oshaStandards.map((standard) => standard.value),
-        estimatedMinutes: values.estimatedMinutes
-          ? Number(values.estimatedMinutes)
-          : undefined,
-      });
+      if (talk) {
+        await updateTalk({ id: talk.id, input });
+      } else {
+        await createTalk(input);
+      }
       onClose();
     } catch {
-      // useCreateTalk already surfaces the failure as a toast.
+      // useCreateTalk / useUpdateTalk already surface the failure as a toast
+      // (including the server's 409 once the talk is tied to a meeting log).
+    }
+  };
+
+  const handleDelete = async () => {
+    if (!talk) return;
+    try {
+      await deleteTalk(talk.id);
+      setIsConfirmingDelete(false);
+      onClose();
+    } catch {
+      // useDeleteTalk surfaces the failure (incl. the 409 in-use guard).
+      setIsConfirmingDelete(false);
     }
   };
 
@@ -126,7 +176,17 @@ export const TalkForm = ({ isOpen, onClose }: TalkFormProps) => {
   const listHint = "One per line — press Enter to add another.";
 
   return (
-    <Modal isOpen={isOpen} onClose={onClose} title="New talk" size="lg">
+    <Modal
+      isOpen={isOpen}
+      onClose={onClose}
+      title={isEdit ? "Edit talk" : "New talk"}
+      size="lg"
+    >
+      <StyledLockNotice>
+        <HiOutlineInformationCircle /> Once this talk is used in a logged safety
+        talk, it can no longer be edited or deleted.
+      </StyledLockNotice>
+
       <Form onSubmit={handleSubmit(onSubmit)} noValidate>
         <FormField id={titleId} label="Title" error={errors.title?.message}>
           <TextInput
@@ -138,7 +198,11 @@ export const TalkForm = ({ isOpen, onClose }: TalkFormProps) => {
           />
         </FormField>
 
-        <FormField id={tradeId} label="Trade (optional)" error={errors.tradeTag?.message}>
+        <FormField
+          id={tradeId}
+          label="Trade (optional)"
+          error={errors.tradeTag?.message}
+        >
           <TextInput
             id={tradeId}
             type="text"
@@ -154,7 +218,11 @@ export const TalkForm = ({ isOpen, onClose }: TalkFormProps) => {
           ))}
         </datalist>
 
-        <FormField id={summaryId} label="Summary (optional)" error={errors.summary?.message}>
+        <FormField
+          id={summaryId}
+          label="Summary (optional)"
+          error={errors.summary?.message}
+        >
           <Textarea
             id={summaryId}
             placeholder="One or two sentences on what this talk covers."
@@ -192,7 +260,11 @@ export const TalkForm = ({ isOpen, onClose }: TalkFormProps) => {
               label="Hazards to check on site (optional)"
               hint={listHint}
             >
-              <BulletListEditor id={hazardsId} value={field.value} onChange={field.onChange} />
+              <BulletListEditor
+                id={hazardsId}
+                value={field.value}
+                onChange={field.onChange}
+              />
             </FormField>
           )}
         />
@@ -206,7 +278,11 @@ export const TalkForm = ({ isOpen, onClose }: TalkFormProps) => {
               label="Discussion questions (optional)"
               hint={listHint}
             >
-              <BulletListEditor id={questionsId} value={field.value} onChange={field.onChange} />
+              <BulletListEditor
+                id={questionsId}
+                value={field.value}
+                onChange={field.onChange}
+              />
             </FormField>
           )}
         />
@@ -235,7 +311,9 @@ export const TalkForm = ({ isOpen, onClose }: TalkFormProps) => {
                     Remove
                   </Button>
                 </StyledListRow>
-                {rowError && <FieldError role="alert">{rowError.message}</FieldError>}
+                {rowError && (
+                  <FieldError role="alert">{rowError.message}</FieldError>
+                )}
               </Field>
             );
           })}
@@ -268,11 +346,42 @@ export const TalkForm = ({ isOpen, onClose }: TalkFormProps) => {
           <Button type="button" variant="outline" size="md" onClick={onClose}>
             Cancel
           </Button>
-          <Button type="submit" variant="primary" size="md" loading={isCreating}>
-            Create talk
+          <Button
+            type="submit"
+            variant="primary"
+            size="md"
+            loading={isCreating || isUpdating}
+          >
+            {isEdit ? "Save changes" : "Create talk"}
           </Button>
         </StyledActions>
       </Form>
+
+      {isEdit && (
+        <StyledDangerZone>
+          <StyledDangerZoneTitle>Danger zone</StyledDangerZoneTitle>
+          <Button
+            type="button"
+            variant="danger"
+            size="md"
+            onClick={() => setIsConfirmingDelete(true)}
+          >
+            Delete talk
+          </Button>
+        </StyledDangerZone>
+      )}
+
+      <ConfirmDialog
+        isOpen={isConfirmingDelete}
+        title="Delete talk"
+        confirmLabel="Delete talk"
+        confirmVariant="danger"
+        isBusy={isDeleting}
+        onConfirm={handleDelete}
+        onClose={() => setIsConfirmingDelete(false)}
+      >
+        Delete <strong>{talk?.title}</strong>? This can't be undone.
+      </ConfirmDialog>
     </Modal>
   );
 };

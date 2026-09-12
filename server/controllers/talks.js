@@ -51,3 +51,47 @@ exports.createTalk = async (req, res, next) => {
     return next(error);
   }
 };
+
+exports.updateTalk = async (req, res, next) => {
+  try {
+    const {
+      title,
+      tradeTag,
+      summary,
+      talkingPoints,
+      siteHazardsToCheck,
+      discussionQuestions,
+      oshaStandards,
+      estimatedMinutes,
+    } = req.body;
+    const data = await talksService.update({
+      id: req.params.id,
+      companyId: req.user.companyId,
+      title,
+      tradeTag,
+      summary,
+      talkingPoints,
+      siteHazardsToCheck,
+      discussionQuestions,
+      oshaStandards,
+      estimatedMinutes,
+    });
+    return res.status(200).json({ success: true, data });
+  } catch (error) {
+    return next(error);
+  }
+};
+
+// TODO(roles): once `admin` / `safety_manager` are real, restrict delete to
+// those roles rather than any member of the owning company.
+exports.deleteTalk = async (req, res, next) => {
+  try {
+    const data = await talksService.remove({
+      id: req.params.id,
+      companyId: req.user.companyId,
+    });
+    return res.status(200).json({ success: true, data });
+  } catch (error) {
+    return next(error);
+  }
+};

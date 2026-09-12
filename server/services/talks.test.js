@@ -2,7 +2,7 @@
 // `supabase.from` is looked up fresh at call time (not destructured), so a
 // single module-scope spy reconfigured per test is enough — no re-spying.
 const { supabase } = require("../utility/supabaseClient");
-const { listForCompany, getById, create } = require("./talks");
+const { listForCompany, getById, create, update, remove } = require("./talks");
 
 const TALK_COLUMNS =
   "id, slug, title, trade_tag, trade_tags, content, structured, attribution, is_global, company_id, created_at";
@@ -289,6 +289,244 @@ describe("talks service: create", () => {
     ).rejects.toMatchObject({
       statusCode: 502,
       message: "Could not create the talk",
+    });
+  });
+});
+
+describe("talks service: update", () => {
+  const payload = {
+    id: "talk-2",
+    companyId: "company-1",
+    title: "Ladder Safety Refresher (Updated)",
+    tradeTag: "Roofing",
+    talkingPoints: ["Inspect rungs before use", "Face the ladder"],
+  };
+
+  const updatedDbRow = {
+    id: "talk-2",
+    slug: null,
+    title: "Ladder Safety Refresher (Updated)",
+    trade_tag: "Roofing",
+    trade_tags: ["Roofing"],
+    content: "# Ladder Safety Refresher (Updated)\n",
+    structured: {
+      summary: null,
+      talking_points: ["Inspect rungs before use", "Face the ladder"],
+      site_hazards_to_check: [],
+      discussion_questions: [],
+      osha_standards: [],
+      estimated_minutes: null,
+    },
+    attribution: null,
+    is_global: false,
+    company_id: "company-1",
+    created_at: "2026-09-12T00:00:00.000Z",
+  };
+
+  let limit;
+  let logsEq;
+  let logsSelect;
+  let single;
+  let selectAfterUpdate;
+  let eqGlobal;
+  let eqCompany;
+  let eqId;
+  let updateFn;
+
+  beforeEach(() => {
+    // meeting_logs guard chain: .select("id").eq("talk_id", id).limit(1)
+    limit = vi.fn().mockResolvedValue({ data: [], error: null });
+    logsEq = vi.fn(() => ({ limit }));
+    logsSelect = vi.fn(() => ({ eq: logsEq }));
+
+    // toolbox_talks update chain: .update().eq("id").eq("company_id").eq("is_global").select().single()
+    single = vi.fn().mockResolvedValue({ data: updatedDbRow, error: null });
+    selectAfterUpdate = vi.fn(() => ({ single }));
+    eqGlobal = vi.fn(() => ({ select: selectAfterUpdate }));
+    eqCompany = vi.fn(() => ({ eq: eqGlobal }));
+    eqId = vi.fn(() => ({ eq: eqCompany }));
+    updateFn = vi.fn(() => ({ eq: eqId }));
+
+    fromSpy.mockReset();
+    fromSpy.mockImplementation((table) => {
+      if (table === "meeting_logs") return { select: logsSelect };
+      if (table === "toolbox_talks") return { update: updateFn };
+      throw new Error(`Unexpected table: ${table}`);
+    });
+  });
+
+  it("should rebuild content/structured and update a not-yet-logged talk, scoped to the owning company and non-global", async () => {
+    // Act
+    const result = await update(payload);
+
+    // Assert
+    expect(logsSelect).toHaveBeenCalledWith("id");
+    expect(logsEq).toHaveBeenCalledWith("talk_id", "talk-2");
+    expect(updateFn).toHaveBeenCalledWith(
+      expect.objectContaining({
+        title: "Ladder Safety Refresher (Updated)",
+        trade_tag: "Roofing",
+        trade_tags: ["Roofing"],
+        structured: expect.objectContaining({
+          talking_points: ["Inspect rungs before use", "Face the ladder"],
+        }),
+      }),
+    );
+    const writtenRow = updateFn.mock.calls[0][0];
+    expect(writtenRow.content).toContain("Ladder Safety Refresher (Updated)");
+    expect(eqId).toHaveBeenCalledWith("id", "talk-2");
+    expect(eqCompany).toHaveBeenCalledWith("company_id", "company-1");
+    expect(eqGlobal).toHaveBeenCalledWith("is_global", false);
+    expect(result.title).toBe("Ladder Safety Refresher (Updated)");
+  });
+
+  it("should throw a 409 AppError when the talk has been used in a meeting log, without touching toolbox_talks", async () => {
+    // Arrange
+    limit.mockResolvedValue({ data: [{ id: "log-1" }], error: null });
+
+    // Act & Assert
+    await expect(update(payload)).rejects.toMatchObject({
+      statusCode: 409,
+      message:
+        "This talk has been used in a logged safety talk and can't be edited or deleted.",
+    });
+    expect(updateFn).not.toHaveBeenCalled();
+  });
+
+  it("should throw a 502 AppError when the meeting_logs guard query fails", async () => {
+    // Arrange
+    limit.mockResolvedValue({ data: null, error: new Error("db down") });
+
+    // Act & Assert
+    await expect(update(payload)).rejects.toMatchObject({
+      statusCode: 502,
+      message: "Could not verify this talk isn't in use",
+    });
+  });
+
+  it("should throw a 404 AppError when no row matches the id, owning company, and non-global scope", async () => {
+    // Arrange
+    single.mockResolvedValue({
+      data: null,
+      error: { code: "PGRST116", message: "no rows" },
+    });
+
+    // Act & Assert
+    await expect(update(payload)).rejects.toMatchObject({
+      statusCode: 404,
+      message: "Talk not found",
+    });
+  });
+
+  it("should throw a 502 AppError on any other update failure", async () => {
+    // Arrange
+    single.mockResolvedValue({ data: null, error: { code: "OTHER" } });
+
+    // Act & Assert
+    await expect(update(payload)).rejects.toMatchObject({
+      statusCode: 502,
+      message: "Could not update the talk",
+    });
+  });
+});
+
+describe("talks service: remove", () => {
+  let limit;
+  let logsEq;
+  let logsSelect;
+  let single;
+  let deleteSelect;
+  let eqGlobal;
+  let eqCompany;
+  let eqId;
+  let deleteFn;
+
+  beforeEach(() => {
+    // meeting_logs guard chain: .select("id").eq("talk_id", id).limit(1)
+    limit = vi.fn().mockResolvedValue({ data: [], error: null });
+    logsEq = vi.fn(() => ({ limit }));
+    logsSelect = vi.fn(() => ({ eq: logsEq }));
+
+    // toolbox_talks delete chain: .delete().eq("id").eq("company_id").eq("is_global").select("id").single()
+    single = vi.fn().mockResolvedValue({ data: { id: "talk-2" }, error: null });
+    deleteSelect = vi.fn(() => ({ single }));
+    eqGlobal = vi.fn(() => ({ select: deleteSelect }));
+    eqCompany = vi.fn(() => ({ eq: eqGlobal }));
+    eqId = vi.fn(() => ({ eq: eqCompany }));
+    deleteFn = vi.fn(() => ({ eq: eqId }));
+
+    fromSpy.mockReset();
+    fromSpy.mockImplementation((table) => {
+      if (table === "meeting_logs") return { select: logsSelect };
+      if (table === "toolbox_talks") return { delete: deleteFn };
+      throw new Error(`Unexpected table: ${table}`);
+    });
+  });
+
+  it("should delete a not-yet-logged custom talk, scoped to the owning company and non-global", async () => {
+    // Act
+    const result = await remove({ id: "talk-2", companyId: "company-1" });
+
+    // Assert
+    expect(logsSelect).toHaveBeenCalledWith("id");
+    expect(logsEq).toHaveBeenCalledWith("talk_id", "talk-2");
+    expect(eqId).toHaveBeenCalledWith("id", "talk-2");
+    expect(eqCompany).toHaveBeenCalledWith("company_id", "company-1");
+    expect(eqGlobal).toHaveBeenCalledWith("is_global", false);
+    expect(result).toEqual({ id: "talk-2" });
+  });
+
+  it("should throw a 409 AppError when the talk has been used in a meeting log, without touching toolbox_talks", async () => {
+    // Arrange
+    limit.mockResolvedValue({ data: [{ id: "log-1" }], error: null });
+
+    // Act & Assert
+    await expect(
+      remove({ id: "talk-2", companyId: "company-1" }),
+    ).rejects.toMatchObject({
+      statusCode: 409,
+      message:
+        "This talk has been used in a logged safety talk and can't be edited or deleted.",
+    });
+    expect(deleteFn).not.toHaveBeenCalled();
+  });
+
+  it("should throw a 502 AppError when the meeting_logs guard query fails", async () => {
+    // Arrange
+    limit.mockResolvedValue({ data: null, error: new Error("db down") });
+
+    // Act & Assert
+    await expect(
+      remove({ id: "talk-2", companyId: "company-1" }),
+    ).rejects.toMatchObject({
+      statusCode: 502,
+      message: "Could not verify this talk isn't in use",
+    });
+  });
+
+  it("should throw a 404 AppError when no row matches the id, owning company, and non-global scope", async () => {
+    // Arrange
+    single.mockResolvedValue({
+      data: null,
+      error: { code: "PGRST116", message: "no rows" },
+    });
+
+    // Act & Assert
+    await expect(
+      remove({ id: "talk-2", companyId: "company-1" }),
+    ).rejects.toMatchObject({ statusCode: 404, message: "Talk not found" });
+  });
+
+  it("should throw a 502 AppError on any other delete failure", async () => {
+    // Arrange
+    single.mockResolvedValue({ data: null, error: { code: "OTHER" } });
+
+    // Act & Assert
+    await expect(
+      remove({ id: "talk-2", companyId: "company-1" }),
+    ).rejects.toMatchObject({
+      statusCode: 502,
+      message: "Could not delete the talk",
     });
   });
 });

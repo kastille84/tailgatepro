@@ -1,10 +1,12 @@
 // Plain CommonJS — see requireAuth.test.js for why (nested require() sharing).
 const talksService = require("../services/talks");
-const { listTalks, getTalk, createTalk } = require("./talks");
+const { listTalks, getTalk, createTalk, updateTalk, deleteTalk } = require("./talks");
 
 const listForCompanySpy = vi.spyOn(talksService, "listForCompany");
 const getByIdSpy = vi.spyOn(talksService, "getById");
 const createSpy = vi.spyOn(talksService, "create");
+const updateSpy = vi.spyOn(talksService, "update");
+const removeSpy = vi.spyOn(talksService, "remove");
 
 const talk = {
   id: "talk-1",
@@ -29,6 +31,8 @@ describe("talks controller", () => {
     listForCompanySpy.mockReset();
     getByIdSpy.mockReset();
     createSpy.mockReset();
+    updateSpy.mockReset();
+    removeSpy.mockReset();
     req = { params: {}, body: {}, user: { id: "user-1", companyId: "company-1" } };
     res = {
       status: vi.fn().mockReturnThis(),
@@ -146,6 +150,101 @@ describe("talks controller", () => {
 
       // Act
       await createTalk(req, res, next);
+
+      // Assert
+      expect(next).toHaveBeenCalledWith(error);
+      expect(res.status).not.toHaveBeenCalled();
+    });
+  });
+
+  describe("updateTalk", () => {
+    const updatedTalk = { ...talk, id: "talk-2", isGlobal: false, companyId: "company-1" };
+
+    beforeEach(() => {
+      req.params = { id: "talk-2" };
+      req.body = {
+        title: "Ladder Safety Refresher (Updated)",
+        tradeTag: "Roofing",
+        summary: "Keep three points of contact.",
+        talkingPoints: ["Inspect rungs before use"],
+        siteHazardsToCheck: [],
+        discussionQuestions: [],
+        oshaStandards: [],
+        estimatedMinutes: 5,
+      };
+    });
+
+    it("should call the service with req.params.id, the assembled body fields, and the caller's companyId, and respond 200", async () => {
+      // Arrange
+      updateSpy.mockResolvedValue(updatedTalk);
+
+      // Act
+      await updateTalk(req, res, next);
+
+      // Assert
+      expect(updateSpy).toHaveBeenCalledWith({
+        id: "talk-2",
+        companyId: "company-1",
+        title: "Ladder Safety Refresher (Updated)",
+        tradeTag: "Roofing",
+        summary: "Keep three points of contact.",
+        talkingPoints: ["Inspect rungs before use"],
+        siteHazardsToCheck: [],
+        discussionQuestions: [],
+        oshaStandards: [],
+        estimatedMinutes: 5,
+      });
+      expect(res.status).toHaveBeenCalledWith(200);
+      expect(res.json).toHaveBeenCalledWith({ success: true, data: updatedTalk });
+      expect(next).not.toHaveBeenCalled();
+    });
+
+    it("should forward a service error to next() (e.g. the 409 in-use guard or 404 not-found)", async () => {
+      // Arrange
+      const error = new Error("Talk not found");
+      updateSpy.mockRejectedValue(error);
+
+      // Act
+      await updateTalk(req, res, next);
+
+      // Assert
+      expect(next).toHaveBeenCalledWith(error);
+      expect(res.status).not.toHaveBeenCalled();
+    });
+  });
+
+  describe("deleteTalk", () => {
+    it("should call the service with req.params.id and the caller's companyId, and respond 200", async () => {
+      // Arrange
+      req.params = { id: "talk-2" };
+      removeSpy.mockResolvedValue({ id: "talk-2" });
+
+      // Act
+      await deleteTalk(req, res, next);
+
+      // Assert
+      expect(removeSpy).toHaveBeenCalledWith({
+        id: "talk-2",
+        companyId: "company-1",
+      });
+      expect(res.status).toHaveBeenCalledWith(200);
+      expect(res.json).toHaveBeenCalledWith({
+        success: true,
+        data: { id: "talk-2" },
+      });
+      expect(next).not.toHaveBeenCalled();
+    });
+
+    it("should forward a service error to next() (e.g. the 409 in-use guard)", async () => {
+      // Arrange
+      req.params = { id: "talk-2" };
+      const error = new Error(
+        "This talk has been used in a logged safety talk and can't be edited or deleted.",
+      );
+      removeSpy.mockRejectedValue(error);
+
+      // Act
+      await deleteTalk(req, res, next);
 
       // Assert
       expect(next).toHaveBeenCalledWith(error);

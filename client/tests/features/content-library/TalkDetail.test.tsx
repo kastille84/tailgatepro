@@ -1,6 +1,6 @@
 import React from "react";
 import { describe, it, expect, vi } from "vitest";
-import { render, screen } from "@testing-library/react";
+import { render, screen, fireEvent } from "@testing-library/react";
 import { ThemeProvider } from "styled-components";
 
 import { TalkDetail } from "../../../src/features/content-library";
@@ -51,6 +51,7 @@ const renderDetail = (
         talk={fullTalk}
         favoriteIds={new Set()}
         onClose={vi.fn()}
+        onEdit={vi.fn()}
         {...props}
       />
     </ThemeProvider>,
@@ -138,5 +139,19 @@ describe("TalkDetail", () => {
   it("shows no Custom badge for a global talk", () => {
     renderDetail();
     expect(screen.queryByText("Custom")).toBeNull();
+  });
+
+  it("offers an Edit button for a custom talk and calls onEdit with it", () => {
+    const onEdit = vi.fn();
+    const customTalk = { ...fullTalk, isGlobal: false, companyId: "company-1" };
+    renderDetail({ talk: customTalk, onEdit });
+
+    fireEvent.click(screen.getByRole("button", { name: /edit talk/i }));
+    expect(onEdit).toHaveBeenCalledWith(customTalk);
+  });
+
+  it("hides the Edit button for a global talk", () => {
+    renderDetail();
+    expect(screen.queryByRole("button", { name: /edit talk/i })).toBeNull();
   });
 });

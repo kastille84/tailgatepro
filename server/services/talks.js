@@ -123,4 +123,113 @@ const create = async ({
   return toTalk(data);
 };
 
-module.exports = { listForCompany, getById, create };
+// Blocks edit/delete once a talk has been used in a logged safety talk.
+// meeting_logs.talk_id is a live FK, not a content snapshot: editing a talk
+// after the fact would retroactively rewrite what that past meeting "was
+// about", and deleting it would sever the historical record entirely. Shared
+// by update() and remove() so the rule (and its wording) lives in one place —
+// unlike projects, where only delete needs the meeting_logs guard.
+const assertNotLoggedAnywhere = async (id) => {
+  const { data: logs, error } = await supabase
+    .from("meeting_logs")
+    .select("id")
+    .eq("talk_id", id)
+    .limit(1);
+
+  if (error) {
+    throw new AppError("Could not verify this talk isn't in use", 502, {
+      cause: error,
+    });
+  }
+
+  if (logs.length > 0) {
+    throw new AppError(
+      "This talk has been used in a logged safety talk and can't be edited or deleted.",
+      409,
+    );
+  }
+};
+
+// Full-replaces a custom talk's editable fields — scoped to the caller's own
+// company and never a global talk (a talk belonging to another company or
+// marked is_global is indistinguishable from missing, same as getById).
+// `content` is rebuilt from the structured fields via the same shared
+// Markdown builder create() uses, so an edited talk's body stays consistent
+// with its structured data.
+const update = async ({
+  id,
+  companyId,
+  title,
+  tradeTag,
+  summary,
+  talkingPoints,
+  siteHazardsToCheck,
+  discussionQuestions,
+  oshaStandards,
+  estimatedMinutes,
+}) => {
+  await assertNotLoggedAnywhere(id);
+
+  const structured = {
+    summary: summary ?? null,
+    talking_points: talkingPoints ?? [],
+    site_hazards_to_check: siteHazardsToCheck ?? [],
+    discussion_questions: discussionQuestions ?? [],
+    osha_standards: oshaStandards ?? [],
+    estimated_minutes: estimatedMinutes ?? null,
+  };
+
+  const { data, error } = await supabase
+    .from("toolbox_talks")
+    .update({
+      title,
+      trade_tag: tradeTag ?? null,
+      trade_tags: tradeTag ? [tradeTag] : [],
+      content: composeTalkMarkdown({ title, ...structured }),
+      structured,
+    })
+    .eq("id", id)
+    .eq("company_id", companyId)
+    .eq("is_global", false)
+    .select(TALK_COLUMNS)
+    .single();
+
+  if (error) {
+    // PGRST116 = no row returned by `.single()` — the id doesn't exist, isn't
+    // owned by this company, or is a global talk.
+    if (error.code === "PGRST116") {
+      throw new AppError("Talk not found", 404, { cause: error });
+    }
+    throw new AppError("Could not update the talk", 502, { cause: error });
+  }
+
+  return toTalk(data);
+};
+
+// Hard-deletes a custom talk the caller's company owns, once it isn't
+// referenced by any meeting_logs row. `user_favorites.talk_id` is
+// ON DELETE CASCADE, so favorites of this talk are cleaned up automatically —
+// no separate handling needed here. Scoped the same way as update.
+const remove = async ({ id, companyId }) => {
+  await assertNotLoggedAnywhere(id);
+
+  const { data, error } = await supabase
+    .from("toolbox_talks")
+    .delete()
+    .eq("id", id)
+    .eq("company_id", companyId)
+    .eq("is_global", false)
+    .select("id")
+    .single();
+
+  if (error) {
+    if (error.code === "PGRST116") {
+      throw new AppError("Talk not found", 404, { cause: error });
+    }
+    throw new AppError("Could not delete the talk", 502, { cause: error });
+  }
+
+  return { id: data.id };
+};
+
+module.exports = { listForCompany, getById, create, update, remove };

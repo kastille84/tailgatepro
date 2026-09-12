@@ -4,7 +4,13 @@ const { body, param } = require("express-validator");
 const { requireAuth } = require("../middlewares/requireAuth");
 const { loadUserContext } = require("../middlewares/loadUserContext");
 const { validate } = require("../middlewares/validate");
-const { listTalks, getTalk, createTalk } = require("../controllers/talks");
+const {
+  listTalks,
+  getTalk,
+  createTalk,
+  updateTalk,
+  deleteTalk,
+} = require("../controllers/talks");
 
 const router = express.Router();
 
@@ -82,6 +88,58 @@ router.post(
   ],
   validate,
   createTalk,
+);
+
+// PATCH /api/talks/:id — full-replace the editable fields of a custom talk
+// the caller's company owns. Same validators as POST (this isn't a sparse
+// patch — content is rebuilt from the structured fields, same as create).
+// Rejected with 404 for a missing/foreign/global talk, 409 once the talk has
+// been used in a logged safety talk (see assertNotLoggedAnywhere).
+router.patch(
+  "/:id",
+  requireAuth,
+  loadUserContext,
+  [
+    param("id").isUUID().withMessage("A valid talk id is required"),
+    body("title")
+      .trim()
+      .notEmpty()
+      .withMessage("Title is required")
+      .isLength({ max: 200 })
+      .withMessage("Title is too long"),
+    body("tradeTag")
+      .optional({ checkFalsy: true })
+      .trim()
+      .isLength({ max: 60 })
+      .withMessage("Trade is too long"),
+    body("summary")
+      .optional({ checkFalsy: true })
+      .trim()
+      .isLength({ max: 1000 })
+      .withMessage("Summary is too long"),
+    ...stringListValidator("talkingPoints", { min: 1 }),
+    ...stringListValidator("siteHazardsToCheck"),
+    ...stringListValidator("discussionQuestions"),
+    ...stringListValidator("oshaStandards"),
+    body("estimatedMinutes")
+      .optional({ nullable: true })
+      .isInt({ min: 1, max: 480 })
+      .withMessage("Estimated minutes must be a positive number")
+      .toInt(),
+  ],
+  validate,
+  updateTalk,
+);
+
+// DELETE /api/talks/:id — hard-delete a custom talk the caller's company owns.
+// Rejected with 409 once the talk has been used in a logged safety talk.
+router.delete(
+  "/:id",
+  requireAuth,
+  loadUserContext,
+  [param("id").isUUID().withMessage("A valid talk id is required")],
+  validate,
+  deleteTalk,
 );
 
 module.exports = router;

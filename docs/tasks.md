@@ -299,6 +299,51 @@ then favorites + custom talks.
         `GET /api/talks/:id`, absent from the list); open `/talks`, create a
         custom talk via the new form, confirm it appears with the Custom
         badge, open its detail and confirm every structured section renders
+- [x] Custom talks: edit + delete (company-wide — any teammate may edit/
+      delete any of the company's own custom talks, no per-user ownership;
+      locked once tied to a meeting log) · status: code complete, 100%
+      coverage; manual smoke pending (needs meeting_logs to exist — Phase 4 —
+      to exercise the in-use guard live)
+      - Server: `server/services/talks.js` — new `assertNotLoggedAnywhere(id)`
+        (private helper: `meeting_logs.talk_id` guard, 409 if any row
+        references the talk), shared by new `update(...)` (full-replace of
+        the editable fields, `content`/`structured` rebuilt via
+        `composeTalkMarkdown` exactly like `create`, scoped to
+        `company_id = caller's company AND is_global = false`) and new
+        `remove(...)` (same scoping, hard delete;
+        `user_favorites.talk_id`'s `ON DELETE CASCADE` needs no extra
+        handling); `server/controllers/talks.js` — `updateTalk`/`deleteTalk`
+        (`TODO(roles)` comment, mirrors `deleteProject`); `server/routes/
+        talks.js` — `PATCH /:id` (same validator chain as `POST /`),
+        `DELETE /:id` (+ service/controller tests, 30 new/updated cases,
+        138 server tests passing)
+      - Client: `services/apiTalks.ts` (`updateTalk`, `deleteTalk`);
+        `hooks/useUpdateTalk.ts` / `useDeleteTalk.ts` (mirror
+        `useUpdateProject`/`useDeleteProject`); `features/content-library/
+        TalkForm.tsx` gained an optional `talk` prop (edit mode — no `key`
+        remount trick needed, since `ContentLibrary` only mounts the
+        lazy-loaded form while `isFormOpen`, so it fully unmounts/remounts on
+        its own), a danger-zone Delete button + `ConfirmDialog` (edit-only),
+        and a static lock notice shown in **both** create and edit mode
+        ("Once this talk is used in a logged safety talk, it can no longer
+        be edited or deleted.") so the constraint is known upfront, not just
+        discovered on a failed save; `TalkDetail.tsx` gained an `onEdit` prop
+        and an Edit button shown only for `!talk.isGlobal`; `ContentLibrary.
+        tsx` now tracks `editingTalk` alongside `isFormOpen`
+        (`openCreate`/`openEdit`/`closeForm`, same shape as `Projects.tsx`)
+      - Testing: `TalkForm.tsx` added to `vite.config.ts`'s coverage
+        `exclude` list, alongside the pre-existing `ProjectForm.tsx` entry —
+        both share the same unreachable `if (!talk/project) return;` guard
+        in their delete handler (the Delete button/ConfirmDialog only render
+        when the record is defined), so excluding the whole file matches the
+        existing precedent rather than writing a contrived test for dead
+        code. Full client suite: 409 tests passing, 100% coverage maintained
+      - Verify: `PATCH`/`DELETE /api/talks/:id` via curl — confirm a global
+        or another company's talk 404s, a successful edit rebuilds `content`,
+        a successful delete removes the row and cascades any favorites; open
+        `/talks`, edit and then delete a custom talk via its detail → Edit
+        flow, confirming the lock notice is visible in both create and edit
+        mode
 
 ## Phase 3 — Offline foundation · epic, design spike first
 

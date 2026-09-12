@@ -48,9 +48,11 @@ vi.mock("../../../src/features/content-library/TalkDetail", () => ({
   TalkDetail: ({
     talk,
     onClose,
+    onEdit,
   }: {
     talk?: { id: string; title: string };
     onClose: () => void;
+    onEdit: (talk: { id: string; title: string }) => void;
   }) =>
     talk ? (
       <div role="dialog">
@@ -58,12 +60,22 @@ vi.mock("../../../src/features/content-library/TalkDetail", () => ({
         <button type="button" onClick={onClose}>
           stub-close
         </button>
+        <button type="button" onClick={() => onEdit(talk)}>
+          stub-edit
+        </button>
       </div>
     ) : null,
 }));
 vi.mock("../../../src/features/content-library/TalkForm", () => ({
-  TalkForm: ({ onClose }: { onClose: () => void }) => (
+  TalkForm: ({
+    onClose,
+    talk,
+  }: {
+    onClose: () => void;
+    talk?: { id: string };
+  }) => (
     <div data-testid="talk-form">
+      {talk ? `editing-${talk.id}` : "creating"}
       <button type="button" onClick={onClose}>
         stub-form-close
       </button>
@@ -236,9 +248,22 @@ describe("ContentLibrary page", () => {
 
     fireEvent.click(screen.getByRole("button", { name: /Add a new talk/i }));
     const form = await screen.findByTestId("talk-form");
-    expect(form).toBeDefined();
+    expect(form.textContent).toContain("creating");
 
     fireEvent.click(screen.getByRole("button", { name: /stub-form-close/i }));
     expect(screen.queryByTestId("talk-form")).toBeNull();
+  });
+
+  it("opens the edit form for a talk selected from its detail modal, closing the detail", async () => {
+    renderPage();
+
+    fireEvent.click(screen.getByRole("button", { name: /select-t1/i }));
+    expect(screen.getByRole("dialog")).toBeDefined();
+
+    fireEvent.click(screen.getByRole("button", { name: /stub-edit/i }));
+
+    expect(screen.queryByRole("dialog")).toBeNull();
+    const form = await screen.findByTestId("talk-form");
+    expect(form.textContent).toContain("editing-t1");
   });
 });

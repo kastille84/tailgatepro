@@ -57,6 +57,20 @@ export const ContentLibrary = () => {
   const [favoritesOnly, setFavoritesOnly] = useState(false);
   const [selected, setSelected] = useState<Talk | undefined>(undefined);
   const [isFormOpen, setIsFormOpen] = useState(false);
+  const [editingTalk, setEditingTalk] = useState<Talk | undefined>(undefined);
+
+  const openCreate = () => {
+    setEditingTalk(undefined);
+    setIsFormOpen(true);
+  };
+
+  const openEdit = (talk: Talk) => {
+    setSelected(undefined);
+    setEditingTalk(talk);
+    setIsFormOpen(true);
+  };
+
+  const closeForm = () => setIsFormOpen(false);
 
   const tradeFilterOptions = useMemo(
     () => [{ value: ALL_TRADES, label: "All trades" }, ...tradeOptions],
@@ -133,7 +147,7 @@ export const ContentLibrary = () => {
             <Button
               variant="primary"
               size="md"
-              onClick={() => setIsFormOpen(true)}
+              onClick={openCreate}
               leftIcon={<HiOutlinePlus />}
             >
               Add a new talk
@@ -162,11 +176,12 @@ export const ContentLibrary = () => {
         talk={selected}
         favoriteIds={favoriteIds}
         onClose={() => setSelected(undefined)}
+        onEdit={openEdit}
       />
 
       {isFormOpen && (
         <Suspense fallback={null}>
-          <TalkForm isOpen={isFormOpen} onClose={() => setIsFormOpen(false)} />
+          <TalkForm isOpen={isFormOpen} onClose={closeForm} talk={editingTalk} />
         </Suspense>
       )}
     </StyledPage>

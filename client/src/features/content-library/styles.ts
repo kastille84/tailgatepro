@@ -190,3 +190,44 @@ export const StyledListRow = styled.div`
   gap: 0.8rem;
   align-items: center;
 `;
+
+/** TalkForm's edit-only Delete affordance, same treatment as ProjectForm's
+ *  danger zone (client/src/pages/Projects/Projects.styles.ts). */
+export const StyledDangerZone = styled.div`
+  margin-top: 2.4rem;
+  padding-top: 1.6rem;
+  border-top: 0.1rem solid ${({ theme }) => theme.colors.navy[100]};
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1.2rem;
+`;
+
+export const StyledDangerZoneTitle = styled.h4`
+  flex-basis: 100%;
+  margin: 0;
+  font-size: 1.3rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: ${({ theme }) => theme.colors.navy[400]};
+`;
+
+/** TalkForm's upfront note (shown in both create and edit mode) that a talk
+ *  used in a logged safety talk can no longer be edited or deleted. */
+export const StyledLockNotice = styled.p`
+  margin: 0 0 1.6rem;
+  padding: 1.2rem 1.4rem;
+  border-radius: ${({ theme }) => theme.borderRadius.sm};
+  background-color: ${({ theme }) => theme.colors.concrete[200]};
+  font-size: 1.3rem;
+  font-weight: 500;
+  line-height: 1.5;
+  color: ${({ theme }) => theme.colors.red[400]};
+  display: flex;
+  align-items: center;
+
+  & svg {
+    margin-right: 0.8rem;
+    flex-shrink: 0;
+  }
+`;
