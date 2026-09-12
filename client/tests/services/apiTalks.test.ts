@@ -1,6 +1,9 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-import { listTalks } from "../../src/services/apiTalks";
+import { createTalk, listTalks } from "../../src/services/apiTalks";
+
+const UUID_RE =
+  /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
 const talk = {
   id: "talk-1",
@@ -84,6 +87,66 @@ describe("apiTalks", () => {
         }),
       );
       await expect(listTalks("token-123")).rejects.toThrow(GENERIC);
+    });
+  });
+
+  describe("createTalk", () => {
+    const customTalk = { ...talk, id: "talk-2", isGlobal: false, companyId: "company-1" };
+
+    it("POSTs a client-generated UUID id plus the input, and returns the created talk", async () => {
+      const fetchMock = vi.fn().mockResolvedValue({
+        ok: true,
+        status: 201,
+        json: async () => ({ success: true, data: customTalk }),
+      });
+      vi.stubGlobal("fetch", fetchMock);
+
+      await expect(
+        createTalk("token-123", {
+          title: "Ladder Safety Refresher",
+          tradeTag: "Roofing",
+          talkingPoints: ["Inspect rungs before use"],
+        }),
+      ).resolves.toEqual(customTalk);
+
+      const [url, options] = fetchMock.mock.calls[0];
+      expect(url).toBe("/api/talks");
+      expect(options.method).toBe("POST");
+      expect(options.headers.Authorization).toBe("Bearer token-123");
+      expect(JSON.parse(options.body)).toEqual({
+        id: expect.stringMatching(UUID_RE),
+        title: "Ladder Safety Refresher",
+        tradeTag: "Roofing",
+        talkingPoints: ["Inspect rungs before use"],
+      });
+    });
+
+    it("rejects with the backend error message on a validation failure", async () => {
+      vi.stubGlobal(
+        "fetch",
+        vi.fn().mockResolvedValue({
+          ok: false,
+          status: 400,
+          json: async () => ({ success: false, error: "Title is required" }),
+        }),
+      );
+      await expect(
+        createTalk("token-123", { title: "", talkingPoints: [] }),
+      ).rejects.toThrow("Title is required");
+    });
+
+    it("rejects with the generic message when the response is unsuccessful without a body", async () => {
+      vi.stubGlobal(
+        "fetch",
+        vi.fn().mockResolvedValue({
+          ok: false,
+          status: 500,
+          json: async () => null,
+        }),
+      );
+      await expect(
+        createTalk("token-123", { title: "x", talkingPoints: ["y"] }),
+      ).rejects.toThrow(GENERIC);
     });
   });
 });

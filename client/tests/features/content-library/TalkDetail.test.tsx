@@ -129,4 +129,14 @@ describe("TalkDetail", () => {
     expect(screen.queryByText(/osha:/i)).toBeNull();
     expect(screen.queryByText(/public domain/i)).toBeNull();
   });
+
+  it("shows a Custom badge for a company's own custom talk", () => {
+    renderDetail({ talk: { ...fullTalk, isGlobal: false, companyId: "company-1" } });
+    expect(screen.getByText("Custom")).toBeDefined();
+  });
+
+  it("shows no Custom badge for a global talk", () => {
+    renderDetail();
+    expect(screen.queryByText("Custom")).toBeNull();
+  });
 });

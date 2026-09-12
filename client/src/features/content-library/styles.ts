@@ -60,6 +60,18 @@ export const StyledTradeBadge = styled.span`
   background-color: ${({ theme }) => theme.colors.orange[100]};
 `;
 
+/** Marks a company's own custom talk in the list/detail views — navy rather
+ *  than the trade taxonomy's orange, so it reads as ownership, not a trade. */
+export const StyledCustomBadge = styled.span`
+  flex-shrink: 0;
+  padding: 0.4rem 0.9rem;
+  border-radius: ${({ theme }) => theme.borderRadius.sm};
+  font-size: 1.2rem;
+  font-weight: 700;
+  color: ${({ theme }) => theme.colors.navy[700]};
+  background-color: ${({ theme }) => theme.colors.navy[100]};
+`;
+
 export const StyledEmpty = styled.p`
   margin: 0;
   padding: 3.2rem 1.6rem;
@@ -162,4 +174,19 @@ export const StyledDetailTitleRow = styled.div`
   justify-content: space-between;
   gap: 1.2rem;
   width: 100%;
+`;
+
+export const StyledActions = styled.div`
+  display: flex;
+  justify-content: flex-end;
+  gap: 1.2rem;
+  margin-top: 0.8rem;
+`;
+
+/** One row of TalkForm's OSHA-standards add/remove list: the text input plus
+ *  its "Remove" button. */
+export const StyledListRow = styled.div`
+  display: flex;
+  gap: 0.8rem;
+  align-items: center;
 `;

@@ -22,7 +22,11 @@ vi.mock("../../../src/hooks/useFavorites", () => ({
 
 // The feature components have their own tests; stub them so the page test
 // stays focused on page state (guards, loading/error, filtering, selection).
-vi.mock("../../../src/features/content-library", () => ({
+// Mocked by their own file paths (not the features/content-library barrel):
+// ContentLibrary.tsx imports TalkList/TalkDetail directly and lazy-loads
+// TalkForm separately, precisely so a static import of the barrel here
+// wouldn't pull TalkForm's module (and Tiptap) into this test's graph either.
+vi.mock("../../../src/features/content-library/TalkList", () => ({
   TalkList: ({
     talks,
     onSelect,
@@ -39,6 +43,8 @@ vi.mock("../../../src/features/content-library", () => ({
       ))}
     </div>
   ),
+}));
+vi.mock("../../../src/features/content-library/TalkDetail", () => ({
   TalkDetail: ({
     talk,
     onClose,
@@ -55,10 +61,29 @@ vi.mock("../../../src/features/content-library", () => ({
       </div>
     ) : null,
 }));
+vi.mock("../../../src/features/content-library/TalkForm", () => ({
+  TalkForm: ({ onClose }: { onClose: () => void }) => (
+    <div data-testid="talk-form">
+      <button type="button" onClick={onClose}>
+        stub-form-close
+      </button>
+    </div>
+  ),
+}));
 
 const talks = [
-  { id: "t1", title: "Eye Protection", tradeTags: ["General Construction", "Welding"] },
+  {
+    id: "t1",
+    title: "Eye Protection",
+    tradeTags: ["General Construction", "Welding"],
+  },
   { id: "t2", title: "Silica Dust Exposure", tradeTags: ["Masonry"] },
+];
+
+const tradeOptions = [
+  { value: "General Construction", label: "General Construction" },
+  { value: "Masonry", label: "Masonry" },
+  { value: "Welding", label: "Welding" },
 ];
 
 const renderPage = () =>
@@ -72,7 +97,12 @@ describe("ContentLibrary page", () => {
   beforeEach(() => {
     vi.clearAllMocks();
     mockUseAuth.mockReturnValue({ user: { email: "a@b.com" }, loading: false });
-    mockUseTalks.mockReturnValue({ talks, isLoading: false, isError: false });
+    mockUseTalks.mockReturnValue({
+      talks,
+      tradeOptions,
+      isLoading: false,
+      isError: false,
+    });
     mockUseFavorites.mockReturnValue({ favoriteIds: new Set() });
   });
 
@@ -89,13 +119,23 @@ describe("ContentLibrary page", () => {
   });
 
   it("shows a spinner while the talks query is loading", () => {
-    mockUseTalks.mockReturnValue({ talks: [], isLoading: true, isError: false });
+    mockUseTalks.mockReturnValue({
+      talks: [],
+      tradeOptions: [],
+      isLoading: true,
+      isError: false,
+    });
     renderPage();
     expect(screen.getByRole("status")).toBeDefined();
   });
 
   it("shows an error message when the talks query fails", () => {
-    mockUseTalks.mockReturnValue({ talks: [], isLoading: false, isError: true });
+    mockUseTalks.mockReturnValue({
+      talks: [],
+      tradeOptions: [],
+      isLoading: false,
+      isError: true,
+    });
     renderPage();
     expect(screen.getByRole("alert")).toBeDefined();
   });
@@ -104,7 +144,9 @@ describe("ContentLibrary page", () => {
     renderPage();
     expect(screen.getByTestId("talk-list").textContent).toContain("2 talks");
     expect(
-      screen.getByText(new RegExp(`© ${new Date().getFullYear()} TailgatePro`, "i")),
+      screen.getByText(
+        new RegExp(`© ${new Date().getFullYear()} TailgatePro`, "i"),
+      ),
     ).toBeTruthy();
   });
 
@@ -185,5 +227,18 @@ describe("ContentLibrary page", () => {
 
     fireEvent.click(screen.getByRole("button", { name: /stub-close/i }));
     expect(screen.queryByRole("dialog")).toBeNull();
+  });
+
+  it("opens and closes the (lazily-loaded) talk creation form from New talk", async () => {
+    renderPage();
+
+    expect(screen.queryByTestId("talk-form")).toBeNull();
+
+    fireEvent.click(screen.getByRole("button", { name: /Add a new talk/i }));
+    const form = await screen.findByTestId("talk-form");
+    expect(form).toBeDefined();
+
+    fireEvent.click(screen.getByRole("button", { name: /stub-form-close/i }));
+    expect(screen.queryByTestId("talk-form")).toBeNull();
   });
 });

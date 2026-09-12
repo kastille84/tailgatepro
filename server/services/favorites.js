@@ -53,10 +53,10 @@ const getOne = async ({ userId, talkId }) => {
 // insert is silently skipped and `.select()` returns an empty array (no
 // error) — that's the branch `getOne` backfills.
 //
-// TODO(2d-custom-talks): once custom (company-scoped) talks exist, decide
-// whether a user may favorite another company's custom talk. Every talk is
-// global today, so an unscoped `talk_id` FK check is sufficient for now —
-// mirrors the TODO in server/services/talks.js `getById`.
+// Resolved (2d): a company's own custom talks plus every global talk are the
+// only ids the client ever sees (talks.listForCompany's scoped `.or()`), so
+// the FK-violation-on-unknown-talk-id 404 below is sufficient — there's no
+// separate "can this user favorite this talk" check to add.
 const add = async ({ userId, talkId }) => {
   const { data, error } = await supabase
     .from("user_favorites")

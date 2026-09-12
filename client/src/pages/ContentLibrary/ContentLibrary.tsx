@@ -1,9 +1,15 @@
-import { useMemo, useState } from "react";
+import { lazy, Suspense, useMemo, useState } from "react";
 
 import { useAuth } from "../../context/auth";
 import { useTalks } from "../../hooks/useTalks";
 import { useFavorites } from "../../hooks/useFavorites";
-import { TalkDetail, TalkList } from "../../features/content-library";
+// Imported directly from their files, not the features/content-library
+// barrel: the barrel also re-exports TalkForm, and a static import of it
+// would pull TalkForm (and Tiptap, via the lazy import below) into this same
+// synchronously-loaded module graph, defeating the code-split.
+import { TalkDetail } from "../../features/content-library/TalkDetail";
+import { TalkList } from "../../features/content-library/TalkList";
+import { Button } from "../../ui_comps/button";
 import { Checkbox } from "../../ui_comps/checkbox";
 import { FormField, TextInput } from "../../ui_comps/form";
 import { Footer } from "../../ui_comps/footer";
@@ -23,6 +29,16 @@ import {
   StyledStatus,
   StyledToolbar,
 } from "./ContentLibrary.styles";
+import { HiOutlinePlus } from "react-icons/hi2";
+
+// Tiptap (used by TalkForm's talking-points/hazards/questions editors) adds
+// real weight, so the form is only fetched when someone actually opens it,
+// not as part of the default /talks browse bundle.
+const TalkForm = lazy(() =>
+  import("../../features/content-library/TalkForm").then((mod) => ({
+    default: mod.TalkForm,
+  })),
+);
 
 const ALL_TRADES = "all";
 
@@ -33,29 +49,25 @@ const ALL_TRADES = "all";
  *  `RequireAuth`. */
 export const ContentLibrary = () => {
   const { user, loading } = useAuth();
-  const { talks, isLoading, isError } = useTalks();
+  const { talks, tradeOptions, isLoading, isError } = useTalks();
   const { favoriteIds } = useFavorites();
 
   const [trade, setTrade] = useState(ALL_TRADES);
   const [search, setSearch] = useState("");
   const [favoritesOnly, setFavoritesOnly] = useState(false);
   const [selected, setSelected] = useState<Talk | undefined>(undefined);
+  const [isFormOpen, setIsFormOpen] = useState(false);
 
-  const tradeOptions = useMemo(() => {
-    const trades = new Set<string>();
-    talks.forEach((talk) => talk.tradeTags.forEach((t) => trades.add(t)));
-    return [
-      { value: ALL_TRADES, label: "All trades" },
-      ...Array.from(trades)
-        .sort((a, b) => a.localeCompare(b))
-        .map((t) => ({ value: t, label: t })),
-    ];
-  }, [talks]);
+  const tradeFilterOptions = useMemo(
+    () => [{ value: ALL_TRADES, label: "All trades" }, ...tradeOptions],
+    [tradeOptions],
+  );
 
   const visibleTalks = useMemo(() => {
     const query = search.trim().toLowerCase();
     return talks.filter((talk) => {
-      const matchesTrade = trade === ALL_TRADES || talk.tradeTags.includes(trade);
+      const matchesTrade =
+        trade === ALL_TRADES || talk.tradeTags.includes(trade);
       const matchesSearch = !query || talk.title.toLowerCase().includes(query);
       const matchesFavorite = !favoritesOnly || favoriteIds.has(talk.id);
       return matchesTrade && matchesSearch && matchesFavorite;
@@ -90,7 +102,7 @@ export const ContentLibrary = () => {
           </StyledHeadline>
           <StyledLede>
             OSHA-mapped toolbox talks, ready to run on site. Filter by trade or
-            search by title.
+            search by title. Plus add your own custom talks.
           </StyledLede>
         </StyledHeroInner>
       </StyledHero>
@@ -102,7 +114,7 @@ export const ContentLibrary = () => {
               <Select
                 value={trade}
                 onChange={(event) => setTrade(event.target.value)}
-                options={tradeOptions}
+                options={tradeFilterOptions}
               />
             </FormField>
             <FormField id="talk-search" label="Search">
@@ -118,6 +130,14 @@ export const ContentLibrary = () => {
               checked={favoritesOnly}
               onChange={(event) => setFavoritesOnly(event.target.checked)}
             />
+            <Button
+              variant="primary"
+              size="md"
+              onClick={() => setIsFormOpen(true)}
+              leftIcon={<HiOutlinePlus />}
+            >
+              Add a new talk
+            </Button>
           </StyledToolbar>
 
           {isLoading && <Spinner center message="Loading the talk library…" />}
@@ -143,6 +163,12 @@ export const ContentLibrary = () => {
         favoriteIds={favoriteIds}
         onClose={() => setSelected(undefined)}
       />
+
+      {isFormOpen && (
+        <Suspense fallback={null}>
+          <TalkForm isOpen={isFormOpen} onClose={() => setIsFormOpen(false)} />
+        </Suspense>
+      )}
     </StyledPage>
   );
 };

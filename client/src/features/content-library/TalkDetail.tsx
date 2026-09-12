@@ -4,6 +4,7 @@ import { FavoriteButton } from "./FavoriteButton";
 import {
   StyledAttribution,
   StyledBadgeRow,
+  StyledCustomBadge,
   StyledDetailTitleRow,
   StyledOshaLine,
   StyledSection,
@@ -45,6 +46,7 @@ export const TalkDetail = ({ talk, favoriteIds, onClose }: TalkDetailProps) => {
       {talk && (
         <>
           <StyledBadgeRow>
+            {!talk.isGlobal && <StyledCustomBadge>Custom</StyledCustomBadge>}
             {talk.tradeTags.map((trade) => (
               <StyledTradeBadge key={trade}>{trade}</StyledTradeBadge>
             ))}

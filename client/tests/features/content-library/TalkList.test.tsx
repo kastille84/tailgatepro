@@ -114,4 +114,17 @@ describe("TalkList", () => {
     );
     expect(onSelect).toHaveBeenCalledWith(talks[0]);
   });
+
+  it("shows a Custom badge for a company's own custom talk, not for a global one", () => {
+    renderList({
+      talks: [...talks, { ...talks[0], id: "t3", title: "In-House Talk", isGlobal: false }],
+    });
+
+    expect(screen.getByText("Custom")).toBeDefined();
+  });
+
+  it("shows no Custom badge when every talk is global", () => {
+    renderList();
+    expect(screen.queryByText("Custom")).toBeNull();
+  });
 });

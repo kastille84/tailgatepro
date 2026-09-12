@@ -239,8 +239,66 @@ then favorites + custom talks.
       - Verify: `POST`/`DELETE`/`GET /api/favorites` via curl; toggle a
         favorite on `/talks`, reload, confirm it persists; toggle "Favorites
         only"
-- [ ] Custom talks (company-scoped create; `is_global = false`,
-      `company_id = req.user.companyId`)
+- [x] Custom talks (company-scoped create; `is_global = false`,
+      `company_id = req.user.companyId`) · status: code complete, 100%
+      coverage; manual smoke pending (needs the pending 2a Supabase apply)
+      - Shared: `server/utility/composeTalkMarkdown.js` extracted from
+        `scripts/lib/talkRow.js`'s `composeMarkdown` (same Markdown-building
+        logic, now required by both the seed pipeline and the create
+        endpoint) + its own test file; `talkRow.js` re-exports it as
+        `composeMarkdown` so its public surface is unchanged
+      - Server: `server/services/talks.js` — `listGlobal` renamed to
+        `listForCompany(companyId)` (`.or('is_global.eq.true,company_id.eq.
+        ${companyId}')`, same pattern as `projects.listForCompany`), `getById`
+        now takes `companyId` and is scoped the same way (closes the prior
+        TODO(2d)), new `create(...)` (client-supplied `id`, assembles
+        `structured` + `content` via `composeTalkMarkdown`, `is_global:
+        false`, `attribution: null`); `server/controllers/talks.js` —
+        `listTalks`/`getTalk` pass `req.user.companyId` through, new
+        `createTalk`; `server/routes/talks.js` — `POST /` with a full
+        express-validator chain (title, optional tradeTag/summary, talking
+        points required min 1, hazards/discussion questions/OSHA standards
+        optional lists, optional estimated minutes); `server/services/
+        favorites.js` TODO(2d-custom-talks) resolved (no code change needed
+        — the scoped talk list is sufficient authorization) (+ service/
+        controller tests updated in lockstep, 94 server tests passing)
+      - Client: `services/apiTalks.ts` (`CreateTalkInput`, `createTalk`),
+        `hooks/useCreateTalk.ts` (mirrors `useCreateProject`), `hooks/
+        useTalks.ts` now also derives `tradeOptions` (shared by
+        `ContentLibrary`'s trade filter and the new form); `ui_comps/form`
+        gained a `Textarea` primitive (used only for the optional summary
+        field); new `ui_comps/bullet-list-editor/` — the first Tiptap usage
+        in the codebase (`@tiptap/react`/`pm`/`starter-kit`/
+        `extension-document`), a schema restricted to
+        Document→BulletList→ListItem→Paragraph→Text plus undo/redo (no
+        marks, no other nodes) so talking points / site hazards / discussion
+        questions are always plain `string[]`, identical in shape to a
+        harvested talk's `structured` arrays — no formatting to sanitize;
+        `features/content-library/TalkForm.tsx` wires those three fields via
+        `<Controller>` + `BulletListEditor`, OSHA standards via
+        `useFieldArray` + plain add/remove rows, and a primary-trade
+        `TextInput` with a `<datalist>` of known trades (not a hard
+        `<Select>` — a company's first custom talk in a new trade must still
+        be creatable); lazy-loaded from `ContentLibrary.tsx` (`React.lazy` +
+        `Suspense`, imported by file path rather than the feature barrel) so
+        Tiptap ships in its own chunk, confirmed by the production build
+        (`TalkForm-*.js` split out from the main bundle); "Custom" badge on
+        `TalkList`/`TalkDetail` for `!talk.isGlobal`; `ContentLibrary.tsx`
+        wires a "New talk" button + `isFormOpen` boolean (create-only, no
+        `editing`/`key` needed)
+      - Testing: a `document.createRange` polyfill in `setupTests.ts` (a
+        known jsdom/ProseMirror workaround) let `BulletListEditor` reach
+        100% coverage under jsdom, including a real update driven through a
+        simulated paste event — no coverage-gate exclusion needed. Full
+        client suite: 389 tests passing, 100% statements/branches/functions/
+        lines maintained
+      - Verify: `POST /api/talks` via curl with a company-scoped bearer
+        token — confirm the row lands with `is_global=false`, `company_id`
+        set, `content` composed; `GET /api/talks` for that company now
+        includes it; a different company's token does NOT see it (404 on
+        `GET /api/talks/:id`, absent from the list); open `/talks`, create a
+        custom talk via the new form, confirm it appears with the Custom
+        badge, open its detail and confirm every structured section renders
 
 ## Phase 3 — Offline foundation · epic, design spike first
 

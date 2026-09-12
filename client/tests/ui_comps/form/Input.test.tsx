@@ -10,6 +10,7 @@ import {
   FormField,
   Input,
   Label,
+  Textarea,
 } from "../../../src/ui_comps/form";
 import theme from "../../../src/styles/theme";
 
@@ -204,5 +205,32 @@ describe("Input", () => {
     const input = screen.getByLabelText(/dark field/i) as HTMLInputElement;
     expect(input.id).toBe("dark-field");
     expect(screen.getByText("Visible on dark mode")).toBeDefined();
+  });
+});
+
+describe("Textarea", () => {
+  it("renders an accessible textarea with the expected placeholder", () => {
+    render(
+      <ThemeProvider theme={theme}>
+        <Textarea aria-label="Summary" placeholder="One or two sentences." />
+      </ThemeProvider>,
+    );
+
+    const textarea = screen.getByLabelText(/summary/i);
+    expect(textarea).toBeDefined();
+    expect(textarea.getAttribute("placeholder")).toBe("One or two sentences.");
+    expect(textarea.getAttribute("aria-invalid")).toBe("false");
+  });
+
+  it("marks the control invalid when the hasError prop is set", () => {
+    render(
+      <ThemeProvider theme={theme}>
+        <Textarea aria-label="Summary" hasError />
+      </ThemeProvider>,
+    );
+
+    expect(
+      screen.getByLabelText(/summary/i).getAttribute("aria-invalid"),
+    ).toBe("true");
   });
 });

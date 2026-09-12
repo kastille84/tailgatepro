@@ -4,6 +4,7 @@ import { FavoriteButton } from "./FavoriteButton";
 import {
   StyledCard,
   StyledCardMain,
+  StyledCustomBadge,
   StyledEmpty,
   StyledList,
   StyledMeta,
@@ -40,6 +41,7 @@ export const TalkList = ({ talks, favoriteIds, onSelect }: TalkListProps) => {
               <StyledMeta>{talk.structured.summary}</StyledMeta>
             )}
           </StyledCardMain>
+          {!talk.isGlobal && <StyledCustomBadge>Custom</StyledCustomBadge>}
           {talk.tradeTag && (
             <StyledTradeBadge>{talk.tradeTag}</StyledTradeBadge>
           )}
