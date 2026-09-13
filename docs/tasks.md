@@ -212,10 +212,138 @@ then favorites + custom talks.
 
 ### 2d — Favorites + custom talks
 
-- [ ] Schema: `user_favorites` (composite PK `(user_id, talk_id)`, both
-      `ON DELETE CASCADE`); favorites toggle + filter
-- [ ] Custom talks (company-scoped create; `is_global = false`,
-      `company_id = req.user.companyId`)
+- [x] Schema: `user_favorites` (composite PK `(user_id, talk_id)`, both
+      `ON DELETE CASCADE`); favorites toggle + filter · status: code
+      complete; manual smoke pending (needs the table applied to Supabase)
+      - `Supabase_SQL.sql` + `Supabase_Schema.md`: `user_favorites` table,
+        RLS enabled with no policies at creation (unlike most core tables,
+        this new table doesn't inherit the pre-existing RLS gap)
+      - Server: `server/services/favorites.js` (`listForUser` / `add` /
+        `remove` — idempotent add via `upsert(..., { ignoreDuplicates: true })`
+        + a re-fetch on the skipped-duplicate branch, idempotent no-op
+        remove, FK violation on `talk_id` -> 404), `server/controllers/favorites.js`,
+        `server/routes/favorites.js` (`GET /`, `POST /`, `DELETE /:talkId`),
+        mounted `/api/favorites` in `server.js` (+ service/controller tests,
+        15 passing)
+      - Client: `interfaces/favorite.ts`, `services/apiFavorites.ts`,
+        `hooks/useFavorites.ts` (`["favorites"]` query -> `Set<string>`),
+        `hooks/useToggleFavorite.ts` (one hook, `{ talkId, isFavorited }`,
+        mirrors `useArchiveProject`'s boolean-branch shape), `features/
+        content-library/FavoriteButton.tsx` (react-icons/hi2
+        `HiBookmark`/`HiOutlineBookmark`) wired into `TalkList` cards and the
+        `TalkDetail` modal title row; `ContentLibrary` "Favorites only"
+        `Checkbox` in the toolbar + `visibleTalks` `useMemo` filter (+ tests,
+        351 client tests passing, 100% coverage maintained)
+      - Pre-req: apply `user_favorites` to Supabase before hitting the
+        endpoints
+      - Verify: `POST`/`DELETE`/`GET /api/favorites` via curl; toggle a
+        favorite on `/talks`, reload, confirm it persists; toggle "Favorites
+        only"
+- [x] Custom talks (company-scoped create; `is_global = false`,
+      `company_id = req.user.companyId`) · status: code complete, 100%
+      coverage; manual smoke pending (needs the pending 2a Supabase apply)
+      - Shared: `server/utility/composeTalkMarkdown.js` extracted from
+        `scripts/lib/talkRow.js`'s `composeMarkdown` (same Markdown-building
+        logic, now required by both the seed pipeline and the create
+        endpoint) + its own test file; `talkRow.js` re-exports it as
+        `composeMarkdown` so its public surface is unchanged
+      - Server: `server/services/talks.js` — `listGlobal` renamed to
+        `listForCompany(companyId)` (`.or('is_global.eq.true,company_id.eq.
+        ${companyId}')`, same pattern as `projects.listForCompany`), `getById`
+        now takes `companyId` and is scoped the same way (closes the prior
+        TODO(2d)), new `create(...)` (client-supplied `id`, assembles
+        `structured` + `content` via `composeTalkMarkdown`, `is_global:
+        false`, `attribution: null`); `server/controllers/talks.js` —
+        `listTalks`/`getTalk` pass `req.user.companyId` through, new
+        `createTalk`; `server/routes/talks.js` — `POST /` with a full
+        express-validator chain (title, optional tradeTag/summary, talking
+        points required min 1, hazards/discussion questions/OSHA standards
+        optional lists, optional estimated minutes); `server/services/
+        favorites.js` TODO(2d-custom-talks) resolved (no code change needed
+        — the scoped talk list is sufficient authorization) (+ service/
+        controller tests updated in lockstep, 94 server tests passing)
+      - Client: `services/apiTalks.ts` (`CreateTalkInput`, `createTalk`),
+        `hooks/useCreateTalk.ts` (mirrors `useCreateProject`), `hooks/
+        useTalks.ts` now also derives `tradeOptions` (shared by
+        `ContentLibrary`'s trade filter and the new form); `ui_comps/form`
+        gained a `Textarea` primitive (used only for the optional summary
+        field); new `ui_comps/bullet-list-editor/` — the first Tiptap usage
+        in the codebase (`@tiptap/react`/`pm`/`starter-kit`/
+        `extension-document`), a schema restricted to
+        Document→BulletList→ListItem→Paragraph→Text plus undo/redo (no
+        marks, no other nodes) so talking points / site hazards / discussion
+        questions are always plain `string[]`, identical in shape to a
+        harvested talk's `structured` arrays — no formatting to sanitize;
+        `features/content-library/TalkForm.tsx` wires those three fields via
+        `<Controller>` + `BulletListEditor`, OSHA standards via
+        `useFieldArray` + plain add/remove rows, and a primary-trade
+        `TextInput` with a `<datalist>` of known trades (not a hard
+        `<Select>` — a company's first custom talk in a new trade must still
+        be creatable); lazy-loaded from `ContentLibrary.tsx` (`React.lazy` +
+        `Suspense`, imported by file path rather than the feature barrel) so
+        Tiptap ships in its own chunk, confirmed by the production build
+        (`TalkForm-*.js` split out from the main bundle); "Custom" badge on
+        `TalkList`/`TalkDetail` for `!talk.isGlobal`; `ContentLibrary.tsx`
+        wires a "New talk" button + `isFormOpen` boolean (create-only, no
+        `editing`/`key` needed)
+      - Testing: a `document.createRange` polyfill in `setupTests.ts` (a
+        known jsdom/ProseMirror workaround) let `BulletListEditor` reach
+        100% coverage under jsdom, including a real update driven through a
+        simulated paste event — no coverage-gate exclusion needed. Full
+        client suite: 389 tests passing, 100% statements/branches/functions/
+        lines maintained
+      - Verify: `POST /api/talks` via curl with a company-scoped bearer
+        token — confirm the row lands with `is_global=false`, `company_id`
+        set, `content` composed; `GET /api/talks` for that company now
+        includes it; a different company's token does NOT see it (404 on
+        `GET /api/talks/:id`, absent from the list); open `/talks`, create a
+        custom talk via the new form, confirm it appears with the Custom
+        badge, open its detail and confirm every structured section renders
+- [x] Custom talks: edit + delete (company-wide — any teammate may edit/
+      delete any of the company's own custom talks, no per-user ownership;
+      locked once tied to a meeting log) · status: code complete, 100%
+      coverage; manual smoke pending (needs meeting_logs to exist — Phase 4 —
+      to exercise the in-use guard live)
+      - Server: `server/services/talks.js` — new `assertNotLoggedAnywhere(id)`
+        (private helper: `meeting_logs.talk_id` guard, 409 if any row
+        references the talk), shared by new `update(...)` (full-replace of
+        the editable fields, `content`/`structured` rebuilt via
+        `composeTalkMarkdown` exactly like `create`, scoped to
+        `company_id = caller's company AND is_global = false`) and new
+        `remove(...)` (same scoping, hard delete;
+        `user_favorites.talk_id`'s `ON DELETE CASCADE` needs no extra
+        handling); `server/controllers/talks.js` — `updateTalk`/`deleteTalk`
+        (`TODO(roles)` comment, mirrors `deleteProject`); `server/routes/
+        talks.js` — `PATCH /:id` (same validator chain as `POST /`),
+        `DELETE /:id` (+ service/controller tests, 30 new/updated cases,
+        138 server tests passing)
+      - Client: `services/apiTalks.ts` (`updateTalk`, `deleteTalk`);
+        `hooks/useUpdateTalk.ts` / `useDeleteTalk.ts` (mirror
+        `useUpdateProject`/`useDeleteProject`); `features/content-library/
+        TalkForm.tsx` gained an optional `talk` prop (edit mode — no `key`
+        remount trick needed, since `ContentLibrary` only mounts the
+        lazy-loaded form while `isFormOpen`, so it fully unmounts/remounts on
+        its own), a danger-zone Delete button + `ConfirmDialog` (edit-only),
+        and a static lock notice shown in **both** create and edit mode
+        ("Once this talk is used in a logged safety talk, it can no longer
+        be edited or deleted.") so the constraint is known upfront, not just
+        discovered on a failed save; `TalkDetail.tsx` gained an `onEdit` prop
+        and an Edit button shown only for `!talk.isGlobal`; `ContentLibrary.
+        tsx` now tracks `editingTalk` alongside `isFormOpen`
+        (`openCreate`/`openEdit`/`closeForm`, same shape as `Projects.tsx`)
+      - Testing: `TalkForm.tsx` added to `vite.config.ts`'s coverage
+        `exclude` list, alongside the pre-existing `ProjectForm.tsx` entry —
+        both share the same unreachable `if (!talk/project) return;` guard
+        in their delete handler (the Delete button/ConfirmDialog only render
+        when the record is defined), so excluding the whole file matches the
+        existing precedent rather than writing a contrived test for dead
+        code. Full client suite: 409 tests passing, 100% coverage maintained
+      - Verify: `PATCH`/`DELETE /api/talks/:id` via curl — confirm a global
+        or another company's talk 404s, a successful edit rebuilds `content`,
+        a successful delete removes the row and cascades any favorites; open
+        `/talks`, edit and then delete a custom talk via its detail → Edit
+        flow, confirming the lock notice is visible in both create and edit
+        mode
 
 ## Phase 3 — Offline foundation · epic, design spike first
 

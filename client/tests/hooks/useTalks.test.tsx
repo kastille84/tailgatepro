@@ -70,4 +70,28 @@ describe("useTalks", () => {
     expect(apiTalks.listTalks).not.toHaveBeenCalled();
     expect(result.current.talks).toEqual([]);
   });
+
+  it("derives a deduped, alphabetically sorted tradeOptions list from every talk's tradeTags", async () => {
+    vi.mocked(apiTalks.listTalks).mockResolvedValue([
+      { ...talk, id: "t1", tradeTags: ["Welding", "General Construction"] },
+      { ...talk, id: "t2", tradeTags: ["Electrical", "Welding"] },
+    ]);
+
+    const { result } = renderHook(() => useTalks(), { wrapper });
+
+    await waitFor(() => expect(result.current.isLoading).toBe(false));
+    expect(result.current.tradeOptions).toEqual([
+      { value: "Electrical", label: "Electrical" },
+      { value: "General Construction", label: "General Construction" },
+      { value: "Welding", label: "Welding" },
+    ]);
+  });
+
+  it("defaults tradeOptions to an empty array when there is no session", () => {
+    mockUseAuth.mockReturnValue({ session: null });
+
+    const { result } = renderHook(() => useTalks(), { wrapper });
+
+    expect(result.current.tradeOptions).toEqual([]);
+  });
 });

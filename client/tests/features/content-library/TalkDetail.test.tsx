@@ -1,11 +1,17 @@
 import React from "react";
 import { describe, it, expect, vi } from "vitest";
-import { render, screen } from "@testing-library/react";
+import { render, screen, fireEvent } from "@testing-library/react";
 import { ThemeProvider } from "styled-components";
 
 import { TalkDetail } from "../../../src/features/content-library";
 import theme from "../../../src/styles/theme";
 import type { Talk } from "../../../src/interfaces/talk";
+
+// FavoriteButton (rendered in the title row) owns its own tests; stub its
+// mutation hook here so this file doesn't need an AuthProvider/QueryClient.
+vi.mock("../../../src/hooks/useToggleFavorite", () => ({
+  useToggleFavorite: () => ({ toggleFavorite: vi.fn(), isToggling: false }),
+}));
 
 const fullTalk: Talk = {
   id: "t1",
@@ -41,7 +47,13 @@ const renderDetail = (
 ) =>
   render(
     <ThemeProvider theme={theme}>
-      <TalkDetail talk={fullTalk} onClose={vi.fn()} {...props} />
+      <TalkDetail
+        talk={fullTalk}
+        favoriteIds={new Set()}
+        onClose={vi.fn()}
+        onEdit={vi.fn()}
+        {...props}
+      />
     </ThemeProvider>,
   );
 
@@ -49,6 +61,16 @@ describe("TalkDetail", () => {
   it("renders nothing when no talk is selected", () => {
     renderDetail({ talk: undefined });
     expect(screen.queryByRole("dialog")).toBeNull();
+  });
+
+  it("renders the favorite toggle in the title row, reflecting favoriteIds", () => {
+    renderDetail({ favoriteIds: new Set(["t1"]) });
+
+    expect(
+      screen.getByRole("button", {
+        name: /remove eye protection on the jobsite from favorites/i,
+      }),
+    ).toBeDefined();
   });
 
   it("renders the title, trade badges, summary and every content section", () => {
@@ -107,5 +129,29 @@ describe("TalkDetail", () => {
     expect(screen.queryByText(/discussion questions/i)).toBeNull();
     expect(screen.queryByText(/osha:/i)).toBeNull();
     expect(screen.queryByText(/public domain/i)).toBeNull();
+  });
+
+  it("shows a Custom badge for a company's own custom talk", () => {
+    renderDetail({ talk: { ...fullTalk, isGlobal: false, companyId: "company-1" } });
+    expect(screen.getByText("Custom")).toBeDefined();
+  });
+
+  it("shows no Custom badge for a global talk", () => {
+    renderDetail();
+    expect(screen.queryByText("Custom")).toBeNull();
+  });
+
+  it("offers an Edit button for a custom talk and calls onEdit with it", () => {
+    const onEdit = vi.fn();
+    const customTalk = { ...fullTalk, isGlobal: false, companyId: "company-1" };
+    renderDetail({ talk: customTalk, onEdit });
+
+    fireEvent.click(screen.getByRole("button", { name: /edit talk/i }));
+    expect(onEdit).toHaveBeenCalledWith(customTalk);
+  });
+
+  it("hides the Edit button for a global talk", () => {
+    renderDetail();
+    expect(screen.queryByRole("button", { name: /edit talk/i })).toBeNull();
   });
 });

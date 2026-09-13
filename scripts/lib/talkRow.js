@@ -3,6 +3,7 @@
 // (scripts/lib/talkRow.test.js). CommonJS to match the server side.
 
 const { v5: uuidv5 } = require("uuid");
+const { composeTalkMarkdown } = require("../../server/utility/composeTalkMarkdown");
 
 // Fixed namespace so a talk's slug always maps to the same UUID. This is what
 // makes re-running the loader idempotent: the primary key never churns.
@@ -13,46 +14,6 @@ const TALK_NAMESPACE = "7c9e6679-7425-40de-944b-e07fc1f90ae7";
  * @param {object} json - a parsed data/processed/**.json file
  */
 const isApproved = (json) => json?.audit?.status === "approved";
-
-const bullets = (heading, items) =>
-  Array.isArray(items) && items.length
-    ? [`## ${heading}`, ...items.map((i) => `- ${i}`), ""]
-    : [];
-
-/**
- * Render the structured pipeline fields into the single Markdown `content`
- * column. The meeting PDF (Phase 5) and any legacy reader still get a body.
- * @param {object} json
- * @returns {string}
- */
-const composeMarkdown = (json) => {
-  const lines = [`# ${json.title}`, ""];
-
-  if (json.summary) lines.push(`**Summary:** ${json.summary}`, "");
-
-  lines.push(...bullets("Talking points", json.talking_points));
-  lines.push(...bullets("Hazards to check on site", json.site_hazards_to_check));
-  lines.push(...bullets("Discussion questions", json.discussion_questions));
-
-  const footer = [];
-  if (Array.isArray(json.osha_standards) && json.osha_standards.length) {
-    footer.push(`OSHA: ${json.osha_standards.join(" · ")}`);
-  }
-  if (json.estimated_minutes) footer.push(`~${json.estimated_minutes} min`);
-  if (footer.length) lines.push(`_${footer.join(" · ")}_`);
-
-  // Source credit rides inside the body too, so the Phase 5 PDF and any plain
-  // reader carry the CPWR/NIOSH copyright markings + no-endorsement notice.
-  const attribution = json.attribution;
-  if (attribution && (attribution.copyright || attribution.notice)) {
-    const credit = [attribution.copyright, attribution.notice]
-      .filter(Boolean)
-      .join(" ");
-    lines.push("", "---", `_Source: ${credit}_`);
-  }
-
-  return `${lines.join("\n").trim()}\n`;
-};
 
 /**
  * Map one parsed pipeline file onto a toolbox_talks row.
@@ -73,7 +34,7 @@ const buildRow = (json) => {
     title: json.title,
     trade_tag: json.primary_trade ?? null,
     trade_tags: Array.isArray(json.trade_tags) ? json.trade_tags : [],
-    content: composeMarkdown(json),
+    content: composeTalkMarkdown(json),
     structured: {
       summary: json.summary ?? null,
       talking_points: json.talking_points ?? [],
@@ -91,4 +52,12 @@ const buildRow = (json) => {
   };
 };
 
-module.exports = { TALK_NAMESPACE, isApproved, composeMarkdown, buildRow };
+// Re-exported under its old name so nothing that already requires
+// `composeMarkdown` from this module breaks; the canonical implementation +
+// tests now live in server/utility/composeTalkMarkdown.js.
+module.exports = {
+  TALK_NAMESPACE,
+  isApproved,
+  composeMarkdown: composeTalkMarkdown,
+  buildRow,
+};

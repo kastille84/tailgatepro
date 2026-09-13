@@ -55,6 +55,15 @@
 
 > RLS: enabled with no policies (server-brokered, deny-all) — see `docs/data-access.md`.
 
+| Table: `user_favorites` | Type | Constraints | Description |
+| :--- | :--- | :--- | :--- |
+| `user_id` | UUID | Not Null, FK -> `users.id` (ON DELETE CASCADE) | The user who bookmarked the talk |
+| `talk_id` | UUID | Not Null, FK -> `toolbox_talks.id` (ON DELETE CASCADE) | The bookmarked talk |
+| `created_at` | Timestamptz | Default `now()` | When it was bookmarked |
+| **PK** | | **Composite** | `(user_id, talk_id)` |
+
+> RLS: enabled with no policies (server-brokered, deny-all) — see `docs/data-access.md`.
+
 ### 4. Meeting & Attendance Logs
 
 | Table: `meeting_logs` | Type | Constraints | Description |

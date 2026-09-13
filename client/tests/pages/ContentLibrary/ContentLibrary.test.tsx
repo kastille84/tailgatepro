@@ -8,6 +8,7 @@ import theme from "../../../src/styles/theme";
 
 const mockUseAuth = vi.fn();
 const mockUseTalks = vi.fn();
+const mockUseFavorites = vi.fn();
 
 vi.mock("../../../src/context/auth", () => ({
   useAuth: () => mockUseAuth(),
@@ -15,10 +16,17 @@ vi.mock("../../../src/context/auth", () => ({
 vi.mock("../../../src/hooks/useTalks", () => ({
   useTalks: (...args: unknown[]) => mockUseTalks(...args),
 }));
+vi.mock("../../../src/hooks/useFavorites", () => ({
+  useFavorites: (...args: unknown[]) => mockUseFavorites(...args),
+}));
 
 // The feature components have their own tests; stub them so the page test
 // stays focused on page state (guards, loading/error, filtering, selection).
-vi.mock("../../../src/features/content-library", () => ({
+// Mocked by their own file paths (not the features/content-library barrel):
+// ContentLibrary.tsx imports TalkList/TalkDetail directly and lazy-loads
+// TalkForm separately, precisely so a static import of the barrel here
+// wouldn't pull TalkForm's module (and Tiptap) into this test's graph either.
+vi.mock("../../../src/features/content-library/TalkList", () => ({
   TalkList: ({
     talks,
     onSelect,
@@ -35,12 +43,16 @@ vi.mock("../../../src/features/content-library", () => ({
       ))}
     </div>
   ),
+}));
+vi.mock("../../../src/features/content-library/TalkDetail", () => ({
   TalkDetail: ({
     talk,
     onClose,
+    onEdit,
   }: {
     talk?: { id: string; title: string };
     onClose: () => void;
+    onEdit: (talk: { id: string; title: string }) => void;
   }) =>
     talk ? (
       <div role="dialog">
@@ -48,13 +60,42 @@ vi.mock("../../../src/features/content-library", () => ({
         <button type="button" onClick={onClose}>
           stub-close
         </button>
+        <button type="button" onClick={() => onEdit(talk)}>
+          stub-edit
+        </button>
       </div>
     ) : null,
 }));
+vi.mock("../../../src/features/content-library/TalkForm", () => ({
+  TalkForm: ({
+    onClose,
+    talk,
+  }: {
+    onClose: () => void;
+    talk?: { id: string };
+  }) => (
+    <div data-testid="talk-form">
+      {talk ? `editing-${talk.id}` : "creating"}
+      <button type="button" onClick={onClose}>
+        stub-form-close
+      </button>
+    </div>
+  ),
+}));
 
 const talks = [
-  { id: "t1", title: "Eye Protection", tradeTags: ["General Construction", "Welding"] },
+  {
+    id: "t1",
+    title: "Eye Protection",
+    tradeTags: ["General Construction", "Welding"],
+  },
   { id: "t2", title: "Silica Dust Exposure", tradeTags: ["Masonry"] },
+];
+
+const tradeOptions = [
+  { value: "General Construction", label: "General Construction" },
+  { value: "Masonry", label: "Masonry" },
+  { value: "Welding", label: "Welding" },
 ];
 
 const renderPage = () =>
@@ -68,7 +109,13 @@ describe("ContentLibrary page", () => {
   beforeEach(() => {
     vi.clearAllMocks();
     mockUseAuth.mockReturnValue({ user: { email: "a@b.com" }, loading: false });
-    mockUseTalks.mockReturnValue({ talks, isLoading: false, isError: false });
+    mockUseTalks.mockReturnValue({
+      talks,
+      tradeOptions,
+      isLoading: false,
+      isError: false,
+    });
+    mockUseFavorites.mockReturnValue({ favoriteIds: new Set() });
   });
 
   it("shows a loading status while auth resolves", () => {
@@ -84,13 +131,23 @@ describe("ContentLibrary page", () => {
   });
 
   it("shows a spinner while the talks query is loading", () => {
-    mockUseTalks.mockReturnValue({ talks: [], isLoading: true, isError: false });
+    mockUseTalks.mockReturnValue({
+      talks: [],
+      tradeOptions: [],
+      isLoading: true,
+      isError: false,
+    });
     renderPage();
     expect(screen.getByRole("status")).toBeDefined();
   });
 
   it("shows an error message when the talks query fails", () => {
-    mockUseTalks.mockReturnValue({ talks: [], isLoading: false, isError: true });
+    mockUseTalks.mockReturnValue({
+      talks: [],
+      tradeOptions: [],
+      isLoading: false,
+      isError: true,
+    });
     renderPage();
     expect(screen.getByRole("alert")).toBeDefined();
   });
@@ -99,7 +156,9 @@ describe("ContentLibrary page", () => {
     renderPage();
     expect(screen.getByTestId("talk-list").textContent).toContain("2 talks");
     expect(
-      screen.getByText(new RegExp(`© ${new Date().getFullYear()} TailgatePro`, "i")),
+      screen.getByText(
+        new RegExp(`© ${new Date().getFullYear()} TailgatePro`, "i"),
+      ),
     ).toBeTruthy();
   });
 
@@ -121,6 +180,40 @@ describe("ContentLibrary page", () => {
     });
 
     expect(screen.getByTestId("talk-list").textContent).toContain("1 talks");
+  });
+
+  it("narrows the list to only favorited talks when 'Favorites only' is checked", () => {
+    mockUseFavorites.mockReturnValue({ favoriteIds: new Set(["t2"]) });
+    renderPage();
+
+    fireEvent.click(screen.getByLabelText(/favorites only/i));
+
+    expect(screen.getByTestId("talk-list").textContent).toContain("1 talks");
+  });
+
+  it("combines the favorites filter with the trade filter", () => {
+    mockUseFavorites.mockReturnValue({ favoriteIds: new Set(["t1"]) });
+    renderPage();
+
+    fireEvent.click(screen.getByLabelText(/favorites only/i));
+    fireEvent.change(screen.getByLabelText(/^trade$/i), {
+      target: { value: "Masonry" },
+    });
+
+    // t1 is favorited but not Masonry; t2 is Masonry but not favorited.
+    expect(screen.getByTestId("talk-list").textContent).toContain("0 talks");
+  });
+
+  it("restores the full list when 'Favorites only' is unchecked", () => {
+    mockUseFavorites.mockReturnValue({ favoriteIds: new Set(["t2"]) });
+    renderPage();
+
+    const checkbox = screen.getByLabelText(/favorites only/i);
+    fireEvent.click(checkbox);
+    expect(screen.getByTestId("talk-list").textContent).toContain("1 talks");
+
+    fireEvent.click(checkbox);
+    expect(screen.getByTestId("talk-list").textContent).toContain("2 talks");
   });
 
   it("shows the empty result set when the trade and search filters both exclude everything", () => {
@@ -146,5 +239,31 @@ describe("ContentLibrary page", () => {
 
     fireEvent.click(screen.getByRole("button", { name: /stub-close/i }));
     expect(screen.queryByRole("dialog")).toBeNull();
+  });
+
+  it("opens and closes the (lazily-loaded) talk creation form from New talk", async () => {
+    renderPage();
+
+    expect(screen.queryByTestId("talk-form")).toBeNull();
+
+    fireEvent.click(screen.getByRole("button", { name: /Add a new talk/i }));
+    const form = await screen.findByTestId("talk-form");
+    expect(form.textContent).toContain("creating");
+
+    fireEvent.click(screen.getByRole("button", { name: /stub-form-close/i }));
+    expect(screen.queryByTestId("talk-form")).toBeNull();
+  });
+
+  it("opens the edit form for a talk selected from its detail modal, closing the detail", async () => {
+    renderPage();
+
+    fireEvent.click(screen.getByRole("button", { name: /select-t1/i }));
+    expect(screen.getByRole("dialog")).toBeDefined();
+
+    fireEvent.click(screen.getByRole("button", { name: /stub-edit/i }));
+
+    expect(screen.queryByRole("dialog")).toBeNull();
+    const form = await screen.findByTestId("talk-form");
+    expect(form.textContent).toContain("editing-t1");
   });
 });

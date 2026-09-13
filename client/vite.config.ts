@@ -120,6 +120,7 @@ export default defineConfig(({ mode }) => {
           "**/context/*",
           "**/src/service-worker.ts",
           "**/src/features/projects/ProjectForm.tsx",
+          "**/src/features/content-library/TalkForm.tsx",
           "**/src/ui_comps/modal/Modal.tsx",
           "**/src/utils/pwa.ts",
         ],

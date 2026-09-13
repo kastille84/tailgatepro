@@ -2,7 +2,7 @@ import styled from "styled-components";
 
 export const StyledWrapper = styled.label<{ $disabled?: boolean }>`
   display: flex;
-  align-items: flex-start;
+  align-items: center;
   gap: 1.2rem;
   /* keep the whole row a comfortable gloved-tap target */
   min-height: 4.8rem;

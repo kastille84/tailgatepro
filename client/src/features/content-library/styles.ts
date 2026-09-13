@@ -60,6 +60,18 @@ export const StyledTradeBadge = styled.span`
   background-color: ${({ theme }) => theme.colors.orange[100]};
 `;
 
+/** Marks a company's own custom talk in the list/detail views — navy rather
+ *  than the trade taxonomy's orange, so it reads as ownership, not a trade. */
+export const StyledCustomBadge = styled.span`
+  flex-shrink: 0;
+  padding: 0.4rem 0.9rem;
+  border-radius: ${({ theme }) => theme.borderRadius.sm};
+  font-size: 1.2rem;
+  font-weight: 700;
+  color: ${({ theme }) => theme.colors.navy[700]};
+  background-color: ${({ theme }) => theme.colors.navy[100]};
+`;
+
 export const StyledEmpty = styled.p`
   margin: 0;
   padding: 3.2rem 1.6rem;
@@ -135,10 +147,87 @@ export const StyledButtonContainer = styled.div`
   display: flex;
   justify-content: flex-end;
   align-items: flex-end;
+  gap: 0.8rem;
   width: 100%;
 
   @media (min-width: ${({ theme }) => theme.breakpoints.sm}) {
     width: inherit;
     margin-top: 0;
+  }
+`;
+
+/** Colors just the bookmark icon inside FavoriteButton — Button's "outline"
+ *  variant is orange-on-transparent by default (no neutral/gray variant
+ *  exists in this app), so the fill has to carry the favorited/unfavorited
+ *  distinction instead of the button chrome. */
+export const StyledFavoriteIcon = styled.span<{ $isFavorited: boolean }>`
+  display: inline-flex;
+  color: ${({ theme, $isFavorited }) =>
+    $isFavorited ? theme.colors.orange[600] : theme.colors.navy[400]};
+`;
+
+/** TalkDetail's modal title row: the talk title plus its favorite toggle,
+ *  spaced to opposite ends of the header. */
+export const StyledDetailTitleRow = styled.div`
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1.2rem;
+  width: 100%;
+`;
+
+export const StyledActions = styled.div`
+  display: flex;
+  justify-content: flex-end;
+  gap: 1.2rem;
+  margin-top: 0.8rem;
+`;
+
+/** One row of TalkForm's OSHA-standards add/remove list: the text input plus
+ *  its "Remove" button. */
+export const StyledListRow = styled.div`
+  display: flex;
+  gap: 0.8rem;
+  align-items: center;
+`;
+
+/** TalkForm's edit-only Delete affordance, same treatment as ProjectForm's
+ *  danger zone (client/src/pages/Projects/Projects.styles.ts). */
+export const StyledDangerZone = styled.div`
+  margin-top: 2.4rem;
+  padding-top: 1.6rem;
+  border-top: 0.1rem solid ${({ theme }) => theme.colors.navy[100]};
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1.2rem;
+`;
+
+export const StyledDangerZoneTitle = styled.h4`
+  flex-basis: 100%;
+  margin: 0;
+  font-size: 1.3rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: ${({ theme }) => theme.colors.navy[400]};
+`;
+
+/** TalkForm's upfront note (shown in both create and edit mode) that a talk
+ *  used in a logged safety talk can no longer be edited or deleted. */
+export const StyledLockNotice = styled.p`
+  margin: 0 0 1.6rem;
+  padding: 1.2rem 1.4rem;
+  border-radius: ${({ theme }) => theme.borderRadius.sm};
+  background-color: ${({ theme }) => theme.colors.concrete[200]};
+  font-size: 1.3rem;
+  font-weight: 500;
+  line-height: 1.5;
+  color: ${({ theme }) => theme.colors.red[400]};
+  display: flex;
+  align-items: center;
+
+  & svg {
+    margin-right: 0.8rem;
+    flex-shrink: 0;
   }
 `;
