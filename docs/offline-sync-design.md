@@ -31,9 +31,12 @@ One Dexie database, `TailgateProDB`, version 1, opened as a module-level singlet
   - `attempts: number`, `lastError: string | null`.
   - `createdAt` — client ISO timestamp, used to order the flush (see below).
   - `syncedAt: string | null` — set locally once the flush confirms success.
-- **`projectsCache`** — key path `id`, indexed on `archivedAt`. A read-through cache of
-  `Project[]`, refreshed whenever `listProjects` succeeds online and read from when that call
-  fails or the app is offline, so `useProjects` keeps returning data offline.
+- **`projectsCache`** — key path `id` only. A read-through cache of `Project[]`, refreshed
+  whenever `listProjects` succeeds online and read from when that call fails or the app is
+  offline, so `useProjects` keeps returning data offline. `archivedAt` is **not** indexed —
+  IndexedDB keys can't be `null`, and most cached projects are live (`archivedAt: null`), so a
+  "find non-archived" query would throw on `.equals(null)`. The cache is one company's worth of
+  projects, small enough to filter in memory instead.
 - **`talksCache`** — same idea, key path `id`, indexed on `tradeTag`, for offline browsing of the
   toolbox-talk library.
 
