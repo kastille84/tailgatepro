@@ -18,7 +18,8 @@ would.
 ## IndexedDB schema (Dexie)
 
 One Dexie database, `TailgateProDB`, version 1, opened as a module-level singleton in
-`client/src/lib/db/tailgate-db.ts`.
+`client/src/utils/db/tailgateDb.ts` (no `lib/` folder exists in this project's documented
+structure, so the DB module lives under `utils/` instead).
 
 - **`outbox`** — the sync queue. Key path `id` (a UUID for the queue row itself, distinct from the
   entity's id). Indexed on `status`, `entityId`, `createdAt`.
@@ -51,18 +52,22 @@ photo-upload and PDF-generation flow that `meeting_logs.crew_photo_url`/`final_p
 States: `pending → syncing → synced`, with `syncing → failed → pending` on error — a failed
 attempt re-queues for the next flush rather than getting stuck.
 
-- **Enqueue** (`enqueueMutation` in `client/src/lib/db/outbox.ts`) writes a `pending` row,
+- **Enqueue** (`enqueueMutation` in `client/src/utils/db/outbox.ts`) writes a `pending` row,
   optimistically updates the relevant TanStack Query cache, and returns immediately. The caller
   sees the same synchronous-feeling result whether the app is online or offline.
 - **Flush triggers:** the browser `online` event, app boot (rows can be left `pending`/`syncing`
   from a previous session), a manual "Retry now" action in the offline indicator, and a ~30s
   interval while pending rows exist as a backstop — the `online` event does not fire reliably on
   every mobile browser.
-- **Flush order:** process `pending` rows in `createdAt` order, **per `entityId`, one at a time**
-  — a `create` must land before a later `update` to the same record. On success: mark `synced`,
-  stamp `syncedAt`, prune the row. On failure: increment `attempts`, store `lastError`, revert to
-  `pending` (exponential backoff held in memory, reset by the next flush trigger), and stop that
-  entity's remaining chain without blocking other entities' rows.
+- **Flush order:** process `pending`-or-`failed` rows in `createdAt` order, **per `entityId`, one
+  at a time** — a `create` must land before a later `update` to the same record. On success: mark
+  `synced`, stamp `syncedAt`, and leave the row (rows are small; pruning old `synced` rows is a
+  deferred cleanup, not required for correctness — `pendingCount`/the next flush only ever look at
+  `pending`/`failed` rows, so a lingering `synced` row is inert). On failure: mark `failed`,
+  increment `attempts`, store `lastError` — the row stays retry-eligible for the next flush trigger
+  rather than needing to bounce back through `pending` first — and stop that entity's remaining
+  chain without blocking other entities' rows. `flush` itself is a no-op while already running, so
+  the `online` event, app boot, and a manual retry can't double-process the same row.
 - **Crash mid-flight:** on boot, any row still marked `syncing` is stale (the app closed mid
   network call) and is reset to `pending` before a new flush starts.
 - **Retried `create` idempotency:** because a `create`'s id is generated client-side before the
@@ -131,8 +136,11 @@ foreman regains signal and reopens or keeps using the app.
 This is split into five sequential, independently reviewable changes:
 
 1. This design doc.
-2. Dexie schema (`lib/db/tailgate-db.ts`, `interfaces/sync.ts`) with unit tests, no consumers.
-3. Outbox queue logic (`lib/db/outbox.ts`) with unit tests, still no UI/hook consumers.
+2. Dexie schema (`utils/db/tailgateDb.ts`, `interfaces/sync.ts`) with unit tests, no consumers.
+3. Outbox queue logic (`utils/db/outbox.ts`) with unit tests, still no UI/hook consumers. `flush`
+   takes a `Replayer` callback rather than importing `apiProjects` directly, so the queue engine
+   has no React/auth dependency and is fully testable with a fake; the concrete replayer (built
+   from the session's access token) is wired up in step 5.
 4. Online/offline indicator (`context/online-status/`, `SyncStatusBanner`), wired into `App.tsx`.
 5. The Projects retrofit — the only change that touches existing, shipped mutation behavior, so it
    lands last, once 2–4 are proven.
