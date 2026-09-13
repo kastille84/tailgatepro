@@ -347,11 +347,15 @@ then favorites + custom talks.
 
 ## Phase 3 — Offline foundation · epic, design spike first
 
-- [ ] Design doc: IndexedDB schema + sync state machine (reviewed)
-- [ ] Add Dexie; tables for meeting_logs, signatures, cached projects/talks
-- [ ] Outbound sync queue: enqueue → flush on `online` → set `synced_at`
-- [ ] Online/offline indicator; last-write-wins
-- [ ] Retro-fit Projects create/edit through the queue
+- [x] Design doc: IndexedDB schema + sync state machine (reviewed) — `docs/offline-sync-design.md`
+- [ ] Dexie schema (`lib/db/tailgate-db.ts`, `interfaces/sync.ts`): `outbox`, `projectsCache`,
+      `talksCache` tables, unit-tested, no consumers yet. Add `dexie` + `fake-indexeddb` (dev) deps.
+- [ ] Outbound sync queue (`lib/db/outbox.ts`): enqueue → flush on `online`/boot/manual retry, per
+      entity ordering, crash-recovery of stuck `syncing` rows — unit-tested in isolation
+- [ ] Online/offline indicator: `context/online-status/` + `SyncStatusBanner`, wired into `App.tsx`
+- [ ] Retro-fit Projects create/edit/archive (PATCH)/delete (DELETE) through the queue — highest-risk
+      change, lands last; includes `createProject`/`CreateProjectInput` taking an explicit `id`
+      and a server-side idempotency check for retried `create` calls (see design doc)
 
 ## Phase 4 — Run-a-Talk flow + signatures · epic
 
