@@ -118,8 +118,18 @@ correlate a later edit with a still-in-flight create.
 A new `client/src/context/online-status/` module (mirroring the existing
 `client/src/context/pwa-install/` structure) exposes `{ isOnline, pendingCount, retryNow }` via a
 provider + `useOnlineStatus()` hook, seeded from `navigator.onLine` and updated on the `online`/
-`offline` window events. A small non-blocking banner (`ui_comps/sync-status-banner/`) shows when
-offline or `pendingCount > 0`, with a "Retry now" button.
+`offline` window events, plus a 30s poll as a backstop (the `online` event doesn't fire reliably on
+every mobile network transition). A small non-blocking banner (`ui_comps/sync-status-banner/`)
+shows when offline or `pendingCount > 0`, with a "Retry now" button, reusing the existing `Button`
+primitive so the touch target and styling stay consistent with the rest of the app.
+
+The provider needs *some* `Replayer` (see "Write path" above) to pass to `outbox.flush`, but has no
+business knowing about Projects specifically. `client/src/utils/db/replayRegistry.ts` bridges the
+two: `registerReplayHandler(entity, handler)` lets a feature register how to replay its own rows,
+and `createReplayer(accessToken)` builds a `Replayer` that dispatches each row to whichever handler
+is registered for its `entity`. The Projects retrofit (step 5) is what actually calls
+`registerReplayHandler("project", ...)` — until then the registry is wired up and tested, but has
+no handlers, so a "project" row would fail loudly (by design) rather than silently drop.
 
 ## Service worker: unchanged
 

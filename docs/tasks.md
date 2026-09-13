@@ -352,7 +352,9 @@ then favorites + custom talks.
       `talksCache` tables, unit-tested, no consumers yet. Add `dexie` + `fake-indexeddb` (dev) deps.
 - [ ] Outbound sync queue (`lib/db/outbox.ts`): enqueue → flush on `online`/boot/manual retry, per
       entity ordering, crash-recovery of stuck `syncing` rows — unit-tested in isolation
-- [ ] Online/offline indicator: `context/online-status/` + `SyncStatusBanner`, wired into `App.tsx`
+- [x] Online/offline indicator: `context/online-status/` + `SyncStatusBanner`, wired into `App.tsx`
+      (plus `utils/db/replayRegistry.ts` — lets a feature register how to replay its own outbox
+      rows without the provider needing to know about it; see design doc)
 - [ ] Retro-fit Projects create/edit/archive (PATCH)/delete (DELETE) through the queue — highest-risk
       change, lands last; includes `createProject`/`CreateProjectInput` taking an explicit `id`
       and a server-side idempotency check for retried `create` calls (see design doc)

@@ -8,6 +8,22 @@ vi.mock("../src/context/auth", () => ({
   ),
 }));
 
+// OnlineStatusProvider calls useAuth() internally, which the mock above
+// doesn't back with a real context value — stub it out here the same way,
+// since these route-shell tests aren't exercising the offline queue.
+// useOnlineStatus is stubbed too so <SyncStatusBanner /> (rendered for real
+// in App.tsx) has a context value to read instead of throwing.
+vi.mock("../src/context/online-status", () => ({
+  OnlineStatusProvider: ({ children }: { children: React.ReactNode }) => (
+    <>{children}</>
+  ),
+  useOnlineStatus: () => ({
+    isOnline: true,
+    pendingCount: 0,
+    retryNow: () => {},
+  }),
+}));
+
 vi.mock("../src/styles/GlobalStyles", () => ({
   default: () => null,
 }));
