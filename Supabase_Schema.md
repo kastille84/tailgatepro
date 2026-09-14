@@ -50,6 +50,7 @@
 | `content` | Text | Not Null | Markdown payload (loader composes it from the structured fields) |
 | `structured` | JSONB | Nullable | `{ summary, talking_points, site_hazards_to_check, discussion_questions, osha_standards, estimated_minutes }` from the pipeline |
 | `attribution` | JSONB | Nullable | `{ source, publisher, copyright, license, source_url, notice }` from the pipeline — CPWR/NIOSH source credit shown in the app + PDF (see `docs/content-attribution.md`) |
+| `quiz` | JSONB | Nullable | Exactly 3 `{ question, choices, correctIndex }` objects — post-TTS comprehension check before signing (Phase 4, see `docs/meeting-flow-design.md`) |
 | `is_global` | Boolean | Default `true` | True for the shared global library; false for a company's custom talk |
 | `company_id` | UUID | FK (Nullable) | Populated if a sub writes a custom talk |
 
@@ -72,9 +73,13 @@
 | `project_id` | UUID | FK -> `projects.id` | Where it happened |
 | `talk_id` | UUID | FK -> `toolbox_talks.id` | What was discussed |
 | `foreman_id` | UUID | FK -> `users.id` | Who gave the talk |
+| `company_id` | UUID | FK -> `companies.id` (Nullable) | Denormalized from `projects.owner_company_id` at create, so the service layer can scope access with a single-column filter (Phase 4, see `docs/meeting-flow-design.md`) |
 | `crew_photo_url`| Text | Nullable | Supabase Storage path |
 | `final_pdf_url` | Text | Nullable | Supabase Storage path for GC |
+| `completed_at` | Timestamptz| Nullable | Set once >=1 signature exists; locks the record and triggers Phase 5 PDF generation |
 | `synced_at` | Timestamptz| Nullable | Used for offline-sync tracking |
+
+> RLS: enabled with no policies (server-brokered, deny-all) — see `docs/data-access.md`.
 
 | Table: `signatures` | Type | Constraints | Description |
 | :--- | :--- | :--- | :--- |
@@ -82,7 +87,22 @@
 | `meeting_id` | UUID | FK -> `meeting_logs.id`| |
 | `worker_name` | Text | Not Null | Name typed by worker |
 | `signature_path`| Text | Not Null | Path to signature image blob in Storage |
-| `quiz_passed` | Boolean | Nullable | Verification of comprehension |
+| `quiz_passed` | Boolean | Nullable | Server-computed (`quiz_score === 3`) — never trust a client-supplied result |
+| `quiz_score` | SmallInt | Nullable | Number of the 3 questions answered correctly |
+| `quiz_answers` | JSONB | Nullable | `[{ questionIndex, selectedIndex, correct }]` |
+
+> RLS: enabled with no policies (server-brokered, deny-all) — see `docs/data-access.md`.
+
+### Supabase Storage buckets (Phase 4)
+
+Both private (`public: false`), created via `scripts/setup-storage-buckets.js`. The client never
+calls the Storage SDK directly — the server issues 5-minute signed URLs after confirming the
+caller's company owns the parent meeting's project (see `docs/data-access.md`).
+
+| Bucket | Path convention | Written by |
+| :--- | :--- | :--- |
+| `signatures` | `signatures/{meetingLogId}/{signatureId}.png` | `PUT /api/signatures/:id/blob` |
+| `crew-photos` | `crew-photos/{meetingLogId}/{photoId}.jpg` | `PUT /api/meetings/:id/crew-photo` |
 
 ### 5. Marketing
 

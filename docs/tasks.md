@@ -215,136 +215,121 @@ then favorites + custom talks.
 
 - [x] Schema: `user_favorites` (composite PK `(user_id, talk_id)`, both
       `ON DELETE CASCADE`); favorites toggle + filter · status: code
-      complete; manual smoke pending (needs the table applied to Supabase)
-      - `Supabase_SQL.sql` + `Supabase_Schema.md`: `user_favorites` table,
-        RLS enabled with no policies at creation (unlike most core tables,
-        this new table doesn't inherit the pre-existing RLS gap)
-      - Server: `server/services/favorites.js` (`listForUser` / `add` /
-        `remove` — idempotent add via `upsert(..., { ignoreDuplicates: true })`
-        + a re-fetch on the skipped-duplicate branch, idempotent no-op
-        remove, FK violation on `talk_id` -> 404), `server/controllers/favorites.js`,
-        `server/routes/favorites.js` (`GET /`, `POST /`, `DELETE /:talkId`),
-        mounted `/api/favorites` in `server.js` (+ service/controller tests,
-        15 passing)
-      - Client: `interfaces/favorite.ts`, `services/apiFavorites.ts`,
-        `hooks/useFavorites.ts` (`["favorites"]` query -> `Set<string>`),
-        `hooks/useToggleFavorite.ts` (one hook, `{ talkId, isFavorited }`,
-        mirrors `useArchiveProject`'s boolean-branch shape), `features/
-        content-library/FavoriteButton.tsx` (react-icons/hi2
-        `HiBookmark`/`HiOutlineBookmark`) wired into `TalkList` cards and the
-        `TalkDetail` modal title row; `ContentLibrary` "Favorites only"
-        `Checkbox` in the toolbar + `visibleTalks` `useMemo` filter (+ tests,
-        351 client tests passing, 100% coverage maintained)
-      - Pre-req: apply `user_favorites` to Supabase before hitting the
-        endpoints
-      - Verify: `POST`/`DELETE`/`GET /api/favorites` via curl; toggle a
-        favorite on `/talks`, reload, confirm it persists; toggle "Favorites
-        only"
+      complete; manual smoke pending (needs the table applied to Supabase) - `Supabase_SQL.sql` + `Supabase_Schema.md`: `user_favorites` table,
+      RLS enabled with no policies at creation (unlike most core tables,
+      this new table doesn't inherit the pre-existing RLS gap) - Server: `server/services/favorites.js` (`listForUser` / `add` /
+      `remove` — idempotent add via `upsert(..., { ignoreDuplicates: true })` + a re-fetch on the skipped-duplicate branch, idempotent no-op
+      remove, FK violation on `talk_id` -> 404), `server/controllers/favorites.js`,
+      `server/routes/favorites.js` (`GET /`, `POST /`, `DELETE /:talkId`),
+      mounted `/api/favorites` in `server.js` (+ service/controller tests,
+      15 passing) - Client: `interfaces/favorite.ts`, `services/apiFavorites.ts`,
+      `hooks/useFavorites.ts` (`["favorites"]` query -> `Set<string>`),
+      `hooks/useToggleFavorite.ts` (one hook, `{ talkId, isFavorited }`,
+      mirrors `useArchiveProject`'s boolean-branch shape), `features/
+      content-library/FavoriteButton.tsx` (react-icons/hi2
+      `HiBookmark`/`HiOutlineBookmark`) wired into `TalkList` cards and the
+      `TalkDetail` modal title row; `ContentLibrary` "Favorites only"
+      `Checkbox` in the toolbar + `visibleTalks` `useMemo` filter (+ tests,
+      351 client tests passing, 100% coverage maintained) - Pre-req: apply `user_favorites` to Supabase before hitting the
+      endpoints - Verify: `POST`/`DELETE`/`GET /api/favorites` via curl; toggle a
+      favorite on `/talks`, reload, confirm it persists; toggle "Favorites
+      only"
 - [x] Custom talks (company-scoped create; `is_global = false`,
       `company_id = req.user.companyId`) · status: code complete, 100%
-      coverage; manual smoke pending (needs the pending 2a Supabase apply)
-      - Shared: `server/utility/composeTalkMarkdown.js` extracted from
-        `scripts/lib/talkRow.js`'s `composeMarkdown` (same Markdown-building
-        logic, now required by both the seed pipeline and the create
-        endpoint) + its own test file; `talkRow.js` re-exports it as
-        `composeMarkdown` so its public surface is unchanged
-      - Server: `server/services/talks.js` — `listGlobal` renamed to
-        `listForCompany(companyId)` (`.or('is_global.eq.true,company_id.eq.
-        ${companyId}')`, same pattern as `projects.listForCompany`), `getById`
-        now takes `companyId` and is scoped the same way (closes the prior
-        TODO(2d)), new `create(...)` (client-supplied `id`, assembles
-        `structured` + `content` via `composeTalkMarkdown`, `is_global:
-        false`, `attribution: null`); `server/controllers/talks.js` —
-        `listTalks`/`getTalk` pass `req.user.companyId` through, new
-        `createTalk`; `server/routes/talks.js` — `POST /` with a full
-        express-validator chain (title, optional tradeTag/summary, talking
-        points required min 1, hazards/discussion questions/OSHA standards
-        optional lists, optional estimated minutes); `server/services/
-        favorites.js` TODO(2d-custom-talks) resolved (no code change needed
-        — the scoped talk list is sufficient authorization) (+ service/
-        controller tests updated in lockstep, 94 server tests passing)
-      - Client: `services/apiTalks.ts` (`CreateTalkInput`, `createTalk`),
-        `hooks/useCreateTalk.ts` (mirrors `useCreateProject`), `hooks/
-        useTalks.ts` now also derives `tradeOptions` (shared by
-        `ContentLibrary`'s trade filter and the new form); `ui_comps/form`
-        gained a `Textarea` primitive (used only for the optional summary
-        field); new `ui_comps/bullet-list-editor/` — the first Tiptap usage
-        in the codebase (`@tiptap/react`/`pm`/`starter-kit`/
-        `extension-document`), a schema restricted to
-        Document→BulletList→ListItem→Paragraph→Text plus undo/redo (no
-        marks, no other nodes) so talking points / site hazards / discussion
-        questions are always plain `string[]`, identical in shape to a
-        harvested talk's `structured` arrays — no formatting to sanitize;
-        `features/content-library/TalkForm.tsx` wires those three fields via
-        `<Controller>` + `BulletListEditor`, OSHA standards via
-        `useFieldArray` + plain add/remove rows, and a primary-trade
-        `TextInput` with a `<datalist>` of known trades (not a hard
-        `<Select>` — a company's first custom talk in a new trade must still
-        be creatable); lazy-loaded from `ContentLibrary.tsx` (`React.lazy` +
-        `Suspense`, imported by file path rather than the feature barrel) so
-        Tiptap ships in its own chunk, confirmed by the production build
-        (`TalkForm-*.js` split out from the main bundle); "Custom" badge on
-        `TalkList`/`TalkDetail` for `!talk.isGlobal`; `ContentLibrary.tsx`
-        wires a "New talk" button + `isFormOpen` boolean (create-only, no
-        `editing`/`key` needed)
-      - Testing: a `document.createRange` polyfill in `setupTests.ts` (a
-        known jsdom/ProseMirror workaround) let `BulletListEditor` reach
-        100% coverage under jsdom, including a real update driven through a
-        simulated paste event — no coverage-gate exclusion needed. Full
-        client suite: 389 tests passing, 100% statements/branches/functions/
-        lines maintained
-      - Verify: `POST /api/talks` via curl with a company-scoped bearer
-        token — confirm the row lands with `is_global=false`, `company_id`
-        set, `content` composed; `GET /api/talks` for that company now
-        includes it; a different company's token does NOT see it (404 on
-        `GET /api/talks/:id`, absent from the list); open `/talks`, create a
-        custom talk via the new form, confirm it appears with the Custom
-        badge, open its detail and confirm every structured section renders
+      coverage; manual smoke pending (needs the pending 2a Supabase apply) - Shared: `server/utility/composeTalkMarkdown.js` extracted from
+      `scripts/lib/talkRow.js`'s `composeMarkdown` (same Markdown-building
+      logic, now required by both the seed pipeline and the create
+      endpoint) + its own test file; `talkRow.js` re-exports it as
+      `composeMarkdown` so its public surface is unchanged - Server: `server/services/talks.js` — `listGlobal` renamed to
+      `listForCompany(companyId)` (`.or('is_global.eq.true,company_id.eq.
+      ${companyId}')`, same pattern as `projects.listForCompany`), `getById`
+      now takes `companyId` and is scoped the same way (closes the prior
+      TODO(2d)), new `create(...)` (client-supplied `id`, assembles
+      `structured` + `content` via `composeTalkMarkdown`, `is_global:
+      false`, `attribution: null`); `server/controllers/talks.js` —
+      `listTalks`/`getTalk` pass `req.user.companyId` through, new
+      `createTalk`; `server/routes/talks.js` — `POST /` with a full
+      express-validator chain (title, optional tradeTag/summary, talking
+      points required min 1, hazards/discussion questions/OSHA standards
+      optional lists, optional estimated minutes); `server/services/
+      favorites.js` TODO(2d-custom-talks) resolved (no code change needed
+      — the scoped talk list is sufficient authorization) (+ service/
+      controller tests updated in lockstep, 94 server tests passing) - Client: `services/apiTalks.ts` (`CreateTalkInput`, `createTalk`),
+      `hooks/useCreateTalk.ts` (mirrors `useCreateProject`), `hooks/
+      useTalks.ts` now also derives `tradeOptions` (shared by
+      `ContentLibrary`'s trade filter and the new form); `ui_comps/form`
+      gained a `Textarea` primitive (used only for the optional summary
+      field); new `ui_comps/bullet-list-editor/` — the first Tiptap usage
+      in the codebase (`@tiptap/react`/`pm`/`starter-kit`/
+      `extension-document`), a schema restricted to
+      Document→BulletList→ListItem→Paragraph→Text plus undo/redo (no
+      marks, no other nodes) so talking points / site hazards / discussion
+      questions are always plain `string[]`, identical in shape to a
+      harvested talk's `structured` arrays — no formatting to sanitize;
+      `features/content-library/TalkForm.tsx` wires those three fields via
+      `<Controller>` + `BulletListEditor`, OSHA standards via
+      `useFieldArray` + plain add/remove rows, and a primary-trade
+      `TextInput` with a `<datalist>` of known trades (not a hard
+      `<Select>` — a company's first custom talk in a new trade must still
+      be creatable); lazy-loaded from `ContentLibrary.tsx` (`React.lazy` +
+      `Suspense`, imported by file path rather than the feature barrel) so
+      Tiptap ships in its own chunk, confirmed by the production build
+      (`TalkForm-*.js` split out from the main bundle); "Custom" badge on
+      `TalkList`/`TalkDetail` for `!talk.isGlobal`; `ContentLibrary.tsx`
+      wires a "New talk" button + `isFormOpen` boolean (create-only, no
+      `editing`/`key` needed) - Testing: a `document.createRange` polyfill in `setupTests.ts` (a
+      known jsdom/ProseMirror workaround) let `BulletListEditor` reach
+      100% coverage under jsdom, including a real update driven through a
+      simulated paste event — no coverage-gate exclusion needed. Full
+      client suite: 389 tests passing, 100% statements/branches/functions/
+      lines maintained - Verify: `POST /api/talks` via curl with a company-scoped bearer
+      token — confirm the row lands with `is_global=false`, `company_id`
+      set, `content` composed; `GET /api/talks` for that company now
+      includes it; a different company's token does NOT see it (404 on
+      `GET /api/talks/:id`, absent from the list); open `/talks`, create a
+      custom talk via the new form, confirm it appears with the Custom
+      badge, open its detail and confirm every structured section renders
 - [x] Custom talks: edit + delete (company-wide — any teammate may edit/
       delete any of the company's own custom talks, no per-user ownership;
       locked once tied to a meeting log) · status: code complete, 100%
       coverage; manual smoke pending (needs meeting_logs to exist — Phase 4 —
-      to exercise the in-use guard live)
-      - Server: `server/services/talks.js` — new `assertNotLoggedAnywhere(id)`
-        (private helper: `meeting_logs.talk_id` guard, 409 if any row
-        references the talk), shared by new `update(...)` (full-replace of
-        the editable fields, `content`/`structured` rebuilt via
-        `composeTalkMarkdown` exactly like `create`, scoped to
-        `company_id = caller's company AND is_global = false`) and new
-        `remove(...)` (same scoping, hard delete;
-        `user_favorites.talk_id`'s `ON DELETE CASCADE` needs no extra
-        handling); `server/controllers/talks.js` — `updateTalk`/`deleteTalk`
-        (`TODO(roles)` comment, mirrors `deleteProject`); `server/routes/
-        talks.js` — `PATCH /:id` (same validator chain as `POST /`),
-        `DELETE /:id` (+ service/controller tests, 30 new/updated cases,
-        138 server tests passing)
-      - Client: `services/apiTalks.ts` (`updateTalk`, `deleteTalk`);
-        `hooks/useUpdateTalk.ts` / `useDeleteTalk.ts` (mirror
-        `useUpdateProject`/`useDeleteProject`); `features/content-library/
-        TalkForm.tsx` gained an optional `talk` prop (edit mode — no `key`
-        remount trick needed, since `ContentLibrary` only mounts the
-        lazy-loaded form while `isFormOpen`, so it fully unmounts/remounts on
-        its own), a danger-zone Delete button + `ConfirmDialog` (edit-only),
-        and a static lock notice shown in **both** create and edit mode
-        ("Once this talk is used in a logged safety talk, it can no longer
-        be edited or deleted.") so the constraint is known upfront, not just
-        discovered on a failed save; `TalkDetail.tsx` gained an `onEdit` prop
-        and an Edit button shown only for `!talk.isGlobal`; `ContentLibrary.
-        tsx` now tracks `editingTalk` alongside `isFormOpen`
-        (`openCreate`/`openEdit`/`closeForm`, same shape as `Projects.tsx`)
-      - Testing: `TalkForm.tsx` added to `vite.config.ts`'s coverage
-        `exclude` list, alongside the pre-existing `ProjectForm.tsx` entry —
-        both share the same unreachable `if (!talk/project) return;` guard
-        in their delete handler (the Delete button/ConfirmDialog only render
-        when the record is defined), so excluding the whole file matches the
-        existing precedent rather than writing a contrived test for dead
-        code. Full client suite: 409 tests passing, 100% coverage maintained
-      - Verify: `PATCH`/`DELETE /api/talks/:id` via curl — confirm a global
-        or another company's talk 404s, a successful edit rebuilds `content`,
-        a successful delete removes the row and cascades any favorites; open
-        `/talks`, edit and then delete a custom talk via its detail → Edit
-        flow, confirming the lock notice is visible in both create and edit
-        mode
+      to exercise the in-use guard live) - Server: `server/services/talks.js` — new `assertNotLoggedAnywhere(id)`
+      (private helper: `meeting_logs.talk_id` guard, 409 if any row
+      references the talk), shared by new `update(...)` (full-replace of
+      the editable fields, `content`/`structured` rebuilt via
+      `composeTalkMarkdown` exactly like `create`, scoped to
+      `company_id = caller's company AND is_global = false`) and new
+      `remove(...)` (same scoping, hard delete;
+      `user_favorites.talk_id`'s `ON DELETE CASCADE` needs no extra
+      handling); `server/controllers/talks.js` — `updateTalk`/`deleteTalk`
+      (`TODO(roles)` comment, mirrors `deleteProject`); `server/routes/
+      talks.js` — `PATCH /:id` (same validator chain as `POST /`),
+      `DELETE /:id` (+ service/controller tests, 30 new/updated cases,
+      138 server tests passing) - Client: `services/apiTalks.ts` (`updateTalk`, `deleteTalk`);
+      `hooks/useUpdateTalk.ts` / `useDeleteTalk.ts` (mirror
+      `useUpdateProject`/`useDeleteProject`); `features/content-library/
+      TalkForm.tsx` gained an optional `talk` prop (edit mode — no `key`
+      remount trick needed, since `ContentLibrary` only mounts the
+      lazy-loaded form while `isFormOpen`, so it fully unmounts/remounts on
+      its own), a danger-zone Delete button + `ConfirmDialog` (edit-only),
+      and a static lock notice shown in **both** create and edit mode
+      ("Once this talk is used in a logged safety talk, it can no longer
+      be edited or deleted.") so the constraint is known upfront, not just
+      discovered on a failed save; `TalkDetail.tsx` gained an `onEdit` prop
+      and an Edit button shown only for `!talk.isGlobal`; `ContentLibrary.
+      tsx` now tracks `editingTalk` alongside `isFormOpen`
+      (`openCreate`/`openEdit`/`closeForm`, same shape as `Projects.tsx`) - Testing: `TalkForm.tsx` added to `vite.config.ts`'s coverage
+      `exclude` list, alongside the pre-existing `ProjectForm.tsx` entry —
+      both share the same unreachable `if (!talk/project) return;` guard
+      in their delete handler (the Delete button/ConfirmDialog only render
+      when the record is defined), so excluding the whole file matches the
+      existing precedent rather than writing a contrived test for dead
+      code. Full client suite: 409 tests passing, 100% coverage maintained - Verify: `PATCH`/`DELETE /api/talks/:id` via curl — confirm a global
+      or another company's talk 404s, a successful edit rebuilds `content`,
+      a successful delete removes the row and cascades any favorites; open
+      `/talks`, edit and then delete a custom talk via its detail → Edit
+      flow, confirming the lock notice is visible in both create and edit
+      mode
 
 ## Phase 3 — Offline foundation · epic, design spike first
 
@@ -397,13 +382,156 @@ then favorites + custom talks.
       (4 cases) + updated `apiTalks.test.ts`'s `createTalk` fixtures for the id change. Full client
       suite: 546 tests passing, 100% coverage maintained; `tsc -b` clean aside from the two
       pre-existing, unrelated failures already noted under Phase 1.
+- [x] Post-hoc audit (ahead of Phase 4 planning): re-verified every `[x]` above against the actual
+      code, not just this checklist. Confirmed all of it holds up — no stray TODOs, no `.skip`ped
+      tests, every referenced test file exists, git tree clean at `af9415f`. Two nuances surfaced,
+      neither blocking Phase 4: 1. The "retried create idempotency" item above is more done than this checklist implies —
+      the server-side 409-on-duplicate-id already exists (`23505` → `AppError(..., 409)` in both
+      `projects.js` and `talks.js`); what's actually missing is `outbox.ts`'s `flush()` treating
+      that 409 as "already synced" instead of retrying forever. Folded into Phase 4b below,
+      since that sub-phase already touches `outbox.ts`'s failure handling. 2. `docs/offline-sync-design.md`'s own "Deferred to manual/E2E testing" section conditions
+      "Phase 3 fully verified" on a manual pass (multi-tab, real airplane-mode on a device,
+      storage eviction, cross-device conflict) that isn't practical under Vitest +
+      fake-indexeddb. No record of this pass exists yet — **still owed**, independent of
+      Phase 4; do this before considering Phase 3 closed in the strict sense the design doc
+      itself defines.
 
 ## Phase 4 — Run-a-Talk flow + signatures · epic
 
-- [ ] Supabase Storage buckets (signatures, crew photos) + access rules
-- [ ] Meeting wizard: project → talk → present → (TTS + quiz) → signatures → photo → save
-- [ ] Canvas finger-signing component
-- [ ] Schema: quiz question storage (table or JSONB on toolbox_talks)
+Plan: `~/.claude/plans/check-if-there-s-anything-spicy-yao.md`. Design doc:
+`docs/meeting-flow-design.md`. Sequenced design → schema/Storage → server (JSON, then blobs) →
+offline queue extension → standalone capture components → wizard integration → hardening, same
+harvest-first/riskiest-last shape Phases 2 and 3 used.
+
+Decisions locked in the design doc: `meeting_logs` gets a denormalized `company_id` (matches the
+`projects`/`toolbox_talks` pattern instead of a join-based scoping rule); signature capture uses
+the small `signature_pad` dependency (~7KB, MIT, no transitive deps) rather than a hand-rolled
+canvas; quiz questions live in a `quiz JSONB` column on `toolbox_talks` (3 questions, same
+shape-of-solution as `structured`/`attribution`); signatures and crew-photo capture are built fully
+offline-capable from day one, not as an online-only v1.
+
+### 4a — Design doc
+
+- [x] `docs/meeting-flow-design.md` — schema additions, Storage bucket/upload design, quiz-scoring
+      rule (server always recomputes `quiz_score`/`quiz_passed`, never trusts the client),
+      immutability rule (`completed_at` locks a meeting log + its signatures), offline-queue
+      extension design (`dependsOnEntityId` cross-entity ordering + the 409-as-success fix from
+      the Phase 3 audit above), draft-resume design, Phase 5 hook point. Explicitly leaves crew
+      photo retention policy unresolved (PRD open question) and flags TTS-offline behavior as
+      needing a real-device check, not an assumption.
+
+### 4b — Schema + Storage buckets · status: code complete; Supabase apply + bucket-script run pending
+
+- [x] `Supabase_SQL.sql` + `Supabase_Schema.md`: `meeting_logs.company_id` (+ backfill),
+      `meeting_logs.completed_at`, `toolbox_talks.quiz`, `signatures.quiz_score` /
+      `quiz_answers`; `ENABLE ROW LEVEL SECURITY` on `meeting_logs` and `signatures` (no policies,
+      matches the `user_favorites` precedent)
+- [x] `scripts/setup-storage-buckets.js` — one-time idempotent script (mirrors
+      `scripts/seed-talks.js`) creating the private `signatures` and `crew-photos` buckets;
+      `setup:storage` root npm script added
+- [x] Pre-req: apply the SQL to Supabase; run `npm run setup:storage`
+- [x] Verify: bucket script re-run is a no-op; both buckets show `public: false`; RLS on with zero
+      policies on both new/touched tables
+
+### 4c — Server: meeting_logs + signatures core API (JSON only, no blobs) · status: code complete; curl smoke with a real Bearer token pending
+
+- [x] `server/services/meetingLogs.js` — `create` (verifies the project belongs to the caller's
+      company before inserting; client-generated `id`, `23505` → 409), `listForCompany` (optional
+      `projectId` scope), `getById`, `complete` (requires ≥1 signature, stamps `completed_at`,
+      calls the Phase 5 PDF-generation stub — `server/services/pdfGenerationQueue.js`, a named
+      no-op today); shared `assertNotCompleted(id, companyId)` helper mirroring `talks.js`'s
+      `assertNotLoggedAnywhere`, reused by `signatures.create`
+- [x] `server/services/signatures.js` — `create` (server-computes `quizScore`/`quizPassed` from
+      `toolbox_talks.quiz` via a pure `scoreQuiz` helper — a missing/wrong answer scores as
+      incorrect, never trusts a client-supplied result; `signaturePath` is set to its deterministic
+      `signatures/{meetingId}/{id}.png` Storage path at row-creation time, ahead of the actual blob
+      — see 4d), `listForMeeting` (scoped via `meetingLogs.getById`)
+- [x] Matching controllers (`{ success, data }`, `next(error)`; `createMeeting` always takes
+      `foremanId` from `req.user.id`, never the request body) + `server/routes/meetingLogs.js`
+      (`GET /`, `GET /:id`, `POST /`, `PATCH /:id/complete`) + `server/routes/signatures.js`
+      (`GET`/`POST /`, nested at `/:meetingId/signatures` with `mergeParams: true`), both behind
+      `requireAuth, loadUserContext`; mounted `/api/meetings` in `server.js` (signatures nested
+      under it, no separate mount)
+- [x] 30 new service/controller tests (156 server tests passing total, up from 138)
+- [x] Verify (partial): booted the server and confirmed every new route (including the nested
+      signatures path) returns 401, not 404/the SPA fallback — proves the routing/mounting is
+      wired correctly. Full curl-with-a-real-Bearer-token pass (create → add signatures → complete
+      → post-completion 409 → cross-company 404) still needs a live session token, same as every
+      prior phase's manual-smoke item
+
+### 4d — Server: binary upload broker
+
+- [ ] `server/services/storage.js` — `uploadBlob(bucket, path, buffer, contentType)`,
+      `getSignedUrl(bucket, path, ttlSeconds)` — the one place any server code touches
+      `supabase.storage`
+- [ ] `PUT /api/signatures/:id/blob` (`express.raw`, `image/png`, 1MB limit) and
+      `PUT /api/meetings/:id/crew-photo` (`express.raw`, `image/*`, 10MB limit), wired into the
+      `signatures`/`meetingLogs` services (authorization already lives there)
+- [ ] `GET /api/signatures/:id/url` / `GET /api/meetings/:id/crew-photo-url` — 5-minute signed URLs
+- [ ] Verify: PUT a small PNG, confirm it lands at the expected private-bucket path and the DB path
+      column updates; confirm the signed-URL endpoint works and expires; confirm cross-company 404
+      even with a guessed valid id
+
+### 4e — Client: offline-queue extension
+
+- [ ] `client/src/interfaces/sync.ts` — `SyncEntity` widened to add `"meeting_log" | "signature" |
+    "crew_photo"`; `OutboxRow` gains optional `dependsOnEntityId?: string`
+- [ ] `client/src/utils/db/outbox.ts` — `flush()` skips a row whose `dependsOnEntityId` hasn't
+      synced yet (closes the cross-entity-ordering gap the design doc identifies); also treats a
+      recognizable 409/"already exists" replay error as a successful sync instead of retrying
+      forever (closes the Phase 3 audit finding above). Regression tests must prove
+      Projects/Talks rows (no `dependsOnEntityId`) behave identically to before
+- [ ] `client/src/utils/db/tailgateDb.ts` — new `meetingDraftCache` and `mediaBlobs` (raw `Blob`
+      storage) Dexie tables
+- [ ] `client/src/services/meetingLogReplayHandler.ts` / `signatureReplayHandler.ts` (mirror
+      `talkReplayHandler.ts`; the blob-upload case PUTs a raw body instead of JSON)
+- [ ] `client/src/services/apiMeetingLogs.ts` / `apiSignatures.ts` (`fetchWithTimeout` wrappers,
+      matches `apiTalks.ts`); `useCreateMeetingLog` / `useCreateSignature` / `useUploadCrewPhoto`
+      hooks, `networkMode: "always"` per the `useCreateTalk.ts` template
+- [ ] Verify: unit tests for the `dependsOnEntityId` skip logic, the blob-upload replay path, the
+      409-as-success path, and full regression of `outbox.test.ts` / existing replay-handler tests
+      unchanged
+
+### 4f — Client: standalone capture components
+
+- [ ] `ui_comps/signature-pad/` wrapping `signature_pad` (new dependency — flag in the `npm
+    install` diff), exports a PNG blob into `mediaBlobs`
+- [ ] `client/src/hooks/useTalkAudio.ts` wrapping `window.speechSynthesis` (async `voiceschanged`,
+      language selection limited to voices actually present). Manual verify on a real
+      Android/Chrome and iOS/Safari device with the radio off — confirm TTS genuinely works
+      offline before relying on the PRD's offline claim
+- [ ] `features/meeting-flow/Quiz.tsx` — renders `talk.quiz`'s 3 questions; client-side pass/fail
+      is UX-only, server always recomputes authoritatively
+- [ ] Photo capture via plain `<input type="file" accept="image/*" capture="environment">` (no
+      library) — must show explicit copy that the photo is for attendance/proof-of-training only,
+      is not analyzed/matched against any biometric database, and offer a skip option (PRD §4.3
+      BIPA-adjacent requirement — part of this sub-phase's definition of done)
+- [ ] Verify: per-component tests — signature pad captures a stroke and exports a blob; TTS hook
+      plays/stops and degrades gracefully with zero voices; quiz blocks continue until answered
+      and shows pass/fail; photo input's compliance copy renders and skip works
+
+### 4g — Client: meeting wizard integration
+
+- [ ] `client/src/pages/MeetingFlow/` + `/meetings/new` route under `RequireAuth`; activates the
+      Dashboard's "Meeting Logs" `StyledCardSoon` (same treatment `ContentLibrary` got in 2c)
+- [ ] `features/meeting-flow/MeetingWizard.tsx` — step machine (project → talk → present → quiz →
+      signatures[] → photo → save), heavy pieces `React.lazy`/`Suspense`-loaded per the
+      `TalkForm`/Tiptap precedent
+- [ ] Each step writes to `meetingDraftCache`; final save fires the mutations and clears the draft
+- [ ] Verify: full airplane-mode manual smoke — start a meeting offline, pick project/talk, TTS or
+      skip, pass quiz, collect 2+ signatures, skip photo, save; reconnect and confirm rows land in
+      Supabase with correct `company_id` and server-computed `quiz_score`, blobs land in their
+      private buckets; reload mid-wizard and confirm the draft resumes
+
+### 4h — Verification, hardening, docs, Phase 5 hook
+
+- [ ] Confirm client coverage stays at the repo's enforced 100%; server suite green
+- [ ] `meetingLogs.js`'s `complete()` gets a named stub call site for Phase 5's PDF generation
+      (e.g. `pdfGenerationQueue.enqueue(meetingLogId)`, no-op today), not a bare `// TODO`
+- [ ] Update `docs/data-access.md`'s Storage line from aspirational to concrete (bucket names,
+      path convention, signed-URL TTL); update `Supabase_Schema.md`
+- [ ] Re-surface still-open items in this file: crew-photo retention policy (PRD §7, unresolved
+      here on purpose) and the Phase 3 manual E2E pass (still owed, independent of Phase 4)
 
 ## Phase 5 — PDF generation + GC delivery · epic
 
