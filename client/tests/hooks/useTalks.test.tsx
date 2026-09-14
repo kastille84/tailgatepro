@@ -1,10 +1,15 @@
 import React from "react";
-import { describe, it, expect, vi, beforeEach } from "vitest";
+import { afterEach, describe, it, expect, vi, beforeEach } from "vitest";
 import { renderHook, waitFor } from "@testing-library/react";
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import {
+  onlineManager,
+  QueryClient,
+  QueryClientProvider,
+} from "@tanstack/react-query";
 
 import { useTalks } from "../../src/hooks/useTalks";
 import * as apiTalks from "../../src/services/apiTalks";
+import { tailgateDb } from "../../src/utils/db/tailgateDb";
 
 vi.mock("../../src/services/apiTalks");
 
@@ -38,6 +43,11 @@ describe("useTalks", () => {
     mockUseAuth.mockReturnValue({ session: { access_token: "token-123" } });
   });
 
+  afterEach(async () => {
+    await tailgateDb.talksCache.clear();
+    onlineManager.setOnline(true);
+  });
+
   const wrapper = ({ children }: { children: React.ReactNode }) => (
     <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
   );
@@ -69,6 +79,44 @@ describe("useTalks", () => {
 
     expect(apiTalks.listTalks).not.toHaveBeenCalled();
     expect(result.current.talks).toEqual([]);
+  });
+
+  it("mirrors a successful fetch into the offline talks cache", async () => {
+    vi.mocked(apiTalks.listTalks).mockResolvedValue([talk]);
+
+    const { result } = renderHook(() => useTalks(), { wrapper });
+    await waitFor(() => expect(result.current.isLoading).toBe(false));
+
+    expect(await tailgateDb.talksCache.get("talk-1")).toEqual(talk);
+  });
+
+  it("falls back to the cached talks when the fetch fails but a cache exists", async () => {
+    await tailgateDb.talksCache.put(talk);
+    vi.mocked(apiTalks.listTalks).mockRejectedValue(
+      new Error("Failed to fetch"),
+    );
+
+    const { result } = renderHook(() => useTalks(), { wrapper });
+
+    await waitFor(() => expect(result.current.isLoading).toBe(false));
+    expect(result.current.isError).toBe(false);
+    expect(result.current.talks).toEqual([talk]);
+  });
+
+  it("runs queryFn immediately even when TanStack Query's onlineManager reports offline", async () => {
+    // Without networkMode: "always", the default networkMode: "online" would
+    // pause this ENTIRE queryFn — including its own try/catch fallback to
+    // the offline cache — until onlineManager sees an `online` event.
+    onlineManager.setOnline(false);
+    await tailgateDb.talksCache.put(talk);
+    vi.mocked(apiTalks.listTalks).mockRejectedValue(
+      new Error("Failed to fetch"),
+    );
+
+    const { result } = renderHook(() => useTalks(), { wrapper });
+
+    await waitFor(() => expect(result.current.isLoading).toBe(false));
+    expect(result.current.talks).toEqual([talk]);
   });
 
   it("derives a deduped, alphabetically sorted tradeOptions list from every talk's tradeTags", async () => {

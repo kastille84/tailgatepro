@@ -1,9 +1,7 @@
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import { createTalk, deleteTalk, listTalks, updateTalk } from "../../src/services/apiTalks";
-
-const UUID_RE =
-  /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+import { DEFAULT_FETCH_TIMEOUT_MS } from "../../src/utils/fetchWithTimeout";
 
 const talk = {
   id: "talk-1",
@@ -27,6 +25,10 @@ describe("apiTalks", () => {
     vi.unstubAllGlobals();
   });
 
+  afterEach(() => {
+    vi.useRealTimers();
+  });
+
   describe("listTalks", () => {
     it("GETs /api/talks with the bearer token and returns the data array", async () => {
       const fetchMock = vi.fn().mockResolvedValue({
@@ -37,13 +39,46 @@ describe("apiTalks", () => {
       vi.stubGlobal("fetch", fetchMock);
 
       await expect(listTalks("token-123")).resolves.toEqual([talk]);
-      expect(fetchMock).toHaveBeenCalledWith("/api/talks", {
-        method: "GET",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: "Bearer token-123",
-        },
+      expect(fetchMock).toHaveBeenCalledWith(
+        "/api/talks",
+        expect.objectContaining({
+          method: "GET",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: "Bearer token-123",
+          },
+          signal: expect.any(AbortSignal),
+        }),
+      );
+    });
+
+    it("rejects (rather than hanging forever) when the request never gets a response", async () => {
+      // The bug this guards against: a request that's accepted but never
+      // answered (e.g. Chrome DevTools' Network "Offline" throttle, which
+      // doesn't flip navigator.onLine) must not hang the caller forever.
+      vi.useFakeTimers();
+      vi.stubGlobal(
+        "fetch",
+        vi.fn((_url: string, init?: RequestInit) => {
+          return new Promise((_resolve, reject) => {
+            init?.signal?.addEventListener("abort", () => {
+              reject(
+                new DOMException("The operation was aborted.", "AbortError"),
+              );
+            });
+          });
+        }),
+      );
+
+      const promise = listTalks("token-123");
+      const assertion = expect(promise).rejects.toMatchObject({
+        name: "AbortError",
       });
+
+      await vi.advanceTimersByTimeAsync(DEFAULT_FETCH_TIMEOUT_MS);
+      await assertion;
+
+      vi.useRealTimers();
     });
 
     it("rejects with the backend error message on an error response", async () => {
@@ -93,7 +128,7 @@ describe("apiTalks", () => {
   describe("createTalk", () => {
     const customTalk = { ...talk, id: "talk-2", isGlobal: false, companyId: "company-1" };
 
-    it("POSTs a client-generated UUID id plus the input, and returns the created talk", async () => {
+    it("POSTs the exact input, including the caller-supplied id, and returns the created talk", async () => {
       const fetchMock = vi.fn().mockResolvedValue({
         ok: true,
         status: 201,
@@ -101,24 +136,29 @@ describe("apiTalks", () => {
       });
       vi.stubGlobal("fetch", fetchMock);
 
-      await expect(
-        createTalk("token-123", {
-          title: "Ladder Safety Refresher",
-          tradeTag: "Roofing",
-          talkingPoints: ["Inspect rungs before use"],
-        }),
-      ).resolves.toEqual(customTalk);
-
-      const [url, options] = fetchMock.mock.calls[0];
-      expect(url).toBe("/api/talks");
-      expect(options.method).toBe("POST");
-      expect(options.headers.Authorization).toBe("Bearer token-123");
-      expect(JSON.parse(options.body)).toEqual({
-        id: expect.stringMatching(UUID_RE),
+      const input = {
+        id: "talk-2",
         title: "Ladder Safety Refresher",
         tradeTag: "Roofing",
         talkingPoints: ["Inspect rungs before use"],
-      });
+      };
+
+      await expect(createTalk("token-123", input)).resolves.toEqual(
+        customTalk,
+      );
+
+      expect(fetchMock).toHaveBeenCalledWith(
+        "/api/talks",
+        expect.objectContaining({
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: "Bearer token-123",
+          },
+          body: JSON.stringify(input),
+          signal: expect.any(AbortSignal),
+        }),
+      );
     });
 
     it("rejects with the backend error message on a validation failure", async () => {
@@ -131,7 +171,7 @@ describe("apiTalks", () => {
         }),
       );
       await expect(
-        createTalk("token-123", { title: "", talkingPoints: [] }),
+        createTalk("token-123", { id: "talk-2", title: "", talkingPoints: [] }),
       ).rejects.toThrow("Title is required");
     });
 
@@ -145,7 +185,11 @@ describe("apiTalks", () => {
         }),
       );
       await expect(
-        createTalk("token-123", { title: "x", talkingPoints: ["y"] }),
+        createTalk("token-123", {
+          id: "talk-2",
+          title: "x",
+          talkingPoints: ["y"],
+        }),
       ).rejects.toThrow(GENERIC);
     });
   });
@@ -176,14 +220,18 @@ describe("apiTalks", () => {
         updateTalk("token-123", "talk-2", input),
       ).resolves.toEqual(updatedTalk);
 
-      expect(fetchMock).toHaveBeenCalledWith("/api/talks/talk-2", {
-        method: "PATCH",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: "Bearer token-123",
-        },
-        body: JSON.stringify(input),
-      });
+      expect(fetchMock).toHaveBeenCalledWith(
+        "/api/talks/talk-2",
+        expect.objectContaining({
+          method: "PATCH",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: "Bearer token-123",
+          },
+          body: JSON.stringify(input),
+          signal: expect.any(AbortSignal),
+        }),
+      );
     });
 
     it("rejects with the backend message on the 409 in-use guard", async () => {
@@ -233,13 +281,17 @@ describe("apiTalks", () => {
       await expect(deleteTalk("token-123", "talk-2")).resolves.toEqual({
         id: "talk-2",
       });
-      expect(fetchMock).toHaveBeenCalledWith("/api/talks/talk-2", {
-        method: "DELETE",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: "Bearer token-123",
-        },
-      });
+      expect(fetchMock).toHaveBeenCalledWith(
+        "/api/talks/talk-2",
+        expect.objectContaining({
+          method: "DELETE",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: "Bearer token-123",
+          },
+          signal: expect.any(AbortSignal),
+        }),
+      );
     });
 
     it("rejects with the backend message on the 409 in-use guard", async () => {

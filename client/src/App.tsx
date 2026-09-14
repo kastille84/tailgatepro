@@ -15,6 +15,8 @@ import { queryClient } from "./utils/queryClient";
 // side-effect import, loaded once here so it's in place before any Projects
 // mutation can enqueue. See docs/offline-sync-design.md.
 import "./services/projectReplayHandler";
+// Same, for a "talk" outbox row.
+import "./services/talkReplayHandler";
 
 import { Navbar } from "./ui_comps/navbar/Navbar";
 import { ScrollToTop } from "./ui_comps/scroll-to-top";
