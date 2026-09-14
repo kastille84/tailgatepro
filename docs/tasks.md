@@ -369,12 +369,34 @@ then favorites + custom talks.
       server-side idempotency check for a retried `create` call (duplicate client-generated `id`)
       is deferred — not yet hit in practice since a first-attempt online failure is now discarded
       rather than replayed; revisit if/when true background retry of a `create` ships.
-- [ ] Retrofit the Toolbox Talks read path through `talksCache` — `talksCache` exists in the
-      Dexie schema but has no consumers: no `talksCache.ts` read/write helpers (unlike Projects'
-      `projectsCache.ts`) and `useTalks.ts` has no fallback-to-cache on a failed fetch, nor the
-      `networkMode: "always"` fix already applied to every Projects hook. Currently a silent gap —
-      an offline user opening `/talks` gets nothing, the same bug class the design doc's addendum
-      fixed for Projects.
+- [x] Retrofit the Toolbox Talks read path through `talksCache` — new
+      `client/src/utils/db/talksCache.ts` (`cacheTalks`/`getCachedTalks`, mirrors
+      `projectsCache.ts` minus the archived-view split — Talks has no such split);
+      `useTalks.ts` gained the same try/catch-to-cache `queryFn` + `networkMode: "always"` as
+      `useProjects`; `apiTalks.ts`'s 4 functions switched from bare `fetch` to `fetchWithTimeout`
+      (matches `apiProjects.ts`, also closes a latent hung-fetch gap on custom-talk
+      create/update/delete). Unit-tested: `tests/utils/db/talksCache.test.ts` (6 cases) +
+      3 new offline-fallback/`networkMode` cases in `tests/hooks/useTalks.test.tsx` + a
+      timeout-rejection case in `tests/services/apiTalks.test.ts`. Full client suite: 517 tests
+      passing, 100% coverage maintained.
+- [x] Offline write queue for custom talks — `useCreateTalk`/`useUpdateTalk`/`useDeleteTalk`
+      routed through the outbox, mirroring the Projects write retrofit file-for-file: `SyncEntity`
+      widened to `"project" | "talk"`; new `talkReplayHandler.ts` (create/update/delete, no
+      `"archive"` case — Talks has no archive concept) registered as a side-effect import in
+      `App.tsx`; new `optimisticTalks.ts` (`snapshotTalksQueries`/`upsertCachedTalk`/
+      `removeCachedTalk`/`findCachedTalk`/`applyTalkPatch`/`restoreTalksQueries`), simpler than its
+      Projects counterpart since `useTalks` has a single unparameterized `["talks"]` cache. Required
+      precursor fix: `apiTalks.ts`'s `createTalk` used to generate its own id internally — moved to
+      the hook boundary (`crypto.randomUUID()` in `useCreateTalk`, mirroring `useCreateProject`) so
+      the outbox's `entityId` and the optimistic cache entry are both known before the write ever
+      reaches the network; added `CreateTalkInput.id` + a new `UpdateTalkInput` type (the PATCH body
+      minus `id`). Server needed zero changes — it already expected a caller-supplied id. Unit-tested:
+      rewrote all 3 mutation-hook test files (mock `outbox`/`replayRegistry` instead of `apiTalks`
+      directly, add offline/`networkMode`/optimistic-cache/rollback cases) + new
+      `tests/utils/optimisticTalks.test.ts` (15 cases) + new `tests/services/talkReplayHandler.test.ts`
+      (4 cases) + updated `apiTalks.test.ts`'s `createTalk` fixtures for the id change. Full client
+      suite: 546 tests passing, 100% coverage maintained; `tsc -b` clean aside from the two
+      pre-existing, unrelated failures already noted under Phase 1.
 
 ## Phase 4 — Run-a-Talk flow + signatures · epic
 

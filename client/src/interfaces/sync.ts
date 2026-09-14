@@ -3,7 +3,7 @@
 
 /** Domains the outbox can queue a write for. Extended in Phase 4 to add
  *  "meeting_log" | "signature" once their server API exists. */
-export type SyncEntity = "project";
+export type SyncEntity = "project" | "talk";
 
 /** The HTTP-shaped operation a queued row replays as. `archive` maps to
  *  `PATCH /api/projects/:id` with `{ archived: true | false }` — the payload's
