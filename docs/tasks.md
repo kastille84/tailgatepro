@@ -106,8 +106,9 @@ default list.
 - [x] Pre-req: apply `archived_at` to Supabase before hitting the endpoints
 - [x] Verify end-to-end: create → delete a talk-less project; archive → toggle
       "Show archived" → restore; other-company bearer token → 404
-- [ ] Phase 3 offline: route archive (PATCH) and delete (DELETE) through the
-      IndexedDB replay queue alongside create/edit
+- [x] Phase 3 offline: route archive (PATCH) and delete (DELETE) through the
+      IndexedDB replay queue alongside create/edit — shipped as part of the
+      Phase 3 Projects retrofit (see below)
 
 ## Phase 2 — Content Library (toolbox_talks)
 
@@ -347,11 +348,33 @@ then favorites + custom talks.
 
 ## Phase 3 — Offline foundation · epic, design spike first
 
-- [ ] Design doc: IndexedDB schema + sync state machine (reviewed)
-- [ ] Add Dexie; tables for meeting_logs, signatures, cached projects/talks
-- [ ] Outbound sync queue: enqueue → flush on `online` → set `synced_at`
-- [ ] Online/offline indicator; last-write-wins
-- [ ] Retro-fit Projects create/edit through the queue
+- [x] Design doc: IndexedDB schema + sync state machine (reviewed) — `docs/offline-sync-design.md`
+- [x] Dexie schema (`client/src/utils/db/tailgateDb.ts`, `client/src/interfaces/sync.ts`):
+      `outbox`, `projectsCache`, `talksCache` tables, unit-tested (`tests/utils/db/tailgateDb.test.ts`).
+      `dexie` + `fake-indexeddb` (dev) deps added. Note: the design doc's original `lib/db/` path
+      was superseded by `utils/db/` — this project has no `lib/` folder — hence the path correction.
+- [x] Outbound sync queue (`client/src/utils/db/outbox.ts`): enqueue → flush on `online`/boot/manual
+      retry/30s poll backstop, per-entity ordering (a poisoned-entity set stops a failed entity's
+      later rows without blocking others), crash-recovery of stuck `syncing` rows via
+      `resetStuckSyncingRows` at boot — unit-tested in isolation (`tests/utils/db/outbox.test.ts`,
+      20 cases)
+- [x] Online/offline indicator: `context/online-status/` + `SyncStatusBanner`, wired into `App.tsx`
+      (plus `utils/db/replayRegistry.ts` — lets a feature register how to replay its own outbox
+      rows without the provider needing to know about it; see design doc)
+- [x] Retro-fit Projects create/edit/archive (PATCH)/delete (DELETE) through the queue —
+      `createProject`/`CreateProjectInput` now take an explicit `id`; `useProjects` falls back to
+      the offline `projectsCache` when the live fetch fails. A synchronous online failure (e.g. a
+      validation error, or the 409 archive-instead guard) still rejects immediately and is
+      discarded rather than retried — see design doc's "Error surfacing" addendum. The
+      server-side idempotency check for a retried `create` call (duplicate client-generated `id`)
+      is deferred — not yet hit in practice since a first-attempt online failure is now discarded
+      rather than replayed; revisit if/when true background retry of a `create` ships.
+- [ ] Retrofit the Toolbox Talks read path through `talksCache` — `talksCache` exists in the
+      Dexie schema but has no consumers: no `talksCache.ts` read/write helpers (unlike Projects'
+      `projectsCache.ts`) and `useTalks.ts` has no fallback-to-cache on a failed fetch, nor the
+      `networkMode: "always"` fix already applied to every Projects hook. Currently a silent gap —
+      an offline user opening `/talks` gets nothing, the same bug class the design doc's addendum
+      fixed for Projects.
 
 ## Phase 4 — Run-a-Talk flow + signatures · epic
 

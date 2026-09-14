@@ -1,5 +1,8 @@
 import { expect, afterEach, vi } from "vitest";
 import { cleanup } from "@testing-library/react";
+// jsdom has no IndexedDB implementation; Dexie (client/src/utils/db) needs
+// this in-memory shim to run under Vitest. See docs/offline-sync-design.md.
+import "fake-indexeddb/auto";
 
 // Cleanup after each test
 afterEach(() => {

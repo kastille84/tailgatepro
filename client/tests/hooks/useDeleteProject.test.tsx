@@ -1,19 +1,38 @@
 import React from "react";
-import { describe, it, expect, vi, beforeEach } from "vitest";
+import { afterEach, describe, it, expect, vi, beforeEach } from "vitest";
 import { renderHook, waitFor } from "@testing-library/react";
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import {
+  onlineManager,
+  QueryClient,
+  QueryClientProvider,
+} from "@tanstack/react-query";
 import toast from "react-hot-toast";
 
 import { useDeleteProject } from "../../src/hooks/useDeleteProject";
-import * as apiProjects from "../../src/services/apiProjects";
+import * as outbox from "../../src/utils/db/outbox";
+import * as replayRegistry from "../../src/utils/db/replayRegistry";
 
 vi.mock("react-hot-toast");
-vi.mock("../../src/services/apiProjects");
+vi.mock("../../src/utils/db/outbox");
+vi.mock("../../src/utils/db/replayRegistry");
 
 const mockUseAuth = vi.fn();
 vi.mock("../../src/context/auth", () => ({
   useAuth: () => mockUseAuth(),
 }));
+
+const mockReplayer = vi.fn();
+
+const project = {
+  id: "p1",
+  ownerCompanyId: "c1",
+  name: "Site",
+  gcCompanyId: null,
+  gcNameCustom: "GC",
+  status: "active" as const,
+  archivedAt: null,
+  createdAt: "2026-09-09",
+};
 
 describe("useDeleteProject", () => {
   let queryClient: QueryClient;
@@ -27,6 +46,11 @@ describe("useDeleteProject", () => {
     });
     vi.clearAllMocks();
     mockUseAuth.mockReturnValue({ session: { access_token: "token-123" } });
+    vi.mocked(replayRegistry.createReplayer).mockReturnValue(mockReplayer);
+  });
+
+  afterEach(() => {
+    onlineManager.setOnline(true);
   });
 
   const wrapper = ({ children }: { children: React.ReactNode }) => (
@@ -38,24 +62,66 @@ describe("useDeleteProject", () => {
     expect(result.current.isDeleting).toBe(false);
   });
 
-  it("deletes by id, toasts success, and invalidates the projects query", async () => {
-    vi.mocked(apiProjects.deleteProject).mockResolvedValue({ id: "p1" });
-    const invalidateSpy = vi.spyOn(queryClient, "invalidateQueries");
+  it("runs mutationFn immediately even when TanStack Query's onlineManager reports offline", async () => {
+    onlineManager.setOnline(false);
+    vi.mocked(outbox.enqueueMutation).mockResolvedValue({} as never);
 
     const { result } = renderHook(() => useDeleteProject(), { wrapper });
     await result.current.deleteProject("p1");
 
-    expect(apiProjects.deleteProject).toHaveBeenCalledWith("token-123", "p1");
-    expect(toast.success).toHaveBeenCalledWith("Project deleted");
-    expect(invalidateSpy).toHaveBeenCalledWith({ queryKey: ["projects"] });
+    expect(outbox.enqueueMutation).toHaveBeenCalled();
   });
 
-  it("toasts the error (e.g. the 409 archive-instead guard) and rejects", async () => {
-    vi.mocked(apiProjects.deleteProject).mockRejectedValue(
+  it("enqueues a delete by id, toasts success", async () => {
+    vi.mocked(outbox.enqueueMutation).mockResolvedValue({} as never);
+
+    const { result } = renderHook(() => useDeleteProject(), { wrapper });
+    await result.current.deleteProject("p1");
+
+    expect(outbox.enqueueMutation).toHaveBeenCalledWith(
+      { entity: "project", entityId: "p1", op: "delete", payload: {} },
+      mockReplayer,
+    );
+    expect(toast.success).toHaveBeenCalledWith("Project deleted");
+  });
+
+  it("enqueues with no replayer when there is no signed-in session", async () => {
+    mockUseAuth.mockReturnValue({ session: null });
+    vi.mocked(outbox.enqueueMutation).mockResolvedValue({} as never);
+
+    const { result } = renderHook(() => useDeleteProject(), { wrapper });
+    await result.current.deleteProject("p1");
+
+    expect(replayRegistry.createReplayer).not.toHaveBeenCalled();
+    expect(outbox.enqueueMutation).toHaveBeenCalledWith(
+      expect.anything(),
+      undefined,
+    );
+  });
+
+  it("optimistically removes the project from the cached lists", async () => {
+    vi.mocked(outbox.enqueueMutation).mockResolvedValue({} as never);
+    queryClient.setQueryData(["projects", { includeArchived: false }], [
+      project,
+    ]);
+
+    const { result } = renderHook(() => useDeleteProject(), { wrapper });
+    await result.current.deleteProject("p1");
+
+    expect(
+      queryClient.getQueryData(["projects", { includeArchived: false }]),
+    ).toEqual([]);
+  });
+
+  it("rolls back, toasts the error (e.g. the 409 archive-instead guard), and rejects", async () => {
+    vi.mocked(outbox.enqueueMutation).mockRejectedValue(
       new Error(
         "This project has logged safety talks and can't be deleted. Archive it instead.",
       ),
     );
+    queryClient.setQueryData(["projects", { includeArchived: false }], [
+      project,
+    ]);
 
     const { result } = renderHook(() => useDeleteProject(), { wrapper });
 
@@ -67,5 +133,8 @@ describe("useDeleteProject", () => {
         expect.stringContaining("Archive it instead."),
       ),
     );
+    expect(
+      queryClient.getQueryData(["projects", { includeArchived: false }]),
+    ).toEqual([project]);
   });
 });
