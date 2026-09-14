@@ -60,10 +60,9 @@ attempt re-queues for the next flush rather than getting stuck.
   interval while pending rows exist as a backstop — the `online` event does not fire reliably on
   every mobile browser.
 - **Flush order:** process `pending`-or-`failed` rows in `createdAt` order, **per `entityId`, one
-  at a time** — a `create` must land before a later `update` to the same record. On success: mark
-  `synced`, stamp `syncedAt`, and leave the row (rows are small; pruning old `synced` rows is a
-  deferred cleanup, not required for correctness — `pendingCount`/the next flush only ever look at
-  `pending`/`failed` rows, so a lingering `synced` row is inert). On failure: mark `failed`,
+  at a time** — a `create` must land before a later `update` to the same record. On success: the
+  row is deleted (see addenda — this was originally "mark synced and leave it," changed after the
+  fact). On failure: mark `failed`,
   increment `attempts`, store `lastError` — the row stays retry-eligible for the next flush trigger
   rather than needing to bounce back through `pending` first — and stop that entity's remaining
   chain without blocking other entities' rows. `flush` itself is a no-op while already running, so
@@ -154,6 +153,151 @@ This is split into five sequential, independently reviewable changes:
 4. Online/offline indicator (`context/online-status/`, `SyncStatusBanner`), wired into `App.tsx`.
 5. The Projects retrofit — the only change that touches existing, shipped mutation behavior, so it
    lands last, once 2–4 are proven.
+
+## Addendum: what the Projects retrofit (step 5) actually needed
+
+Building the retrofit surfaced a few things the design above didn't cover. Recorded here rather
+than rewritten into the sections above, so the reasoning stays visible.
+
+**Error surfacing.** The queue's original "flush swallows every error and retries later" behavior
+would have silently closed `ProjectForm` on a validation error (a duplicate name, a missing GC
+field) or the 409 "archive instead of delete" guard — the request would be queued instead of
+rejected, and would then fail identically forever since retrying an invalid payload can never
+succeed. Fixed by having `flush` accept an optional `watchRowId`: when `enqueueMutation` makes its
+first, synchronous attempt while online, it passes its own row's id as `watchRowId`. If that
+specific row fails on its first attempt (`attempts === 0`), the row is deleted (not retried) and
+the error is rethrown out of `enqueueMutation` — a synchronous online mutation gets the same
+immediate rejection a direct API call always gave. A row that fails on any later attempt (a
+genuine offline queue, or a retry after the original caller is long gone) still fails silently and
+stays retry-eligible, as originally designed. If an entity already has an earlier unsynced row when
+a new one is enqueued, the new one skips this "watched" fast path entirely and just joins the queue
+behind it, so per-`entityId` ordering is never bypassed.
+
+**Cache reconciliation across triggers.** Whichever hook makes a mutation, the write might not be
+confirmed until later — the `online` event, a manual retry, or the backstop poll, none of which run
+inside that hook. So instead of each hook invalidating `["projects"]` in its own `onSuccess` (which
+would refetch immediately and, if still offline, blow away the optimistic entry with a stale cache
+read), the registered "project" replay handler (`services/projectReplayHandler.ts`) invalidates
+`["projects"]` itself, once, right after any successful replay — regardless of what triggered it.
+This needed the app's `QueryClient` to be reachable from outside the component tree, so it moved
+from a local variable in `App.tsx` into `utils/queryClient.ts` as a singleton; components still get
+the same instance via `useQueryClient()` as before.
+
+**Optimistic updates.** Each mutation hook now has an `onMutate`/`onError` pair: `onMutate` snapshots
+every cached `["projects", ...]` list (`snapshotProjectsQueries`), applies the change immediately
+(`upsertCachedProject` for create/update/archive, `removeCachedProject` for delete,
+`applyProjectPatch` to merge a patch onto a cached project for update/archive), and `onError` rolls
+back to the snapshot if the mutation is rejected outright (per the point above, only a synchronous
+online failure rejects). A newly-created project's `ownerCompanyId` is set to `""` as a placeholder
+until the write syncs — it's never read anywhere in the client (only passed through from the server),
+so this is safe, and the real value arrives once the replay handler's invalidation refetches.
+
+**No per-card "pending sync" badge.** The original plan mentioned tagging an optimistic entry with a
+UI-visible "pending" flag. This landed without one — the app-wide `SyncStatusBanner` (step 4)
+already surfaces "N changes waiting to sync," and a per-card badge would have meant threading new
+props through `ProjectList`/`ProjectCard` plus new styles and tests for marginal added clarity. Can
+be added later if the global banner turns out not to be enough signal.
+
+## Addendum: `fetch` needs a timeout, not just an online check
+
+Found via a real repro: creating a project while "offline" (Chrome DevTools' Network tab set to
+"Offline") hung the form's spinner forever. DevTools' offline throttle blocks real network
+requests but does **not** flip `navigator.onLine` to `false` — so `enqueueMutation` believed it
+was online and attempted an immediate sync, and `apiProjects.ts`'s bare `fetch()` calls (no
+`AbortController`, no timeout) simply never resolved or rejected under that simulation. That hung
+`flush`'s `await replay(row)` forever, which meant its `finally { isFlushing = false }` never ran —
+wedging the module-level lock `true` for the rest of the session and silently turning every later
+flush trigger (the `online` event, the 30s poll, "Retry now") into a no-op until a full reload.
+
+Fixed with `client/src/utils/fetchWithTimeout.ts` — a `fetch` wrapper using `AbortController` with
+a 10s default timeout, used by all four `apiProjects.ts` calls. This also required `outbox.ts`'s
+`flush` to distinguish *why* a watched row's first attempt failed: a genuine server rejection
+(`apiProjects.ts`'s `Error(body?.error ?? GENERIC_ERROR)`, thrown only after a response is actually
+received) still discards the row and rejects the caller immediately, as designed — but a network
+failure (`TypeError`, per the Fetch spec) or a timeout (`AbortError`) now falls through to the same
+path as any other retryable failure: stays queued, resolves normally, no discard. `navigator.onLine`
+stays as a fast-path heuristic (skipping a doomed attempt when we're confident we're offline) since
+the timeout now bounds the cost of it being wrong to 10 seconds instead of forever.
+
+## Addendum: the local write itself needs a timeout too
+
+Round 2 of the same bug class, this time genuinely offline (Wi-Fi disabled for real, confirmed by
+the app's own banner — so `navigator.onLine` was correctly `false` and `flush`/`fetch` were never
+reached at all). "Create project" still hung: the spinner never stopped, the modal never closed,
+and the `outbox` table stayed empty. With the network path provably unreached, the only remaining
+`await` in that branch is `tailgateDb.outbox.add(row)` itself — a bare Dexie call with no timeout,
+and nothing anywhere in this codebase handling IndexedDB's `blocked`/`versionchange` events. A
+native IndexedDB request that never fires `success` or `error` (most plausibly a connection blocked
+by another open tab, or a stale connection from an iterative dev session) produces exactly these
+symptoms.
+
+Fixed the same way as the fetch case, one layer down: `client/src/utils/withTimeout.ts` races a
+promise against a timer (5s — legitimate IndexedDB latency is never multi-second). Unlike
+`fetchWithTimeout`, this can't actually cancel the underlying operation — Dexie has no cancellation
+primitive — so a "timeout" here means "stop waiting and give the caller an answer," not "the
+operation stopped." Applied to `enqueueMutation`'s initial write and `flush`'s per-row status
+updates/delete in `outbox.ts`. Also added the two Dexie connection-hygiene handlers this codebase
+had neither of: `versionchange` (close this tab's connection so it doesn't block another tab's
+upgrade) and `blocked` (log it, since there was previously no way to even detect it), plus a Vite
+HMR dispose hook so iterating on `tailgateDb.ts` during dev doesn't accumulate orphaned connections
+across hot-reloads.
+
+Unlike a network failure, a timed-out local write has no queue to fall back to — there's nowhere
+else to durably store the change — so it's a real rejection, not a quiet "stays queued" like the
+network case: the mutation rejects, the form shows an honest error and stays open, and the
+already-applied optimistic tile rolls back via the same `onError` path already built for a
+server-rejected mutation.
+
+## Addendum: the real cause was TanStack Query's default `networkMode`
+
+Rounds 1–2 above were real, valid fixes — but neither was the actual reason "Create project" hung
+while genuinely offline. The tell was in the third repro: while offline, *nothing* happened at
+all — no outbox row, no network call — and the instant Wi-Fi came back on, an outbox row appeared,
+a network request fired, and the modal closed, all together. That's not "some `await` hangs
+forever" (rounds 1–2's shape); it's "the code never starts running until connectivity returns."
+
+That's exactly what `useMutation`/`useQuery` do by default: every one has a `networkMode` option
+defaulting to `"online"`, backed by TanStack Query's own `onlineManager` (which just subscribes to
+`navigator.onLine` and the `online`/`offline` events — the same signal this app's own code already
+uses). While the manager considers the browser offline, `mutationFn`/`queryFn` is **never invoked
+at all** — not paused mid-flight, never started — and only runs once an `online` event fires and
+the library auto-resumes it. Since nothing in this app ever configured `networkMode`, this was
+invisible to two full rounds of tracing `outbox.ts`, `apiProjects.ts`, `tailgateDb.ts`, and every
+`navigator.onLine`/`fetch(` call site: the gate is one layer above all of that, inside the library,
+and it pauses the *whole* function — including the local, no-network Dexie write inside
+`enqueueMutation`, not just the eventual network call.
+
+This also explains why round 1's fix looked like it worked: DevTools' Offline throttle doesn't flip
+`navigator.onLine`, so `onlineManager` also saw "online" and let `mutationFn` run normally, reaching
+the real `fetch()` that round 1's timeout fixed. Round 2's genuinely-offline repro (and this one)
+had `navigator.onLine` truly `false`, so TanStack Query paused `mutationFn` before it ever reached
+the Dexie write round 2 was bounding — a correct fix for code that was never being reached.
+
+**Fix:** `networkMode: "always"` on every Projects `useMutation` and on `useProjects`'s `useQuery` —
+TanStack Query's own documented recommendation for an app that manages its own offline
+persistence/queue instead of relying on the library's pause-and-resume. With it, `mutationFn`/
+`queryFn` always runs immediately, online or offline, and this app's own `navigator.onLine` checks
+(in `enqueueMutation`, and `useProjects`'s try/catch-to-cache) become the only thing deciding what
+happens next — which is what `outbox.ts`'s doc comments described as the design all along. Confirmed
+with a test that fails in exactly the right way without the fix: `onlineManager.setOnline(false)`
+before calling a mutation hook, with `networkMode` unset, times out at Vitest's default 15s (proving
+`mutationFn` never runs); with `networkMode: "always"` restored, the same test resolves in
+milliseconds. Rounds 1–2's fixes are unchanged and still valid for the cases where `mutationFn` does
+run and something inside it stalls.
+
+## Addendum: synced rows are deleted, not kept
+
+The original design (above, and this doc's first draft) left a successfully-synced row in place,
+marked `status: "synced"` with `syncedAt` stamped — reasoned as harmless since `pendingCount`/the
+next flush only ever look at `pending`/`failed` rows. Once the queue was actually working
+end-to-end, the practical downside became obvious: synced rows just accumulate in `outbox` forever,
+which is both an unbounded storage/table-growth concern over the life of the app and made the table
+noisy to inspect while debugging. Nothing in the app ever reads a row's synced state, so there was
+no upside to keeping it. Changed `flush()` to delete a row immediately once it's replayed
+successfully, instead of marking it synced. `"synced"` stays in the `SyncStatus` type and
+`syncedAt` stays on `OutboxRow` for now rather than removing them — a row simply never persists in
+that state anymore, but the fields are harmless to keep and removing them would mean touching every
+place that constructs an `OutboxRow` (including several test files) for no functional gain.
 
 ## Deferred to manual/E2E testing
 

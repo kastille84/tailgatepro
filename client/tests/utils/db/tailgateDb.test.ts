@@ -1,6 +1,10 @@
-import { afterEach, describe, expect, it } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
 
-import { tailgateDb } from "../../../src/utils/db/tailgateDb";
+import {
+  handleBlocked,
+  handleVersionChange,
+  tailgateDb,
+} from "../../../src/utils/db/tailgateDb";
 import type { OutboxRow } from "../../../src/interfaces/sync";
 import type { Project } from "../../../src/interfaces/project";
 import type { Talk } from "../../../src/interfaces/talk";
@@ -129,5 +133,31 @@ describe("tailgateDb", () => {
       .toArray();
 
     expect(roofing.map((t) => t.id)).toEqual(["talk-1"]);
+  });
+});
+
+describe("handleVersionChange", () => {
+  it("closes the connection, so another tab's upgrade isn't blocked by this one", () => {
+    const closeSpy = vi
+      .spyOn(tailgateDb, "close")
+      .mockImplementation(() => {});
+
+    handleVersionChange();
+
+    expect(closeSpy).toHaveBeenCalledTimes(1);
+    closeSpy.mockRestore();
+  });
+});
+
+describe("handleBlocked", () => {
+  it("logs a warning so a blocked connection isn't silently invisible", () => {
+    const warnSpy = vi.spyOn(console, "warn").mockImplementation(() => {});
+
+    handleBlocked();
+
+    expect(warnSpy).toHaveBeenCalledWith(
+      "TailgateProDB: blocked by another open connection.",
+    );
+    warnSpy.mockRestore();
   });
 });

@@ -1,30 +1,30 @@
 import React from "react";
-import { describe, it, expect, vi, beforeEach } from "vitest";
+import { afterEach, describe, it, expect, vi, beforeEach } from "vitest";
 import { renderHook, waitFor } from "@testing-library/react";
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import {
+  onlineManager,
+  QueryClient,
+  QueryClientProvider,
+} from "@tanstack/react-query";
 import toast from "react-hot-toast";
 
 import { useCreateProject } from "../../src/hooks/useCreateProject";
-import * as apiProjects from "../../src/services/apiProjects";
+import * as outbox from "../../src/utils/db/outbox";
+import * as replayRegistry from "../../src/utils/db/replayRegistry";
 
 vi.mock("react-hot-toast");
-vi.mock("../../src/services/apiProjects");
+vi.mock("../../src/utils/db/outbox");
+vi.mock("../../src/utils/db/replayRegistry");
 
 const mockUseAuth = vi.fn();
 vi.mock("../../src/context/auth", () => ({
   useAuth: () => mockUseAuth(),
 }));
 
-const project = {
-  id: "p1",
-  ownerCompanyId: "c1",
-  name: "Site",
-  gcCompanyId: null,
-  gcNameCustom: "GC",
-  status: "active" as const,
-  archivedAt: null,
-  createdAt: "2026-09-09",
-};
+const UUID_RE =
+  /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
+const mockReplayer = vi.fn();
 
 describe("useCreateProject", () => {
   let queryClient: QueryClient;
@@ -38,6 +38,11 @@ describe("useCreateProject", () => {
     });
     vi.clearAllMocks();
     mockUseAuth.mockReturnValue({ session: { access_token: "token-123" } });
+    vi.mocked(replayRegistry.createReplayer).mockReturnValue(mockReplayer);
+  });
+
+  afterEach(() => {
+    onlineManager.setOnline(true);
   });
 
   const wrapper = ({ children }: { children: React.ReactNode }) => (
@@ -49,34 +54,106 @@ describe("useCreateProject", () => {
     expect(result.current.isCreating).toBe(false);
   });
 
-  it("calls createProject with the token and input, then invalidates the projects query", async () => {
-    vi.mocked(apiProjects.createProject).mockResolvedValue(project);
-    const invalidateSpy = vi.spyOn(queryClient, "invalidateQueries");
+  it("runs mutationFn immediately even when TanStack Query's onlineManager reports offline", async () => {
+    // Without networkMode: "always", the default networkMode: "online" would
+    // pause mutationFn — the outbox write included — until onlineManager
+    // sees an `online` event, instead of running immediately and letting the
+    // outbox's own navigator.onLine check decide what happens next.
+    onlineManager.setOnline(false);
+    vi.mocked(outbox.enqueueMutation).mockResolvedValue({} as never);
 
     const { result } = renderHook(() => useCreateProject(), { wrapper });
-
     await result.current.createProject({ name: "Site", gcNameCustom: "GC" });
 
-    expect(apiProjects.createProject).toHaveBeenCalledWith("token-123", {
-      name: "Site",
-      gcNameCustom: "GC",
-    });
-    expect(invalidateSpy).toHaveBeenCalledWith({ queryKey: ["projects"] });
+    expect(outbox.enqueueMutation).toHaveBeenCalled();
   });
 
-  it("toasts the error and rejects when the mutation fails", async () => {
-    vi.mocked(apiProjects.createProject).mockRejectedValue(
-      new Error("This project already exists"),
+  it("enqueues a create with a generated id and the given replayer", async () => {
+    vi.mocked(outbox.enqueueMutation).mockResolvedValue({} as never);
+
+    const { result } = renderHook(() => useCreateProject(), { wrapper });
+    await result.current.createProject({ name: "Site", gcNameCustom: "GC" });
+
+    expect(replayRegistry.createReplayer).toHaveBeenCalledWith("token-123");
+    expect(outbox.enqueueMutation).toHaveBeenCalledWith(
+      {
+        entity: "project",
+        entityId: expect.stringMatching(UUID_RE),
+        op: "create",
+        payload: expect.objectContaining({
+          id: expect.stringMatching(UUID_RE),
+          name: "Site",
+          gcNameCustom: "GC",
+        }),
+      },
+      mockReplayer,
     );
+  });
+
+  it("optimistically adds the new project to the cached projects lists", async () => {
+    vi.mocked(outbox.enqueueMutation).mockResolvedValue({} as never);
+    queryClient.setQueryData(["projects", { includeArchived: false }], []);
+
+    const { result } = renderHook(() => useCreateProject(), { wrapper });
+    await result.current.createProject({ name: "Site", gcNameCustom: "GC" });
+
+    const cached = queryClient.getQueryData<{ name: string }[]>([
+      "projects",
+      { includeArchived: false },
+    ]);
+    expect(cached).toHaveLength(1);
+    expect(cached?.[0]).toMatchObject({ name: "Site", gcNameCustom: "GC" });
+  });
+
+  it("defaults gcCompanyId/gcNameCustom to null on the optimistic entry when omitted", async () => {
+    vi.mocked(outbox.enqueueMutation).mockResolvedValue({} as never);
+    queryClient.setQueryData(["projects", { includeArchived: false }], []);
+
+    const { result } = renderHook(() => useCreateProject(), { wrapper });
+    await result.current.createProject({ name: "Site", gcCompanyId: "gc-1" });
+
+    const cached = queryClient.getQueryData<
+      { gcCompanyId: string | null; gcNameCustom: string | null }[]
+    >(["projects", { includeArchived: false }]);
+    expect(cached?.[0]).toMatchObject({
+      gcCompanyId: "gc-1",
+      gcNameCustom: null,
+    });
+  });
+
+  it("enqueues with no replayer when there is no signed-in session", async () => {
+    mockUseAuth.mockReturnValue({ session: null });
+    vi.mocked(outbox.enqueueMutation).mockResolvedValue({} as never);
+
+    const { result } = renderHook(() => useCreateProject(), { wrapper });
+    await result.current.createProject({ name: "Site", gcNameCustom: "GC" });
+
+    expect(replayRegistry.createReplayer).not.toHaveBeenCalled();
+    expect(outbox.enqueueMutation).toHaveBeenCalledWith(
+      expect.anything(),
+      undefined,
+    );
+  });
+
+  it("rolls back the optimistic entry, toasts, and rejects when enqueue fails", async () => {
+    vi.mocked(outbox.enqueueMutation).mockRejectedValue(
+      new Error("A general contractor is required"),
+    );
+    queryClient.setQueryData(["projects", { includeArchived: false }], []);
 
     const { result } = renderHook(() => useCreateProject(), { wrapper });
 
     await expect(
       result.current.createProject({ name: "Site", gcNameCustom: "GC" }),
-    ).rejects.toThrow("This project already exists");
+    ).rejects.toThrow("A general contractor is required");
 
     await waitFor(() =>
-      expect(toast.error).toHaveBeenCalledWith("This project already exists"),
+      expect(toast.error).toHaveBeenCalledWith(
+        "A general contractor is required",
+      ),
     );
+    expect(
+      queryClient.getQueryData(["projects", { includeArchived: false }]),
+    ).toEqual([]);
   });
 });

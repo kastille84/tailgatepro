@@ -1,19 +1,27 @@
 import React from "react";
-import { describe, it, expect, vi, beforeEach } from "vitest";
+import { afterEach, describe, it, expect, vi, beforeEach } from "vitest";
 import { renderHook, waitFor } from "@testing-library/react";
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import {
+  onlineManager,
+  QueryClient,
+  QueryClientProvider,
+} from "@tanstack/react-query";
 import toast from "react-hot-toast";
 
 import { useArchiveProject } from "../../src/hooks/useArchiveProject";
-import * as apiProjects from "../../src/services/apiProjects";
+import * as outbox from "../../src/utils/db/outbox";
+import * as replayRegistry from "../../src/utils/db/replayRegistry";
 
 vi.mock("react-hot-toast");
-vi.mock("../../src/services/apiProjects");
+vi.mock("../../src/utils/db/outbox");
+vi.mock("../../src/utils/db/replayRegistry");
 
 const mockUseAuth = vi.fn();
 vi.mock("../../src/context/auth", () => ({
   useAuth: () => mockUseAuth(),
 }));
+
+const mockReplayer = vi.fn();
 
 const project = {
   id: "p1",
@@ -38,28 +46,47 @@ describe("useArchiveProject", () => {
     });
     vi.clearAllMocks();
     mockUseAuth.mockReturnValue({ session: { access_token: "token-123" } });
+    vi.mocked(replayRegistry.createReplayer).mockReturnValue(mockReplayer);
+  });
+
+  afterEach(() => {
+    onlineManager.setOnline(true);
   });
 
   const wrapper = ({ children }: { children: React.ReactNode }) => (
     <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
   );
 
-  it("patches archived:true, toasts 'archived', and invalidates the projects query", async () => {
-    vi.mocked(apiProjects.updateProject).mockResolvedValue(project);
-    const invalidateSpy = vi.spyOn(queryClient, "invalidateQueries");
+  it("runs mutationFn immediately even when TanStack Query's onlineManager reports offline", async () => {
+    onlineManager.setOnline(false);
+    vi.mocked(outbox.enqueueMutation).mockResolvedValue({} as never);
 
     const { result } = renderHook(() => useArchiveProject(), { wrapper });
     await result.current.archiveProject({ id: "p1", archived: true });
 
-    expect(apiProjects.updateProject).toHaveBeenCalledWith("token-123", "p1", {
-      archived: true,
-    });
+    expect(outbox.enqueueMutation).toHaveBeenCalled();
+  });
+
+  it("enqueues an archive op with the id and archived flag, toasts 'archived'", async () => {
+    vi.mocked(outbox.enqueueMutation).mockResolvedValue({} as never);
+
+    const { result } = renderHook(() => useArchiveProject(), { wrapper });
+    await result.current.archiveProject({ id: "p1", archived: true });
+
+    expect(outbox.enqueueMutation).toHaveBeenCalledWith(
+      {
+        entity: "project",
+        entityId: "p1",
+        op: "archive",
+        payload: { archived: true },
+      },
+      mockReplayer,
+    );
     expect(toast.success).toHaveBeenCalledWith("Project archived");
-    expect(invalidateSpy).toHaveBeenCalledWith({ queryKey: ["projects"] });
   });
 
   it("toasts 'restored' when archived is false", async () => {
-    vi.mocked(apiProjects.updateProject).mockResolvedValue(project);
+    vi.mocked(outbox.enqueueMutation).mockResolvedValue({} as never);
 
     const { result } = renderHook(() => useArchiveProject(), { wrapper });
     await result.current.archiveProject({ id: "p1", archived: false });
@@ -67,10 +94,48 @@ describe("useArchiveProject", () => {
     expect(toast.success).toHaveBeenCalledWith("Project restored");
   });
 
-  it("toasts the error and rejects when the mutation fails", async () => {
-    vi.mocked(apiProjects.updateProject).mockRejectedValue(
+  it("enqueues with no replayer when there is no signed-in session", async () => {
+    mockUseAuth.mockReturnValue({ session: null });
+    vi.mocked(outbox.enqueueMutation).mockResolvedValue({} as never);
+
+    const { result } = renderHook(() => useArchiveProject(), { wrapper });
+    await result.current.archiveProject({ id: "p1", archived: true });
+
+    expect(replayRegistry.createReplayer).not.toHaveBeenCalled();
+    expect(outbox.enqueueMutation).toHaveBeenCalledWith(
+      expect.anything(),
+      undefined,
+    );
+  });
+
+  it("optimistically moves the cached project out of the default view when archiving", async () => {
+    vi.mocked(outbox.enqueueMutation).mockResolvedValue({} as never);
+    queryClient.setQueryData(["projects", { includeArchived: false }], [
+      project,
+    ]);
+    queryClient.setQueryData(["projects", { includeArchived: true }], [
+      project,
+    ]);
+
+    const { result } = renderHook(() => useArchiveProject(), { wrapper });
+    await result.current.archiveProject({ id: "p1", archived: true });
+
+    expect(
+      queryClient.getQueryData(["projects", { includeArchived: false }]),
+    ).toEqual([]);
+    const archivedView = queryClient.getQueryData<{ archivedAt: string | null }[]>(
+      ["projects", { includeArchived: true }],
+    );
+    expect(archivedView?.[0].archivedAt).not.toBeNull();
+  });
+
+  it("rolls back the optimistic move, toasts the error, and rejects when the mutation fails", async () => {
+    vi.mocked(outbox.enqueueMutation).mockRejectedValue(
       new Error("Project not found"),
     );
+    queryClient.setQueryData(["projects", { includeArchived: false }], [
+      project,
+    ]);
 
     const { result } = renderHook(() => useArchiveProject(), { wrapper });
 
@@ -80,5 +145,8 @@ describe("useArchiveProject", () => {
     await waitFor(() =>
       expect(toast.error).toHaveBeenCalledWith("Project not found"),
     );
+    expect(
+      queryClient.getQueryData(["projects", { includeArchived: false }]),
+    ).toEqual([project]);
   });
 });

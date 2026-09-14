@@ -1,5 +1,5 @@
 import { ThemeProvider } from "styled-components";
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { QueryClientProvider } from "@tanstack/react-query";
 import { ReactQueryDevtools } from "@tanstack/react-query-devtools";
 import { BrowserRouter, Route, Routes } from "react-router-dom";
 import { Toaster } from "react-hot-toast";
@@ -10,6 +10,11 @@ import { OnlineStatusProvider } from "./context/online-status";
 
 import GlobalStyles from "./styles/GlobalStyles";
 import theme from "./styles/theme";
+import { queryClient } from "./utils/queryClient";
+// Registers how the offline queue replays a "project" outbox row — a
+// side-effect import, loaded once here so it's in place before any Projects
+// mutation can enqueue. See docs/offline-sync-design.md.
+import "./services/projectReplayHandler";
 
 import { Navbar } from "./ui_comps/navbar/Navbar";
 import { ScrollToTop } from "./ui_comps/scroll-to-top";
@@ -25,16 +30,6 @@ import { ResetPassword } from "./pages/ResetPassword";
 import { Dashboard } from "./pages/Dashboard";
 import { Projects } from "./pages/Projects";
 import { ContentLibrary } from "./pages/ContentLibrary";
-
-const queryClient = new QueryClient({
-  defaultOptions: {
-    queries: {
-      // staleTime: 60 * 1000,
-      staleTime: 0,
-      gcTime: 0,
-    },
-  },
-});
 
 function App() {
   return (

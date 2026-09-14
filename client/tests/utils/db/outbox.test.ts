@@ -47,7 +47,7 @@ describe("enqueueMutation", () => {
     );
 
     expect(replay).toHaveBeenCalledTimes(1);
-    expect((await tailgateDb.outbox.get(row.id))?.status).toBe("synced");
+    expect(await tailgateDb.outbox.get(row.id)).toBeUndefined(); // deleted once synced
     expect(await getPendingCount()).toBe(0);
   });
 
@@ -63,10 +63,116 @@ describe("enqueueMutation", () => {
     expect(replay).not.toHaveBeenCalled();
     expect((await tailgateDb.outbox.get(row.id))?.status).toBe("pending");
   });
+
+  it("rejects and discards the row when its first, online attempt fails", async () => {
+    const replay = vi
+      .fn()
+      .mockRejectedValue(new Error("A general contractor is required"));
+    setOnline(true);
+
+    await expect(
+      enqueueMutation(
+        { entity: "project", entityId: "project-1", op: "create", payload: {} },
+        replay,
+      ),
+    ).rejects.toThrow("A general contractor is required");
+
+    expect(await tailgateDb.outbox.count()).toBe(0); // discarded, not requeued
+    expect(await getPendingCount()).toBe(0);
+  });
+
+  it("does not discard or reject when the first, online attempt fails with a network error", async () => {
+    // A TypeError is what fetch() itself rejects with on a genuine network
+    // failure — distinct from the Error apiProjects.ts throws once a
+    // response is actually received. This should behave like being offline:
+    // stay queued, resolve normally — not like an invalid payload.
+    const replay = vi.fn().mockRejectedValue(new TypeError("Failed to fetch"));
+    setOnline(true);
+
+    const row = await enqueueMutation(
+      { entity: "project", entityId: "project-1", op: "create", payload: {} },
+      replay,
+    );
+
+    const stored = await tailgateDb.outbox.get(row.id);
+    expect(stored?.status).toBe("failed");
+    expect(stored?.attempts).toBe(1);
+    expect(await getPendingCount()).toBe(1);
+  });
+
+  it("does not discard or reject when the first, online attempt times out", async () => {
+    // fetchWithTimeout rejects with an error named "AbortError" on timeout.
+    const timeoutError = Object.assign(new Error("The operation was aborted."), {
+      name: "AbortError",
+    });
+    const replay = vi.fn().mockRejectedValue(timeoutError);
+    setOnline(true);
+
+    const row = await enqueueMutation(
+      { entity: "project", entityId: "project-1", op: "create", payload: {} },
+      replay,
+    );
+
+    const stored = await tailgateDb.outbox.get(row.id);
+    expect(stored?.status).toBe("failed");
+    expect(stored?.attempts).toBe(1);
+    expect(await getPendingCount()).toBe(1);
+  });
+
+  it("does not reject when an earlier unsynced row for the same entity already exists — it just joins the queue", async () => {
+    // No replayer on this first call, so it stays pending without attempting.
+    await enqueueMutation({
+      entity: "project",
+      entityId: "project-1",
+      op: "update",
+      payload: { name: "first" },
+    });
+    const replay = vi.fn().mockResolvedValue(undefined);
+
+    const row = await enqueueMutation(
+      {
+        entity: "project",
+        entityId: "project-1",
+        op: "update",
+        payload: { name: "second" },
+      },
+      replay,
+    );
+
+    // Both rows flushed, in order, once the chain was clear to run.
+    expect(replay).toHaveBeenCalledTimes(2);
+    expect(await tailgateDb.outbox.get(row.id)).toBeUndefined(); // deleted once synced
+    expect(await getPendingCount()).toBe(0);
+  });
+
+  it("rejects with a TimeoutError instead of hanging forever when the local write never settles", async () => {
+    // Simulates a blocked/stuck IndexedDB connection (e.g. another open tab)
+    // — the write itself is what hangs here, before any network is involved.
+    vi.useFakeTimers();
+    const addSpy = vi
+      .spyOn(tailgateDb.outbox, "add")
+      .mockReturnValue(new Promise(() => {}) as never);
+
+    const promise = enqueueMutation({
+      entity: "project",
+      entityId: "project-1",
+      op: "create",
+      payload: {},
+    });
+    const assertion = expect(promise).rejects.toMatchObject({
+      name: "TimeoutError",
+    });
+
+    await vi.advanceTimersByTimeAsync(5000);
+    await assertion;
+
+    addSpy.mockRestore();
+    vi.useRealTimers();
+  });
 });
 
 describe("flush", () => {
-  it("marks a successfully replayed row synced and stamps syncedAt", async () => {
+  it("deletes a successfully replayed row rather than keeping it marked synced", async () => {
     const row = await enqueueMutation({
       entity: "project",
       entityId: "project-1",
@@ -76,9 +182,7 @@ describe("flush", () => {
 
     await flush(vi.fn().mockResolvedValue(undefined));
 
-    const synced = await tailgateDb.outbox.get(row.id);
-    expect(synced?.status).toBe("synced");
-    expect(synced?.syncedAt).not.toBeNull();
+    expect(await tailgateDb.outbox.get(row.id)).toBeUndefined();
   });
 
   it("marks a failed row failed, increments attempts, and keeps it retry-eligible", async () => {
@@ -99,7 +203,7 @@ describe("flush", () => {
 
     // A later flush retries it and can succeed.
     await flush(vi.fn().mockResolvedValue(undefined));
-    expect((await tailgateDb.outbox.get(row.id))?.status).toBe("synced");
+    expect(await tailgateDb.outbox.get(row.id)).toBeUndefined(); // deleted once synced
   });
 
   it("stores a stringified lastError when the replayer rejects with a non-Error", async () => {
@@ -208,7 +312,32 @@ describe("flush", () => {
     expect(calls).toEqual(["create-a", "create-b"]);
     expect((await tailgateDb.outbox.get("create-a"))?.status).toBe("failed");
     expect((await tailgateDb.outbox.get("update-a"))?.status).toBe("pending");
-    expect((await tailgateDb.outbox.get("create-b"))?.status).toBe("synced");
+    expect(await tailgateDb.outbox.get("create-b")).toBeUndefined(); // deleted once synced
+  });
+
+  it("watchRowId only rethrows on a row's first attempt — a later failure stays silent and retry-eligible", async () => {
+    await tailgateDb.outbox.add({
+      id: "watched",
+      entity: "project",
+      entityId: "project-1",
+      op: "update",
+      payload: {},
+      status: "failed",
+      attempts: 1, // already failed once before
+      lastError: "previous error",
+      createdAt: "2026-09-13T00:00:00.000Z",
+      syncedAt: null,
+    });
+
+    await expect(
+      flush(vi.fn().mockRejectedValue(new Error("still down")), {
+        watchRowId: "watched",
+      }),
+    ).resolves.toBeUndefined();
+
+    const row = await tailgateDb.outbox.get("watched");
+    expect(row?.status).toBe("failed");
+    expect(row?.attempts).toBe(2);
   });
 
   it("is a no-op while a flush is already running", async () => {
@@ -235,6 +364,31 @@ describe("flush", () => {
     releaseFirst();
     await firstFlush;
     expect(firstReplay).toHaveBeenCalledTimes(1);
+  });
+
+  it("rejects with a TimeoutError instead of hanging when a status update never settles", async () => {
+    await enqueueMutation({
+      entity: "project",
+      entityId: "project-1",
+      op: "create",
+      payload: {},
+    });
+
+    vi.useFakeTimers();
+    const updateSpy = vi
+      .spyOn(tailgateDb.outbox, "update")
+      .mockReturnValue(new Promise(() => {}) as never);
+
+    const promise = flush(vi.fn().mockResolvedValue(undefined));
+    const assertion = expect(promise).rejects.toMatchObject({
+      name: "TimeoutError",
+    });
+
+    await vi.advanceTimersByTimeAsync(5000);
+    await assertion;
+
+    updateSpy.mockRestore();
+    vi.useRealTimers();
   });
 });
 

@@ -355,9 +355,14 @@ then favorites + custom talks.
 - [x] Online/offline indicator: `context/online-status/` + `SyncStatusBanner`, wired into `App.tsx`
       (plus `utils/db/replayRegistry.ts` — lets a feature register how to replay its own outbox
       rows without the provider needing to know about it; see design doc)
-- [ ] Retro-fit Projects create/edit/archive (PATCH)/delete (DELETE) through the queue — highest-risk
-      change, lands last; includes `createProject`/`CreateProjectInput` taking an explicit `id`
-      and a server-side idempotency check for retried `create` calls (see design doc)
+- [x] Retro-fit Projects create/edit/archive (PATCH)/delete (DELETE) through the queue —
+      `createProject`/`CreateProjectInput` now take an explicit `id`; `useProjects` falls back to
+      the offline `projectsCache` when the live fetch fails. A synchronous online failure (e.g. a
+      validation error, or the 409 archive-instead guard) still rejects immediately and is
+      discarded rather than retried — see design doc's "Error surfacing" addendum. The
+      server-side idempotency check for a retried `create` call (duplicate client-generated `id`)
+      is deferred — not yet hit in practice since a first-attempt online failure is now discarded
+      rather than replayed; revisit if/when true background retry of a `create` ships.
 
 ## Phase 4 — Run-a-Talk flow + signatures · epic
 
