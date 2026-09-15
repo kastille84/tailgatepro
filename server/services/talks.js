@@ -6,7 +6,7 @@ const { composeTalkMarkdown } = require("../utility/composeTalkMarkdown");
 // mapper applied to each row before it leaves the service. Services never leak
 // DB column names to the controller layer.
 const TALK_COLUMNS =
-  "id, slug, title, trade_tag, trade_tags, content, structured, attribution, is_global, company_id, created_at";
+  "id, slug, title, trade_tag, trade_tags, content, structured, attribution, quiz, is_global, company_id, created_at";
 
 const toTalk = (row) => ({
   id: row.id,
@@ -17,6 +17,7 @@ const toTalk = (row) => ({
   content: row.content,
   structured: row.structured ?? null,
   attribution: row.attribution ?? null,
+  quiz: row.quiz ?? null,
   isGlobal: row.is_global,
   companyId: row.company_id,
   createdAt: row.created_at,

@@ -26,6 +26,16 @@ export interface TalkAttribution {
   notice: string;
 }
 
+/** One question of a talk's comprehension quiz. `correctIndex` is a 0-based
+ *  index into `choices`. See docs/meeting-flow-design.md — `quiz_score`/
+ *  `quiz_answers` are recorded per-signature (one crew member's answers),
+ *  not per-meeting. */
+export interface TalkQuizQuestion {
+  question: string;
+  choices: string[];
+  correctIndex: number;
+}
+
 export interface Talk {
   id: string;
   slug: string;
@@ -38,6 +48,10 @@ export interface Talk {
   content: string;
   structured: TalkStructured | null;
   attribution: TalkAttribution | null;
+  /** `toolbox_talks.quiz` — exactly 3 questions when present, null for talks
+   *  not yet authored with a quiz (see docs/meeting-flow-design.md). Mirrors
+   *  the server's `toTalk` output. */
+  quiz: TalkQuizQuestion[] | null;
   isGlobal: boolean;
   companyId: string | null;
   createdAt: string;

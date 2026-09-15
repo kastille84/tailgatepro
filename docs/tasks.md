@@ -548,23 +548,49 @@ unit tests, same as how 4b–4d shipped server code ahead of any client UI.
       file; `npx eslint` clean on every new/changed file; `tsc -b` shows no new errors (still hits
       only the pre-existing, unrelated `Input.tsx`/`Dashboard.tsx` failures noted under Phase 1)
 
-### 4f — Client: standalone capture components
+### 4f — Client: standalone capture components · status: code complete, 100% coverage; TTS real-device check still owed
 
-- [ ] `ui_comps/signature-pad/` wrapping `signature_pad` (new dependency — flag in the `npm
-    install` diff), exports a PNG blob into `mediaBlobs`
-- [ ] `client/src/hooks/useTalkAudio.ts` wrapping `window.speechSynthesis` (async `voiceschanged`,
-      language selection limited to voices actually present). Manual verify on a real
-      Android/Chrome and iOS/Safari device with the radio off — confirm TTS genuinely works
-      offline before relying on the PRD's offline claim
-- [ ] `features/meeting-flow/Quiz.tsx` — renders `talk.quiz`'s 3 questions; client-side pass/fail
-      is UX-only, server always recomputes authoritatively
-- [ ] Photo capture via plain `<input type="file" accept="image/*" capture="environment">` (no
-      library) — must show explicit copy that the photo is for attendance/proof-of-training only,
-      is not analyzed/matched against any biometric database, and offer a skip option (PRD §4.3
-      BIPA-adjacent requirement — part of this sub-phase's definition of done)
-- [ ] Verify: per-component tests — signature pad captures a stroke and exports a blob; TTS hook
-      plays/stops and degrades gracefully with zero voices; quiz blocks continue until answered
-      and shows pass/fail; photo input's compliance copy renders and skip works
+- [x] `ui_comps/signature-pad/` wrapping `signature_pad` (new dependency, `client/package.json`) —
+      `SignaturePad.tsx` (imperative `clear`/`isEmpty`/`exportBlob` handle, `ref` taken as a plain
+      prop per `docs/ui-inputs.md`, high-DPI + resize handling) + pure `utils.ts`
+      (`dataUrlToBlob`, since jsdom has no real 2D canvas to export a PNG from) + `styles.ts`.
+      Purely presentational — does not touch `mediaBlobs`/the outbox itself; wiring an exported
+      blob into `storeMediaBlob`/`useUploadSignatureBlob` is the 4g wizard's job. 28 tests across
+      `SignaturePad.test.tsx` + `utils.test.ts`, 100% coverage
+- [x] `client/src/hooks/useTalkAudio.ts` wrapping `window.speechSynthesis` — loads voices via both
+      the synchronous `getVoices()` call and the async `voiceschanged` event, degrades to safe
+      no-ops with zero voices/no `speechSynthesis` support, cancels in-flight speech on unmount.
+      13 tests in `useTalkAudio.test.tsx`, 100% coverage. Manual verify on a real Android/Chrome
+      and iOS/Safari device with the radio off — confirm TTS genuinely works offline before
+      relying on the PRD's offline claim — **still owed**, same as every prior phase's
+      real-device item
+- [x] `features/meeting-flow/Quiz.tsx` — renders `talk.quiz`'s 3 questions via `ui_comps/radio`'s
+      `RadioGroup` (one group per question); Continue is disabled until every question has an
+      answer (enforced by the button's own `disabled` state, not a redundant runtime guard); a
+      pass/fail summary shows once everything's answered, computed client-side for UX feedback
+      only — `onContinue` hands back `{questionIndex, selectedIndex}[]` in the exact shape
+      `apiSignatures.ts`'s `CreateSignatureInput.quizAnswers` expects, so 4g can pass it straight
+      through; the server always recomputes `quiz_score`/`quiz_passed` authoritatively (see
+      docs/meeting-flow-design.md). Same presentational-only 4f/4g boundary as SignaturePad — no
+      `useCreateSignature` call in here. Required threading `quiz`/`TalkQuizQuestion` through
+      `interfaces/talk.ts`, `server/services/talks.js`'s `TALK_COLUMNS`/`toTalk`, and
+      `useCreateTalk.ts` (custom talks default `quiz: null` — quiz authoring for custom talks is
+      out of scope here)
+- [x] `features/meeting-flow/PhotoCapture.tsx` — plain `<input type="file" accept="image/*"
+      capture="environment">` (no library), opens the device camera directly on mobile; the
+      BIPA-adjacent compliance notice ("attendance/proof-of-training only, not analyzed or
+      matched against any facial-recognition or biometric database... optional") is always
+      visible, not just on hover/error, per PRD §4.3; a Skip button; a live preview (object URL,
+      revoked on replace/unmount so retakes don't leak blobs). Hands back the chosen `File` via
+      `onCapture` — same presentational-only boundary, no `mediaBlobs`/outbox wiring here
+- [x] Verify: per-component tests — 12 new tests (`Quiz.test.tsx`, `PhotoCapture.test.tsx`) on top
+      of the pre-existing SignaturePad/useTalkAudio suites: quiz blocks Continue until every
+      question is answered and shows a pass/fail summary that doesn't gate Continue; photo
+      input's compliance copy always renders, capture/retake/skip all fire their callbacks
+      correctly, and the previous preview URL is revoked on replace/unmount. Full client suite:
+      648 tests passing, 100% coverage maintained across every file; `npx eslint` clean; `tsc -b`
+      shows no new errors (still only the pre-existing, unrelated `Input.tsx`/`Dashboard.tsx`
+      failures noted under Phase 1)
 
 ### 4g — Client: meeting wizard integration
 

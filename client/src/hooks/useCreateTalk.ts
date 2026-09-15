@@ -70,6 +70,7 @@ export const useCreateTalk = () => {
           estimated_minutes: payload.estimatedMinutes ?? null,
         },
         attribution: null,
+        quiz: null,
         isGlobal: false,
         // Unknown until the write syncs — never read in the UI.
         companyId: "",
