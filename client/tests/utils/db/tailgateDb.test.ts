@@ -8,6 +8,8 @@ import {
 import type { OutboxRow } from "../../../src/interfaces/sync";
 import type { Project } from "../../../src/interfaces/project";
 import type { Talk } from "../../../src/interfaces/talk";
+import type { MeetingDraftRow } from "../../../src/interfaces/meetingDraft";
+import type { MediaBlobRow } from "../../../src/interfaces/mediaBlob";
 
 const outboxRow: OutboxRow = {
   id: "row-1",
@@ -47,17 +49,37 @@ const talk: Talk = {
   createdAt: "2026-09-13T00:00:00.000Z",
 };
 
+const meetingDraft: MeetingDraftRow = {
+  id: "draft-1",
+  projectId: "project-1",
+  talkId: null,
+  status: "in_progress",
+  updatedAt: "2026-09-15T00:00:00.000Z",
+  data: {},
+};
+
+const mediaBlob: MediaBlobRow = {
+  id: "blob-1",
+  blob: new Blob(["x"], { type: "image/png" }),
+  mimeType: "image/png",
+  createdAt: "2026-09-15T00:00:00.000Z",
+};
+
 afterEach(async () => {
   await Promise.all([
     tailgateDb.outbox.clear(),
     tailgateDb.projectsCache.clear(),
     tailgateDb.talksCache.clear(),
+    tailgateDb.meetingDraftCache.clear(),
+    tailgateDb.mediaBlobs.clear(),
   ]);
 });
 
 describe("tailgateDb", () => {
-  it("opens with the outbox, projectsCache, and talksCache tables", () => {
+  it("opens with the outbox, projectsCache, talksCache, meetingDraftCache, and mediaBlobs tables", () => {
     expect(tailgateDb.tables.map((t) => t.name).sort()).toEqual([
+      "mediaBlobs",
+      "meetingDraftCache",
       "outbox",
       "projectsCache",
       "talksCache",
@@ -133,6 +155,36 @@ describe("tailgateDb", () => {
       .toArray();
 
     expect(roofing.map((t) => t.id)).toEqual(["talk-1"]);
+  });
+
+  it("round-trips a row through the meetingDraftCache table, keyed by id", async () => {
+    await tailgateDb.meetingDraftCache.put(meetingDraft);
+
+    expect(await tailgateDb.meetingDraftCache.get("draft-1")).toEqual(
+      meetingDraft,
+    );
+  });
+
+  it("finds meeting drafts by the projectId index", async () => {
+    await tailgateDb.meetingDraftCache.bulkPut([
+      meetingDraft,
+      { ...meetingDraft, id: "draft-2", projectId: "project-2" },
+    ]);
+
+    const forProject1 = await tailgateDb.meetingDraftCache
+      .where("projectId")
+      .equals("project-1")
+      .toArray();
+
+    expect(forProject1.map((d) => d.id)).toEqual(["draft-1"]);
+  });
+
+  it("round-trips a row through the mediaBlobs table, keyed by id", async () => {
+    await tailgateDb.mediaBlobs.put(mediaBlob);
+
+    expect((await tailgateDb.mediaBlobs.get("blob-1"))?.mimeType).toBe(
+      "image/png",
+    );
   });
 });
 

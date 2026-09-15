@@ -169,6 +169,21 @@ describe("enqueueMutation", () => {
     addSpy.mockRestore();
     vi.useRealTimers();
   });
+
+  it("includes dependsOnEntityId on the row when given", async () => {
+    const row = await enqueueMutation({
+      entity: "signature",
+      entityId: "signature-1",
+      op: "create",
+      payload: {},
+      dependsOnEntityId: "meeting-1",
+    });
+
+    expect(row.dependsOnEntityId).toBe("meeting-1");
+    expect((await tailgateDb.outbox.get(row.id))?.dependsOnEntityId).toBe(
+      "meeting-1",
+    );
+  });
 });
 
 describe("flush", () => {
@@ -389,6 +404,267 @@ describe("flush", () => {
 
     updateSpy.mockRestore();
     vi.useRealTimers();
+  });
+});
+
+describe("flush — dependsOnEntityId", () => {
+  it("skips a row whose dependency is still in the outbox, leaving it pending", async () => {
+    const calls: string[] = [];
+    const replay = vi.fn(async (row: OutboxRow) => {
+      calls.push(row.id);
+      throw new Error("dependency never synced in this pass");
+    });
+
+    await tailgateDb.outbox.bulkAdd([
+      {
+        id: "meeting-create",
+        entity: "meeting_log",
+        entityId: "meeting-1",
+        op: "create",
+        payload: {},
+        status: "pending",
+        attempts: 0,
+        lastError: null,
+        createdAt: "2026-09-15T00:00:01.000Z",
+        syncedAt: null,
+      },
+      {
+        id: "signature-create",
+        entity: "signature",
+        entityId: "signature-1",
+        op: "create",
+        payload: {},
+        status: "pending",
+        attempts: 0,
+        lastError: null,
+        createdAt: "2026-09-15T00:00:02.000Z",
+        syncedAt: null,
+        dependsOnEntityId: "meeting-1",
+      },
+    ]);
+
+    await flush(replay);
+
+    // The meeting-log row was attempted (and failed); the dependent
+    // signature row was never attempted at all.
+    expect(calls).toEqual(["meeting-create"]);
+    expect((await tailgateDb.outbox.get("signature-create"))?.status).toBe(
+      "pending",
+    );
+  });
+
+  it("attempts a dependent row once its dependency has synced, in the same pass", async () => {
+    const calls: string[] = [];
+    const replay = vi.fn(async (row: OutboxRow) => {
+      calls.push(row.id);
+    });
+
+    await tailgateDb.outbox.bulkAdd([
+      {
+        id: "meeting-create",
+        entity: "meeting_log",
+        entityId: "meeting-1",
+        op: "create",
+        payload: {},
+        status: "pending",
+        attempts: 0,
+        lastError: null,
+        createdAt: "2026-09-15T00:00:01.000Z",
+        syncedAt: null,
+      },
+      {
+        id: "signature-create",
+        entity: "signature",
+        entityId: "signature-1",
+        op: "create",
+        payload: {},
+        status: "pending",
+        attempts: 0,
+        lastError: null,
+        createdAt: "2026-09-15T00:00:02.000Z",
+        syncedAt: null,
+        dependsOnEntityId: "meeting-1",
+      },
+    ]);
+
+    await flush(replay);
+
+    // The meeting-log row synced (deleted) before the signature row was
+    // reached, so its dependency check finds nothing outstanding.
+    expect(calls).toEqual(["meeting-create", "signature-create"]);
+    expect(await tailgateDb.outbox.get("signature-create")).toBeUndefined();
+  });
+
+  it("cascades an unresolved dependency to a later same-entityId row, without marking either row failed", async () => {
+    const calls: string[] = [];
+    const replay = vi.fn(async (row: OutboxRow) => {
+      calls.push(row.id);
+      if (row.id === "meeting-create") throw new Error("boom");
+    });
+
+    await tailgateDb.outbox.bulkAdd([
+      {
+        id: "meeting-create",
+        entity: "meeting_log",
+        entityId: "meeting-1",
+        op: "create",
+        payload: {},
+        status: "pending",
+        attempts: 0,
+        lastError: null,
+        createdAt: "2026-09-15T00:00:01.000Z",
+        syncedAt: null,
+      },
+      {
+        id: "signature-create",
+        entity: "signature",
+        entityId: "signature-1",
+        op: "create",
+        payload: {},
+        status: "pending",
+        attempts: 0,
+        lastError: null,
+        createdAt: "2026-09-15T00:00:02.000Z",
+        syncedAt: null,
+        dependsOnEntityId: "meeting-1",
+      },
+      {
+        // Chained to signature-create via the ordinary same-entityId
+        // mechanism (a signature blob upload) — must not slip through just
+        // because the create row was skipped rather than failed.
+        id: "signature-blob",
+        entity: "signature",
+        entityId: "signature-1",
+        op: "update",
+        payload: {},
+        status: "pending",
+        attempts: 0,
+        lastError: null,
+        createdAt: "2026-09-15T00:00:03.000Z",
+        syncedAt: null,
+      },
+    ]);
+
+    await flush(replay);
+
+    expect(calls).toEqual(["meeting-create"]);
+    expect((await tailgateDb.outbox.get("meeting-create"))?.status).toBe(
+      "failed",
+    );
+    expect((await tailgateDb.outbox.get("signature-create"))?.status).toBe(
+      "pending",
+    );
+    expect((await tailgateDb.outbox.get("signature-blob"))?.status).toBe(
+      "pending",
+    );
+  });
+
+  it("does not affect a row with no dependsOnEntityId (Projects/Talks regression)", async () => {
+    const calls: string[] = [];
+    const replay = vi.fn(async (row: OutboxRow) => {
+      calls.push(row.id);
+    });
+
+    await tailgateDb.outbox.bulkAdd([
+      {
+        id: "project-create",
+        entity: "project",
+        entityId: "project-1",
+        op: "create",
+        payload: {},
+        status: "pending",
+        attempts: 0,
+        lastError: null,
+        createdAt: "2026-09-15T00:00:01.000Z",
+        syncedAt: null,
+      },
+      {
+        id: "talk-create",
+        entity: "talk",
+        entityId: "talk-1",
+        op: "create",
+        payload: {},
+        status: "pending",
+        attempts: 0,
+        lastError: null,
+        createdAt: "2026-09-15T00:00:02.000Z",
+        syncedAt: null,
+      },
+    ]);
+
+    await flush(replay);
+
+    expect(calls).toEqual(["project-create", "talk-create"]);
+  });
+});
+
+describe("flush — already-exists 409", () => {
+  it("deletes (rather than fails) a create row whose replay rejects with an 'already exists' message", async () => {
+    const row = await enqueueMutation({
+      entity: "meeting_log",
+      entityId: "meeting-1",
+      op: "create",
+      payload: {},
+    });
+
+    await flush(
+      vi.fn().mockRejectedValue(new Error("This meeting already exists")),
+    );
+
+    expect(await tailgateDb.outbox.get(row.id)).toBeUndefined();
+    expect(await getPendingCount()).toBe(0);
+  });
+
+  it("resolves rather than rejects when the already-exists row is the watched row", async () => {
+    const replay = vi
+      .fn()
+      .mockRejectedValue(new Error("This signature already exists"));
+    setOnline(true);
+
+    const row = await enqueueMutation(
+      { entity: "signature", entityId: "signature-1", op: "create", payload: {} },
+      replay,
+    );
+
+    expect(await tailgateDb.outbox.get(row.id)).toBeUndefined();
+  });
+
+  it("does not treat an 'already exists' message as synced on a non-create op", async () => {
+    const row = await enqueueMutation({
+      entity: "signature",
+      entityId: "signature-1",
+      op: "update",
+      payload: {},
+    });
+
+    await flush(
+      vi.fn().mockRejectedValue(new Error("This signature already exists")),
+    );
+
+    const stored = await tailgateDb.outbox.get(row.id);
+    expect(stored?.status).toBe("failed");
+  });
+
+  it("does not treat a differently-worded 409 as synced", async () => {
+    const row = await enqueueMutation({
+      entity: "meeting_log",
+      entityId: "meeting-1",
+      op: "create",
+      payload: {},
+    });
+
+    await flush(
+      vi
+        .fn()
+        .mockRejectedValue(
+          new Error(
+            "This meeting has already been completed and can't be changed.",
+          ),
+        ),
+    );
+
+    const stored = await tailgateDb.outbox.get(row.id);
+    expect(stored?.status).toBe("failed");
   });
 });
 

@@ -17,6 +17,10 @@ import { queryClient } from "./utils/queryClient";
 import "./services/projectReplayHandler";
 // Same, for a "talk" outbox row.
 import "./services/talkReplayHandler";
+// Same, for "meeting_log" and "crew_photo" outbox rows.
+import "./services/meetingLogReplayHandler";
+// Same, for a "signature" outbox row.
+import "./services/signatureReplayHandler";
 
 import { Navbar } from "./ui_comps/navbar/Navbar";
 import { ScrollToTop } from "./ui_comps/scroll-to-top";

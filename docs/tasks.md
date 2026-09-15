@@ -490,25 +490,63 @@ offline-capable from day one, not as an online-only v1.
       cleanly, confirm a post-completion upload 409s, confirm cross-company 404) still needs a live
       session token
 
-### 4e — Client: offline-queue extension
+### 4e — Client: offline-queue extension · status: code complete, 100% coverage; no UI consumes it yet (4f/4g)
 
-- [ ] `client/src/interfaces/sync.ts` — `SyncEntity` widened to add `"meeting_log" | "signature" |
-    "crew_photo"`; `OutboxRow` gains optional `dependsOnEntityId?: string`
-- [ ] `client/src/utils/db/outbox.ts` — `flush()` skips a row whose `dependsOnEntityId` hasn't
-      synced yet (closes the cross-entity-ordering gap the design doc identifies); also treats a
-      recognizable 409/"already exists" replay error as a successful sync instead of retrying
-      forever (closes the Phase 3 audit finding above). Regression tests must prove
-      Projects/Talks rows (no `dependsOnEntityId`) behave identically to before
-- [ ] `client/src/utils/db/tailgateDb.ts` — new `meetingDraftCache` and `mediaBlobs` (raw `Blob`
-      storage) Dexie tables
-- [ ] `client/src/services/meetingLogReplayHandler.ts` / `signatureReplayHandler.ts` (mirror
-      `talkReplayHandler.ts`; the blob-upload case PUTs a raw body instead of JSON)
-- [ ] `client/src/services/apiMeetingLogs.ts` / `apiSignatures.ts` (`fetchWithTimeout` wrappers,
-      matches `apiTalks.ts`); `useCreateMeetingLog` / `useCreateSignature` / `useUploadCrewPhoto`
-      hooks, `networkMode: "always"` per the `useCreateTalk.ts` template
-- [ ] Verify: unit tests for the `dependsOnEntityId` skip logic, the blob-upload replay path, the
-      409-as-success path, and full regression of `outbox.test.ts` / existing replay-handler tests
-      unchanged
+Plan: `~/.claude/plans/let-s-work-on-4e-idempotent-eich.md`. Pure plumbing — types, Dexie tables,
+outbox mechanics, API wrapper functions, replay handlers, four mutation hooks — verified only by
+unit tests, same as how 4b–4d shipped server code ahead of any client UI.
+
+- [x] `client/src/interfaces/sync.ts` — `SyncEntity` widened to `"project" | "talk" |
+      "meeting_log" | "signature" | "crew_photo"`; `OutboxRow` gains optional
+      `dependsOnEntityId?: string`. New `meetingLog.ts` / `signature.ts` / `mediaBlob.ts` /
+      `meetingDraft.ts` interfaces (mirroring `talk.ts`'s camelCase-mapper style)
+- [x] `client/src/utils/db/outbox.ts` — `EnqueueInput` gains `dependsOnEntityId?`; `flush()` skips
+      a row whose `dependsOnEntityId` still has an outstanding row elsewhere in the outbox
+      (closes the cross-entity-ordering gap), cascading the skip into `poisonedEntityIds` so a
+      same-`entityId` follow-up (e.g. a signature's blob-upload row) can't slip through while its
+      create is merely skipped rather than failed; new `isAlreadyExistsError` helper treats a
+      `create`-op row whose replay message matches `/already exists/i` as a successful sync
+      (deleted, not failed) instead of retrying forever — detected by message text (the server's
+      JSON envelope carries no status code) so `apiProjects.ts`/`apiTalks.ts` need zero changes,
+      closing the Phase 3 audit finding for every entity, not just the three new ones. 11 new
+      regression/new-case tests in `outbox.test.ts` (27 total), full existing suite unmodified
+- [x] Entity/op design (documented in the plan, not literally spelled out in this checklist):
+      `meeting_log` create has no dependency; `signature` create sets `dependsOnEntityId` to its
+      parent meeting log; `signature` blob upload reuses op `"update"` and the *same* `entityId`
+      as its own create (chained via the outbox's existing same-entityId ordering, no
+      `dependsOnEntityId` needed); `crew_photo` upload (`op: "update"`) reuses its parent meeting
+      log's own id as `entityId` — there's no separate crew-photo record server-side. `SyncOp` was
+      not widened
+- [x] `client/src/utils/db/tailgateDb.ts` — new `meetingDraftCache` (`id, projectId, status,
+      updatedAt`) and `mediaBlobs` (`id`, raw `Blob` storage) tables added into the existing
+      `version(1)` block (no live data, no existing migration precedent — revisit at the first
+      breaking change against real deployed data); new `client/src/utils/db/mediaBlobs.ts`
+      (`storeMediaBlob`/`getMediaBlob`/`deleteMediaBlob`, `withTimeout`-guarded like `outbox.ts`)
+- [x] `client/src/services/apiMeetingLogs.ts` (`createMeetingLog`, `uploadCrewPhoto`) /
+      `apiSignatures.ts` (`createSignature`, `uploadSignatureBlob`) — mirror `apiTalks.ts`'s
+      `fetchWithTimeout`/`authHeaders`/`GENERIC_ERROR` pattern; the two upload functions are this
+      codebase's first raw-`Blob`-body PUTs (`Content-Type` set to the blob's real mime type, no
+      `JSON.stringify`)
+- [x] `client/src/services/meetingLogReplayHandler.ts` (registers both `"meeting_log"` and
+      `"crew_photo"`) / `signatureReplayHandler.ts` (registers `"signature"`, create + blob-upload
+      `update` cases) — mirror `talkReplayHandler.ts`; the blob-upload cases are the one place a
+      replay handler's body isn't JSON, reading the blob back out of `mediaBlobs` by the id
+      carried in `payload` and deleting it only once the upload succeeds. No cache to invalidate
+      yet — no `useMeetingLogs`/`useSignatures` query exists until 4f/4g
+- [x] `client/src/hooks/useCreateMeetingLog.ts` / `useCreateSignature.ts` (sets
+      `dependsOnEntityId`) / `useUploadCrewPhoto.ts` / `useUploadSignatureBlob.ts` (a 4th hook not
+      literally named in this checklist's original bullet, but needed — `signatureReplayHandler`'s
+      blob-upload case has no other caller) — `networkMode: "always"` per `useCreateTalk.ts`;
+      deliberately skip optimistic-cache machinery (no list view exists yet to reconcile); the two
+      create hooks return the client-generated id synchronously (the wizard needs it before any
+      server round-trip completes)
+- [x] `client/src/App.tsx` — two new side-effect imports (`meetingLogReplayHandler`,
+      `signatureReplayHandler`) next to the existing `talkReplayHandler` one
+- [x] Verify: 108 new tests across 10 files (outbox dependency/409 cases, `mediaBlobs.ts`,
+      `tailgateDb.ts` table round-trips, both api wrapper files, both replay handlers, all four
+      hooks) — full client suite 608 tests passing, 100% coverage maintained on every touched
+      file; `npx eslint` clean on every new/changed file; `tsc -b` shows no new errors (still hits
+      only the pre-existing, unrelated `Input.tsx`/`Dashboard.tsx` failures noted under Phase 1)
 
 ### 4f — Client: standalone capture components
 
