@@ -68,6 +68,10 @@ CREATE TABLE toolbox_talks (
   -- CPWR/NIOSH copyright markings and no-endorsement notice travel with the
   -- talk (a CPWR licensing condition). See docs/content-attribution.md.
   attribution JSONB,
+  -- Phase 4: exactly 3 { question, choices: string[], correctIndex } objects,
+  -- read aloud/quizzed post-TTS-playback before a worker can sign. See
+  -- docs/meeting-flow-design.md.
+  quiz JSONB,
   is_global BOOLEAN DEFAULT true,
   company_id UUID REFERENCES companies(id) ON DELETE CASCADE,
   created_at TIMESTAMPTZ DEFAULT NOW()
@@ -84,6 +88,7 @@ ALTER TABLE toolbox_talks ENABLE ROW LEVEL SECURITY;
 -- ALTER TABLE toolbox_talks ADD COLUMN IF NOT EXISTS trade_tags TEXT[];
 -- ALTER TABLE toolbox_talks ADD COLUMN IF NOT EXISTS structured JSONB;
 -- ALTER TABLE toolbox_talks ADD COLUMN IF NOT EXISTS attribution JSONB;
+-- ALTER TABLE toolbox_talks ADD COLUMN IF NOT EXISTS quiz JSONB;
 -- CREATE INDEX IF NOT EXISTS idx_toolbox_talks_trades ON toolbox_talks USING GIN (trade_tags);
 -- ALTER TABLE toolbox_talks ENABLE ROW LEVEL SECURITY;
 
@@ -110,11 +115,29 @@ CREATE TABLE meeting_logs (
   project_id UUID REFERENCES projects(id) ON DELETE CASCADE,
   talk_id UUID REFERENCES toolbox_talks(id) ON DELETE SET NULL,
   foreman_id UUID REFERENCES users(id) ON DELETE SET NULL,
+  -- Denormalized from projects.owner_company_id (Phase 4) so the service layer
+  -- can scope access with a single-column filter, same as every other table,
+  -- instead of a join through projects. Set once at create, never updated.
+  company_id UUID REFERENCES companies(id),
   crew_photo_url TEXT,
   final_pdf_url TEXT,
+  -- Set once the meeting has >=1 signature; locks the meeting_log and its
+  -- signatures against further changes (see docs/meeting-flow-design.md) and
+  -- is the Phase 5 PDF-generation trigger point.
+  completed_at TIMESTAMPTZ,
   synced_at TIMESTAMPTZ,
   created_at TIMESTAMPTZ DEFAULT NOW()
 );
+
+-- Server-only table: enable RLS with NO policies so the public anon key is
+-- denied all access. The server's service-role key bypasses RLS and still works.
+ALTER TABLE meeting_logs ENABLE ROW LEVEL SECURITY;
+
+-- If the table already exists from an earlier run, add the new columns instead:
+-- ALTER TABLE meeting_logs ADD COLUMN IF NOT EXISTS company_id UUID REFERENCES companies(id);
+-- ALTER TABLE meeting_logs ADD COLUMN IF NOT EXISTS completed_at TIMESTAMPTZ;
+-- ALTER TABLE meeting_logs ENABLE ROW LEVEL SECURITY;
+-- UPDATE meeting_logs SET company_id = (SELECT owner_company_id FROM projects WHERE projects.id = meeting_logs.project_id) WHERE company_id IS NULL;
 
 -- 8. Signatures
 CREATE TABLE signatures (
@@ -123,8 +146,22 @@ CREATE TABLE signatures (
   worker_name TEXT NOT NULL,
   signature_path TEXT NOT NULL,
   quiz_passed BOOLEAN,
+  -- Server-computed only (quiz_score = 3 -> quiz_passed = true); never trust a
+  -- client-supplied pass/fail. quiz_answers records what was actually
+  -- answered: [{ questionIndex, selectedIndex, correct }].
+  quiz_score SMALLINT,
+  quiz_answers JSONB,
   created_at TIMESTAMPTZ DEFAULT NOW()
 );
+
+-- Server-only table: enable RLS with NO policies so the public anon key is
+-- denied all access. The server's service-role key bypasses RLS and still works.
+ALTER TABLE signatures ENABLE ROW LEVEL SECURITY;
+
+-- If the table already exists from an earlier run, add the new columns instead:
+-- ALTER TABLE signatures ADD COLUMN IF NOT EXISTS quiz_score SMALLINT;
+-- ALTER TABLE signatures ADD COLUMN IF NOT EXISTS quiz_answers JSONB;
+-- ALTER TABLE signatures ENABLE ROW LEVEL SECURITY;
 
 -- 9. Waitlist (landing-page early-access signups)
 CREATE TABLE waitlist (
