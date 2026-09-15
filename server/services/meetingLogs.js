@@ -1,12 +1,16 @@
 const { supabase } = require("../utility/supabaseClient");
 const { AppError } = require("../utility/AppError");
 const pdfGenerationQueue = require("./pdfGenerationQueue");
+const storageService = require("./storage");
 
 // The columns every meeting_logs query selects, and the snake_case ->
 // camelCase mapper applied to each row before it leaves the service. Services
 // never leak DB column names to the controller layer.
 const MEETING_LOG_COLUMNS =
   "id, project_id, talk_id, foreman_id, company_id, crew_photo_url, final_pdf_url, completed_at, synced_at, created_at";
+
+const CREW_PHOTO_BUCKET = "crew-photos";
+const CREW_PHOTO_URL_TTL_SECONDS = 300;
 
 const toMeetingLog = (row) => ({
   id: row.id,
@@ -189,4 +193,60 @@ const complete = async ({ id, companyId }) => {
   return toMeetingLog(data);
 };
 
-module.exports = { create, listForCompany, getById, complete, assertNotCompleted };
+// The path a meeting's crew photo lives at, relative to the `crew-photos`
+// bucket. A meeting has at most one crew photo (`crew_photo_url` is a single
+// column, not a gallery), so there's no separate photo id in the path — a
+// retake overwrites the same object (storage.uploadBlob always upserts).
+const crewPhotoPath = (id) => `${id}/photo.jpg`;
+
+// Uploads (or replaces) a meeting's crew photo. Blocked once the meeting is
+// completed — an upload is new evidence attached to the record, subject to
+// the same immutability rule as a new signature row.
+const uploadCrewPhoto = async ({ id, companyId, buffer, contentType }) => {
+  await assertNotCompleted(id, companyId);
+
+  const path = crewPhotoPath(id);
+  await storageService.uploadBlob(CREW_PHOTO_BUCKET, path, buffer, contentType);
+
+  const { data, error } = await supabase
+    .from("meeting_logs")
+    .update({ crew_photo_url: path })
+    .eq("id", id)
+    .eq("company_id", companyId)
+    .select(MEETING_LOG_COLUMNS)
+    .single();
+
+  if (error) {
+    if (error.code === "PGRST116") {
+      throw new AppError("Meeting not found", 404, { cause: error });
+    }
+    throw new AppError("Could not save the crew photo", 502, { cause: error });
+  }
+
+  return toMeetingLog(data);
+};
+
+// A 5-minute signed URL for a meeting's crew photo, once one exists.
+const getCrewPhotoUrl = async (id, companyId) => {
+  const meeting = await getById(id, companyId);
+
+  if (!meeting.crewPhotoUrl) {
+    throw new AppError("No crew photo has been uploaded for this meeting", 404);
+  }
+
+  return storageService.getSignedUrl(
+    CREW_PHOTO_BUCKET,
+    meeting.crewPhotoUrl,
+    CREW_PHOTO_URL_TTL_SECONDS,
+  );
+};
+
+module.exports = {
+  create,
+  listForCompany,
+  getById,
+  complete,
+  assertNotCompleted,
+  uploadCrewPhoto,
+  getCrewPhotoUrl,
+};

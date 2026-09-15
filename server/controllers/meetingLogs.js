@@ -56,3 +56,31 @@ exports.completeMeeting = async (req, res, next) => {
     return next(error);
   }
 };
+
+// req.body is a raw Buffer here (see the route's `express.raw` middleware),
+// not the parsed JSON object every other controller in this file sees.
+exports.uploadCrewPhoto = async (req, res, next) => {
+  try {
+    const data = await meetingLogsService.uploadCrewPhoto({
+      id: req.params.id,
+      companyId: req.user.companyId,
+      buffer: req.body,
+      contentType: req.get("Content-Type"),
+    });
+    return res.status(200).json({ success: true, data });
+  } catch (error) {
+    return next(error);
+  }
+};
+
+exports.getCrewPhotoUrl = async (req, res, next) => {
+  try {
+    const url = await meetingLogsService.getCrewPhotoUrl(
+      req.params.id,
+      req.user.companyId,
+    );
+    return res.status(200).json({ success: true, data: { url } });
+  } catch (error) {
+    return next(error);
+  }
+};

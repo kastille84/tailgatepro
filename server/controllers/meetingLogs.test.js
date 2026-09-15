@@ -5,12 +5,16 @@ const {
   getMeeting,
   createMeeting,
   completeMeeting,
+  uploadCrewPhoto,
+  getCrewPhotoUrl,
 } = require("./meetingLogs");
 
 const listForCompanySpy = vi.spyOn(meetingLogsService, "listForCompany");
 const getByIdSpy = vi.spyOn(meetingLogsService, "getById");
 const createSpy = vi.spyOn(meetingLogsService, "create");
 const completeSpy = vi.spyOn(meetingLogsService, "complete");
+const uploadCrewPhotoSpy = vi.spyOn(meetingLogsService, "uploadCrewPhoto");
+const getCrewPhotoUrlSpy = vi.spyOn(meetingLogsService, "getCrewPhotoUrl");
 
 const meeting = {
   id: "meeting-1",
@@ -35,11 +39,14 @@ describe("meetingLogs controller", () => {
     getByIdSpy.mockReset();
     createSpy.mockReset();
     completeSpy.mockReset();
+    uploadCrewPhotoSpy.mockReset();
+    getCrewPhotoUrlSpy.mockReset();
     req = {
       params: {},
       query: {},
       body: {},
       user: { id: "user-1", companyId: "company-1" },
+      get: vi.fn().mockReturnValue("image/jpeg"),
     };
     res = {
       status: vi.fn().mockReturnThis(),
@@ -207,6 +214,80 @@ describe("meetingLogs controller", () => {
 
       // Act
       await completeMeeting(req, res, next);
+
+      // Assert
+      expect(next).toHaveBeenCalledWith(error);
+      expect(res.status).not.toHaveBeenCalled();
+    });
+  });
+
+  describe("uploadCrewPhoto", () => {
+    it("should call the service with req.params.id, the caller's companyId, the raw body Buffer, and the Content-Type header, then respond 200", async () => {
+      // Arrange
+      req.params = { id: "meeting-1" };
+      req.body = Buffer.from("jpg-bytes");
+      const updated = { ...meeting, crewPhotoUrl: "meeting-1/photo.jpg" };
+      uploadCrewPhotoSpy.mockResolvedValue(updated);
+
+      // Act
+      await uploadCrewPhoto(req, res, next);
+
+      // Assert
+      expect(uploadCrewPhotoSpy).toHaveBeenCalledWith({
+        id: "meeting-1",
+        companyId: "company-1",
+        buffer: req.body,
+        contentType: "image/jpeg",
+      });
+      expect(res.status).toHaveBeenCalledWith(200);
+      expect(res.json).toHaveBeenCalledWith({ success: true, data: updated });
+      expect(next).not.toHaveBeenCalled();
+    });
+
+    it("should forward a service error to next() (e.g. the already-completed 409 guard)", async () => {
+      // Arrange
+      req.params = { id: "meeting-1" };
+      const error = new Error(
+        "This meeting has already been completed and can't be changed.",
+      );
+      uploadCrewPhotoSpy.mockRejectedValue(error);
+
+      // Act
+      await uploadCrewPhoto(req, res, next);
+
+      // Assert
+      expect(next).toHaveBeenCalledWith(error);
+      expect(res.status).not.toHaveBeenCalled();
+    });
+  });
+
+  describe("getCrewPhotoUrl", () => {
+    it("should call the service with req.params.id + the caller's companyId and respond 200 with the signed url", async () => {
+      // Arrange
+      req.params = { id: "meeting-1" };
+      getCrewPhotoUrlSpy.mockResolvedValue("https://signed.example/photo.jpg");
+
+      // Act
+      await getCrewPhotoUrl(req, res, next);
+
+      // Assert
+      expect(getCrewPhotoUrlSpy).toHaveBeenCalledWith("meeting-1", "company-1");
+      expect(res.status).toHaveBeenCalledWith(200);
+      expect(res.json).toHaveBeenCalledWith({
+        success: true,
+        data: { url: "https://signed.example/photo.jpg" },
+      });
+      expect(next).not.toHaveBeenCalled();
+    });
+
+    it("should forward a service error to next() (e.g. no crew photo uploaded yet)", async () => {
+      // Arrange
+      req.params = { id: "meeting-1" };
+      const error = new Error("No crew photo has been uploaded for this meeting");
+      getCrewPhotoUrlSpy.mockRejectedValue(error);
+
+      // Act
+      await getCrewPhotoUrl(req, res, next);
 
       // Assert
       expect(next).toHaveBeenCalledWith(error);

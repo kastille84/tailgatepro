@@ -459,18 +459,36 @@ offline-capable from day one, not as an online-only v1.
       → post-completion 409 → cross-company 404) still needs a live session token, same as every
       prior phase's manual-smoke item
 
-### 4d — Server: binary upload broker
+### 4d — Server: binary upload broker · status: code complete; curl smoke with a real Bearer token pending
 
-- [ ] `server/services/storage.js` — `uploadBlob(bucket, path, buffer, contentType)`,
-      `getSignedUrl(bucket, path, ttlSeconds)` — the one place any server code touches
+- [x] `server/services/storage.js` — `uploadBlob(bucket, path, buffer, contentType)` (always
+      `upsert: true`, so a retry/retake overwrites cleanly instead of erroring on a duplicate
+      object), `getSignedUrl(bucket, path, ttlSeconds)` — the one place any server code touches
       `supabase.storage`
-- [ ] `PUT /api/signatures/:id/blob` (`express.raw`, `image/png`, 1MB limit) and
-      `PUT /api/meetings/:id/crew-photo` (`express.raw`, `image/*`, 10MB limit), wired into the
-      `signatures`/`meetingLogs` services (authorization already lives there)
-- [ ] `GET /api/signatures/:id/url` / `GET /api/meetings/:id/crew-photo-url` — 5-minute signed URLs
-- [ ] Verify: PUT a small PNG, confirm it lands at the expected private-bucket path and the DB path
-      column updates; confirm the signed-URL endpoint works and expires; confirm cross-company 404
-      even with a guessed valid id
+- [x] Housekeeping: fixed 4c's `signatures.create` to store `signature_path` relative to the
+      `signatures` bucket (`{meetingId}/{id}.png`) instead of bucket-prefixed
+      (`signatures/{meetingId}/{id}.png`) — caught before any storage call depended on the wrong
+      convention. Updated `docs/meeting-flow-design.md` and `Supabase_Schema.md` to match; crew
+      photo path simplified to `{meetingId}/photo.jpg` (no separate photo id — a meeting has at
+      most one crew photo, and a retake upserts the same object)
+- [x] `server/services/signatures.js` gained `getById` (scoped to the caller's company via a
+      PostgREST embedded filter through `meeting_logs`, since `signatures` has no `company_id` of
+      its own), `uploadBlob` and `getSignedUrl` (both guarded by `meetingLogs.assertNotCompleted` —
+      an upload is new evidence, blocked once the meeting is completed, same as a new signature row)
+- [x] `server/services/meetingLogs.js` gained `uploadCrewPhoto` (guarded by `assertNotCompleted`,
+      persists `crew_photo_url`) and `getCrewPhotoUrl` (404s if no photo uploaded yet)
+- [x] `PUT /api/meetings/:meetingId/signatures/:id/blob` (`express.raw`, `image/png`, 1MB limit)
+      and `PUT /api/meetings/:id/crew-photo` (`express.raw`, `image/*`, 10MB limit) — confirmed the
+      global `bodyParser.json()` in `server.js` no-ops for non-JSON content types, so no server.js
+      change was needed for the raw body to reach these routes; no `multer` dependency added
+- [x] `GET /api/meetings/:meetingId/signatures/:id/url` / `GET /api/meetings/:id/crew-photo-url` —
+      5-minute signed URLs
+- [x] 26 new service/controller tests (182 server tests passing total, up from 156)
+- [x] Verify (partial): booted the server and confirmed all 4 new routes return 401, not
+      404/the SPA fallback. Full curl-with-a-real-Bearer-token pass (PUT a PNG, confirm it lands at
+      the expected path, confirm the signed URL works and expires, confirm a re-upload overwrites
+      cleanly, confirm a post-completion upload 409s, confirm cross-company 404) still needs a live
+      session token
 
 ### 4e — Client: offline-queue extension
 

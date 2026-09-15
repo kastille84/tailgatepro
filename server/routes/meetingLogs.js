@@ -9,6 +9,8 @@ const {
   getMeeting,
   createMeeting,
   completeMeeting,
+  uploadCrewPhoto,
+  getCrewPhotoUrl,
 } = require("../controllers/meetingLogs");
 const signaturesRoutes = require("./signatures");
 
@@ -73,6 +75,33 @@ router.patch(
   [param("id").isUUID().withMessage("A valid meeting id is required")],
   validate,
   completeMeeting,
+);
+
+// PUT /api/meetings/:id/crew-photo — replaces (or first sets) the meeting's
+// optional crew photo. `express.raw` reads the request body as a Buffer
+// (`req.body`) instead of parsing it — the global `bodyParser.json()` in
+// server.js only consumes bodies whose Content-Type is application/json, so
+// it no-ops for an image upload and leaves the stream for this middleware.
+// No new dependency (e.g. multer) needed for a single-file raw body.
+router.put(
+  "/:id/crew-photo",
+  requireAuth,
+  loadUserContext,
+  [param("id").isUUID().withMessage("A valid meeting id is required")],
+  validate,
+  express.raw({ type: "image/*", limit: "10mb" }),
+  uploadCrewPhoto,
+);
+
+// GET /api/meetings/:id/crew-photo-url — a short-lived signed URL, per
+// docs/data-access.md ("private buckets, the server issues signed URLs").
+router.get(
+  "/:id/crew-photo-url",
+  requireAuth,
+  loadUserContext,
+  [param("id").isUUID().withMessage("A valid meeting id is required")],
+  validate,
+  getCrewPhotoUrl,
 );
 
 // Nested under /api/meetings/:meetingId/signatures — see

@@ -88,10 +88,16 @@ matching the no-client-direct-Supabase-access rule already in force for table da
 script, `scripts/setup-storage-buckets.js` (same shape as `scripts/seed-talks.js`: uses the
 service-role client, safe to re-run, no-op if the bucket already exists).
 
-**Path convention**: `signatures/{meetingLogId}/{signatureId}.png`, `crew-photos/{meetingLogId}/{photoId}.jpg`.
+**Path convention**: within the `signatures` bucket, `{meetingLogId}/{signatureId}.png`; within the
+`crew-photos` bucket, `{meetingLogId}/photo.jpg`. Paths are always relative to their bucket — the
+bucket name is never repeated inside the path itself, since `.from(bucket)` already selects it.
 Scoping every object under its `meetingLogId` is what lets the signed-URL endpoint authorize a read
 by checking the caller's company owns that meeting's project — no separate object-ownership table
-needed.
+needed. A meeting has at most one crew photo (`crew_photo_url` is a single column, not a gallery),
+so there's no separate photo id in its path — a retake overwrites the same object (uploads always
+`upsert: true`, so a re-upload to either bucket's deterministic path is idempotent rather than
+erroring on a duplicate object, matching the offline-sync design's "a retry resolves to the same
+end state" principle).
 
 **Write path**: two raw-body PUT endpoints, deliberately kept JSON-free rather than adding `multer`
 as a new dependency (`express.raw()` is sufficient for a single-file body):

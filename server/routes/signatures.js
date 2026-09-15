@@ -4,7 +4,12 @@ const { body, param } = require("express-validator");
 const { requireAuth } = require("../middlewares/requireAuth");
 const { loadUserContext } = require("../middlewares/loadUserContext");
 const { validate } = require("../middlewares/validate");
-const { listSignatures, createSignature } = require("../controllers/signatures");
+const {
+  listSignatures,
+  createSignature,
+  uploadSignatureBlob,
+  getSignatureUrl,
+} = require("../controllers/signatures");
 
 // mergeParams: true — this router is nested under
 // /api/meetings/:meetingId/signatures (see server/routes/meetingLogs.js) and
@@ -53,6 +58,38 @@ router.post(
   ],
   validate,
   createSignature,
+);
+
+// PUT /api/meetings/:meetingId/signatures/:id/blob — uploads the signature
+// image to its already-known deterministic path. `express.raw` reads the
+// body as a Buffer instead of parsing it — see the crew-photo route in
+// server/routes/meetingLogs.js for why the global JSON body-parser doesn't
+// interfere.
+router.put(
+  "/:id/blob",
+  requireAuth,
+  loadUserContext,
+  [
+    param("meetingId").isUUID().withMessage("A valid meeting id is required"),
+    param("id").isUUID().withMessage("A valid signature id is required"),
+  ],
+  validate,
+  express.raw({ type: "image/png", limit: "1mb" }),
+  uploadSignatureBlob,
+);
+
+// GET /api/meetings/:meetingId/signatures/:id/url — a short-lived signed URL,
+// per docs/data-access.md ("private buckets, the server issues signed URLs").
+router.get(
+  "/:id/url",
+  requireAuth,
+  loadUserContext,
+  [
+    param("meetingId").isUUID().withMessage("A valid meeting id is required"),
+    param("id").isUUID().withMessage("A valid signature id is required"),
+  ],
+  validate,
+  getSignatureUrl,
 );
 
 module.exports = router;

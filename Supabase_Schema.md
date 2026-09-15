@@ -99,10 +99,10 @@ Both private (`public: false`), created via `scripts/setup-storage-buckets.js`. 
 calls the Storage SDK directly — the server issues 5-minute signed URLs after confirming the
 caller's company owns the parent meeting's project (see `docs/data-access.md`).
 
-| Bucket | Path convention | Written by |
+| Bucket | Path (relative to the bucket) | Written by |
 | :--- | :--- | :--- |
-| `signatures` | `signatures/{meetingLogId}/{signatureId}.png` | `PUT /api/signatures/:id/blob` |
-| `crew-photos` | `crew-photos/{meetingLogId}/{photoId}.jpg` | `PUT /api/meetings/:id/crew-photo` |
+| `signatures` | `{meetingLogId}/{signatureId}.png` | `PUT /api/meetings/:meetingId/signatures/:id/blob` |
+| `crew-photos` | `{meetingLogId}/photo.jpg` (one per meeting; a retake upserts the same object) | `PUT /api/meetings/:id/crew-photo` |
 
 ### 5. Marketing
 

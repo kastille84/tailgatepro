@@ -1,12 +1,15 @@
 // Plain CommonJS — see requireAuth.test.js for why (nested require() sharing).
 const { supabase } = require("../utility/supabaseClient");
 const pdfGenerationQueue = require("./pdfGenerationQueue");
+const storageService = require("./storage");
 const {
   create,
   listForCompany,
   getById,
   complete,
   assertNotCompleted,
+  uploadCrewPhoto,
+  getCrewPhotoUrl,
 } = require("./meetingLogs");
 
 const MEETING_LOG_COLUMNS =
@@ -479,5 +482,170 @@ describe("meetingLogs service: complete", () => {
       message: "Could not complete the meeting",
     });
     expect(pdfGenerationQueue.enqueue).not.toHaveBeenCalled();
+  });
+});
+
+describe("meetingLogs service: uploadCrewPhoto", () => {
+  let guardSingle;
+  let guardEqCompany;
+  let guardEqId;
+  let guardSelect;
+
+  let updateSingle;
+  let updateSelectAfter;
+  let updateEqCompany;
+  let updateEqId;
+  let updateFn;
+
+  const photoRow = { ...dbRow, crew_photo_url: "meeting-1/photo.jpg" };
+  const mappedPhoto = { ...mappedMeetingLog, crewPhotoUrl: "meeting-1/photo.jpg" };
+
+  beforeEach(() => {
+    guardSingle = vi.fn().mockResolvedValue({
+      data: { id: "meeting-1", talk_id: "talk-1", completed_at: null },
+      error: null,
+    });
+    guardEqCompany = vi.fn(() => ({ single: guardSingle }));
+    guardEqId = vi.fn(() => ({ eq: guardEqCompany }));
+    guardSelect = vi.fn(() => ({ eq: guardEqId }));
+
+    updateSingle = vi.fn().mockResolvedValue({ data: photoRow, error: null });
+    updateSelectAfter = vi.fn(() => ({ single: updateSingle }));
+    updateEqCompany = vi.fn(() => ({ select: updateSelectAfter }));
+    updateEqId = vi.fn(() => ({ eq: updateEqCompany }));
+    updateFn = vi.fn(() => ({ eq: updateEqId }));
+
+    fromSpy.mockReset();
+    fromSpy.mockImplementation((table) => {
+      if (table === "meeting_logs") return { select: guardSelect, update: updateFn };
+      throw new Error(`Unexpected table: ${table}`);
+    });
+
+    vi.spyOn(storageService, "uploadBlob").mockReset().mockResolvedValue(undefined);
+  });
+
+  it("should confirm the meeting isn't completed, upload to its deterministic path, and persist crew_photo_url", async () => {
+    // Act
+    const result = await uploadCrewPhoto({
+      id: "meeting-1",
+      companyId: "company-1",
+      buffer: Buffer.from("jpg-bytes"),
+      contentType: "image/jpeg",
+    });
+
+    // Assert
+    expect(guardEqId).toHaveBeenCalledWith("id", "meeting-1");
+    expect(storageService.uploadBlob).toHaveBeenCalledWith(
+      "crew-photos",
+      "meeting-1/photo.jpg",
+      Buffer.from("jpg-bytes"),
+      "image/jpeg",
+    );
+    expect(updateFn).toHaveBeenCalledWith({ crew_photo_url: "meeting-1/photo.jpg" });
+    expect(result).toEqual(mappedPhoto);
+  });
+
+  it("should throw a 409 AppError when the meeting is already completed, without uploading", async () => {
+    // Arrange
+    guardSingle.mockResolvedValue({
+      data: {
+        id: "meeting-1",
+        talk_id: "talk-1",
+        completed_at: "2026-09-13T00:00:00.000Z",
+      },
+      error: null,
+    });
+
+    // Act & Assert
+    await expect(
+      uploadCrewPhoto({
+        id: "meeting-1",
+        companyId: "company-1",
+        buffer: Buffer.from("x"),
+        contentType: "image/jpeg",
+      }),
+    ).rejects.toMatchObject({ statusCode: 409 });
+    expect(storageService.uploadBlob).not.toHaveBeenCalled();
+  });
+
+  it("should throw a 502 AppError when persisting crew_photo_url fails", async () => {
+    // Arrange
+    updateSingle.mockResolvedValue({ data: null, error: { code: "OTHER" } });
+
+    // Act & Assert
+    await expect(
+      uploadCrewPhoto({
+        id: "meeting-1",
+        companyId: "company-1",
+        buffer: Buffer.from("x"),
+        contentType: "image/jpeg",
+      }),
+    ).rejects.toMatchObject({
+      statusCode: 502,
+      message: "Could not save the crew photo",
+    });
+  });
+});
+
+describe("meetingLogs service: getCrewPhotoUrl", () => {
+  let single;
+  let eqCompany;
+  let eqId;
+  let select;
+
+  beforeEach(() => {
+    single = vi.fn().mockResolvedValue({
+      data: { ...dbRow, crew_photo_url: "meeting-1/photo.jpg" },
+      error: null,
+    });
+    eqCompany = vi.fn(() => ({ single }));
+    eqId = vi.fn(() => ({ eq: eqCompany }));
+    select = vi.fn(() => ({ eq: eqId }));
+
+    fromSpy.mockReset();
+    fromSpy.mockImplementation((table) => {
+      if (table === "meeting_logs") return { select };
+      throw new Error(`Unexpected table: ${table}`);
+    });
+
+    vi.spyOn(storageService, "getSignedUrl")
+      .mockReset()
+      .mockResolvedValue("https://signed.example/photo.jpg");
+  });
+
+  it("should return a 5-minute signed URL for an existing crew photo", async () => {
+    // Act
+    const url = await getCrewPhotoUrl("meeting-1", "company-1");
+
+    // Assert
+    expect(storageService.getSignedUrl).toHaveBeenCalledWith(
+      "crew-photos",
+      "meeting-1/photo.jpg",
+      300,
+    );
+    expect(url).toBe("https://signed.example/photo.jpg");
+  });
+
+  it("should throw a 404 AppError when the meeting has no crew photo yet", async () => {
+    // Arrange
+    single.mockResolvedValue({ data: dbRow, error: null }); // crew_photo_url: null
+
+    // Act & Assert
+    await expect(getCrewPhotoUrl("meeting-1", "company-1")).rejects.toMatchObject({
+      statusCode: 404,
+      message: "No crew photo has been uploaded for this meeting",
+    });
+    expect(storageService.getSignedUrl).not.toHaveBeenCalled();
+  });
+
+  it("should propagate the meeting-not-found error", async () => {
+    // Arrange
+    single.mockResolvedValue({ data: null, error: { code: "PGRST116" } });
+
+    // Act & Assert
+    await expect(getCrewPhotoUrl("missing", "company-1")).rejects.toMatchObject({
+      statusCode: 404,
+      message: "Meeting not found",
+    });
   });
 });

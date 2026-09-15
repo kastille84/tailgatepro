@@ -1,7 +1,14 @@
 // Plain CommonJS — see requireAuth.test.js for why (nested require() sharing).
 const { supabase } = require("../utility/supabaseClient");
 const meetingLogsService = require("./meetingLogs");
-const { create, listForMeeting } = require("./signatures");
+const storageService = require("./storage");
+const {
+  create,
+  listForMeeting,
+  getById,
+  uploadBlob,
+  getSignedUrl,
+} = require("./signatures");
 
 const SIGNATURE_COLUMNS =
   "id, meeting_id, worker_name, signature_path, quiz_passed, quiz_score, quiz_answers, created_at";
@@ -16,7 +23,7 @@ const dbRow = {
   id: "sig-1",
   meeting_id: "meeting-1",
   worker_name: "Alex Worker",
-  signature_path: "signatures/meeting-1/sig-1.png",
+  signature_path: "meeting-1/sig-1.png",
   quiz_passed: true,
   quiz_score: 3,
   quiz_answers: [
@@ -31,7 +38,7 @@ const mappedSignature = {
   id: "sig-1",
   meetingId: "meeting-1",
   workerName: "Alex Worker",
-  signaturePath: "signatures/meeting-1/sig-1.png",
+  signaturePath: "meeting-1/sig-1.png",
   quizPassed: true,
   quizScore: 3,
   quizAnswers: dbRow.quiz_answers,
@@ -41,6 +48,8 @@ const mappedSignature = {
 const fromSpy = vi.spyOn(supabase, "from");
 const assertNotCompletedSpy = vi.spyOn(meetingLogsService, "assertNotCompleted");
 const getByIdSpy = vi.spyOn(meetingLogsService, "getById");
+const uploadBlobSpy = vi.spyOn(storageService, "uploadBlob");
+const getSignedUrlSpy = vi.spyOn(storageService, "getSignedUrl");
 
 describe("signatures service: create", () => {
   let talkSingle;
@@ -96,7 +105,7 @@ describe("signatures service: create", () => {
       id: "sig-1",
       meeting_id: "meeting-1",
       worker_name: "Alex Worker",
-      signature_path: "signatures/meeting-1/sig-1.png",
+      signature_path: "meeting-1/sig-1.png",
       quiz_passed: true,
       quiz_score: 3,
       quiz_answers: dbRow.quiz_answers,
@@ -272,5 +281,177 @@ describe("signatures service: listForMeeting", () => {
     await expect(
       listForMeeting("meeting-1", "company-1"),
     ).rejects.toMatchObject({ statusCode: 502, message: "Could not load signatures" });
+  });
+});
+
+describe("signatures service: getById", () => {
+  let single;
+  let eqCompany;
+  let eqId;
+  let select;
+
+  beforeEach(() => {
+    single = vi.fn().mockResolvedValue({ data: dbRow, error: null });
+    eqCompany = vi.fn(() => ({ single }));
+    eqId = vi.fn(() => ({ eq: eqCompany }));
+    select = vi.fn(() => ({ eq: eqId }));
+
+    fromSpy.mockReset();
+    fromSpy.mockImplementation((table) => {
+      if (table === "signatures") return { select };
+      throw new Error(`Unexpected table: ${table}`);
+    });
+  });
+
+  it("should fetch one signature scoped to its parent meeting's company via an embedded filter, mapped to camelCase", async () => {
+    // Act
+    const result = await getById("sig-1", "company-1");
+
+    // Assert
+    expect(select).toHaveBeenCalledWith(
+      `${SIGNATURE_COLUMNS}, meeting_logs!inner(company_id)`,
+    );
+    expect(eqId).toHaveBeenCalledWith("id", "sig-1");
+    expect(eqCompany).toHaveBeenCalledWith("meeting_logs.company_id", "company-1");
+    expect(result).toEqual(mappedSignature);
+  });
+
+  it("should throw a 404 AppError when no row matches the id and company", async () => {
+    // Arrange
+    single.mockResolvedValue({ data: null, error: { code: "PGRST116" } });
+
+    // Act & Assert
+    await expect(getById("missing", "company-1")).rejects.toMatchObject({
+      statusCode: 404,
+      message: "Signature not found",
+    });
+  });
+
+  it("should throw a 502 AppError on any other query failure", async () => {
+    // Arrange
+    single.mockResolvedValue({ data: null, error: { code: "OTHER" } });
+
+    // Act & Assert
+    await expect(getById("sig-1", "company-1")).rejects.toMatchObject({
+      statusCode: 502,
+      message: "Could not load the signature",
+    });
+  });
+});
+
+describe("signatures service: uploadBlob", () => {
+  let single;
+  let eqCompany;
+  let eqId;
+  let select;
+
+  beforeEach(() => {
+    single = vi.fn().mockResolvedValue({ data: dbRow, error: null });
+    eqCompany = vi.fn(() => ({ single }));
+    eqId = vi.fn(() => ({ eq: eqCompany }));
+    select = vi.fn(() => ({ eq: eqId }));
+
+    fromSpy.mockReset();
+    fromSpy.mockImplementation((table) => {
+      if (table === "signatures") return { select };
+      throw new Error(`Unexpected table: ${table}`);
+    });
+
+    assertNotCompletedSpy.mockReset().mockResolvedValue({
+      id: "meeting-1",
+      talkId: "talk-1",
+    });
+    uploadBlobSpy.mockReset().mockResolvedValue(undefined);
+  });
+
+  it("should look up the signature, confirm its meeting isn't completed, upload to its stored path, and return the signature", async () => {
+    // Act
+    const result = await uploadBlob(
+      "sig-1",
+      "company-1",
+      Buffer.from("png-bytes"),
+      "image/png",
+    );
+
+    // Assert
+    expect(assertNotCompletedSpy).toHaveBeenCalledWith("meeting-1", "company-1");
+    expect(uploadBlobSpy).toHaveBeenCalledWith(
+      "signatures",
+      "meeting-1/sig-1.png",
+      Buffer.from("png-bytes"),
+      "image/png",
+    );
+    expect(result).toEqual(mappedSignature);
+  });
+
+  it("should propagate the already-completed error without uploading", async () => {
+    // Arrange
+    const error = new Error(
+      "This meeting has already been completed and can't be changed.",
+    );
+    assertNotCompletedSpy.mockRejectedValue(error);
+
+    // Act & Assert
+    await expect(
+      uploadBlob("sig-1", "company-1", Buffer.from("x"), "image/png"),
+    ).rejects.toBe(error);
+    expect(uploadBlobSpy).not.toHaveBeenCalled();
+  });
+
+  it("should propagate the signature-not-found error without checking completion", async () => {
+    // Arrange
+    single.mockResolvedValue({ data: null, error: { code: "PGRST116" } });
+
+    // Act & Assert
+    await expect(
+      uploadBlob("missing", "company-1", Buffer.from("x"), "image/png"),
+    ).rejects.toMatchObject({ statusCode: 404 });
+    expect(assertNotCompletedSpy).not.toHaveBeenCalled();
+  });
+});
+
+describe("signatures service: getSignedUrl", () => {
+  let single;
+  let eqCompany;
+  let eqId;
+  let select;
+
+  beforeEach(() => {
+    single = vi.fn().mockResolvedValue({ data: dbRow, error: null });
+    eqCompany = vi.fn(() => ({ single }));
+    eqId = vi.fn(() => ({ eq: eqCompany }));
+    select = vi.fn(() => ({ eq: eqId }));
+
+    fromSpy.mockReset();
+    fromSpy.mockImplementation((table) => {
+      if (table === "signatures") return { select };
+      throw new Error(`Unexpected table: ${table}`);
+    });
+
+    getSignedUrlSpy.mockReset().mockResolvedValue("https://signed.example/sig-1.png");
+  });
+
+  it("should look up the signature, then request a 5-minute signed URL for its stored path", async () => {
+    // Act
+    const url = await getSignedUrl("sig-1", "company-1");
+
+    // Assert
+    expect(getSignedUrlSpy).toHaveBeenCalledWith(
+      "signatures",
+      "meeting-1/sig-1.png",
+      300,
+    );
+    expect(url).toBe("https://signed.example/sig-1.png");
+  });
+
+  it("should propagate the signature-not-found error without requesting a URL", async () => {
+    // Arrange
+    single.mockResolvedValue({ data: null, error: { code: "PGRST116" } });
+
+    // Act & Assert
+    await expect(getSignedUrl("missing", "company-1")).rejects.toMatchObject({
+      statusCode: 404,
+    });
+    expect(getSignedUrlSpy).not.toHaveBeenCalled();
   });
 });

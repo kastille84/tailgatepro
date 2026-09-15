@@ -32,3 +32,31 @@ exports.createSignature = async (req, res, next) => {
     return next(error);
   }
 };
+
+// req.body is a raw Buffer here (see the route's `express.raw` middleware),
+// not the parsed JSON object every other controller in this file sees.
+exports.uploadSignatureBlob = async (req, res, next) => {
+  try {
+    const data = await signaturesService.uploadBlob(
+      req.params.id,
+      req.user.companyId,
+      req.body,
+      req.get("Content-Type"),
+    );
+    return res.status(200).json({ success: true, data });
+  } catch (error) {
+    return next(error);
+  }
+};
+
+exports.getSignatureUrl = async (req, res, next) => {
+  try {
+    const url = await signaturesService.getSignedUrl(
+      req.params.id,
+      req.user.companyId,
+    );
+    return res.status(200).json({ success: true, data: { url } });
+  } catch (error) {
+    return next(error);
+  }
+};
