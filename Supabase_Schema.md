@@ -51,6 +51,7 @@
 | `structured` | JSONB | Nullable | `{ summary, talking_points, site_hazards_to_check, discussion_questions, osha_standards, estimated_minutes }` from the pipeline |
 | `attribution` | JSONB | Nullable | `{ source, publisher, copyright, license, source_url, notice }` from the pipeline — CPWR/NIOSH source credit shown in the app + PDF (see `docs/content-attribution.md`) |
 | `quiz` | JSONB | Nullable | Exactly 3 `{ question, choices, correctIndex }` objects — post-TTS comprehension check before signing (Phase 4, see `docs/meeting-flow-design.md`) |
+| `translations` | JSONB | Nullable | Per-language `{ title, summary, talking_points, site_hazards_to_check, discussion_questions }`, keyed by ISO 639-1 code (e.g. `"es"`). English is implicit (the row's own fields). Global talks: official agency-published translations only, never machine-translated. Custom talks: Google Cloud Translation API at create/edit time, gated to `premium`/`enterprise` tier — see `server/utility/entitlements.js` |
 | `is_global` | Boolean | Default `true` | True for the shared global library; false for a company's custom talk |
 | `company_id` | UUID | FK (Nullable) | Populated if a sub writes a custom talk |
 

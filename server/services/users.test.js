@@ -147,6 +147,7 @@ describe("users service: getUserContext", () => {
         name: "Alex Builder",
         role: "foreman",
         company_id: "company-1",
+        companies: { tier: "premium" },
       },
       error: null,
     });
@@ -162,19 +163,42 @@ describe("users service: getUserContext", () => {
     });
   });
 
-  it("should look up the user row by id and return the mapped identity fields", async () => {
+  it("should look up the user row by id and return the mapped identity fields, including the embedded company tier", async () => {
     // Act
     const result = await getUserContext("auth-user-1");
 
     // Assert
-    expect(usersSelect).toHaveBeenCalledWith("id, name, role, company_id");
+    expect(usersSelect).toHaveBeenCalledWith(
+      "id, name, role, company_id, companies(tier)",
+    );
     expect(usersEq).toHaveBeenCalledWith("id", "auth-user-1");
     expect(result).toEqual({
       id: "auth-user-1",
       name: "Alex Builder",
       role: "foreman",
       companyId: "company-1",
+      tier: "premium",
     });
+  });
+
+  it("should default tier to null when the company embed is missing", async () => {
+    // Arrange
+    usersSingle.mockResolvedValue({
+      data: {
+        id: "auth-user-1",
+        name: "Alex Builder",
+        role: "foreman",
+        company_id: "company-1",
+        companies: null,
+      },
+      error: null,
+    });
+
+    // Act
+    const result = await getUserContext("auth-user-1");
+
+    // Assert
+    expect(result.tier).toBeNull();
   });
 
   it("should throw a 404 AppError when no profile row exists for the auth user", async () => {

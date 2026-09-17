@@ -1,10 +1,12 @@
 import { useState } from "react";
 import { Controller, useFieldArray, useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
+import { Link } from "react-router-dom";
 import { z } from "zod";
 
 import { Button } from "../../ui_comps/button";
 import { BulletListEditor } from "../../ui_comps/bullet-list-editor";
+import { Checkbox } from "../../ui_comps/checkbox";
 import { ConfirmDialog } from "../../ui_comps/confirm-dialog";
 import {
   Field,
@@ -17,8 +19,11 @@ import {
 } from "../../ui_comps/form";
 import { Modal } from "../../ui_comps/modal";
 import { useCreateTalk } from "../../hooks/useCreateTalk";
+import { useCurrentUser } from "../../hooks/useCurrentUser";
 import { useDeleteTalk } from "../../hooks/useDeleteTalk";
+import { useOnlineStatus } from "../../context/online-status";
 import { useTalks } from "../../hooks/useTalks";
+import { useTranslationLanguages } from "../../hooks/useTranslationLanguages";
 import { useUpdateTalk } from "../../hooks/useUpdateTalk";
 import type { Talk } from "../../interfaces/talk";
 import {
@@ -27,6 +32,8 @@ import {
   StyledDangerZoneTitle,
   StyledListRow,
   StyledLockNotice,
+  StyledTranslationsList,
+  StyledTranslationsNote,
 } from "./styles";
 import { HiOutlineInformationCircle } from "react-icons/hi2";
 
@@ -63,6 +70,7 @@ const talkSchema = z.object({
         (/^\d+$/.test(value) && Number(value) >= 1 && Number(value) <= 480),
       { message: "Estimated minutes must be a positive number" },
     ),
+  targetLanguages: z.array(z.string()).optional(),
 });
 
 type TalkFormValues = z.infer<typeof talkSchema>;
@@ -87,15 +95,24 @@ export const TalkForm = ({ isOpen, onClose, talk }: TalkFormProps) => {
   const { updateTalk, isUpdating } = useUpdateTalk();
   const { deleteTalk, isDeleting } = useDeleteTalk();
   const { tradeOptions } = useTalks();
+  const { hasTranslationAccess } = useCurrentUser();
+  const { isOnline } = useOnlineStatus();
+  const { languages: translationLanguages } = useTranslationLanguages();
 
   const [isConfirmingDelete, setIsConfirmingDelete] = useState(false);
 
   const structured = talk?.structured;
 
+  const hasExistingTranslations = Object.keys(talk?.translations ?? {}).length > 0;
+  const [wantsTranslations, setWantsTranslations] = useState(
+    hasExistingTranslations,
+  );
+
   const {
     register,
     control,
     handleSubmit,
+    setValue,
     formState: { errors },
   } = useForm<TalkFormValues>({
     resolver: zodResolver(talkSchema),
@@ -113,6 +130,11 @@ export const TalkForm = ({ isOpen, onClose, talk }: TalkFormProps) => {
       estimatedMinutes: structured?.estimated_minutes
         ? String(structured.estimated_minutes)
         : "",
+      // Pre-check whichever languages this talk already has, so a normal
+      // edit keeps them in sync with the (possibly just-edited) English
+      // text; unchecking one and submitting drops it (full-replace, same as
+      // `structured`).
+      targetLanguages: Object.keys(talk?.translations ?? {}),
     },
   });
 
@@ -138,6 +160,7 @@ export const TalkForm = ({ isOpen, onClose, talk }: TalkFormProps) => {
       estimatedMinutes: values.estimatedMinutes
         ? Number(values.estimatedMinutes)
         : undefined,
+      targetLanguages: values.targetLanguages,
     };
 
     try {
@@ -325,6 +348,59 @@ export const TalkForm = ({ isOpen, onClose, talk }: TalkFormProps) => {
           >
             Add OSHA standard
           </Button>
+        </Field>
+
+        <Field>
+          <Label>Translations (optional)</Label>
+          <Checkbox
+            label="Add translations for this talk?"
+            checked={wantsTranslations}
+            onChange={(event) => {
+              setWantsTranslations(event.target.checked);
+              // A collapsed section should never silently submit a stale
+              // selection from before it was hidden.
+              if (!event.target.checked) setValue("targetLanguages", []);
+            }}
+          />
+          {wantsTranslations &&
+            (!hasTranslationAccess ? (
+              <StyledTranslationsNote>
+                Multi-language translation is a Trade Pro feature —{" "}
+                <Link to="/pricing">upgrade</Link> to unlock it.
+              </StyledTranslationsNote>
+            ) : !isOnline ? (
+              <StyledTranslationsNote>
+                Translations are unavailable offline. Edit this talk once
+                you&apos;re back online to add them.
+              </StyledTranslationsNote>
+            ) : (
+              <Controller
+                name="targetLanguages"
+                control={control}
+                render={({ field }) => (
+                  <StyledTranslationsList>
+                    {translationLanguages.map((lang) => {
+                      const checked = field.value?.includes(lang.code) ?? false;
+                      return (
+                        <Checkbox
+                          key={lang.code}
+                          label={lang.name}
+                          checked={checked}
+                          onChange={(event) => {
+                            const current = field.value ?? [];
+                            field.onChange(
+                              event.target.checked
+                                ? [...current, lang.code]
+                                : current.filter((code) => code !== lang.code),
+                            );
+                          }}
+                        />
+                      );
+                    })}
+                  </StyledTranslationsList>
+                )}
+              />
+            ))}
         </Field>
 
         <FormField

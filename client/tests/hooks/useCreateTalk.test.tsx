@@ -156,6 +156,29 @@ describe("useCreateTalk", () => {
     );
   });
 
+  it("passes targetLanguages through in the outbox payload when given, and sets translations to null on the optimistic entry", async () => {
+    vi.mocked(outbox.enqueueMutation).mockResolvedValue({} as never);
+    queryClient.setQueryData(["talks"], []);
+
+    const { result } = renderHook(() => useCreateTalk(), { wrapper });
+    await result.current.createTalk({
+      title: "Ladder Safety Refresher",
+      talkingPoints: ["Inspect rungs before use"],
+      targetLanguages: ["es"],
+    });
+
+    expect(outbox.enqueueMutation).toHaveBeenCalledWith(
+      expect.objectContaining({
+        payload: expect.objectContaining({ targetLanguages: ["es"] }),
+      }),
+      mockReplayer,
+    );
+    const cached = queryClient.getQueryData<{ translations: unknown }[]>([
+      "talks",
+    ]);
+    expect(cached?.[0].translations).toBeNull();
+  });
+
   it("rolls back the optimistic entry, toasts, and rejects when enqueue fails", async () => {
     vi.mocked(outbox.enqueueMutation).mockRejectedValue(
       new Error("Title is required"),

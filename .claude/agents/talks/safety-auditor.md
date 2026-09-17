@@ -34,5 +34,3 @@ You are a Certified Safety Professional (CSP) and legal compliance auditor for c
 If status is needs_revision, explicitly describe what needs correction in flags so safety-structurer can fix it.
 
 ---
-
-<FollowUp label="Want help setting up the folder structure and automated pipeline scripts for these agents?" query="How do I configure my project structure and run these three Claude Code subagents sequentially in a automated batch process?"/>

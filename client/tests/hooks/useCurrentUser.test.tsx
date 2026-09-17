@@ -1,0 +1,84 @@
+import React from "react";
+import { describe, it, expect, vi, beforeEach } from "vitest";
+import { renderHook, waitFor } from "@testing-library/react";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+
+import { useCurrentUser } from "../../src/hooks/useCurrentUser";
+import * as apiUsers from "../../src/services/apiUsers";
+
+vi.mock("../../src/services/apiUsers");
+
+const mockUseAuth = vi.fn();
+vi.mock("../../src/context/auth", () => ({
+  useAuth: () => mockUseAuth(),
+}));
+
+describe("useCurrentUser", () => {
+  let queryClient: QueryClient;
+
+  beforeEach(() => {
+    queryClient = new QueryClient({
+      defaultOptions: { queries: { retry: false } },
+    });
+    vi.clearAllMocks();
+    mockUseAuth.mockReturnValue({ session: { access_token: "token-123" } });
+  });
+
+  const wrapper = ({ children }: { children: React.ReactNode }) => (
+    <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
+  );
+
+  it("fetches the current user with the session token and exposes the tier", async () => {
+    vi.mocked(apiUsers.getCurrentUser).mockResolvedValue({
+      id: "user-1",
+      companyId: "company-1",
+      role: "foreman",
+      tier: "premium",
+    });
+
+    const { result } = renderHook(() => useCurrentUser(), { wrapper });
+
+    await waitFor(() => expect(result.current.isLoading).toBe(false));
+    expect(apiUsers.getCurrentUser).toHaveBeenCalledWith("token-123");
+    expect(result.current.tier).toBe("premium");
+    expect(result.current.hasTranslationAccess).toBe(true);
+  });
+
+  it("reports hasTranslationAccess true for enterprise tier", async () => {
+    vi.mocked(apiUsers.getCurrentUser).mockResolvedValue({
+      id: "user-1",
+      companyId: "company-1",
+      role: "foreman",
+      tier: "enterprise",
+    });
+
+    const { result } = renderHook(() => useCurrentUser(), { wrapper });
+
+    await waitFor(() => expect(result.current.tier).toBe("enterprise"));
+    expect(result.current.hasTranslationAccess).toBe(true);
+  });
+
+  it("reports hasTranslationAccess false for basic tier", async () => {
+    vi.mocked(apiUsers.getCurrentUser).mockResolvedValue({
+      id: "user-1",
+      companyId: "company-1",
+      role: "foreman",
+      tier: "basic",
+    });
+
+    const { result } = renderHook(() => useCurrentUser(), { wrapper });
+
+    await waitFor(() => expect(result.current.tier).toBe("basic"));
+    expect(result.current.hasTranslationAccess).toBe(false);
+  });
+
+  it("defaults tier to null and hasTranslationAccess to false before the query resolves / without a session", () => {
+    mockUseAuth.mockReturnValue({ session: null });
+
+    const { result } = renderHook(() => useCurrentUser(), { wrapper });
+
+    expect(apiUsers.getCurrentUser).not.toHaveBeenCalled();
+    expect(result.current.tier).toBeNull();
+    expect(result.current.hasTranslationAccess).toBe(false);
+  });
+});

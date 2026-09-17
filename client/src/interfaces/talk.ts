@@ -36,6 +36,19 @@ export interface TalkQuizQuestion {
   correctIndex: number;
 }
 
+/** One language's translated variant of a talk's translatable prose fields
+ *  (mirrors the subset of `TalkStructured` that `TalkPresenter` renders).
+ *  Never partial for a given language -- `getLocalizedTalkContent` falls back
+ *  to English as a whole object, not field-by-field, so a talk never renders
+ *  a mid-sentence language mix. */
+export interface TalkTranslation {
+  title: string;
+  summary: string | null;
+  talking_points: string[];
+  site_hazards_to_check: string[];
+  discussion_questions: string[];
+}
+
 export interface Talk {
   id: string;
   slug: string;
@@ -52,6 +65,11 @@ export interface Talk {
    *  not yet authored with a quiz (see docs/meeting-flow-design.md). Mirrors
    *  the server's `toTalk` output. */
   quiz: TalkQuizQuestion[] | null;
+  /** Per-language translated variants, keyed by ISO 639-1 code (e.g. `"es"`).
+   *  English is implicit -- this talk's own top-level/`structured` fields.
+   *  See `TalkTranslation` and `docs/content-attribution.md`/the translation
+   *  plan for how global vs. custom talks populate this differently. */
+  translations: Record<string, TalkTranslation> | null;
   isGlobal: boolean;
   companyId: string | null;
   createdAt: string;

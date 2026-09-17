@@ -30,6 +30,12 @@ exports.keysBasedOnEnv = () => {
         price_forest: process.env.STRIPE_PRICE_FOREST_PROD,
         webhookSecret: process.env.STRIPE_WEBHOOK_SECRET_PROD,
       },
+      // Google Cloud Translation API -- premium/enterprise-tier custom talk
+      // translation only (server/services/translation.js). Unset = feature
+      // disabled everywhere it's used, never a hard error.
+      googleTranslate: {
+        apiKey: process.env.GOOGLE_TRANSLATE_API_KEY_PROD,
+      },
     };
   } else {
     console.log("not production");
@@ -61,6 +67,10 @@ exports.keysBasedOnEnv = () => {
         price_grove: process.env.STRIPE_PRICE_GROVE,
         price_forest: process.env.STRIPE_PRICE_FOREST,
         webhookSecret: process.env.STRIPE_WEBHOOK_SECRET,
+      },
+      // Google Cloud Translation API -- see the prod branch's comment.
+      googleTranslate: {
+        apiKey: process.env.GOOGLE_TRANSLATE_API_KEY,
       },
     };
   }

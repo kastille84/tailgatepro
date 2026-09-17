@@ -47,6 +47,11 @@ const buildRow = (json) => {
     // copyright markings be shown). Populated by the content pipeline from the
     // raw file's frontmatter; see scripts/backfill-attribution.js.
     attribution: json.attribution ?? null,
+    // Only present when the structurer captured an official, agency-published
+    // translation (never machine translation) -- see
+    // .claude/agents/talks/safety-structurer.md. `null` for the vast majority
+    // of talks today.
+    translations: json.translations ?? null,
     is_global: true,
     company_id: null,
   };

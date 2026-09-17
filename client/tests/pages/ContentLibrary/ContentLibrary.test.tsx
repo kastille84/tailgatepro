@@ -88,8 +88,14 @@ const talks = [
     id: "t1",
     title: "Eye Protection",
     tradeTags: ["General Construction", "Welding"],
+    isGlobal: true,
   },
-  { id: "t2", title: "Silica Dust Exposure", tradeTags: ["Masonry"] },
+  {
+    id: "t2",
+    title: "Silica Dust Exposure",
+    tradeTags: ["Masonry"],
+    isGlobal: false,
+  },
 ];
 
 const tradeOptions = [
@@ -209,6 +215,38 @@ describe("ContentLibrary page", () => {
     renderPage();
 
     const checkbox = screen.getByLabelText(/favorites only/i);
+    fireEvent.click(checkbox);
+    expect(screen.getByTestId("talk-list").textContent).toContain("1 talks");
+
+    fireEvent.click(checkbox);
+    expect(screen.getByTestId("talk-list").textContent).toContain("2 talks");
+  });
+
+  it("narrows the list to only custom talks when 'Custom talks only' is checked", () => {
+    renderPage();
+
+    fireEvent.click(screen.getByLabelText(/custom talks only/i));
+
+    // Only t2 has isGlobal: false.
+    expect(screen.getByTestId("talk-list").textContent).toContain("1 talks");
+  });
+
+  it("combines the custom filter with the trade filter", () => {
+    renderPage();
+
+    fireEvent.click(screen.getByLabelText(/custom talks only/i));
+    fireEvent.change(screen.getByLabelText(/^trade$/i), {
+      target: { value: "Welding" },
+    });
+
+    // t1 is Welding but global; t2 is custom but not Welding.
+    expect(screen.getByTestId("talk-list").textContent).toContain("0 talks");
+  });
+
+  it("restores the full list when 'Custom talks only' is unchecked", () => {
+    renderPage();
+
+    const checkbox = screen.getByLabelText(/custom talks only/i);
     fireEvent.click(checkbox);
     expect(screen.getByTestId("talk-list").textContent).toContain("1 talks");
 

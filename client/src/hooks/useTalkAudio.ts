@@ -15,10 +15,26 @@ export interface UseTalkAudioResult {
   voices: TalkAudioVoiceOption[];
   selectedVoiceURI: string | null;
   selectVoice: (voiceURI: string) => void;
+  /** Re-picks the best-matching voice for `languageCode` (same matching
+   *  logic as the initial default pick) and selects it -- a no-op if no
+   *  voice matches. Called when the talk's displayed language changes, so
+   *  switching language nudges the read-aloud accent to match while the
+   *  voice dropdown still allows a manual override. */
+  matchVoiceToLanguage: (languageCode: string) => void;
   isSpeaking: boolean;
   speak: (text: string) => void;
   stop: () => void;
 }
+
+/** Finds the voice whose `lang` best matches `languageCode` (a two-letter
+ *  ISO code, e.g. `"es"`) -- prefix match against each voice's own `lang`
+ *  (e.g. `"es-MX"`), same rule the default-voice pick already used against
+ *  `navigator.language`. Returns `undefined` if nothing matches. */
+export const findVoiceForLanguage = (
+  voices: TalkAudioVoiceOption[],
+  languageCode: string,
+): TalkAudioVoiceOption | undefined =>
+  voices.find((voice) => voice.lang.startsWith(languageCode));
 
 /**
  * Wraps `window.speechSynthesis` for reading a talk aloud (docs/tasks.md
@@ -57,22 +73,19 @@ export const useTalkAudio = (): UseTalkAudioResult => {
     const loadVoices = () => {
       const rawVoices = synth.getVoices();
       rawVoicesRef.current = rawVoices;
-      setVoices(
-        rawVoices.map((voice) => ({
-          voiceURI: voice.voiceURI,
-          lang: voice.lang,
-          name: voice.name,
-        })),
-      );
+      const mappedVoices = rawVoices.map((voice) => ({
+        voiceURI: voice.voiceURI,
+        lang: voice.lang,
+        name: voice.name,
+      }));
+      setVoices(mappedVoices);
 
-      if (rawVoices.length === 0) return;
+      if (mappedVoices.length === 0) return;
       setSelectedVoiceURI((current) => {
         if (current) return current;
         const primaryLanguage = navigator.language.split("-")[0];
-        const match = rawVoices.find((voice) =>
-          voice.lang.startsWith(primaryLanguage),
-        );
-        return (match ?? rawVoices[0]).voiceURI;
+        const match = findVoiceForLanguage(mappedVoices, primaryLanguage);
+        return (match ?? mappedVoices[0]).voiceURI;
       });
     };
 
@@ -96,6 +109,14 @@ export const useTalkAudio = (): UseTalkAudioResult => {
   const selectVoice = useCallback((voiceURI: string) => {
     setSelectedVoiceURI(voiceURI);
   }, []);
+
+  const matchVoiceToLanguage = useCallback(
+    (languageCode: string) => {
+      const match = findVoiceForLanguage(voices, languageCode);
+      if (match) setSelectedVoiceURI(match.voiceURI);
+    },
+    [voices],
+  );
 
   const speak = useCallback(
     (text: string) => {
@@ -130,6 +151,7 @@ export const useTalkAudio = (): UseTalkAudioResult => {
     voices,
     selectedVoiceURI,
     selectVoice,
+    matchVoiceToLanguage,
     isSpeaking,
     speak,
     stop,

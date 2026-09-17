@@ -17,3 +17,11 @@ exports.createProfile = async (req, res, next) => {
     return next(error);
   }
 };
+
+// GET /api/users/me — the caller's own resolved identity (id, companyId,
+// role, tier). `loadUserContext` already did the DB work; this just returns
+// what it put on req.user. First endpoint that exposes profile/tier to the
+// client at all.
+exports.getCurrentUser = (req, res) => {
+  return res.status(200).json({ success: true, data: req.user });
+};

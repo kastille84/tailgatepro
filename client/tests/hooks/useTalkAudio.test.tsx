@@ -1,7 +1,7 @@
 import { act, cleanup, renderHook } from "@testing-library/react";
 import { afterEach, describe, expect, it, vi } from "vitest";
 
-import { useTalkAudio } from "../../src/hooks/useTalkAudio";
+import { findVoiceForLanguage, useTalkAudio } from "../../src/hooks/useTalkAudio";
 
 const makeVoice = (overrides: Partial<SpeechSynthesisVoice> = {}) =>
   ({
@@ -61,6 +61,21 @@ afterEach(() => {
   cleanup();
   vi.unstubAllGlobals();
   vi.restoreAllMocks();
+});
+
+describe("findVoiceForLanguage", () => {
+  const voices = [
+    { voiceURI: "voice-en", lang: "en-US", name: "English" },
+    { voiceURI: "voice-es", lang: "es-MX", name: "Spanish" },
+  ];
+
+  it("returns the voice whose lang prefix-matches the given language code", () => {
+    expect(findVoiceForLanguage(voices, "es")?.voiceURI).toBe("voice-es");
+  });
+
+  it("returns undefined when nothing matches", () => {
+    expect(findVoiceForLanguage(voices, "fr")).toBeUndefined();
+  });
 });
 
 describe("useTalkAudio", () => {
@@ -252,5 +267,33 @@ describe("useTalkAudio", () => {
     unmount();
 
     expect(synth.cancelFn).toHaveBeenCalled();
+  });
+
+  it("matchVoiceToLanguage selects the best-matching voice for a language code", () => {
+    const englishVoice = makeVoice({ voiceURI: "voice-en", lang: "en-US" });
+    const spanishVoice = makeVoice({ voiceURI: "voice-es", lang: "es-MX", name: "Spanish" });
+    installMockSpeechSynthesis([englishVoice, spanishVoice]);
+
+    const { result } = renderHook(() => useTalkAudio());
+    expect(result.current.selectedVoiceURI).toBe("voice-en");
+
+    act(() => {
+      result.current.matchVoiceToLanguage("es");
+    });
+
+    expect(result.current.selectedVoiceURI).toBe("voice-es");
+  });
+
+  it("matchVoiceToLanguage no-ops (keeps the current voice) when nothing matches", () => {
+    installMockSpeechSynthesis([makeVoice({ voiceURI: "voice-en", lang: "en-US" })]);
+
+    const { result } = renderHook(() => useTalkAudio());
+    expect(result.current.selectedVoiceURI).toBe("voice-en");
+
+    act(() => {
+      result.current.matchVoiceToLanguage("fr");
+    });
+
+    expect(result.current.selectedVoiceURI).toBe("voice-en");
   });
 });

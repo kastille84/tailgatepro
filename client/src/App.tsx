@@ -36,6 +36,7 @@ import { ResetPassword } from "./pages/ResetPassword";
 import { Dashboard } from "./pages/Dashboard";
 import { Projects } from "./pages/Projects";
 import { ContentLibrary } from "./pages/ContentLibrary";
+import { MeetingFlow } from "./pages/MeetingFlow";
 
 function App() {
   return (
@@ -77,6 +78,10 @@ function App() {
                       <Route
                         path="/talks"
                         element={<ContentLibrary />}
+                      ></Route>
+                      <Route
+                        path="/meetings/new"
+                        element={<MeetingFlow />}
                       ></Route>
                     </Route>
                   </Routes>

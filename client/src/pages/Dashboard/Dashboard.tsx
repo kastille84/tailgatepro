@@ -1,7 +1,11 @@
-import { useState } from "react";
+import {
+  HiBookOpen,
+  HiBuildingOffice2,
+  HiClipboardDocumentList,
+  HiShieldCheck,
+} from "react-icons/hi2";
 
 import { useAuth } from "../../context/auth";
-import { Button } from "../../ui_comps/button";
 import { Footer } from "../../ui_comps/footer";
 import {
   StyledPage,
@@ -18,13 +22,14 @@ import {
   StyledCardTitle,
   StyledCardText,
   StyledStatus,
+  StyledCardIconContainer,
 } from "./Dashboard.styles";
 
 /** The authenticated hub. Renders entry-point cards for the product areas;
  *  only Projects is live today, the rest are "coming soon" placeholders. Reached
  *  only through the RequireAuth route guard, but stays defensive on its own. */
 export const Dashboard = () => {
-  const { user, loading, /*logout*/ } = useAuth();
+  const { user, loading /*logout*/ } = useAuth();
   // const [isLoggingOut, setIsLoggingOut] = useState(false);
 
   // const handleLogout = async () => {
@@ -80,24 +85,52 @@ export const Dashboard = () => {
         <StyledContainer>
           <StyledCardGrid>
             <StyledCard to="/projects">
+              <StyledCardIconContainer>
+                <HiBuildingOffice2
+                  size={22}
+                  color="var(--color-orange-600)"
+                  aria-hidden="true"
+                />
+              </StyledCardIconContainer>
               <StyledCardTitle>Projects</StyledCardTitle>
               <StyledCardText>
                 Manage your job sites and the GCs you report to.
               </StyledCardText>
             </StyledCard>
             <StyledCard to="/talks">
+              <StyledCardIconContainer>
+                <HiBookOpen
+                  size={22}
+                  color="var(--color-navy-600)"
+                  aria-hidden="true"
+                />
+              </StyledCardIconContainer>
               <StyledCardTitle>Toolbox Talks</StyledCardTitle>
               <StyledCardText>
                 Browse the OSHA safety-talk library.
               </StyledCardText>
             </StyledCard>
-            <StyledCardSoon aria-disabled="true">
+            <StyledCard to="/meetings/new">
+              <StyledCardIconContainer>
+                <HiClipboardDocumentList
+                  size={22}
+                  color="var(--color-green-700)"
+                  aria-hidden="true"
+                />
+              </StyledCardIconContainer>
               <StyledCardTitle>Meeting Logs</StyledCardTitle>
               <StyledCardText>
-                Review and sync completed talks. Coming soon.
+                Start a toolbox talk and collect signatures.
               </StyledCardText>
-            </StyledCardSoon>
+            </StyledCard>
             <StyledCardSoon aria-disabled="true">
+              <StyledCardIconContainer>
+                <HiShieldCheck
+                  size={22}
+                  color="var(--color-red-500)"
+                  aria-hidden="true"
+                />
+              </StyledCardIconContainer>
               <StyledCardTitle>GC Compliance</StyledCardTitle>
               <StyledCardText>
                 Audit subcontractor safety logs. Coming soon.

@@ -592,21 +592,73 @@ unit tests, same as how 4b–4d shipped server code ahead of any client UI.
       shows no new errors (still only the pre-existing, unrelated `Input.tsx`/`Dashboard.tsx`
       failures noted under Phase 1)
 
-### 4g — Client: meeting wizard integration
+### 4g — Client: meeting wizard integration · status: code complete, 100% coverage; manual airplane-mode smoke pending
 
-- [ ] `client/src/pages/MeetingFlow/` + `/meetings/new` route under `RequireAuth`; activates the
-      Dashboard's "Meeting Logs" `StyledCardSoon` (same treatment `ContentLibrary` got in 2c)
-- [ ] `features/meeting-flow/MeetingWizard.tsx` — step machine (project → talk → present → quiz →
-      signatures[] → photo → save), heavy pieces `React.lazy`/`Suspense`-loaded per the
-      `TalkForm`/Tiptap precedent
-- [ ] Each step writes to `meetingDraftCache`; final save fires the mutations and clears the draft
+Plan: `~/.claude/plans/let-s-do-plan-4g-majestic-lake.md`. Key finding ahead of implementation: the
+checklist's "quiz" and "signatures[]" steps are one repeating sub-flow, not two sequential ones —
+`signatures.quiz_score`/`quiz_answers` are recorded per signature, not per meeting
+(`docs/meeting-flow-design.md`), so each crew member's quiz is taken immediately before they sign.
+Deliberately does **not** call `PATCH /api/meetings/:id/complete` this pass — see the new 4h bullet
+below for why (dependsOnEntityId doesn't support "wait for N rows" yet).
+
+- [x] `client/src/pages/MeetingFlow/` (`MeetingFlow.tsx` + `.styles.ts` + `index.ts`) +
+      `/meetings/new` route under `RequireAuth` in `App.tsx`; activated the Dashboard's "Meeting
+      Logs" `StyledCardSoon` → `StyledCard to="/meetings/new"` (same treatment `ContentLibrary` got
+      in 2c) — required removing two now-genuinely-unused imports (`useState`, `Button`) from
+      `Dashboard.tsx` that were only referenced by already-commented-out logout code, closing a
+      pre-existing (not 4g-caused) `tsc -b` failure alongside the already-documented `Input.tsx` one
+- [x] `features/meeting-flow/MeetingWizard.tsx` — step machine (`project → talk → present →
+      signatures → photo → save`, `WizardStep` union + plain `useState`, no reducer). Composes new
+      `ProjectPicker.tsx` (a dedicated selection-shaped picker — `features/projects/ProjectList` is
+      edit-shaped, not reusable here), `content-library/TalkList` (`favoriteIds={new Set()}`), new
+      `TalkPresenter.tsx` (talk sections + `useTalkAudio` read-aloud controls, Continue always
+      available), and new `SignaturesStep.tsx` (the per-worker add loop: name → quiz, skipped when
+      `talk.quiz` is `null` → `SignaturePad` → add to list, Continue disabled until ≥1 signer).
+      Lazy-loaded from `MeetingFlow.tsx` by direct file path (not the barrel), same as
+      `ContentLibrary.tsx`'s `TalkForm`, so `signature_pad` stays out of the main bundle
+- [x] Each step persists into the singleton `meetingDraftCache` row (new
+      `client/src/utils/db/meetingDraftCache.ts` — `getActiveDraft`/`putDraft`/`clearDraft`, the
+      read/write helpers Phase 4e's schema-only table was missing) via one `persistStep` call per
+      step-commit, never on every keystroke/stroke; `interfaces/meetingDraft.ts` gained
+      `WizardStep`/`DraftSigner`/`MeetingDraftData`. On mount, an existing draft triggers a
+      `ConfirmDialog` ("Resume in-progress meeting?" / "Discard draft"); Cancel resumes, confirming
+      discards — a draft whose project no longer resolves (archived/deleted) is silently discarded
+      instead of prompted. Final Save is checkpoint-guarded (`meetingLogId`/`signatureId`/
+      `blobUploaded`/`photoUploaded` fields, mirrored into the draft after each mutation) so a
+      retried Save after a partial online failure never re-creates a meeting log or a signature that
+      already landed — necessary because `useCreateMeetingLog`/`useCreateSignature` mint a fresh
+      `crypto.randomUUID()` on every call. On success: `clearDraft()`, a success toast, navigate to
+      `/dashboard`. On failure: the draft is left exactly as far as it got, Save stays re-clickable
+- [x] Tests: 40 new/changed test cases across `meetingDraftCache.test.ts`, `ProjectPicker.test.tsx`,
+      `TalkPresenter.test.tsx`, `SignaturesStep.test.tsx` (mocks the `signature_pad` boundary the
+      same way `SignaturePad.test.tsx` does, so the real component wiring is exercised),
+      `MeetingWizard.test.tsx` (every composed child stubbed by file path, `fake-indexeddb`-backed
+      resume/checkpoint behavior verified for real), `MeetingFlow.test.tsx`, plus the Dashboard card
+      test split. Full client suite: 699 tests passing, **100%** statements/branches/functions/lines
+      maintained on every file (the repo's actual enforced bar, not the 90% `CLAUDE.md` describes) —
+      hitting true 100% branch coverage required removing a handful of genuinely-unreachable
+      `if (!selectedProject)`-style guards in favor of non-null assertions with an invariant comment
+      (their call sites are only ever reached after that state is already set), rather than writing
+      contrived tests for dead code, matching the `TalkForm`/`ProjectForm` precedent's reasoning.
+      `npx eslint` clean; `tsc -b` shows no new errors
 - [ ] Verify: full airplane-mode manual smoke — start a meeting offline, pick project/talk, TTS or
-      skip, pass quiz, collect 2+ signatures, skip photo, save; reconnect and confirm rows land in
-      Supabase with correct `company_id` and server-computed `quiz_score`, blobs land in their
-      private buckets; reload mid-wizard and confirm the draft resumes
+      skip, collect 2+ signatures (with and without a quiz), skip photo, save; reconnect and confirm
+      rows land in Supabase with correct `company_id` and server-computed `quiz_score`, blobs land in
+      their private buckets; reload mid-wizard and confirm the draft resumes
 
 ### 4h — Verification, hardening, docs, Phase 5 hook
 
+- [ ] `PATCH /api/meetings/:id/complete` exists server-side (4c, per
+      `docs/meeting-flow-design.md`'s immutability rule) but is **intentionally
+      not called** by the 4g wizard — correctly completing a meeting requires
+      waiting for the meeting log *and every collected signature* to have
+      actually **synced** (not merely enqueued), and `OutboxRow.
+      dependsOnEntityId` only supports a single dependency id, not "wait for N
+      rows." Building a wait-for-N-dependencies primitive into the offline
+      queue is real scope of its own, not 4g's. Until it lands, every meeting
+      saved by the wizard has `completed_at: null` forever, and Phase 5's PDF
+      hook (which fires from `complete()`) never triggers — re-surfaced here so
+      it isn't silently forgotten.
 - [ ] Confirm client coverage stays at the repo's enforced 100%; server suite green
 - [ ] `meetingLogs.js`'s `complete()` gets a named stub call site for Phase 5's PDF generation
       (e.g. `pdfGenerationQueue.enqueue(meetingLogId)`, no-op today), not a bare `// TODO`
@@ -626,6 +678,94 @@ unit tests, same as how 4b–4d shipped server code ahead of any client UI.
 ## Phase 6 — GC dashboard · epic, blocked by invite/join-company
 
 - [ ] GC views: projects, incoming meeting-log PDFs, per-sub compliance status
+
+## Phase 7 — Multi-language talks + entitlement gating · status: code complete, 100% client coverage; manual verify + GOOGLE_TRANSLATE_API_KEY provisioning pending
+
+Plan: `~/.claude/plans/i-noticed-that-there-buzzing-fox.md`. Started from the user noticing
+`useTalkAudio`'s "read aloud" only changed the TTS *voice/accent*, never the talk's actual text —
+a real gap against `docs/PRD.md` §4.4's "TTS in English, Spanish, and other requested languages."
+Two source-dependent translation strategies converge on one schema/UI: the global library
+(official-source-only, mechanism-only this pass) and custom talks (Google Cloud Translation API at
+create/edit time). Along the way, discovered `client/src/data/plans.ts` gates multi-language behind
+Trade Pro/Enterprise and that **no entitlement enforcement existed anywhere** (server or client) —
+added the first real (if minimal) one, both to honor the pricing page and because Google Translate
+is a metered API. AI Talk Builder and cloud "AI voice" synthesis (both also promised on the pricing
+page) were explicitly scoped OUT — see Known limitations below.
+
+- [x] Shared `toolbox_talks.translations` JSONB column (`Supabase_SQL.sql`, `Supabase_Schema.md`) —
+      per-language `{ title, summary, talking_points, site_hazards_to_check, discussion_questions }`,
+      keyed by ISO 639-1 code; English stays implicit (the row's own fields). `Talk`/`TalkTranslation`
+      (`client/src/interfaces/talk.ts`), `server/services/talks.js` `TALK_COLUMNS`/`toTalk`, and
+      `scripts/lib/talkRow.js` `buildRow` all pass it through, defaulting to `null`
+- [x] Entitlement gating (new) — `server/utility/entitlements.js` (`hasTranslationAccess`, tiers
+      `premium`/`enterprise`); `server/services/users.js` `getUserContext` now joins
+      `companies(tier)`; `loadUserContext` puts `tier` on `req.user`; new `GET /api/users/me` (first
+      endpoint exposing profile/tier to the client at all) backs new client
+      `useCurrentUser.ts`/`apiUsers.getCurrentUser`, deliberately layered on top of `useAuth()`
+      rather than merged into `AuthProvider` per CLAUDE.md. `createTalk`/`updateTalk`/
+      `listTranslationLanguages` all 403 with "Upgrade to Trade Pro to unlock multi-language talks"
+      when `targetLanguages`/the languages list is requested without access
+- [x] Global library path — `.claude/agents/talks/safety-structurer.md` documents an optional
+      `translations` key in the Standard Talk Schema: official agency-published translations only
+      (e.g. CPWR/NIOSH "Charlas de Seguridad"), never machine-translated. No backfill of the existing
+      30 talks this pass — that's separate future content work
+- [x] Custom-talk path — new `server/services/translation.js` wraps the Google Cloud Translation API
+      (v2 REST + API key, no SDK): `getSupportedLanguages()` and `translateStructuredFields()` (one
+      API call per language via the array form of `q`, flattening/rebuilding the structured shape;
+      a single language's failure is caught and simply omitted, never blocks the talk save). New
+      `GOOGLE_TRANSLATE_API_KEY[_PROD]` in `server/utility/envUtils.js` — unset degrades to
+      "unavailable" everywhere, never a hard error. `talks.js` `create`/`update` call it when
+      `targetLanguages` is given; `update` full-replaces `translations` (same as `structured`) so
+      unchecking a language on edit drops it. New `GET /api/talks/translation-languages` (registered
+      before `GET /:id`) backs client `apiTranslation.ts`/`useTranslationLanguages.ts`
+      (`enabled: isOnline && hasTranslationAccess`)
+- [x] `TalkForm.tsx` — the "Translations" section is collapsed by default behind a single "Add
+      translations for this talk?" `Checkbox` (always visible, not tier/online-gated itself); once
+      checked it reveals the three-way tier upgrade note / offline note / "Translate into" `Checkbox`
+      list, in that precedence. `wantsTranslations` state starts `true` when editing a talk that
+      already has `translations` (so existing data is never hidden); unchecking the toggle also
+      clears the form's `targetLanguages` via RHF `setValue` so a collapsed section can never
+      silently submit a stale selection. `targetLanguages` rides in `CreateTalkInput`/
+      `UpdateTalkInput` through the existing offline outbox unchanged (translation runs server-side
+      whenever the write actually lands, online-now or after reconnect) — `useCreateTalk`'s
+      optimistic entry gets `translations: null` (unknown until sync, same as `content`/`slug`);
+      `useUpdateTalk`'s `applyTalkPatch` needed no change (already spreads `...existing` first)
+- [x] `TalkPresenter.tsx` — new `client/src/utils/talkLocalization.ts`
+      (`getTalkLanguageOptions`/`getLocalizedTalkContent`, `Intl.DisplayNames` for labels, whole-
+      object English fallback so a talk never mixes languages mid-sentence). `useTalkAudio.ts` gained
+      exported `findVoiceForLanguage` + `matchVoiceToLanguage` so picking a language also nudges the
+      TTS accent to match (voice dropdown still overrides). Language switcher — and any non-English
+      content at all — is gated on `hasTranslationAccess`, not just on `talk.translations` existing,
+      so a Basic-tier company always sees English even against a manually-seeded row or a downgrade.
+      A "Machine-translated — verify accuracy..." note shows only for non-global talks' translations
+- [x] Tests: `server/services/translation.test.js` (new), updates across `talks.test.js` (service +
+      controller), `users.test.js`; client: `talkLocalization.test.ts`, `useCurrentUser.test.tsx`,
+      `useTranslationLanguages.test.tsx`, `apiTranslation.test.ts` (all new), plus updates to
+      `TalkForm.test.tsx`, `TalkPresenter.test.tsx`, `useTalkAudio.test.tsx`, `useCreateTalk.test.tsx`,
+      `useUpdateTalk.test.tsx`, `apiUsers.test.ts`. 737 client tests passing (includes the later
+      collapsed-by-default toggle refinement below), **100%** coverage
+      maintained (including the `Intl.DisplayNames` constructor/`.of()` fallback branches, exercised
+      via `vi.spyOn` rather than skipped as dead code); 206 server tests passing. `npx eslint` clean
+      on every touched file; `tsc -b` shows no *new* errors (the pre-existing `Input.tsx` failure
+      already documented earlier in this file is untouched)
+- [ ] Known limitations, tracked explicitly rather than silently dropped: **AI Talk Builder** and
+      **cloud "AI voice" synthesis** (both promised alongside multi-language on the pricing page) were
+      out of scope for this pass; the 3-question comprehension quiz (`talk.quiz`) and the composed
+      Markdown `content` (PDF) are not translated; a per-language translation failure is silently
+      omitted rather than surfaced (re-opening Edit and seeing which languages are unchecked is the
+      only current signal, matching the outbox's existing fire-and-forget model); `useCurrentUser`'s
+      client-side tier check hand-mirrors `server/utility/entitlements.js` (server is the real
+      authority, enforced on every gated endpoint)
+- [ ] Verify: provision a real `GOOGLE_TRANSLATE_API_KEY` (Google Cloud project with the Cloud
+      Translation API enabled + billing) in both envs; manually smoke Basic-tier (upgrade note, no
+      switcher even against a DB-seeded `translations` row), Pro-tier online (checklist → create →
+      edit shows pre-checked → Present shows switcher + disclaimer + voice auto-match), and Pro-tier
+      offline (offline note, talk still saves) per the plan file's Verification section
+- [ ] Sourcing 300+ additional talks from a purchased (non-government) bundle to approach the pricing
+      page's "500+ OSHA library" claim was raised and **intentionally deferred** — flagged as a real
+      licensing question (unlike NIOSH/CPWR, a commercial bundle has no vetted redistribution-in-a-
+      SaaS-product license) to resolve before any ingestion work, not a content-pipeline task to run
+      as-is through `safety-collector`
 
 ## Cross-cutting — Invite / join-company flow · epic, prerequisite for multi-user + Phase 6
 

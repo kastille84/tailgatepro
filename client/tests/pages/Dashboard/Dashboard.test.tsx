@@ -81,7 +81,7 @@ describe("Dashboard page", () => {
     expect(talksCard?.getAttribute("href")).toBe("/talks");
   });
 
-  it("renders the remaining placeholder cards without links", () => {
+  it("shows the live Meeting Logs card link", () => {
     mockUseAuth.mockReturnValue({
       user: { email: "alex@example.com" },
       loading: false,
@@ -89,7 +89,22 @@ describe("Dashboard page", () => {
 
     renderDashboard();
 
-    expect(screen.getByText(/meeting logs/i).closest("a")).toBeNull();
+    const meetingLogsCard = screen
+      .getByRole("heading", { name: /^meeting logs$/i })
+      .closest("a");
+
+    expect(meetingLogsCard).not.toBeNull();
+    expect(meetingLogsCard?.getAttribute("href")).toBe("/meetings/new");
+  });
+
+  it("renders the remaining placeholder card without a link", () => {
+    mockUseAuth.mockReturnValue({
+      user: { email: "alex@example.com" },
+      loading: false,
+    });
+
+    renderDashboard();
+
     expect(screen.getByText(/gc compliance/i).closest("a")).toBeNull();
   });
 

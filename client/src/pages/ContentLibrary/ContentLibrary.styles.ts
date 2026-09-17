@@ -67,16 +67,10 @@ export const StyledContainer = styled.div`
   margin: 0 auto;
 `;
 
-export const StyledToolbar = styled.div`
+export const StyledButtonContainer = styled.div`
   display: flex;
-  flex-wrap: wrap;
-  align-items: flex-end;
-  gap: 1.6rem;
-  margin-bottom: 2.4rem;
-
-  > * {
-    flex: 1 1 20rem;
-  }
+  justify-content: flex-end;
+  margin-bottom: 1.6rem;
 `;
 
 export const StyledError = styled.p`

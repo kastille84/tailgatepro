@@ -10,6 +10,7 @@ const {
   createTalk,
   updateTalk,
   deleteTalk,
+  listTranslationLanguages,
 } = require("../controllers/talks");
 
 const router = express.Router();
@@ -19,6 +20,16 @@ const router = express.Router();
 // run client-side over this one list (docs/tasks.md Phase 2b), so no query
 // params.
 router.get("/", requireAuth, loadUserContext, listTalks);
+
+// GET /api/talks/translation-languages — must be registered before
+// GET /:id, or the id-param route would swallow this path as `:id ===
+// "translation-languages"`.
+router.get(
+  "/translation-languages",
+  requireAuth,
+  loadUserContext,
+  listTranslationLanguages,
+);
 
 // GET /api/talks/:id — scoped the same way as the list: a talk belonging to
 // another company can't be fetched by guessing its id.
@@ -85,6 +96,14 @@ router.post(
       .isInt({ min: 1, max: 480 })
       .withMessage("Estimated minutes must be a positive number")
       .toInt(),
+    body("targetLanguages")
+      .optional()
+      .isArray({ max: 10 })
+      .withMessage("targetLanguages must be a list"),
+    body("targetLanguages.*")
+      .trim()
+      .isLength({ min: 2, max: 5 })
+      .withMessage("targetLanguages entries must be a valid language code"),
   ],
   validate,
   createTalk,
@@ -126,6 +145,14 @@ router.patch(
       .isInt({ min: 1, max: 480 })
       .withMessage("Estimated minutes must be a positive number")
       .toInt(),
+    body("targetLanguages")
+      .optional()
+      .isArray({ max: 10 })
+      .withMessage("targetLanguages must be a list"),
+    body("targetLanguages.*")
+      .trim()
+      .isLength({ min: 2, max: 5 })
+      .withMessage("targetLanguages entries must be a valid language code"),
   ],
   validate,
   updateTalk,

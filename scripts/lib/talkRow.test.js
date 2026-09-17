@@ -68,6 +68,20 @@ describe("buildRow", () => {
     expect(buildRow(baseJson).attribution).toEqual(baseJson.attribution);
   });
 
+  it("passes translations straight through, defaulting to null when absent (official-source-only, never machine-translated)", () => {
+    expect(buildRow(baseJson).translations).toBeNull();
+    const translations = {
+      es: {
+        title: "Seguridad contra arcos eléctricos",
+        summary: null,
+        talking_points: [],
+        site_hazards_to_check: [],
+        discussion_questions: [],
+      },
+    };
+    expect(buildRow({ ...baseJson, translations }).translations).toEqual(translations);
+  });
+
   it("derives a deterministic v5 UUID from the slug", () => {
     const a = buildRow(baseJson).id;
     const b = buildRow({ ...baseJson, title: "Different title" }).id;

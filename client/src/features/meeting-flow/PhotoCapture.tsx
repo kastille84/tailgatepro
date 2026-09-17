@@ -1,7 +1,9 @@
-import { useEffect, useId, useState } from "react";
+import { useCallback, useEffect, useId, useRef, useState } from "react";
 
 import { Button } from "../../ui_comps/button";
+import { dataUrlToBlob } from "../../ui_comps/signature-pad";
 import {
+  StyledCameraCanvas,
   StyledComplianceNotice,
   StyledFileInput,
   StyledFileInputLabel,
@@ -9,21 +11,37 @@ import {
   StyledPhotoWrapper,
   StyledPreviewFrame,
   StyledPreviewImage,
+  StyledVideo,
 } from "./styles";
 
 interface PhotoCaptureProps {
-  /** Fires with the captured file once a worker picks/takes a photo. */
+  /** Fires with the captured file once a worker snaps or picks a photo. */
   onCapture: (file: File) => void;
   /** Fires when a worker declines to add a crew photo -- optional per
    *  PRD §4.3, so the wizard must be able to move on without one. */
   onSkip: () => void;
 }
 
+type Mode =
+  | { kind: "idle" }
+  | { kind: "camera" }
+  | { kind: "captured"; previewUrl: string }
+  | { kind: "fallback" };
+
+const CAMERA_UNAVAILABLE_NOTE = "Camera unavailable -- choose a photo instead.";
+
+const hasCameraSupport = () =>
+  typeof navigator !== "undefined" && !!navigator.mediaDevices?.getUserMedia;
+
 /**
- * Crew-photo capture step (docs/tasks.md Phase 4f, PRD §4.3). No image
- * library -- a plain `<input type="file" accept="image/*"
- * capture="environment">` opens the device camera directly on mobile and
- * falls back to a file picker on desktop. Purely presentational, same 4f/4g
+ * Crew-photo capture step (docs/tasks.md Phase 4f, PRD §4.3). Opens a live
+ * in-browser camera (getUserMedia + a <video> preview + a <canvas> snapshot)
+ * consistently on phone, tablet, and desktop -- unlike the old
+ * `<input capture="environment">` trick, which only launched a camera on
+ * mobile because `capture` is a browser hint desktop/tablet browsers are
+ * free to ignore. Falls back to a plain file picker only when a camera
+ * genuinely isn't available (unsupported browser, insecure context,
+ * permission denied, no camera device). Purely presentational, same 4f/4g
  * boundary as `SignaturePad`/`Quiz`: this component only hands back the
  * chosen `File` via `onCapture` and does not touch `mediaBlobs`/the outbox
  * itself.
@@ -35,27 +53,115 @@ interface PhotoCaptureProps {
  */
 export const PhotoCapture = ({ onCapture, onSkip }: PhotoCaptureProps) => {
   const inputId = useId();
-  const [previewUrl, setPreviewUrl] = useState<string | null>(null);
+  const [mode, setMode] = useState<Mode>(() =>
+    hasCameraSupport() ? { kind: "idle" } : { kind: "fallback" },
+  );
+  const [videoReady, setVideoReady] = useState(false);
+  const [cameraNote, setCameraNote] = useState<string | null>(null);
+
+  const videoRef = useRef<HTMLVideoElement>(null);
+  const canvasRef = useRef<HTMLCanvasElement>(null);
+  const streamRef = useRef<MediaStream | null>(null);
+
+  const stopStream = useCallback(() => {
+    streamRef.current?.getTracks().forEach((track) => track.stop());
+    streamRef.current = null;
+  }, []);
+
+  // Releases the camera if the step unmounts (e.g. the worker navigates
+  // away) while a stream is still live.
+  useEffect(() => stopStream, [stopStream]);
 
   // Revokes the previous preview's object URL whenever it's replaced/torn
   // down, so a worker retaking the photo several times doesn't leak blobs.
   useEffect(() => {
-    return () => {
-      if (previewUrl) URL.revokeObjectURL(previewUrl);
-    };
-  }, [previewUrl]);
+    if (mode.kind !== "captured") return;
+    return () => URL.revokeObjectURL(mode.previewUrl);
+  }, [mode]);
 
-  const handleChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+  // Binds the live stream once camera mode has actually rendered the
+  // <video> element -- the ref is already attached by the time this effect
+  // runs, since it fires after the render that switched into "camera" mode.
+  useEffect(() => {
+    if (mode.kind !== "camera") return;
+    const video = videoRef.current;
+    if (video) video.srcObject = streamRef.current;
+  }, [mode]);
+
+  const openCamera = async () => {
+    setVideoReady(false);
+    setCameraNote(null);
+
+    if (!hasCameraSupport()) {
+      setMode({ kind: "fallback" });
+      return;
+    }
+
+    try {
+      streamRef.current = await navigator.mediaDevices.getUserMedia({
+        video: { facingMode: "environment" },
+      });
+      setMode({ kind: "camera" });
+    } catch {
+      // Permission denied, no camera device, device busy, or an insecure
+      // context -- fall back to the file picker rather than getting stuck.
+      setCameraNote(CAMERA_UNAVAILABLE_NOTE);
+      setMode({ kind: "fallback" });
+    }
+  };
+
+  const handleVideoReady = () => setVideoReady(true);
+
+  const handleCapture = () => {
+    // Capture only renders while mode is "camera", so both refs are already
+    // attached by the time this can fire -- same non-null-assertion pattern
+    // as SignaturePad.tsx's imperative handle.
+    const video = videoRef.current!;
+    const canvas = canvasRef.current!;
+
+    canvas.width = video.videoWidth;
+    canvas.height = video.videoHeight;
+    const ctx = canvas.getContext("2d");
+    if (!ctx) {
+      // No 2D context available on this device/browser -- can't snapshot.
+      stopStream();
+      setCameraNote(CAMERA_UNAVAILABLE_NOTE);
+      setMode({ kind: "fallback" });
+      return;
+    }
+
+    ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+    stopStream();
+
+    const blob = dataUrlToBlob(canvas.toDataURL("image/jpeg", 0.92));
+    const file = new File([blob], "crew-photo.jpg", { type: "image/jpeg" });
+
+    onCapture(file);
+    setMode({ kind: "captured", previewUrl: URL.createObjectURL(blob) });
+  };
+
+  const handleCancelCamera = () => {
+    stopStream();
+    setMode({ kind: "idle" });
+  };
+
+  const handleRetake = () => {
+    void openCamera();
+  };
+
+  const handleSkip = () => {
+    stopStream();
+    onSkip();
+  };
+
+  const handleFallbackChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (!file) return;
 
-    setPreviewUrl((current) => {
-      if (current) URL.revokeObjectURL(current);
-      return URL.createObjectURL(file);
-    });
     onCapture(file);
-    // Clears the input's own value so choosing the same file again (e.g. a
-    // retake that reuses the last shot) still fires a change event.
+    setMode({ kind: "captured", previewUrl: URL.createObjectURL(file) });
+    // Clears the input's own value so choosing the same file again still
+    // fires a change event.
     event.target.value = "";
   };
 
@@ -67,25 +173,75 @@ export const PhotoCapture = ({ onCapture, onSkip }: PhotoCaptureProps) => {
         database. Adding a photo is optional.
       </StyledComplianceNotice>
 
-      {previewUrl && (
-        <StyledPreviewFrame>
-          <StyledPreviewImage src={previewUrl} alt="Captured crew photo" />
-        </StyledPreviewFrame>
+      {mode.kind === "idle" && (
+        <StyledPhotoActions>
+          <Button type="button" size="lg" onClick={handleRetake}>
+            Take crew photo
+          </Button>
+        </StyledPhotoActions>
       )}
 
-      <StyledFileInputLabel htmlFor={inputId}>
-        {previewUrl ? "Retake photo" : "Take crew photo"}
-      </StyledFileInputLabel>
-      <StyledFileInput
-        id={inputId}
-        type="file"
-        accept="image/*"
-        capture="environment"
-        onChange={handleChange}
-      />
+      {mode.kind === "camera" && (
+        <>
+          <StyledPreviewFrame>
+            <StyledVideo
+              ref={videoRef}
+              autoPlay
+              playsInline
+              muted
+              onLoadedMetadata={handleVideoReady}
+            />
+          </StyledPreviewFrame>
+          <StyledCameraCanvas ref={canvasRef} aria-hidden="true" />
+          <StyledPhotoActions>
+            <Button
+              type="button"
+              variant="outline"
+              size="md"
+              onClick={handleCancelCamera}
+            >
+              Cancel
+            </Button>
+            <Button
+              type="button"
+              size="lg"
+              onClick={handleCapture}
+              disabled={!videoReady}
+            >
+              Capture
+            </Button>
+          </StyledPhotoActions>
+        </>
+      )}
+
+      {mode.kind === "captured" && (
+        <>
+          <StyledPreviewFrame>
+            <StyledPreviewImage src={mode.previewUrl} alt="Captured crew photo" />
+          </StyledPreviewFrame>
+          <StyledPhotoActions>
+            <Button type="button" variant="outline" size="md" onClick={handleRetake}>
+              Retake photo
+            </Button>
+          </StyledPhotoActions>
+        </>
+      )}
+
+      {mode.kind === "fallback" && (
+        <>
+          {cameraNote && <StyledComplianceNotice>{cameraNote}</StyledComplianceNotice>}
+          <StyledFileInputLabel htmlFor={inputId}>Choose a photo</StyledFileInputLabel>
+          <StyledFileInput
+            id={inputId}
+            type="file"
+            accept="image/*"
+            onChange={handleFallbackChange}
+          />
+        </>
+      )}
 
       <StyledPhotoActions>
-        <Button type="button" variant="outline" size="md" onClick={onSkip}>
+        <Button type="button" variant="outline" size="md" onClick={handleSkip}>
           Skip photo
         </Button>
       </StyledPhotoActions>
