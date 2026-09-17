@@ -62,7 +62,12 @@ export const SignaturePad = ({
     // already attached by the time this effect runs.
     const canvas = canvasRef.current!;
 
-    const pad = new SignaturePadLib(canvas);
+    // Without an explicit backgroundColor, signature_pad defaults to a fully
+    // transparent fill -- exported PNGs then show black wherever the
+    // viewing surface behind them is dark, making a black penColor stroke
+    // unreadable. Force opaque white so the exported PNG always reads as
+    // ink on paper, independent of the app's theme.
+    const pad = new SignaturePadLib(canvas, { backgroundColor: "#fff" });
     padRef.current = pad;
 
     const handleEndStroke = () => onEndRef.current?.(pad.isEmpty());

@@ -1,4 +1,4 @@
-import { ThemeProvider } from "styled-components";
+import styled, { ThemeProvider } from "styled-components";
 import { QueryClientProvider } from "@tanstack/react-query";
 import { ReactQueryDevtools } from "@tanstack/react-query-devtools";
 import { BrowserRouter, Route, Routes } from "react-router-dom";
@@ -38,6 +38,14 @@ import { Projects } from "./pages/Projects";
 import { ContentLibrary } from "./pages/ContentLibrary";
 import { MeetingFlow } from "./pages/MeetingFlow";
 
+// Pins Navbar + SyncStatusBanner together as one scroll-fixed block, so the
+// banner never scrolls away from the nav it sits under.
+const StyledStickyHeader = styled.div`
+  position: sticky;
+  top: 0;
+  z-index: 1000;
+`;
+
 function App() {
   return (
     <div data-testid="app">
@@ -53,8 +61,10 @@ function App() {
                 <GlobalStyles />
                 <BrowserRouter>
                   <ScrollToTop />
-                  <Navbar />
-                  <SyncStatusBanner />
+                  <StyledStickyHeader>
+                    <Navbar />
+                    <SyncStatusBanner />
+                  </StyledStickyHeader>
                   <Routes>
                     <Route path="/" element={<Landing />}></Route>
                     <Route path="/landing" element={<Landing />}></Route>

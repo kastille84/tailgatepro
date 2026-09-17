@@ -25,7 +25,7 @@ interface PhotoCaptureProps {
 type Mode =
   | { kind: "idle" }
   | { kind: "camera" }
-  | { kind: "captured"; previewUrl: string }
+  | { kind: "captured"; previewUrl: string; file: File }
   | { kind: "fallback" };
 
 const CAMERA_UNAVAILABLE_NOTE = "Camera unavailable -- choose a photo instead.";
@@ -136,8 +136,7 @@ export const PhotoCapture = ({ onCapture, onSkip }: PhotoCaptureProps) => {
     const blob = dataUrlToBlob(canvas.toDataURL("image/jpeg", 0.92));
     const file = new File([blob], "crew-photo.jpg", { type: "image/jpeg" });
 
-    onCapture(file);
-    setMode({ kind: "captured", previewUrl: URL.createObjectURL(blob) });
+    setMode({ kind: "captured", previewUrl: URL.createObjectURL(blob), file });
   };
 
   const handleCancelCamera = () => {
@@ -149,6 +148,11 @@ export const PhotoCapture = ({ onCapture, onSkip }: PhotoCaptureProps) => {
     void openCamera();
   };
 
+  const handleConfirm = () => {
+    if (mode.kind !== "captured") return;
+    onCapture(mode.file);
+  };
+
   const handleSkip = () => {
     stopStream();
     onSkip();
@@ -158,8 +162,7 @@ export const PhotoCapture = ({ onCapture, onSkip }: PhotoCaptureProps) => {
     const file = event.target.files?.[0];
     if (!file) return;
 
-    onCapture(file);
-    setMode({ kind: "captured", previewUrl: URL.createObjectURL(file) });
+    setMode({ kind: "captured", previewUrl: URL.createObjectURL(file), file });
     // Clears the input's own value so choosing the same file again still
     // fires a change event.
     event.target.value = "";
@@ -222,6 +225,9 @@ export const PhotoCapture = ({ onCapture, onSkip }: PhotoCaptureProps) => {
           <StyledPhotoActions>
             <Button type="button" variant="outline" size="md" onClick={handleRetake}>
               Retake photo
+            </Button>
+            <Button type="button" size="md" onClick={handleConfirm}>
+              Use photo
             </Button>
           </StyledPhotoActions>
         </>
