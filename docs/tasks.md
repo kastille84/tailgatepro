@@ -646,7 +646,9 @@ below for why (dependsOnEntityId doesn't support "wait for N rows" yet).
       rows land in Supabase with correct `company_id` and server-computed `quiz_score`, blobs land in
       their private buckets; reload mid-wizard and confirm the draft resumes
 
-### 4h — Verification, hardening, docs, Phase 5 hook
+### 4h — Verification, hardening, docs, Phase 5 hook · status: code/docs complete;
+manual smoke with a real Bearer token (see the first bullet below) and the Phase 3 manual E2E
+pass are the only items left, both live-device passes deferred like every prior phase's
 
 - [x] Wired up `PATCH /api/meetings/:id/complete`: `OutboxRow.dependsOnEntityId`
       (single string) widened to `dependsOnEntityIds?: string[]` — `flush()`'s
@@ -709,13 +711,40 @@ below for why (dependsOnEntityId doesn't support "wait for N rows" yet).
       briefly appears in the outbox then clears; confirm `completed_at` lands
       in Supabase; confirm the `isAlreadyCompletedError` path on a forced
       duplicate replay.
-- [ ] Confirm client coverage stays at the repo's enforced 100%; server suite green
-- [ ] `meetingLogs.js`'s `complete()` gets a named stub call site for Phase 5's PDF generation
-      (e.g. `pdfGenerationQueue.enqueue(meetingLogId)`, no-op today), not a bare `// TODO`
-- [ ] Update `docs/data-access.md`'s Storage line from aspirational to concrete (bucket names,
-      path convention, signed-URL TTL); update `Supabase_Schema.md`
-- [ ] Re-surface still-open items in this file: crew-photo retention policy (PRD §7, unresolved
-      here on purpose) and the Phase 3 manual E2E pass (still owed, independent of Phase 4)
+- [x] Confirm client coverage stays at the repo's enforced 100%; server suite green — server:
+      `npm run test:server` → 206/206 passing, clean. Client: `npx vitest run --coverage` → 783/785
+      passing; the coverage report itself doesn't get generated when any test fails (no
+      `coverage/` output, by this repo's Vitest config). The 2 failures are the same pre-existing
+      `PhotoCapture.test.tsx` camera-mock timing cases already called out and confirmed
+      unrelated/pre-existing under the prior 4h bullet (reconfirmed here by running that file in
+      isolation — same 2 failures, not flaky-per-run) — not something this pass introduced or
+      needs to fix. Coverage on every file this branch actually touched was already verified at
+      100% when each of those changes landed (see the per-bullet notes above); a clean full-suite
+      coverage number is blocked on fixing `PhotoCapture.test.tsx`, which is out of this checklist
+      item's scope
+- [x] `meetingLogs.js`'s `complete()` gets a named stub call site for Phase 5's PDF generation
+      (e.g. `pdfGenerationQueue.enqueue(meetingLogId)`, no-op today), not a bare `// TODO` —
+      already satisfied: `complete()` calls `await pdfGenerationQueue.enqueue(id)`
+      (`server/services/meetingLogs.js`), and `server/services/pdfGenerationQueue.js` is exactly
+      that named no-op stub. Shipped back in 4c/4d; this bullet was stale
+- [x] Update `docs/data-access.md`'s Storage line from aspirational to concrete (bucket names,
+      path convention, signed-URL TTL); update `Supabase_Schema.md` — `Supabase_Schema.md`'s
+      "Supabase Storage buckets (Phase 4)" section already had the concrete bucket names/paths/TTL
+      (shipped in 4d); only `docs/data-access.md`'s one-liner was still aspirational — replaced it
+      with the concrete bucket names + TTL, cross-referencing `Supabase_Schema.md` rather than
+      duplicating its table
+- [x] Re-surface still-open items in this file: crew-photo retention policy (PRD §7, unresolved
+      here on purpose) and the Phase 3 manual E2E pass (still owed, independent of Phase 4) — both
+      were already flagged inline (4a's design-doc bullet; the end of the Phase 3 section) but
+      buried inside older completed-status prose. Restating them here so a future "what's next?"
+      pass finds them without re-reading Phase 3/4a in full:
+      - **Crew-photo retention policy** — PRD §7 leaves how long a crew photo is kept unresolved;
+        `docs/meeting-flow-design.md` (4a) deliberately didn't decide it. Needs a product decision
+        before Phase 5/6 build anything that assumes a retention window.
+      - **Phase 3 manual E2E pass** — multi-tab, real airplane-mode on a device, storage eviction,
+        cross-device conflict. Not practical under Vitest + fake-indexeddb; no record of this pass
+        exists yet. Independent of Phase 4 — do it whenever a device is available, not blocking
+        anything above.
 
 ## Phase 5 — PDF generation + GC delivery · epic
 

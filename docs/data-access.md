@@ -50,4 +50,8 @@ for simple CRUD. It was not chosen because:
 - Never add a Supabase call to the client outside `context/auth/`.
 - Do not write RLS policies. If a future feature genuinely needs client-direct access (e.g. a
   Supabase Realtime subscription), that is a deliberate revisit of this decision, documented here.
-- Storage buckets (Phase 4) follow the same idea: private buckets, the server issues signed URLs.
+- Storage buckets follow the same idea: `signatures` and `crew-photos` (both `public: false`,
+  created via `scripts/setup-storage-buckets.js`) are never touched by the client directly — the
+  server issues 5-minute signed URLs after confirming the caller's company owns the parent
+  meeting's project. See `Supabase_Schema.md`'s "Supabase Storage buckets" section for the exact
+  bucket names and path convention.
