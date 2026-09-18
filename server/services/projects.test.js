@@ -5,7 +5,7 @@ const { supabase } = require("../utility/supabaseClient");
 const { listForCompany, create, update, remove } = require("./projects");
 
 const PROJECT_COLUMNS =
-  "id, owner_company_id, name, gc_company_id, gc_name_custom, status, archived_at, created_at";
+  "id, owner_company_id, name, gc_company_id, gc_name_custom, gc_contact_email, status, archived_at, created_at";
 
 const dbRow = {
   id: "project-1",
@@ -13,6 +13,7 @@ const dbRow = {
   name: "Downtown Highrise",
   gc_company_id: null,
   gc_name_custom: "Acme GC",
+  gc_contact_email: null,
   status: "active",
   archived_at: null,
   created_at: "2026-09-09T00:00:00.000Z",
@@ -24,6 +25,7 @@ const mappedProject = {
   name: "Downtown Highrise",
   gcCompanyId: null,
   gcNameCustom: "Acme GC",
+  gcContactEmail: null,
   status: "active",
   archivedAt: null,
   createdAt: "2026-09-09T00:00:00.000Z",
@@ -120,9 +122,20 @@ describe("projects service: create", () => {
       name: "Downtown Highrise",
       gc_company_id: null,
       gc_name_custom: "Acme GC",
+      gc_contact_email: null,
     });
     expect(select).toHaveBeenCalledWith(PROJECT_COLUMNS);
     expect(result).toEqual(mappedProject);
+  });
+
+  it("should insert a given gcContactEmail rather than coalescing it to null", async () => {
+    // Act
+    await create({ ...payload, gcContactEmail: "gc@example.com" });
+
+    // Assert
+    expect(insert).toHaveBeenCalledWith(
+      expect.objectContaining({ gc_contact_email: "gc@example.com" }),
+    );
   });
 
   it("should throw a 409 AppError when the project id is already used", async () => {
@@ -207,18 +220,23 @@ describe("projects service: update", () => {
     expect(result).toEqual({ ...mappedProject, status: "completed" });
   });
 
-  it("should map gcCompanyId / gcNameCustom patch keys to their DB column names", async () => {
+  it("should map gcCompanyId / gcNameCustom / gcContactEmail patch keys to their DB column names", async () => {
     // Act
     await update({
       id: "project-1",
       companyId: "company-1",
-      patch: { gcCompanyId: "gc-9", gcNameCustom: "New GC" },
+      patch: {
+        gcCompanyId: "gc-9",
+        gcNameCustom: "New GC",
+        gcContactEmail: "new@gc.com",
+      },
     });
 
     // Assert
     expect(updateFn).toHaveBeenCalledWith({
       gc_company_id: "gc-9",
       gc_name_custom: "New GC",
+      gc_contact_email: "new@gc.com",
     });
   });
 

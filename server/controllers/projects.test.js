@@ -116,6 +116,25 @@ describe("projects controller", () => {
       expect(res.json).toHaveBeenCalledWith({ success: true, data: project });
     });
 
+    it("should pass gcContactEmail through to the service when present in the body", async () => {
+      // Arrange
+      req.body = {
+        id: "project-1",
+        name: "Downtown Highrise",
+        gcNameCustom: "Acme GC",
+        gcContactEmail: "gc@example.com",
+      };
+      createSpy.mockResolvedValue(project);
+
+      // Act
+      await createProject(req, res, next);
+
+      // Assert
+      expect(createSpy).toHaveBeenCalledWith(
+        expect.objectContaining({ gcContactEmail: "gc@example.com" }),
+      );
+    });
+
     it("should ignore an owner_company_id planted in the body and use req.user.companyId", async () => {
       // Arrange
       req.body = {
@@ -176,6 +195,23 @@ describe("projects controller", () => {
         success: true,
         data: { ...project, status: "completed" },
       });
+    });
+
+    it("should pass gcContactEmail through to the service patch", async () => {
+      // Arrange
+      req.params = { id: "project-1" };
+      req.body = { gcContactEmail: "new@gc.com" };
+      updateSpy.mockResolvedValue(project);
+
+      // Act
+      await updateProject(req, res, next);
+
+      // Assert
+      expect(updateSpy).toHaveBeenCalledWith(
+        expect.objectContaining({
+          patch: expect.objectContaining({ gcContactEmail: "new@gc.com" }),
+        }),
+      );
     });
 
     it("should pass an archived flag through to the service patch", async () => {

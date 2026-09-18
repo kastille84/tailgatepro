@@ -43,6 +43,12 @@ router.post(
       .trim()
       .isLength({ max: 120 })
       .withMessage("GC name is too long"),
+    body("gcContactEmail")
+      .optional({ checkFalsy: true })
+      .trim()
+      .isEmail()
+      .withMessage("Invalid GC contact email")
+      .normalizeEmail({ gmail_remove_dots: false }),
     body("gcNameCustom").custom((value, { req }) => {
       if (!req.body.gcCompanyId && !req.body.gcNameCustom) {
         throw new Error("Enter the general contractor for this project");
@@ -82,6 +88,12 @@ router.patch(
       .trim()
       .isLength({ max: 120 })
       .withMessage("GC name is too long"),
+    body("gcContactEmail")
+      .optional({ checkFalsy: true })
+      .trim()
+      .isEmail()
+      .withMessage("Invalid GC contact email")
+      .normalizeEmail({ gmail_remove_dots: false }),
     body("archived")
       .optional()
       .isBoolean()

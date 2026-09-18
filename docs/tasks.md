@@ -762,9 +762,9 @@ manual `projects.gc_contact_email` field now rather than block on that epic —
 explicitly flagged below as due for superseding once invite/join-company
 ships, so it isn't forgotten.
 
-### 5a — Design decisions (docs only)
+### 5a — Design decisions (docs only) · status: done
 
-- [ ] Append a "Phase 5" section to `docs/meeting-flow-design.md` recording:
+- [x] Append a "Phase 5" section to `docs/meeting-flow-design.md` recording:
       `pdfGenerationQueue.enqueue` stays a plain awaited call inside
       `complete()`'s request (no job-queue infra exists, and the client never
       blocks on this HTTP call directly — `MeetingWizard.handleSave` enqueues
@@ -817,15 +817,44 @@ ships, so it isn't forgotten.
       failures documented under Phase 1). Full suite: 785/787 passing — the
       only 2 failures are the pre-existing, unrelated `PhotoCapture.test.tsx`
       camera-mock timing cases already called out under Phase 4h
+- [x] **Gap fix (found while starting 5d):** 5c only threaded
+      `gcContactEmail` through the *client* — `server/services/projects.js`'s
+      `PROJECT_COLUMNS`/`toProject`/`create`/`update`,
+      `server/controllers/projects.js`, and `server/routes/projects.js`'s
+      validator chains had no knowledge of `gc_contact_email` at all, so a
+      value a foreman typed in was silently dropped before reaching Supabase.
+      Fixed: column added to `PROJECT_COLUMNS`/`toProject`; `create`/`update`
+      read and write it; `createProject`/`updateProject` controllers pass it
+      through; both `POST /`/`PATCH /:id` validators gained an
+      `.optional({ checkFalsy: true }).isEmail()` chain (mirrors
+      `waitlist.js`'s existing email validator); `server/services/
+    projects.test.js` and `server/controllers/projects.test.js` both updated
+      with matching cases
 
-### 5d — Server: PDF rendering (pure, testable)
+### 5d — Server: PDF rendering (pure, testable) · status: done
 
-- [ ] New `server/services/pdfGeneration.js` — pure `renderMeetingLogPdf({
-  meetingLog, project, talk, signatures })` → `Buffer` via `pdfkit`; prints
-      the CPWR/NIOSH attribution block per `docs/content-attribution.md`
-- [ ] Unit tests: structural assertions (valid `%PDF` header bytes, no throw
-      on a representative fixture, attribution text present in the generated
-      content stream) rather than pixel/snapshot comparison
+- [x] New `server/services/pdfGeneration.js` — pure `renderMeetingLogPdf({
+  meetingLog, project, talk, signatures, crewPhotoBuffer })` → `Buffer` via
+      `pdfkit` (`compress: false`, so rendered text stays greppable in the
+      raw buffer for tests); prints the CPWR/NIOSH attribution block per
+      `docs/content-attribution.md`. `crewPhotoBuffer` is an optional
+      pre-fetched param (this function does no Storage I/O itself) — 5e is
+      what will download the photo bytes and pass them in; when omitted, the
+      PDF prints a "No crew photo on file" note instead of embedding an image
+- [x] Unit tests (`server/services/pdfGeneration.test.js`, 8 cases): valid
+      `%PDF-` header, doesn't throw on a full or minimal fixture, project
+      name/talk title/signer names present in rendered content, CPWR/NIOSH
+      attribution printed when present and omitted when absent, quiz
+      pass/fail printed per signer when the talk has a quiz and omitted when
+      it doesn't, crew-photo fallback note when no buffer is given. Required
+      a `decodeRenderedText` test helper: pdfkit renders text as hex-encoded
+      glyph runs inside `TJ` kerning arrays, not literal parenthesized
+      strings, so a plain `buffer.toString().includes(...)` never matches —
+      the helper decodes every `<hex>` run back to ASCII and concatenates
+      them (kerning splits fall mid-word, not at gaps needing a reinserted
+      separator) so assertions can check rendered content directly
+- [x] Verify: `npm run test:server` — full suite 217/217 passing (up from
+      206), no regressions
 
 ### 5e — Server: orchestration + signed-URL endpoint
 

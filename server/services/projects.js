@@ -5,7 +5,7 @@ const { AppError } = require("../utility/AppError");
 // mapper applied to each row before it leaves the service. Services never leak
 // DB column names to the controller layer.
 const PROJECT_COLUMNS =
-  "id, owner_company_id, name, gc_company_id, gc_name_custom, status, archived_at, created_at";
+  "id, owner_company_id, name, gc_company_id, gc_name_custom, gc_contact_email, status, archived_at, created_at";
 
 const toProject = (row) => ({
   id: row.id,
@@ -13,6 +13,7 @@ const toProject = (row) => ({
   name: row.name,
   gcCompanyId: row.gc_company_id,
   gcNameCustom: row.gc_name_custom,
+  gcContactEmail: row.gc_contact_email,
   status: row.status,
   archivedAt: row.archived_at,
   createdAt: row.created_at,
@@ -46,7 +47,14 @@ const listForCompany = async (companyId, { includeArchived = false } = {}) => {
 // PKs are generated client-side so offline records don't collide on sync). The
 // DB `check_gc_info` constraint guarantees at least one of gc_company_id /
 // gc_name_custom is present.
-const create = async ({ id, ownerCompanyId, name, gcCompanyId, gcNameCustom }) => {
+const create = async ({
+  id,
+  ownerCompanyId,
+  name,
+  gcCompanyId,
+  gcNameCustom,
+  gcContactEmail,
+}) => {
   const { data, error } = await supabase
     .from("projects")
     .insert({
@@ -55,6 +63,7 @@ const create = async ({ id, ownerCompanyId, name, gcCompanyId, gcNameCustom }) =
       name,
       gc_company_id: gcCompanyId ?? null,
       gc_name_custom: gcNameCustom ?? null,
+      gc_contact_email: gcContactEmail ?? null,
     })
     .select(PROJECT_COLUMNS)
     .single();
@@ -93,6 +102,9 @@ const update = async ({ id, companyId, patch }) => {
   if (patch.gcCompanyId !== undefined) nextPatch.gc_company_id = patch.gcCompanyId;
   if (patch.gcNameCustom !== undefined) {
     nextPatch.gc_name_custom = patch.gcNameCustom;
+  }
+  if (patch.gcContactEmail !== undefined) {
+    nextPatch.gc_contact_email = patch.gcContactEmail;
   }
   if (patch.archived !== undefined) {
     nextPatch.archived_at = patch.archived ? new Date().toISOString() : null;
