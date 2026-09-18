@@ -1,5 +1,6 @@
 // One-time, idempotent Supabase Storage bucket setup for Phase 4 (signatures +
-// crew photos). See docs/meeting-flow-design.md.
+// crew photos) and Phase 5 (generated meeting-log PDFs). See
+// docs/meeting-flow-design.md.
 //
 // Creates two private buckets. The client never talks to Supabase Storage
 // directly — the server broker (server/services/storage.js) uploads blobs and
@@ -13,7 +14,7 @@ require("dotenv").config();
 
 const { supabase } = require("../server/utility/supabaseClient");
 
-const BUCKETS = ["signatures", "crew-photos"];
+const BUCKETS = ["signatures", "crew-photos", "meeting-pdfs"];
 
 const main = async () => {
   const { data: existing, error: listError } = await supabase.storage.listBuckets();

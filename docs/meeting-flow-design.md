@@ -220,6 +220,51 @@ inline `// TODO`, `complete()` gets an explicit, named call site now (e.g.
 `await pdfGenerationQueue.enqueue(meetingLogId)`, backed by a no-op stub today) so Phase 5 has one
 obvious function to implement instead of a code path to rediscover.
 
+Full sub-phase breakdown (5a–5g) lives in `docs/tasks.md`; this section records the design decisions
+made ahead of that work, so 5b onward don't re-litigate them.
+
+**Synchronous, not a real queue.** Despite its name, `pdfGenerationQueue.enqueue` stays a plain
+`await`ed call inside `complete()`'s own request — there's no job-queue infrastructure (Redis, Bull,
+etc.) anywhere in this repo, and introducing one just for this would be new architecture the PRD
+never asked for. Blocking that HTTP request on PDF render + Storage upload + email is safe because
+nothing in the client actually waits on it: `MeetingWizard.tsx`'s `handleSave` enqueues the
+`meeting_completion` row into the offline outbox and returns immediately (see "Offline queue
+extension" above), so the real `PATCH .../complete` call happens later, on a background flush, with
+no user staring at a spinner for it.
+
+**Soft-fail, like every other secondary side effect in this codebase.** A failure at any step — PDF
+render, Storage upload, or email send — is caught and logged, never unwinds `completed_at` or fails
+the completion request itself. This mirrors Phase 7's per-language translation failures ("a single
+language's failure is caught and simply omitted, never blocks the talk save"): a completed meeting
+log is the durable OSHA record; the PDF and its email are a delivery mechanism layered on top; one
+failing must not un-complete the other.
+
+**GC recipient: a manual `projects.gc_contact_email` field.** No email address for a GC exists
+anywhere in the schema today — `companies` and `users` have no email column, and
+`projects.gc_company_id`/`gc_name_custom` don't resolve to one — because the invite/join-company flow
+that would produce a real GC user account isn't built yet (see `docs/tasks.md`'s Cross-cutting epic).
+Rather than block PDF delivery on that epic, Phase 5 adds a nullable `projects.gc_contact_email TEXT`
+that the foreman fills in manually alongside `gc_name_custom`. This is explicitly a stopgap: the
+Cross-cutting epic's checklist carries a standing item to supersede it with a real GC account's email
+once invite/join-company ships, so this doesn't quietly become permanent.
+
+**Dev-vs-Mailgun transport, gated on env presence.** `server/utility/envUtils.js` already exposes
+`MAILGUN_API_KEY`/`MAILGUN_DOMAIN` identically in both environment branches (no dedicated
+dev/test pair). Phase 5's email service checks whether both are set: present → send via `mailgun.js`
+(already an installed, unused dependency); unset → log the composed email (recipient, subject, PDF
+link) to the console instead of sending. This is the same "unset degrades to unavailable, never a
+hard error" shape `GOOGLE_TRANSLATE_API_KEY` uses in Phase 7, and satisfies `docs/tasks.md`'s "dev
+transport until paid Mailgun" phrasing without inventing a separate test-mode flag.
+
+**PDF content scope.** The generated PDF covers: a project/meeting header (project name, talk title,
+date); the talk's structured content (talking points, hazards, discussion questions); the CPWR/NIOSH
+attribution block (`toolbox_talks.attribution`'s `copyright` + `notice`) per
+`docs/content-attribution.md`'s "Phase 5 PDF service must print the same credit" requirement; the
+signer list (`worker_name` plus quiz pass/fail where the talk has a quiz); the crew photo (embedded
+if present, otherwise a "photo on file" note referencing the signed-URL endpoint); and the
+`completed_at` timestamp. Nothing beyond what's already captured by the meeting wizard — no new data
+collection is implied by the PDF itself.
+
 ## Explicitly not resolved here
 
 **Crew photo retention/deletion policy** — `docs/PRD.md` §7 flags this as an open question (GC audit

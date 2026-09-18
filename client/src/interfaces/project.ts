@@ -11,6 +11,10 @@ export interface Project {
   gcCompanyId: string | null;
   /** Free-text GC name, used before a GC company is linked (the invite/join flow). */
   gcNameCustom: string | null;
+  /** Manual GC contact email for Phase 5 PDF delivery — a stopgap until the
+   *  invite/join-company flow provides a real GC account (see docs/tasks.md's
+   *  Cross-cutting epic). */
+  gcContactEmail: string | null;
   status: ProjectStatus;
   /** ISO timestamp when the project was archived, or `null` while it is live.
    *  Archived projects are hidden from the default list but can be restored. */

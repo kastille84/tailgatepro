@@ -14,6 +14,7 @@ const project = {
   name: "Downtown Highrise",
   gcCompanyId: null,
   gcNameCustom: "Acme GC",
+  gcContactEmail: null,
   status: "active",
   archivedAt: null,
   createdAt: "2026-09-09T00:00:00.000Z",

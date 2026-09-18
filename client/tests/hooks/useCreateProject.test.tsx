@@ -95,17 +95,25 @@ describe("useCreateProject", () => {
     queryClient.setQueryData(["projects", { includeArchived: false }], []);
 
     const { result } = renderHook(() => useCreateProject(), { wrapper });
-    await result.current.createProject({ name: "Site", gcNameCustom: "GC" });
+    await result.current.createProject({
+      name: "Site",
+      gcNameCustom: "GC",
+      gcContactEmail: "gc@example.com",
+    });
 
     const cached = queryClient.getQueryData<{ name: string }[]>([
       "projects",
       { includeArchived: false },
     ]);
     expect(cached).toHaveLength(1);
-    expect(cached?.[0]).toMatchObject({ name: "Site", gcNameCustom: "GC" });
+    expect(cached?.[0]).toMatchObject({
+      name: "Site",
+      gcNameCustom: "GC",
+      gcContactEmail: "gc@example.com",
+    });
   });
 
-  it("defaults gcCompanyId/gcNameCustom to null on the optimistic entry when omitted", async () => {
+  it("defaults gcCompanyId/gcNameCustom/gcContactEmail to null on the optimistic entry when omitted", async () => {
     vi.mocked(outbox.enqueueMutation).mockResolvedValue({} as never);
     queryClient.setQueryData(["projects", { includeArchived: false }], []);
 
@@ -113,11 +121,16 @@ describe("useCreateProject", () => {
     await result.current.createProject({ name: "Site", gcCompanyId: "gc-1" });
 
     const cached = queryClient.getQueryData<
-      { gcCompanyId: string | null; gcNameCustom: string | null }[]
+      {
+        gcCompanyId: string | null;
+        gcNameCustom: string | null;
+        gcContactEmail: string | null;
+      }[]
     >(["projects", { includeArchived: false }]);
     expect(cached?.[0]).toMatchObject({
       gcCompanyId: "gc-1",
       gcNameCustom: null,
+      gcContactEmail: null,
     });
   });
 

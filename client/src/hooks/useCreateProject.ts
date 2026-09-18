@@ -64,6 +64,7 @@ export const useCreateProject = () => {
         name: payload.name,
         gcCompanyId: payload.gcCompanyId ?? null,
         gcNameCustom: payload.gcNameCustom ?? null,
+        gcContactEmail: payload.gcContactEmail ?? null,
         status: "active",
         archivedAt: null,
         createdAt: new Date().toISOString(),

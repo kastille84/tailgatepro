@@ -14,6 +14,7 @@ export interface CreateProjectInput {
   name: string;
   gcCompanyId?: string | null;
   gcNameCustom?: string | null;
+  gcContactEmail?: string | null;
 }
 
 /** Fields that can be patched on an existing project. Only the keys present are
@@ -24,6 +25,7 @@ export interface UpdateProjectPatch {
   status?: ProjectStatus;
   gcCompanyId?: string | null;
   gcNameCustom?: string | null;
+  gcContactEmail?: string | null;
   archived?: boolean;
 }
 

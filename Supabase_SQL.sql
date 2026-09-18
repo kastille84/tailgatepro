@@ -29,6 +29,10 @@ CREATE TABLE projects (
   name TEXT NOT NULL,
   gc_company_id UUID REFERENCES companies(id) ON DELETE SET NULL,
   gc_name_custom TEXT,
+  -- Manual GC contact email for Phase 5 PDF delivery. Stopgap until the
+  -- invite/join-company flow provides a real GC account to email instead —
+  -- see docs/tasks.md's Cross-cutting epic.
+  gc_contact_email TEXT,
   status project_status DEFAULT 'active',
   -- Soft-delete / visibility state, orthogonal to `status`: NULL = live,
   -- a timestamp = archived (hidden from the default list, still restorable).
@@ -39,8 +43,9 @@ CREATE TABLE projects (
     gc_company_id IS NOT NULL OR gc_name_custom IS NOT NULL
   )
 );
--- If the table already exists from an earlier run, add the new column instead:
+-- If the table already exists from an earlier run, add the new column(s) instead:
 -- ALTER TABLE projects ADD COLUMN IF NOT EXISTS archived_at TIMESTAMPTZ;
+-- ALTER TABLE projects ADD COLUMN IF NOT EXISTS gc_contact_email TEXT;
 -- 4. Project Subcontractors (Many-to-Many)
 CREATE TABLE project_subcontractors (
   project_id UUID REFERENCES projects(id) ON DELETE CASCADE,
