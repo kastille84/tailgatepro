@@ -1,12 +1,24 @@
 // Plain CommonJS — see requireAuth.test.js for why (nested require() sharing).
 const talksService = require("../services/talks");
-const { listTalks, getTalk, createTalk, updateTalk, deleteTalk } = require("./talks");
+const translationService = require("../services/translation");
+const {
+  listTalks,
+  getTalk,
+  createTalk,
+  updateTalk,
+  deleteTalk,
+  listTranslationLanguages,
+} = require("./talks");
 
 const listForCompanySpy = vi.spyOn(talksService, "listForCompany");
 const getByIdSpy = vi.spyOn(talksService, "getById");
 const createSpy = vi.spyOn(talksService, "create");
 const updateSpy = vi.spyOn(talksService, "update");
 const removeSpy = vi.spyOn(talksService, "remove");
+const getSupportedLanguagesSpy = vi.spyOn(
+  translationService,
+  "getSupportedLanguages",
+);
 
 const talk = {
   id: "talk-1",
@@ -33,7 +45,12 @@ describe("talks controller", () => {
     createSpy.mockReset();
     updateSpy.mockReset();
     removeSpy.mockReset();
-    req = { params: {}, body: {}, user: { id: "user-1", companyId: "company-1" } };
+    getSupportedLanguagesSpy.mockReset();
+    req = {
+      params: {},
+      body: {},
+      user: { id: "user-1", companyId: "company-1", tier: "premium" },
+    };
     res = {
       status: vi.fn().mockReturnThis(),
       json: vi.fn().mockReturnThis(),
@@ -155,6 +172,53 @@ describe("talks controller", () => {
       expect(next).toHaveBeenCalledWith(error);
       expect(res.status).not.toHaveBeenCalled();
     });
+
+    it("should pass targetLanguages through to the service when the caller's tier has translation access", async () => {
+      // Arrange
+      req.body.targetLanguages = ["es"];
+      req.user.tier = "premium";
+      createSpy.mockResolvedValue(customTalk);
+
+      // Act
+      await createTalk(req, res, next);
+
+      // Assert
+      expect(createSpy).toHaveBeenCalledWith(
+        expect.objectContaining({ targetLanguages: ["es"] }),
+      );
+      expect(res.status).toHaveBeenCalledWith(201);
+    });
+
+    it("should reject with a 403 AppError, without calling the service, when targetLanguages is given but the tier lacks translation access", async () => {
+      // Arrange
+      req.body.targetLanguages = ["es"];
+      req.user.tier = "basic";
+
+      // Act
+      await createTalk(req, res, next);
+
+      // Assert
+      expect(createSpy).not.toHaveBeenCalled();
+      expect(next).toHaveBeenCalledWith(
+        expect.objectContaining({
+          statusCode: 403,
+          message: "Upgrade to Trade Pro to unlock multi-language talks",
+        }),
+      );
+    });
+
+    it("should not require translation access when targetLanguages isn't given", async () => {
+      // Arrange
+      req.user.tier = "basic";
+      createSpy.mockResolvedValue(customTalk);
+
+      // Act
+      await createTalk(req, res, next);
+
+      // Assert
+      expect(createSpy).toHaveBeenCalled();
+      expect(res.status).toHaveBeenCalledWith(201);
+    });
   });
 
   describe("updateTalk", () => {
@@ -211,6 +275,40 @@ describe("talks controller", () => {
       expect(next).toHaveBeenCalledWith(error);
       expect(res.status).not.toHaveBeenCalled();
     });
+
+    it("should pass targetLanguages through to the service when the caller's tier has translation access", async () => {
+      // Arrange
+      req.body.targetLanguages = ["es"];
+      req.user.tier = "enterprise";
+      updateSpy.mockResolvedValue(updatedTalk);
+
+      // Act
+      await updateTalk(req, res, next);
+
+      // Assert
+      expect(updateSpy).toHaveBeenCalledWith(
+        expect.objectContaining({ targetLanguages: ["es"] }),
+      );
+      expect(res.status).toHaveBeenCalledWith(200);
+    });
+
+    it("should reject with a 403 AppError, without calling the service, when targetLanguages is given but the tier lacks translation access", async () => {
+      // Arrange
+      req.body.targetLanguages = ["es"];
+      req.user.tier = "basic";
+
+      // Act
+      await updateTalk(req, res, next);
+
+      // Assert
+      expect(updateSpy).not.toHaveBeenCalled();
+      expect(next).toHaveBeenCalledWith(
+        expect.objectContaining({
+          statusCode: 403,
+          message: "Upgrade to Trade Pro to unlock multi-language talks",
+        }),
+      );
+    });
   });
 
   describe("deleteTalk", () => {
@@ -245,6 +343,58 @@ describe("talks controller", () => {
 
       // Act
       await deleteTalk(req, res, next);
+
+      // Assert
+      expect(next).toHaveBeenCalledWith(error);
+      expect(res.status).not.toHaveBeenCalled();
+    });
+  });
+
+  describe("listTranslationLanguages", () => {
+    it("should respond 200 with the supported languages when the caller's tier has translation access", async () => {
+      // Arrange
+      req.user.tier = "premium";
+      getSupportedLanguagesSpy.mockResolvedValue([{ code: "es", name: "Spanish" }]);
+
+      // Act
+      await listTranslationLanguages(req, res, next);
+
+      // Assert
+      expect(getSupportedLanguagesSpy).toHaveBeenCalled();
+      expect(res.status).toHaveBeenCalledWith(200);
+      expect(res.json).toHaveBeenCalledWith({
+        success: true,
+        data: [{ code: "es", name: "Spanish" }],
+      });
+      expect(next).not.toHaveBeenCalled();
+    });
+
+    it("should reject with a 403 AppError, without calling the service, when the caller's tier lacks translation access", async () => {
+      // Arrange
+      req.user.tier = "basic";
+
+      // Act
+      await listTranslationLanguages(req, res, next);
+
+      // Assert
+      expect(getSupportedLanguagesSpy).not.toHaveBeenCalled();
+      expect(next).toHaveBeenCalledWith(
+        expect.objectContaining({
+          statusCode: 403,
+          message: "Upgrade to Trade Pro to unlock multi-language talks",
+        }),
+      );
+      expect(res.status).not.toHaveBeenCalled();
+    });
+
+    it("should forward a service error to next()", async () => {
+      // Arrange
+      req.user.tier = "premium";
+      const error = new Error("boom");
+      getSupportedLanguagesSpy.mockRejectedValue(error);
+
+      // Act
+      await listTranslationLanguages(req, res, next);
 
       // Assert
       expect(next).toHaveBeenCalledWith(error);

@@ -114,6 +114,15 @@ export const StyledCardSoon = styled.div`
   cursor: not-allowed;
 `;
 
+export const StyledCardIconContainer = styled.div`
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 4.8rem;
+  height: 4.8rem;
+  border-radius: 50%;
+  background-color: ${({ theme }) => theme.colors.concrete[500]};
+`;
 export const StyledCardTitle = styled.h2`
   margin: 0;
   font-size: 1.8rem;

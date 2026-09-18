@@ -70,6 +70,11 @@ export const useCreateTalk = () => {
           estimated_minutes: payload.estimatedMinutes ?? null,
         },
         attribution: null,
+        quiz: null,
+        // Computed server-side (Google Translate, when targetLanguages was
+        // sent) -- unknown until the write syncs, same treatment as
+        // `content`/`slug` above.
+        translations: null,
         isGlobal: false,
         // Unknown until the write syncs — never read in the UI.
         companyId: "",

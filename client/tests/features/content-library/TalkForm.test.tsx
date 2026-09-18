@@ -1,6 +1,7 @@
 import React from "react";
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { render, screen, fireEvent, waitFor } from "@testing-library/react";
+import { MemoryRouter } from "react-router-dom";
 import { ThemeProvider } from "styled-components";
 
 import { TalkForm } from "../../../src/features/content-library/TalkForm";
@@ -11,6 +12,9 @@ const mockCreate = vi.fn();
 const mockUpdate = vi.fn();
 const mockDelete = vi.fn();
 const mockUseTalks = vi.fn();
+const mockUseCurrentUser = vi.fn();
+const mockUseOnlineStatus = vi.fn();
+const mockUseTranslationLanguages = vi.fn();
 
 vi.mock("../../../src/hooks/useCreateTalk", () => ({
   useCreateTalk: () => ({ createTalk: mockCreate, isCreating: false }),
@@ -23,6 +27,15 @@ vi.mock("../../../src/hooks/useDeleteTalk", () => ({
 }));
 vi.mock("../../../src/hooks/useTalks", () => ({
   useTalks: (...args: unknown[]) => mockUseTalks(...args),
+}));
+vi.mock("../../../src/hooks/useCurrentUser", () => ({
+  useCurrentUser: () => mockUseCurrentUser(),
+}));
+vi.mock("../../../src/context/online-status", () => ({
+  useOnlineStatus: () => mockUseOnlineStatus(),
+}));
+vi.mock("../../../src/hooks/useTranslationLanguages", () => ({
+  useTranslationLanguages: () => mockUseTranslationLanguages(),
 }));
 
 // BulletListEditor has its own tests (ui_comps/bullet-list-editor); stub it
@@ -59,9 +72,11 @@ const renderForm = (
   props: Partial<React.ComponentProps<typeof TalkForm>> = {},
 ) =>
   render(
-    <ThemeProvider theme={theme}>
-      <TalkForm isOpen onClose={vi.fn()} {...props} />
-    </ThemeProvider>,
+    <MemoryRouter>
+      <ThemeProvider theme={theme}>
+        <TalkForm isOpen onClose={vi.fn()} {...props} />
+      </ThemeProvider>
+    </MemoryRouter>,
   );
 
 const editTalk: Talk = {
@@ -80,6 +95,8 @@ const editTalk: Talk = {
     estimated_minutes: 5,
   },
   attribution: null,
+  quiz: null,
+  translations: null,
   isGlobal: false,
   companyId: "company-1",
   createdAt: "2026-09-12T00:00:00.000Z",
@@ -100,6 +117,11 @@ describe("TalkForm", () => {
       isLoading: false,
       isError: false,
     });
+    mockUseCurrentUser.mockReturnValue({ hasTranslationAccess: true });
+    mockUseOnlineStatus.mockReturnValue({ isOnline: true });
+    // Empty by default so pre-existing tests' `targetLanguages: []` payload
+    // expectation holds without every test needing to think about it.
+    mockUseTranslationLanguages.mockReturnValue({ languages: [], isAvailable: false });
   });
 
   it("renders nothing when closed", () => {
@@ -130,6 +152,7 @@ describe("TalkForm", () => {
         discussionQuestions: [],
         oshaStandards: [],
         estimatedMinutes: undefined,
+        targetLanguages: [],
       }),
     );
     await waitFor(() => expect(onClose).toHaveBeenCalled());
@@ -206,6 +229,7 @@ describe("TalkForm", () => {
         discussionQuestions: ["What PPE is required?"],
         oshaStandards: ["29 CFR 1926.416"],
         estimatedMinutes: 5,
+        targetLanguages: [],
       }),
     );
   });
@@ -398,5 +422,145 @@ describe("TalkForm", () => {
 
     await waitFor(() => expect(mockDelete).toHaveBeenCalledWith("talk-1"));
     expect(onClose).not.toHaveBeenCalled();
+  });
+
+  describe("translations", () => {
+    it("hides the note/checklist behind a toggle, collapsed by default for a talk with no existing translations", () => {
+      mockUseTranslationLanguages.mockReturnValue({
+        languages: [{ code: "es", name: "Spanish" }],
+        isAvailable: true,
+      });
+      renderForm();
+
+      expect(
+        (screen.getByLabelText(/add translations for this talk/i) as HTMLInputElement)
+          .checked,
+      ).toBe(false);
+      expect(screen.queryByLabelText(/^spanish$/i)).toBeNull();
+      expect(screen.queryByText(/trade pro feature/i)).toBeNull();
+      expect(screen.queryByText(/unavailable offline/i)).toBeNull();
+    });
+
+    it("shows an upgrade note, not the checklist, once toggled on when the caller's tier lacks translation access", () => {
+      mockUseCurrentUser.mockReturnValue({ hasTranslationAccess: false });
+      mockUseTranslationLanguages.mockReturnValue({
+        languages: [{ code: "es", name: "Spanish" }],
+        isAvailable: false,
+      });
+      renderForm();
+
+      fireEvent.click(screen.getByLabelText(/add translations for this talk/i));
+
+      expect(screen.getByText(/trade pro feature/i)).toBeDefined();
+      expect(screen.queryByLabelText(/^spanish$/i)).toBeNull();
+    });
+
+    it("shows an offline note, not the checklist, once toggled on when access exists but the device is offline", () => {
+      mockUseOnlineStatus.mockReturnValue({ isOnline: false });
+      mockUseTranslationLanguages.mockReturnValue({
+        languages: [{ code: "es", name: "Spanish" }],
+        isAvailable: false,
+      });
+      renderForm();
+
+      fireEvent.click(screen.getByLabelText(/add translations for this talk/i));
+
+      expect(screen.getByText(/unavailable offline/i)).toBeDefined();
+      expect(screen.queryByLabelText(/^spanish$/i)).toBeNull();
+    });
+
+    it("shows the checklist once toggled on and includes checked languages in the submit payload", async () => {
+      mockUseTranslationLanguages.mockReturnValue({
+        languages: [{ code: "es", name: "Spanish" }],
+        isAvailable: true,
+      });
+      renderForm();
+
+      fireEvent.change(screen.getByLabelText(/^title$/i), {
+        target: { value: "T" },
+      });
+      fireEvent.change(screen.getByLabelText(/talking points/i), {
+        target: { value: "A point" },
+      });
+      fireEvent.click(screen.getByLabelText(/add translations for this talk/i));
+      fireEvent.click(screen.getByLabelText(/^spanish$/i));
+      fireEvent.click(screen.getByRole("button", { name: /create talk/i }));
+
+      await waitFor(() =>
+        expect(mockCreate).toHaveBeenCalledWith(
+          expect.objectContaining({ targetLanguages: ["es"] }),
+        ),
+      );
+    });
+
+    it("clears any checked languages when the toggle is switched back off", async () => {
+      mockUseTranslationLanguages.mockReturnValue({
+        languages: [{ code: "es", name: "Spanish" }],
+        isAvailable: true,
+      });
+      renderForm();
+
+      fireEvent.change(screen.getByLabelText(/^title$/i), {
+        target: { value: "T" },
+      });
+      fireEvent.change(screen.getByLabelText(/talking points/i), {
+        target: { value: "A point" },
+      });
+      fireEvent.click(screen.getByLabelText(/add translations for this talk/i));
+      fireEvent.click(screen.getByLabelText(/^spanish$/i));
+      // Collapse the section again -- a hidden section should never silently
+      // submit a stale selection.
+      fireEvent.click(screen.getByLabelText(/add translations for this talk/i));
+      expect(screen.queryByLabelText(/^spanish$/i)).toBeNull();
+
+      fireEvent.click(screen.getByRole("button", { name: /create talk/i }));
+
+      await waitFor(() =>
+        expect(mockCreate).toHaveBeenCalledWith(
+          expect.objectContaining({ targetLanguages: [] }),
+        ),
+      );
+    });
+
+    it("starts expanded with pre-checked languages the talk already has a translation for in edit mode", async () => {
+      mockUseTranslationLanguages.mockReturnValue({
+        languages: [{ code: "es", name: "Spanish" }],
+        isAvailable: true,
+      });
+      renderForm({
+        talk: {
+          ...editTalk,
+          translations: {
+            es: {
+              title: "Refuerzo de seguridad de escaleras",
+              summary: null,
+              talking_points: [],
+              site_hazards_to_check: [],
+              discussion_questions: [],
+            },
+          },
+        },
+      });
+
+      expect(
+        (screen.getByLabelText(/add translations for this talk/i) as HTMLInputElement)
+          .checked,
+      ).toBe(true);
+      expect(
+        (screen.getByLabelText(/^spanish$/i) as HTMLInputElement).checked,
+      ).toBe(true);
+
+      // Unchecking and submitting drops it (full-replace).
+      fireEvent.click(screen.getByLabelText(/^spanish$/i));
+      fireEvent.click(screen.getByRole("button", { name: /save changes/i }));
+
+      await waitFor(() =>
+        expect(mockUpdate).toHaveBeenCalledWith(
+          expect.objectContaining({
+            input: expect.objectContaining({ targetLanguages: [] }),
+          }),
+        ),
+      );
+    });
   });
 });

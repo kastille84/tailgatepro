@@ -3,19 +3,23 @@ import Dexie, { type EntityTable } from "dexie";
 import type { OutboxRow } from "../../interfaces/sync";
 import type { Project } from "../../interfaces/project";
 import type { Talk } from "../../interfaces/talk";
+import type { MeetingDraftRow } from "../../interfaces/meetingDraft";
+import type { MediaBlobRow } from "../../interfaces/mediaBlob";
 
 /**
- * The app's local IndexedDB, via Dexie. See `docs/offline-sync-design.md` for
- * why each table exists and how it's used.
+ * The app's local IndexedDB, via Dexie. See `docs/offline-sync-design.md` and
+ * `docs/meeting-flow-design.md` for why each table exists and how it's used.
  *
  * - `outbox` — the offline write queue (see `interfaces/sync.ts`).
  * - `projectsCache` / `talksCache` — read-through caches so `useProjects` /
  *   `useTalks` can still return data when the network call fails or the app
  *   is offline. Populated on a successful online fetch, read from otherwise.
- *
- * `meeting_logs`/`signatures` do not get tables here yet — no server API
- * exists for either (Phase 4); adding cache/queue support for them now would
- * mean guessing at a contract that hasn't been designed.
+ * - `meetingDraftCache` — the in-progress meeting wizard's per-step state
+ *   (Phase 4e only defines the schema; Phase 4g's wizard reads/writes it).
+ * - `mediaBlobs` — raw `Blob` storage for a signature or crew photo awaiting
+ *   upload. Dexie/IndexedDB natively structured-clones `Blob` values, so this
+ *   is a real table, not a workaround; a queued outbox row's JSON `payload`
+ *   carries a `mediaBlobs` id, never the bytes themselves.
  *
  * Opened once as a module-level singleton, mirroring the singleton
  * `queryClient` in `App.tsx`.
@@ -24,6 +28,8 @@ class TailgateProDB extends Dexie {
   outbox!: EntityTable<OutboxRow, "id">;
   projectsCache!: EntityTable<Project, "id">;
   talksCache!: EntityTable<Talk, "id">;
+  meetingDraftCache!: EntityTable<MeetingDraftRow, "id">;
+  mediaBlobs!: EntityTable<MediaBlobRow, "id">;
 
   constructor() {
     super("TailgateProDB");
@@ -31,11 +37,20 @@ class TailgateProDB extends Dexie {
     // `projectsCache.archivedAt` is NOT indexed: IndexedDB keys can't be
     // `null`, and most cached projects are live (`archivedAt: null`), so a
     // "find non-archived" query would throw on `.equals(null)`. The cache is
-    // small (one company's projects) — filter it in memory instead.
+    // small (one company's projects) — filter it in memory instead. Same
+    // reasoning applies to `meetingDraftCache.talkId` below.
+    //
+    // New tables are added directly into this same version(1) block rather
+    // than a real Dexie `.version(2)` migration — there's no live user data
+    // yet and no existing precedent for one in this codebase. Revisit this
+    // the first time a *breaking* change is needed against real deployed
+    // data.
     this.version(1).stores({
       outbox: "id, status, entityId, createdAt",
       projectsCache: "id",
       talksCache: "id, tradeTag",
+      meetingDraftCache: "id, projectId, status, updatedAt",
+      mediaBlobs: "id",
     });
   }
 }

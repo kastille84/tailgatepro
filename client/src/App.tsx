@@ -1,4 +1,4 @@
-import { ThemeProvider } from "styled-components";
+import styled, { ThemeProvider } from "styled-components";
 import { QueryClientProvider } from "@tanstack/react-query";
 import { ReactQueryDevtools } from "@tanstack/react-query-devtools";
 import { BrowserRouter, Route, Routes } from "react-router-dom";
@@ -17,6 +17,10 @@ import { queryClient } from "./utils/queryClient";
 import "./services/projectReplayHandler";
 // Same, for a "talk" outbox row.
 import "./services/talkReplayHandler";
+// Same, for "meeting_log", "crew_photo", and "meeting_completion" outbox rows.
+import "./services/meetingLogReplayHandler";
+// Same, for a "signature" outbox row.
+import "./services/signatureReplayHandler";
 
 import { Navbar } from "./ui_comps/navbar/Navbar";
 import { ScrollToTop } from "./ui_comps/scroll-to-top";
@@ -32,6 +36,15 @@ import { ResetPassword } from "./pages/ResetPassword";
 import { Dashboard } from "./pages/Dashboard";
 import { Projects } from "./pages/Projects";
 import { ContentLibrary } from "./pages/ContentLibrary";
+import { MeetingFlow } from "./pages/MeetingFlow";
+
+// Pins Navbar + SyncStatusBanner together as one scroll-fixed block, so the
+// banner never scrolls away from the nav it sits under.
+const StyledStickyHeader = styled.div`
+  position: sticky;
+  top: 0;
+  z-index: 1000;
+`;
 
 function App() {
   return (
@@ -48,8 +61,10 @@ function App() {
                 <GlobalStyles />
                 <BrowserRouter>
                   <ScrollToTop />
-                  <Navbar />
-                  <SyncStatusBanner />
+                  <StyledStickyHeader>
+                    <Navbar />
+                    <SyncStatusBanner />
+                  </StyledStickyHeader>
                   <Routes>
                     <Route path="/" element={<Landing />}></Route>
                     <Route path="/landing" element={<Landing />}></Route>
@@ -73,6 +88,10 @@ function App() {
                       <Route
                         path="/talks"
                         element={<ContentLibrary />}
+                      ></Route>
+                      <Route
+                        path="/meetings/new"
+                        element={<MeetingFlow />}
                       ></Route>
                     </Route>
                   </Routes>

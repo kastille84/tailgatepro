@@ -24,6 +24,11 @@ export interface CreateTalkInput {
   discussionQuestions?: string[];
   oshaStandards?: string[];
   estimatedMinutes?: number | null;
+  /** Language codes to machine-translate this talk into (Google Cloud
+   *  Translation API, gated to premium/enterprise tier). Full-replace on
+   *  update — an omitted language that previously had a translation drops
+   *  it. Omitted/empty ⇒ no translation requested. */
+  targetLanguages?: string[];
 }
 
 /** Fields sent on a full-replace PATCH of an existing custom talk — every

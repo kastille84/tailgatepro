@@ -226,7 +226,7 @@ then favorites + custom talks.
       `hooks/useFavorites.ts` (`["favorites"]` query -> `Set<string>`),
       `hooks/useToggleFavorite.ts` (one hook, `{ talkId, isFavorited }`,
       mirrors `useArchiveProject`'s boolean-branch shape), `features/
-      content-library/FavoriteButton.tsx` (react-icons/hi2
+    content-library/FavoriteButton.tsx` (react-icons/hi2
       `HiBookmark`/`HiOutlineBookmark`) wired into `TalkList` cards and the
       `TalkDetail` modal title row; `ContentLibrary` "Favorites only"
       `Checkbox` in the toolbar + `visibleTalks` `useMemo` filter (+ tests,
@@ -242,21 +242,21 @@ then favorites + custom talks.
       endpoint) + its own test file; `talkRow.js` re-exports it as
       `composeMarkdown` so its public surface is unchanged - Server: `server/services/talks.js` — `listGlobal` renamed to
       `listForCompany(companyId)` (`.or('is_global.eq.true,company_id.eq.
-      ${companyId}')`, same pattern as `projects.listForCompany`), `getById`
+    ${companyId}')`, same pattern as `projects.listForCompany`), `getById`
       now takes `companyId` and is scoped the same way (closes the prior
       TODO(2d)), new `create(...)` (client-supplied `id`, assembles
       `structured` + `content` via `composeTalkMarkdown`, `is_global:
-      false`, `attribution: null`); `server/controllers/talks.js` —
+    false`, `attribution: null`); `server/controllers/talks.js` —
       `listTalks`/`getTalk` pass `req.user.companyId` through, new
       `createTalk`; `server/routes/talks.js` — `POST /` with a full
       express-validator chain (title, optional tradeTag/summary, talking
       points required min 1, hazards/discussion questions/OSHA standards
       optional lists, optional estimated minutes); `server/services/
-      favorites.js` TODO(2d-custom-talks) resolved (no code change needed
+    favorites.js` TODO(2d-custom-talks) resolved (no code change needed
       — the scoped talk list is sufficient authorization) (+ service/
       controller tests updated in lockstep, 94 server tests passing) - Client: `services/apiTalks.ts` (`CreateTalkInput`, `createTalk`),
       `hooks/useCreateTalk.ts` (mirrors `useCreateProject`), `hooks/
-      useTalks.ts` now also derives `tradeOptions` (shared by
+    useTalks.ts` now also derives `tradeOptions` (shared by
       `ContentLibrary`'s trade filter and the new form); `ui_comps/form`
       gained a `Textarea` primitive (used only for the optional summary
       field); new `ui_comps/bullet-list-editor/` — the first Tiptap usage
@@ -303,12 +303,12 @@ then favorites + custom talks.
       `user_favorites.talk_id`'s `ON DELETE CASCADE` needs no extra
       handling); `server/controllers/talks.js` — `updateTalk`/`deleteTalk`
       (`TODO(roles)` comment, mirrors `deleteProject`); `server/routes/
-      talks.js` — `PATCH /:id` (same validator chain as `POST /`),
+    talks.js` — `PATCH /:id` (same validator chain as `POST /`),
       `DELETE /:id` (+ service/controller tests, 30 new/updated cases,
       138 server tests passing) - Client: `services/apiTalks.ts` (`updateTalk`, `deleteTalk`);
       `hooks/useUpdateTalk.ts` / `useDeleteTalk.ts` (mirror
       `useUpdateProject`/`useDeleteProject`); `features/content-library/
-      TalkForm.tsx` gained an optional `talk` prop (edit mode — no `key`
+    TalkForm.tsx` gained an optional `talk` prop (edit mode — no `key`
       remount trick needed, since `ContentLibrary` only mounts the
       lazy-loaded form while `isFormOpen`, so it fully unmounts/remounts on
       its own), a danger-zone Delete button + `ConfirmDialog` (edit-only),
@@ -317,7 +317,7 @@ then favorites + custom talks.
       be edited or deleted.") so the constraint is known upfront, not just
       discovered on a failed save; `TalkDetail.tsx` gained an `onEdit` prop
       and an Edit button shown only for `!talk.isGlobal`; `ContentLibrary.
-      tsx` now tracks `editingTalk` alongside `isFormOpen`
+    tsx` now tracks `editingTalk` alongside `isFormOpen`
       (`openCreate`/`openEdit`/`closeForm`, same shape as `Projects.tsx`) - Testing: `TalkForm.tsx` added to `vite.config.ts`'s coverage
       `exclude` list, alongside the pre-existing `ProjectForm.tsx` entry —
       both share the same unreachable `if (!talk/project) return;` guard
@@ -490,66 +490,261 @@ offline-capable from day one, not as an online-only v1.
       cleanly, confirm a post-completion upload 409s, confirm cross-company 404) still needs a live
       session token
 
-### 4e — Client: offline-queue extension
+### 4e — Client: offline-queue extension · status: code complete, 100% coverage; no UI consumes it yet (4f/4g)
 
-- [ ] `client/src/interfaces/sync.ts` — `SyncEntity` widened to add `"meeting_log" | "signature" |
-    "crew_photo"`; `OutboxRow` gains optional `dependsOnEntityId?: string`
-- [ ] `client/src/utils/db/outbox.ts` — `flush()` skips a row whose `dependsOnEntityId` hasn't
-      synced yet (closes the cross-entity-ordering gap the design doc identifies); also treats a
-      recognizable 409/"already exists" replay error as a successful sync instead of retrying
-      forever (closes the Phase 3 audit finding above). Regression tests must prove
-      Projects/Talks rows (no `dependsOnEntityId`) behave identically to before
-- [ ] `client/src/utils/db/tailgateDb.ts` — new `meetingDraftCache` and `mediaBlobs` (raw `Blob`
-      storage) Dexie tables
-- [ ] `client/src/services/meetingLogReplayHandler.ts` / `signatureReplayHandler.ts` (mirror
-      `talkReplayHandler.ts`; the blob-upload case PUTs a raw body instead of JSON)
-- [ ] `client/src/services/apiMeetingLogs.ts` / `apiSignatures.ts` (`fetchWithTimeout` wrappers,
-      matches `apiTalks.ts`); `useCreateMeetingLog` / `useCreateSignature` / `useUploadCrewPhoto`
-      hooks, `networkMode: "always"` per the `useCreateTalk.ts` template
-- [ ] Verify: unit tests for the `dependsOnEntityId` skip logic, the blob-upload replay path, the
-      409-as-success path, and full regression of `outbox.test.ts` / existing replay-handler tests
-      unchanged
+Plan: `~/.claude/plans/let-s-work-on-4e-idempotent-eich.md`. Pure plumbing — types, Dexie tables,
+outbox mechanics, API wrapper functions, replay handlers, four mutation hooks — verified only by
+unit tests, same as how 4b–4d shipped server code ahead of any client UI.
 
-### 4f — Client: standalone capture components
+- [x] `client/src/interfaces/sync.ts` — `SyncEntity` widened to `"project" | "talk" |
+    "meeting_log" | "signature" | "crew_photo"`; `OutboxRow` gains optional
+      `dependsOnEntityId?: string`. New `meetingLog.ts` / `signature.ts` / `mediaBlob.ts` /
+      `meetingDraft.ts` interfaces (mirroring `talk.ts`'s camelCase-mapper style)
+- [x] `client/src/utils/db/outbox.ts` — `EnqueueInput` gains `dependsOnEntityId?`; `flush()` skips
+      a row whose `dependsOnEntityId` still has an outstanding row elsewhere in the outbox
+      (closes the cross-entity-ordering gap), cascading the skip into `poisonedEntityIds` so a
+      same-`entityId` follow-up (e.g. a signature's blob-upload row) can't slip through while its
+      create is merely skipped rather than failed; new `isAlreadyExistsError` helper treats a
+      `create`-op row whose replay message matches `/already exists/i` as a successful sync
+      (deleted, not failed) instead of retrying forever — detected by message text (the server's
+      JSON envelope carries no status code) so `apiProjects.ts`/`apiTalks.ts` need zero changes,
+      closing the Phase 3 audit finding for every entity, not just the three new ones. 11 new
+      regression/new-case tests in `outbox.test.ts` (27 total), full existing suite unmodified
+- [x] Entity/op design (documented in the plan, not literally spelled out in this checklist):
+      `meeting_log` create has no dependency; `signature` create sets `dependsOnEntityId` to its
+      parent meeting log; `signature` blob upload reuses op `"update"` and the _same_ `entityId`
+      as its own create (chained via the outbox's existing same-entityId ordering, no
+      `dependsOnEntityId` needed); `crew_photo` upload (`op: "update"`) reuses its parent meeting
+      log's own id as `entityId` — there's no separate crew-photo record server-side. `SyncOp` was
+      not widened
+- [x] `client/src/utils/db/tailgateDb.ts` — new `meetingDraftCache` (`id, projectId, status,
+    updatedAt`) and `mediaBlobs` (`id`, raw `Blob` storage) tables added into the existing
+      `version(1)` block (no live data, no existing migration precedent — revisit at the first
+      breaking change against real deployed data); new `client/src/utils/db/mediaBlobs.ts`
+      (`storeMediaBlob`/`getMediaBlob`/`deleteMediaBlob`, `withTimeout`-guarded like `outbox.ts`)
+- [x] `client/src/services/apiMeetingLogs.ts` (`createMeetingLog`, `uploadCrewPhoto`) /
+      `apiSignatures.ts` (`createSignature`, `uploadSignatureBlob`) — mirror `apiTalks.ts`'s
+      `fetchWithTimeout`/`authHeaders`/`GENERIC_ERROR` pattern; the two upload functions are this
+      codebase's first raw-`Blob`-body PUTs (`Content-Type` set to the blob's real mime type, no
+      `JSON.stringify`)
+- [x] `client/src/services/meetingLogReplayHandler.ts` (registers both `"meeting_log"` and
+      `"crew_photo"`) / `signatureReplayHandler.ts` (registers `"signature"`, create + blob-upload
+      `update` cases) — mirror `talkReplayHandler.ts`; the blob-upload cases are the one place a
+      replay handler's body isn't JSON, reading the blob back out of `mediaBlobs` by the id
+      carried in `payload` and deleting it only once the upload succeeds. No cache to invalidate
+      yet — no `useMeetingLogs`/`useSignatures` query exists until 4f/4g
+- [x] `client/src/hooks/useCreateMeetingLog.ts` / `useCreateSignature.ts` (sets
+      `dependsOnEntityId`) / `useUploadCrewPhoto.ts` / `useUploadSignatureBlob.ts` (a 4th hook not
+      literally named in this checklist's original bullet, but needed — `signatureReplayHandler`'s
+      blob-upload case has no other caller) — `networkMode: "always"` per `useCreateTalk.ts`;
+      deliberately skip optimistic-cache machinery (no list view exists yet to reconcile); the two
+      create hooks return the client-generated id synchronously (the wizard needs it before any
+      server round-trip completes)
+- [x] `client/src/App.tsx` — two new side-effect imports (`meetingLogReplayHandler`,
+      `signatureReplayHandler`) next to the existing `talkReplayHandler` one
+- [x] Verify: 108 new tests across 10 files (outbox dependency/409 cases, `mediaBlobs.ts`,
+      `tailgateDb.ts` table round-trips, both api wrapper files, both replay handlers, all four
+      hooks) — full client suite 608 tests passing, 100% coverage maintained on every touched
+      file; `npx eslint` clean on every new/changed file; `tsc -b` shows no new errors (still hits
+      only the pre-existing, unrelated `Input.tsx`/`Dashboard.tsx` failures noted under Phase 1)
 
-- [ ] `ui_comps/signature-pad/` wrapping `signature_pad` (new dependency — flag in the `npm
-    install` diff), exports a PNG blob into `mediaBlobs`
-- [ ] `client/src/hooks/useTalkAudio.ts` wrapping `window.speechSynthesis` (async `voiceschanged`,
-      language selection limited to voices actually present). Manual verify on a real
-      Android/Chrome and iOS/Safari device with the radio off — confirm TTS genuinely works
-      offline before relying on the PRD's offline claim
-- [ ] `features/meeting-flow/Quiz.tsx` — renders `talk.quiz`'s 3 questions; client-side pass/fail
-      is UX-only, server always recomputes authoritatively
-- [ ] Photo capture via plain `<input type="file" accept="image/*" capture="environment">` (no
-      library) — must show explicit copy that the photo is for attendance/proof-of-training only,
-      is not analyzed/matched against any biometric database, and offer a skip option (PRD §4.3
-      BIPA-adjacent requirement — part of this sub-phase's definition of done)
-- [ ] Verify: per-component tests — signature pad captures a stroke and exports a blob; TTS hook
-      plays/stops and degrades gracefully with zero voices; quiz blocks continue until answered
-      and shows pass/fail; photo input's compliance copy renders and skip works
+### 4f — Client: standalone capture components · status: code complete, 100% coverage; TTS real-device check still owed
 
-### 4g — Client: meeting wizard integration
+- [x] `ui_comps/signature-pad/` wrapping `signature_pad` (new dependency, `client/package.json`) —
+      `SignaturePad.tsx` (imperative `clear`/`isEmpty`/`exportBlob` handle, `ref` taken as a plain
+      prop per `docs/ui-inputs.md`, high-DPI + resize handling) + pure `utils.ts`
+      (`dataUrlToBlob`, since jsdom has no real 2D canvas to export a PNG from) + `styles.ts`.
+      Purely presentational — does not touch `mediaBlobs`/the outbox itself; wiring an exported
+      blob into `storeMediaBlob`/`useUploadSignatureBlob` is the 4g wizard's job. 28 tests across
+      `SignaturePad.test.tsx` + `utils.test.ts`, 100% coverage
+- [x] `client/src/hooks/useTalkAudio.ts` wrapping `window.speechSynthesis` — loads voices via both
+      the synchronous `getVoices()` call and the async `voiceschanged` event, degrades to safe
+      no-ops with zero voices/no `speechSynthesis` support, cancels in-flight speech on unmount.
+      13 tests in `useTalkAudio.test.tsx`, 100% coverage. Manual verify on a real Android/Chrome
+      and iOS/Safari device with the radio off — confirm TTS genuinely works offline before
+      relying on the PRD's offline claim — **still owed**, same as every prior phase's
+      real-device item
+- [x] `features/meeting-flow/Quiz.tsx` — renders `talk.quiz`'s 3 questions via `ui_comps/radio`'s
+      `RadioGroup` (one group per question); Continue is disabled until every question has an
+      answer (enforced by the button's own `disabled` state, not a redundant runtime guard); a
+      pass/fail summary shows once everything's answered, computed client-side for UX feedback
+      only — `onContinue` hands back `{questionIndex, selectedIndex}[]` in the exact shape
+      `apiSignatures.ts`'s `CreateSignatureInput.quizAnswers` expects, so 4g can pass it straight
+      through; the server always recomputes `quiz_score`/`quiz_passed` authoritatively (see
+      docs/meeting-flow-design.md). Same presentational-only 4f/4g boundary as SignaturePad — no
+      `useCreateSignature` call in here. Required threading `quiz`/`TalkQuizQuestion` through
+      `interfaces/talk.ts`, `server/services/talks.js`'s `TALK_COLUMNS`/`toTalk`, and
+      `useCreateTalk.ts` (custom talks default `quiz: null` — quiz authoring for custom talks is
+      out of scope here)
+- [x] `features/meeting-flow/PhotoCapture.tsx` — plain `<input type="file" accept="image/*"
+    capture="environment">` (no library), opens the device camera directly on mobile; the
+      BIPA-adjacent compliance notice ("attendance/proof-of-training only, not analyzed or
+      matched against any facial-recognition or biometric database... optional") is always
+      visible, not just on hover/error, per PRD §4.3; a Skip button; a live preview (object URL,
+      revoked on replace/unmount so retakes don't leak blobs). Hands back the chosen `File` via
+      `onCapture` — same presentational-only boundary, no `mediaBlobs`/outbox wiring here
+- [x] Verify: per-component tests — 12 new tests (`Quiz.test.tsx`, `PhotoCapture.test.tsx`) on top
+      of the pre-existing SignaturePad/useTalkAudio suites: quiz blocks Continue until every
+      question is answered and shows a pass/fail summary that doesn't gate Continue; photo
+      input's compliance copy always renders, capture/retake/skip all fire their callbacks
+      correctly, and the previous preview URL is revoked on replace/unmount. Full client suite:
+      648 tests passing, 100% coverage maintained across every file; `npx eslint` clean; `tsc -b`
+      shows no new errors (still only the pre-existing, unrelated `Input.tsx`/`Dashboard.tsx`
+      failures noted under Phase 1)
 
-- [ ] `client/src/pages/MeetingFlow/` + `/meetings/new` route under `RequireAuth`; activates the
-      Dashboard's "Meeting Logs" `StyledCardSoon` (same treatment `ContentLibrary` got in 2c)
-- [ ] `features/meeting-flow/MeetingWizard.tsx` — step machine (project → talk → present → quiz →
-      signatures[] → photo → save), heavy pieces `React.lazy`/`Suspense`-loaded per the
-      `TalkForm`/Tiptap precedent
-- [ ] Each step writes to `meetingDraftCache`; final save fires the mutations and clears the draft
-- [ ] Verify: full airplane-mode manual smoke — start a meeting offline, pick project/talk, TTS or
-      skip, pass quiz, collect 2+ signatures, skip photo, save; reconnect and confirm rows land in
-      Supabase with correct `company_id` and server-computed `quiz_score`, blobs land in their
-      private buckets; reload mid-wizard and confirm the draft resumes
+### 4g — Client: meeting wizard integration · status: code complete, 100% coverage; manual airplane-mode smoke pending
 
-### 4h — Verification, hardening, docs, Phase 5 hook
+Plan: `~/.claude/plans/let-s-do-plan-4g-majestic-lake.md`. Key finding ahead of implementation: the
+checklist's "quiz" and "signatures[]" steps are one repeating sub-flow, not two sequential ones —
+`signatures.quiz_score`/`quiz_answers` are recorded per signature, not per meeting
+(`docs/meeting-flow-design.md`), so each crew member's quiz is taken immediately before they sign.
+Deliberately does **not** call `PATCH /api/meetings/:id/complete` this pass — see the new 4h bullet
+below for why (dependsOnEntityId doesn't support "wait for N rows" yet).
 
-- [ ] Confirm client coverage stays at the repo's enforced 100%; server suite green
-- [ ] `meetingLogs.js`'s `complete()` gets a named stub call site for Phase 5's PDF generation
-      (e.g. `pdfGenerationQueue.enqueue(meetingLogId)`, no-op today), not a bare `// TODO`
-- [ ] Update `docs/data-access.md`'s Storage line from aspirational to concrete (bucket names,
-      path convention, signed-URL TTL); update `Supabase_Schema.md`
-- [ ] Re-surface still-open items in this file: crew-photo retention policy (PRD §7, unresolved
-      here on purpose) and the Phase 3 manual E2E pass (still owed, independent of Phase 4)
+- [x] `client/src/pages/MeetingFlow/` (`MeetingFlow.tsx` + `.styles.ts` + `index.ts`) +
+      `/meetings/new` route under `RequireAuth` in `App.tsx`; activated the Dashboard's "Meeting
+      Logs" `StyledCardSoon` → `StyledCard to="/meetings/new"` (same treatment `ContentLibrary` got
+      in 2c) — required removing two now-genuinely-unused imports (`useState`, `Button`) from
+      `Dashboard.tsx` that were only referenced by already-commented-out logout code, closing a
+      pre-existing (not 4g-caused) `tsc -b` failure alongside the already-documented `Input.tsx` one
+- [x] `features/meeting-flow/MeetingWizard.tsx` — step machine (`project → talk → present →
+    signatures → photo → save`, `WizardStep` union + plain `useState`, no reducer). Composes new
+      `ProjectPicker.tsx` (a dedicated selection-shaped picker — `features/projects/ProjectList` is
+      edit-shaped, not reusable here), `content-library/TalkList` (`favoriteIds={new Set()}`), new
+      `TalkPresenter.tsx` (talk sections + `useTalkAudio` read-aloud controls, Continue always
+      available), and new `SignaturesStep.tsx` (the per-worker add loop: name → quiz, skipped when
+      `talk.quiz` is `null` → `SignaturePad` → add to list, Continue disabled until ≥1 signer).
+      Lazy-loaded from `MeetingFlow.tsx` by direct file path (not the barrel), same as
+      `ContentLibrary.tsx`'s `TalkForm`, so `signature_pad` stays out of the main bundle
+- [x] Each step persists into the singleton `meetingDraftCache` row (new
+      `client/src/utils/db/meetingDraftCache.ts` — `getActiveDraft`/`putDraft`/`clearDraft`, the
+      read/write helpers Phase 4e's schema-only table was missing) via one `persistStep` call per
+      step-commit, never on every keystroke/stroke; `interfaces/meetingDraft.ts` gained
+      `WizardStep`/`DraftSigner`/`MeetingDraftData`. On mount, an existing draft triggers a
+      `ConfirmDialog` ("Resume in-progress meeting?" / "Discard draft"); Cancel resumes, confirming
+      discards — a draft whose project no longer resolves (archived/deleted) is silently discarded
+      instead of prompted. Final Save is checkpoint-guarded (`meetingLogId`/`signatureId`/
+      `blobUploaded`/`photoUploaded` fields, mirrored into the draft after each mutation) so a
+      retried Save after a partial online failure never re-creates a meeting log or a signature that
+      already landed — necessary because `useCreateMeetingLog`/`useCreateSignature` mint a fresh
+      `crypto.randomUUID()` on every call. On success: `clearDraft()`, a success toast, navigate to
+      `/dashboard`. On failure: the draft is left exactly as far as it got, Save stays re-clickable
+- [x] Tests: 40 new/changed test cases across `meetingDraftCache.test.ts`, `ProjectPicker.test.tsx`,
+      `TalkPresenter.test.tsx`, `SignaturesStep.test.tsx` (mocks the `signature_pad` boundary the
+      same way `SignaturePad.test.tsx` does, so the real component wiring is exercised),
+      `MeetingWizard.test.tsx` (every composed child stubbed by file path, `fake-indexeddb`-backed
+      resume/checkpoint behavior verified for real), `MeetingFlow.test.tsx`, plus the Dashboard card
+      test split. Full client suite: 699 tests passing, **100%** statements/branches/functions/lines
+      maintained on every file (the repo's actual enforced bar, not the 90% `CLAUDE.md` describes) —
+      hitting true 100% branch coverage required removing a handful of genuinely-unreachable
+      `if (!selectedProject)`-style guards in favor of non-null assertions with an invariant comment
+      (their call sites are only ever reached after that state is already set), rather than writing
+      contrived tests for dead code, matching the `TalkForm`/`ProjectForm` precedent's reasoning.
+      `npx eslint` clean; `tsc -b` shows no new errors
+- [x] Verify: full airplane-mode manual smoke — start a meeting offline, pick project/talk, TTS or
+      skip, collect 2+ signatures (with and without a quiz), skip photo, save; reconnect and confirm
+      rows land in Supabase with correct `company_id` and server-computed `quiz_score`, blobs land in
+      their private buckets; reload mid-wizard and confirm the draft resumes
+
+### 4h — Verification, hardening, docs, Phase 5 hook · status: code/docs complete;
+manual smoke with a real Bearer token (see the first bullet below) and the Phase 3 manual E2E
+pass are the only items left, both live-device passes deferred like every prior phase's
+
+- [x] Wired up `PATCH /api/meetings/:id/complete`: `OutboxRow.dependsOnEntityId`
+      (single string) widened to `dependsOnEntityIds?: string[]` — `flush()`'s
+      dependency-skip check now blocks a row while _any_ listed id has an
+      outstanding outbox row, not just one. Only production call site
+      (`useCreateSignature.ts`) migrated to the array form (`[meetingId]`); no
+      back-compat shim needed (pre-production, field isn't part of the Dexie
+      index). New `SyncEntity` member `"meeting_completion"` and `SyncOp`
+      member `"complete"`; new `isAlreadyCompletedError` in `outbox.ts` (mirrors
+      `isAlreadyExistsError`, gated `op === "complete"`, matches the server's
+      "already been completed" 409 text) so a retried completion self-heals
+      instead of retrying forever. New `apiMeetingLogs.completeMeeting` (PATCH,
+      no request body — the route reads none); new `registerReplayHandler
+    ("meeting_completion", ...)` folded into the existing
+      `meetingLogReplayHandler.ts` (alongside `meeting_log`/`crew_photo`, same
+      "no separate record, reuses the meeting log's id" reasoning — no new file,
+      no new `App.tsx` import). New `client/src/hooks/useCompleteMeetingLog.ts`
+      (mirrors `useUploadCrewPhoto.ts`'s shape) enqueues
+      `{entity: "meeting_completion", entityId: meetingLogId, op: "complete",
+    dependsOnEntityIds: <every collected signatureId>}` — piggybacks on the
+      outbox's existing same-entityId ordering for the meeting-log/crew-photo
+      dependency (free) and the new array field for the N-signature dependency.
+      `MeetingWizard.tsx`'s `handleSave` enqueues this as its final checkpointed
+      step (`completionEnqueued`, threaded through `checkpointsRef`,
+      `persistStep`, `handleResumeDraft`, and `MeetingDraftData`) after the
+      crew-photo step and before `clearDraft()` — deliberately does not await
+      actual sync, so Save stays fast and fully offline-capable; the row rides
+      the same background flush triggers (online event, boot, retry, 30s poll)
+      as everything else.
+      Tests: renamed/extended `outbox.test.ts`'s dependency-array coverage (two
+      dependencies, one/both clearing; empty array) + new
+      "already-completed 409" describe block (4 cases mirroring
+      "already-exists"); `useCreateSignature.test.ts` updated; new
+      `apiMeetingLogs.test.ts` `completeMeeting` cases; new
+      `meetingLogReplayHandler.test.ts` `meeting_completion` cases; new
+      `useCompleteMeetingLog.test.tsx` (mirrors `useUploadCrewPhoto.test.tsx`);
+      `MeetingWizard.test.tsx` gained a `completeMeetingLog` mock plus cases for
+      the happy path, a retried Save that doesn't double-complete, and both
+      "resume with completion already enqueued" / "resume without it" paths.
+      Full client suite: 783 tests, 781 passing — the only 2 failures are
+      pre-existing and unrelated (`PhotoCapture.test.tsx`'s camera-mock timing
+      cases, confirmed flaky/failing on this branch before this change too, via
+      a stash-and-rerun check). Every touched file (including the new
+      `useCompleteMeetingLog.ts`) verified at 100% coverage. `npx eslint` clean
+      on every new/changed file; `tsc -b` shows no new errors (still only the
+      pre-existing `Input.tsx` failures already documented under Phase 1).
+      Server suite unaffected: 206 tests passing (no server-side changes).
+      **Known, accepted limitation** (not new scope): if a signature or its
+      blob permanently fails during a _background_ flush (as opposed to the
+      wizard's own synchronous first-attempt check, which still surfaces the
+      error inline before completion is ever enqueued), that row retries
+      forever and blocks that one meeting's completion indefinitely — a
+      pre-existing property of the outbox's retry model, just more exposed here
+      since completion depends on N ids instead of one. No per-meeting
+      completion-status UI exists either — only the app's existing generic
+      pending-sync badge. Both are intentionally deferred, not gaps to close in
+      this pass.
+      Manual/curl smoke (needs a real Bearer token, same as every prior phase's
+      manual-smoke item) still pending: confirm a `meeting_completion` row
+      briefly appears in the outbox then clears; confirm `completed_at` lands
+      in Supabase; confirm the `isAlreadyCompletedError` path on a forced
+      duplicate replay.
+- [x] Confirm client coverage stays at the repo's enforced 100%; server suite green — server:
+      `npm run test:server` → 206/206 passing, clean. Client: `npx vitest run --coverage` → 783/785
+      passing; the coverage report itself doesn't get generated when any test fails (no
+      `coverage/` output, by this repo's Vitest config). The 2 failures are the same pre-existing
+      `PhotoCapture.test.tsx` camera-mock timing cases already called out and confirmed
+      unrelated/pre-existing under the prior 4h bullet (reconfirmed here by running that file in
+      isolation — same 2 failures, not flaky-per-run) — not something this pass introduced or
+      needs to fix. Coverage on every file this branch actually touched was already verified at
+      100% when each of those changes landed (see the per-bullet notes above); a clean full-suite
+      coverage number is blocked on fixing `PhotoCapture.test.tsx`, which is out of this checklist
+      item's scope
+- [x] `meetingLogs.js`'s `complete()` gets a named stub call site for Phase 5's PDF generation
+      (e.g. `pdfGenerationQueue.enqueue(meetingLogId)`, no-op today), not a bare `// TODO` —
+      already satisfied: `complete()` calls `await pdfGenerationQueue.enqueue(id)`
+      (`server/services/meetingLogs.js`), and `server/services/pdfGenerationQueue.js` is exactly
+      that named no-op stub. Shipped back in 4c/4d; this bullet was stale
+- [x] Update `docs/data-access.md`'s Storage line from aspirational to concrete (bucket names,
+      path convention, signed-URL TTL); update `Supabase_Schema.md` — `Supabase_Schema.md`'s
+      "Supabase Storage buckets (Phase 4)" section already had the concrete bucket names/paths/TTL
+      (shipped in 4d); only `docs/data-access.md`'s one-liner was still aspirational — replaced it
+      with the concrete bucket names + TTL, cross-referencing `Supabase_Schema.md` rather than
+      duplicating its table
+- [x] Re-surface still-open items in this file: crew-photo retention policy (PRD §7, unresolved
+      here on purpose) and the Phase 3 manual E2E pass (still owed, independent of Phase 4) — both
+      were already flagged inline (4a's design-doc bullet; the end of the Phase 3 section) but
+      buried inside older completed-status prose. Restating them here so a future "what's next?"
+      pass finds them without re-reading Phase 3/4a in full:
+      - **Crew-photo retention policy** — PRD §7 leaves how long a crew photo is kept unresolved;
+        `docs/meeting-flow-design.md` (4a) deliberately didn't decide it. Needs a product decision
+        before Phase 5/6 build anything that assumes a retention window.
+      - **Phase 3 manual E2E pass** — multi-tab, real airplane-mode on a device, storage eviction,
+        cross-device conflict. Not practical under Vitest + fake-indexeddb; no record of this pass
+        exists yet. Independent of Phase 4 — do it whenever a device is available, not blocking
+        anything above.
 
 ## Phase 5 — PDF generation + GC delivery · epic
 
@@ -562,6 +757,94 @@ offline-capable from day one, not as an online-only v1.
 ## Phase 6 — GC dashboard · epic, blocked by invite/join-company
 
 - [ ] GC views: projects, incoming meeting-log PDFs, per-sub compliance status
+
+## Phase 7 — Multi-language talks + entitlement gating · status: code complete, 100% client coverage; manual verify + GOOGLE_TRANSLATE_API_KEY provisioning pending
+
+Plan: `~/.claude/plans/i-noticed-that-there-buzzing-fox.md`. Started from the user noticing
+`useTalkAudio`'s "read aloud" only changed the TTS _voice/accent_, never the talk's actual text —
+a real gap against `docs/PRD.md` §4.4's "TTS in English, Spanish, and other requested languages."
+Two source-dependent translation strategies converge on one schema/UI: the global library
+(official-source-only, mechanism-only this pass) and custom talks (Google Cloud Translation API at
+create/edit time). Along the way, discovered `client/src/data/plans.ts` gates multi-language behind
+Trade Pro/Enterprise and that **no entitlement enforcement existed anywhere** (server or client) —
+added the first real (if minimal) one, both to honor the pricing page and because Google Translate
+is a metered API. AI Talk Builder and cloud "AI voice" synthesis (both also promised on the pricing
+page) were explicitly scoped OUT — see Known limitations below.
+
+- [x] Shared `toolbox_talks.translations` JSONB column (`Supabase_SQL.sql`, `Supabase_Schema.md`) —
+      per-language `{ title, summary, talking_points, site_hazards_to_check, discussion_questions }`,
+      keyed by ISO 639-1 code; English stays implicit (the row's own fields). `Talk`/`TalkTranslation`
+      (`client/src/interfaces/talk.ts`), `server/services/talks.js` `TALK_COLUMNS`/`toTalk`, and
+      `scripts/lib/talkRow.js` `buildRow` all pass it through, defaulting to `null`
+- [x] Entitlement gating (new) — `server/utility/entitlements.js` (`hasTranslationAccess`, tiers
+      `premium`/`enterprise`); `server/services/users.js` `getUserContext` now joins
+      `companies(tier)`; `loadUserContext` puts `tier` on `req.user`; new `GET /api/users/me` (first
+      endpoint exposing profile/tier to the client at all) backs new client
+      `useCurrentUser.ts`/`apiUsers.getCurrentUser`, deliberately layered on top of `useAuth()`
+      rather than merged into `AuthProvider` per CLAUDE.md. `createTalk`/`updateTalk`/
+      `listTranslationLanguages` all 403 with "Upgrade to Trade Pro to unlock multi-language talks"
+      when `targetLanguages`/the languages list is requested without access
+- [x] Global library path — `.claude/agents/talks/safety-structurer.md` documents an optional
+      `translations` key in the Standard Talk Schema: official agency-published translations only
+      (e.g. CPWR/NIOSH "Charlas de Seguridad"), never machine-translated. No backfill of the existing
+      30 talks this pass — that's separate future content work
+- [x] Custom-talk path — new `server/services/translation.js` wraps the Google Cloud Translation API
+      (v2 REST + API key, no SDK): `getSupportedLanguages()` and `translateStructuredFields()` (one
+      API call per language via the array form of `q`, flattening/rebuilding the structured shape;
+      a single language's failure is caught and simply omitted, never blocks the talk save). New
+      `GOOGLE_TRANSLATE_API_KEY[_PROD]` in `server/utility/envUtils.js` — unset degrades to
+      "unavailable" everywhere, never a hard error. `talks.js` `create`/`update` call it when
+      `targetLanguages` is given; `update` full-replaces `translations` (same as `structured`) so
+      unchecking a language on edit drops it. New `GET /api/talks/translation-languages` (registered
+      before `GET /:id`) backs client `apiTranslation.ts`/`useTranslationLanguages.ts`
+      (`enabled: isOnline && hasTranslationAccess`)
+- [x] `TalkForm.tsx` — the "Translations" section is collapsed by default behind a single "Add
+      translations for this talk?" `Checkbox` (always visible, not tier/online-gated itself); once
+      checked it reveals the three-way tier upgrade note / offline note / "Translate into" `Checkbox`
+      list, in that precedence. `wantsTranslations` state starts `true` when editing a talk that
+      already has `translations` (so existing data is never hidden); unchecking the toggle also
+      clears the form's `targetLanguages` via RHF `setValue` so a collapsed section can never
+      silently submit a stale selection. `targetLanguages` rides in `CreateTalkInput`/
+      `UpdateTalkInput` through the existing offline outbox unchanged (translation runs server-side
+      whenever the write actually lands, online-now or after reconnect) — `useCreateTalk`'s
+      optimistic entry gets `translations: null` (unknown until sync, same as `content`/`slug`);
+      `useUpdateTalk`'s `applyTalkPatch` needed no change (already spreads `...existing` first)
+- [x] `TalkPresenter.tsx` — new `client/src/utils/talkLocalization.ts`
+      (`getTalkLanguageOptions`/`getLocalizedTalkContent`, `Intl.DisplayNames` for labels, whole-
+      object English fallback so a talk never mixes languages mid-sentence). `useTalkAudio.ts` gained
+      exported `findVoiceForLanguage` + `matchVoiceToLanguage` so picking a language also nudges the
+      TTS accent to match (voice dropdown still overrides). Language switcher — and any non-English
+      content at all — is gated on `hasTranslationAccess`, not just on `talk.translations` existing,
+      so a Basic-tier company always sees English even against a manually-seeded row or a downgrade.
+      A "Machine-translated — verify accuracy..." note shows only for non-global talks' translations
+- [x] Tests: `server/services/translation.test.js` (new), updates across `talks.test.js` (service +
+      controller), `users.test.js`; client: `talkLocalization.test.ts`, `useCurrentUser.test.tsx`,
+      `useTranslationLanguages.test.tsx`, `apiTranslation.test.ts` (all new), plus updates to
+      `TalkForm.test.tsx`, `TalkPresenter.test.tsx`, `useTalkAudio.test.tsx`, `useCreateTalk.test.tsx`,
+      `useUpdateTalk.test.tsx`, `apiUsers.test.ts`. 737 client tests passing (includes the later
+      collapsed-by-default toggle refinement below), **100%** coverage
+      maintained (including the `Intl.DisplayNames` constructor/`.of()` fallback branches, exercised
+      via `vi.spyOn` rather than skipped as dead code); 206 server tests passing. `npx eslint` clean
+      on every touched file; `tsc -b` shows no _new_ errors (the pre-existing `Input.tsx` failure
+      already documented earlier in this file is untouched)
+- [ ] Known limitations, tracked explicitly rather than silently dropped: **AI Talk Builder** and
+      **cloud "AI voice" synthesis** (both promised alongside multi-language on the pricing page) were
+      out of scope for this pass; the 3-question comprehension quiz (`talk.quiz`) and the composed
+      Markdown `content` (PDF) are not translated; a per-language translation failure is silently
+      omitted rather than surfaced (re-opening Edit and seeing which languages are unchecked is the
+      only current signal, matching the outbox's existing fire-and-forget model); `useCurrentUser`'s
+      client-side tier check hand-mirrors `server/utility/entitlements.js` (server is the real
+      authority, enforced on every gated endpoint)
+- [ ] Verify: provision a real `GOOGLE_TRANSLATE_API_KEY` (Google Cloud project with the Cloud
+      Translation API enabled + billing) in both envs; manually smoke Basic-tier (upgrade note, no
+      switcher even against a DB-seeded `translations` row), Pro-tier online (checklist → create →
+      edit shows pre-checked → Present shows switcher + disclaimer + voice auto-match), and Pro-tier
+      offline (offline note, talk still saves) per the plan file's Verification section
+- [ ] Sourcing 300+ additional talks from a purchased (non-government) bundle to approach the pricing
+      page's "500+ OSHA library" claim was raised and **intentionally deferred** — flagged as a real
+      licensing question (unlike NIOSH/CPWR, a commercial bundle has no vetted redistribution-in-a-
+      SaaS-product license) to resolve before any ingestion work, not a content-pipeline task to run
+      as-is through `safety-collector`
 
 ## Cross-cutting — Invite / join-company flow · epic, prerequisite for multi-user + Phase 6
 

@@ -231,3 +231,57 @@ export const StyledLockNotice = styled.p`
     flex-shrink: 0;
   }
 `;
+
+/** TalkFilters' toolbar (trade Select + search TextInput), shared by
+ *  ContentLibrary and the meeting wizard's talk-picker step. */
+export const StyledToolbar = styled.div`
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: 1.6rem;
+  margin-bottom: 2.4rem;
+
+  > * {
+    flex: 1 1 20rem;
+  }
+`;
+
+export const StyledCheckboxContainer = styled.div`
+  display: flex;
+  align-items: flex-start;
+  flex-direction: column;
+  justify-content: flex-start;
+
+  @media (min-width: ${({ theme }) => theme.breakpoints.md}) {
+    flex-direction: row;
+    justify-content: flex-start;
+    align-items: center;
+    gap: 1.6rem;
+  }
+`;
+
+/** TalkForm's translation section: either the "Translate into" checklist, or
+ *  one of two explanatory notes (no tier access / offline) in its place. */
+export const StyledTranslationsList = styled.div`
+  display: flex;
+  flex-direction: column;
+  gap: 0.8rem;
+  max-height: 20rem;
+  overflow-y: auto;
+`;
+
+export const StyledTranslationsNote = styled.p`
+  margin: 0;
+  padding: 1.2rem 1.4rem;
+  border-radius: ${({ theme }) => theme.borderRadius.sm};
+  background-color: ${({ theme }) => theme.colors.concrete[200]};
+  font-size: 1.3rem;
+  font-weight: 500;
+  line-height: 1.5;
+  color: ${({ theme }) => theme.colors.navy[500]};
+
+  & a {
+    color: ${({ theme }) => theme.colors.orange[600]};
+    font-weight: 700;
+  }
+`;

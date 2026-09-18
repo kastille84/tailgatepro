@@ -42,9 +42,38 @@ You are a content engineer specializing in UI schema design, trade classificatio
     "license": "free-use-with-attribution",
     "source_url": "https://www.cpwr.com/wp-content/uploads/...",
     "notice": "Adapted from a CPWR/NIOSH Toolbox Talk, produced under NIOSH cooperative agreement OH 009762. Reproduced with attribution for jobsite safety training; not an endorsement by CPWR or NIOSH."
+  },
+  "translations": {
+    "es": {
+      "title": "Título claro y accionable",
+      "summary": "Resumen de 1-2 oraciones del tema.",
+      "talking_points": ["Punto de seguridad clave 1"],
+      "site_hazards_to_check": ["Peligro físico específico a inspeccionar en el sitio"],
+      "discussion_questions": ["¿Pregunta para verificar la comprensión de la cuadrilla?"]
+    }
   }
 }
 ```
+
+## Translations (optional — official sources only)
+
+`translations` is keyed by ISO 639-1 language code and is **omitted entirely**
+unless the source agency itself published an official translation of this
+exact talk (e.g. CPWR/NIOSH sometimes publish a Spanish "Charla de
+Seguridad" alongside the English version). When one exists:
+
+- The `safety-collector` agent captures it into `data/raw/` the same way it
+  captures the English source, with its own `source_url`.
+- Populate `translations.<lang-code>` with the translated `title`, `summary`,
+  `talking_points`, `site_hazards_to_check`, and `discussion_questions` —
+  the same fields the English talk carries at the top level, translated.
+  `osha_standards`, `estimated_minutes`, `attribution`, and `quiz` are not
+  translated (they're codes/metadata, not prose, or out of scope for now).
+- **Never machine-translate** a global-library talk to fill this field —
+  custom, company-authored talks have their own machine-translation path
+  (Google Cloud Translation API, gated to paid tiers); this pipeline's talks
+  are held to the official-source-only bar. Leave `translations` out of the
+  JSON entirely rather than guess.
 
 ## Attribution (required on every talk)
 

@@ -3,9 +3,18 @@
 // single module-scope spy reconfigured per test is enough — no re-spying.
 const { supabase } = require("../utility/supabaseClient");
 const { listForCompany, getById, create, update, remove } = require("./talks");
+const translation = require("./translation");
 
 const TALK_COLUMNS =
-  "id, slug, title, trade_tag, trade_tags, content, structured, attribution, is_global, company_id, created_at";
+  "id, slug, title, trade_tag, trade_tags, content, structured, attribution, quiz, translations, is_global, company_id, created_at";
+
+const translateSpy = vi.spyOn(translation, "translateStructuredFields");
+
+const sampleQuiz = [
+  { question: "Q1?", choices: ["A", "B", "C"], correctIndex: 0 },
+  { question: "Q2?", choices: ["A", "B", "C"], correctIndex: 1 },
+  { question: "Q3?", choices: ["A", "B", "C"], correctIndex: 2 },
+];
 
 const dbRow = {
   id: "talk-1",
@@ -16,6 +25,7 @@ const dbRow = {
   content: "# Eye Protection on the Jobsite\n",
   structured: { summary: "...", talking_points: [] },
   attribution: { source: "NIOSH" },
+  quiz: sampleQuiz,
   is_global: true,
   company_id: null,
   created_at: "2026-09-09T00:00:00.000Z",
@@ -30,6 +40,8 @@ const mappedTalk = {
   content: "# Eye Protection on the Jobsite\n",
   structured: { summary: "...", talking_points: [] },
   attribution: { source: "NIOSH" },
+  quiz: sampleQuiz,
+  translations: null,
   isGlobal: true,
   companyId: null,
   createdAt: "2026-09-09T00:00:00.000Z",
@@ -65,10 +77,12 @@ describe("talks service: listForCompany", () => {
     expect(result).toEqual([mappedTalk]);
   });
 
-  it("should default missing structured/attribution/trade_tags to []/null", async () => {
+  it("should default missing structured/attribution/quiz/trade_tags to []/null", async () => {
     // Arrange
     order.mockResolvedValue({
-      data: [{ ...dbRow, structured: null, attribution: null, trade_tags: null }],
+      data: [
+        { ...dbRow, structured: null, attribution: null, quiz: null, trade_tags: null },
+      ],
       error: null,
     });
 
@@ -78,6 +92,7 @@ describe("talks service: listForCompany", () => {
     // Assert
     expect(result.structured).toBeNull();
     expect(result.attribution).toBeNull();
+    expect(result.quiz).toBeNull();
     expect(result.tradeTags).toEqual([]);
   });
 
@@ -183,6 +198,8 @@ describe("talks service: create", () => {
     content: "# Ladder Safety Refresher\n",
     structured: customDbRow.structured,
     attribution: null,
+    quiz: null,
+    translations: null,
     isGlobal: false,
     companyId: "company-1",
     createdAt: "2026-09-12T00:00:00.000Z",
@@ -202,6 +219,9 @@ describe("talks service: create", () => {
       if (table === "toolbox_talks") return { insert };
       throw new Error(`Unexpected table: ${table}`);
     });
+
+    translateSpy.mockReset();
+    translateSpy.mockResolvedValue({});
   });
 
   it("should insert a company-scoped, non-global row and return it mapped to camelCase", async () => {
@@ -291,6 +311,55 @@ describe("talks service: create", () => {
       message: "Could not create the talk",
     });
   });
+
+  it("should translate into every targetLanguage and store the result as translations", async () => {
+    // Arrange
+    translateSpy.mockResolvedValue({
+      es: {
+        title: "Refuerzo de seguridad de escaleras",
+        summary: null,
+        talking_points: ["Inspeccione los peldaños antes de usar"],
+        site_hazards_to_check: [],
+        discussion_questions: [],
+      },
+    });
+
+    // Act
+    await create({
+      id: "talk-2",
+      companyId: "company-1",
+      title: "Ladder Safety Refresher",
+      talkingPoints: ["Inspect rungs before use"],
+      targetLanguages: ["es"],
+    });
+
+    // Assert
+    expect(translateSpy).toHaveBeenCalledWith(
+      expect.objectContaining({ title: "Ladder Safety Refresher" }),
+      ["es"],
+    );
+    expect(insert).toHaveBeenCalledWith(
+      expect.objectContaining({
+        translations: { es: expect.objectContaining({ title: expect.any(String) }) },
+      }),
+    );
+  });
+
+  it("should not call the translation service and store translations as null when no targetLanguages is given", async () => {
+    // Act
+    await create({
+      id: "talk-2",
+      companyId: "company-1",
+      title: "Ladder Safety Refresher",
+      talkingPoints: ["x"],
+    });
+
+    // Assert
+    expect(translateSpy).not.toHaveBeenCalled();
+    expect(insert).toHaveBeenCalledWith(
+      expect.objectContaining({ translations: null }),
+    );
+  });
 });
 
 describe("talks service: update", () => {
@@ -353,6 +422,9 @@ describe("talks service: update", () => {
       if (table === "toolbox_talks") return { update: updateFn };
       throw new Error(`Unexpected table: ${table}`);
     });
+
+    translateSpy.mockReset();
+    translateSpy.mockResolvedValue({});
   });
 
   it("should rebuild content/structured and update a not-yet-logged talk, scoped to the owning company and non-global", async () => {
@@ -427,6 +499,44 @@ describe("talks service: update", () => {
       statusCode: 502,
       message: "Could not update the talk",
     });
+  });
+
+  it("should translate into every targetLanguage and full-replace translations with the result", async () => {
+    // Arrange
+    translateSpy.mockResolvedValue({
+      es: {
+        title: "Refuerzo de seguridad de escaleras (actualizado)",
+        summary: null,
+        talking_points: [],
+        site_hazards_to_check: [],
+        discussion_questions: [],
+      },
+    });
+
+    // Act
+    await update({ ...payload, targetLanguages: ["es"] });
+
+    // Assert
+    expect(translateSpy).toHaveBeenCalledWith(
+      expect.objectContaining({ title: payload.title }),
+      ["es"],
+    );
+    expect(updateFn).toHaveBeenCalledWith(
+      expect.objectContaining({
+        translations: { es: expect.objectContaining({ title: expect.any(String) }) },
+      }),
+    );
+  });
+
+  it("should not call the translation service and full-replace translations with null when no targetLanguages is given (dropping any prior translation)", async () => {
+    // Act
+    await update(payload);
+
+    // Assert
+    expect(translateSpy).not.toHaveBeenCalled();
+    expect(updateFn).toHaveBeenCalledWith(
+      expect.objectContaining({ translations: null }),
+    );
   });
 });
 

@@ -14,6 +14,8 @@ export interface EnqueueInput {
   entityId: string;
   op: SyncOp;
   payload: Record<string, unknown>;
+  /** See `OutboxRow.dependsOnEntityIds`. */
+  dependsOnEntityIds?: string[];
 }
 
 /**
@@ -43,6 +45,44 @@ const isNetworkOrTimeoutError = (error: unknown): boolean =>
   (typeof error === "object" &&
     error !== null &&
     (error as { name?: unknown }).name === "AbortError");
+
+/**
+ * True for the one case the server signals via `AppError("This X already
+ * exists", 409)` on a `create`'s Postgres `23505` unique-violation — see the
+ * `create` functions in `projects.js`/`talks.js`/`meetingLogs.js`/
+ * `signatures.js`. Means this row's write actually landed on an earlier
+ * attempt (e.g. the response to that attempt was lost, or a previous flush
+ * was interrupted after the server committed it), so the retry should be
+ * treated as a success, not failed forever.
+ *
+ * Detected by message text rather than a status code: the server's JSON
+ * error envelope only ever carries `{ success, error: <message> }` (see
+ * `server/middlewares/errorHandler.js`), and `apiProjects.ts`/`apiTalks.ts`
+ * already throw a plain `Error(body.error)` — matching text here keeps every
+ * existing API wrapper unchanged instead of requiring a status-carrying
+ * error class for no behavioral gain. Gated on `row.op === "create"` since
+ * that's the only op this situation can happen for, and defensively — no
+ * *other* 409 in the codebase (e.g. "already been completed", "used in a
+ * logged safety talk") contains the phrase "already exists".
+ */
+const isAlreadyExistsError = (row: OutboxRow, error: unknown): boolean =>
+  row.op === "create" &&
+  error instanceof Error &&
+  /already exists/i.test(error.message);
+
+/**
+ * True for the analogous case on a `"complete"` op: `AppError("This meeting
+ * has already been completed and can't be changed.", 409)` from
+ * `meetingLogs.js`'s `assertNotCompleted`, meaning an earlier attempt's
+ * `PATCH .../complete` actually landed (e.g. its response was lost, or a
+ * previous flush was interrupted after the server committed it). Gated on
+ * `op === "complete"` the same way `isAlreadyExistsError` is gated on
+ * `"create"` — no other 409 in the codebase contains this phrase.
+ */
+const isAlreadyCompletedError = (row: OutboxRow, error: unknown): boolean =>
+  row.op === "complete" &&
+  error instanceof Error &&
+  /already been completed/i.test(error.message);
 
 /**
  * Queues a mutation in the outbox, then — if a replayer is given and the
@@ -81,6 +121,9 @@ export const enqueueMutation = async (
     lastError: null,
     createdAt: new Date().toISOString(),
     syncedAt: null,
+    ...(input.dependsOnEntityIds?.length
+      ? { dependsOnEntityIds: input.dependsOnEntityIds }
+      : {}),
   };
 
   await withTimeout(
@@ -137,6 +180,17 @@ export interface FlushOptions {
  * an edit never applies on top of a create that never landed), but other
  * entities keep processing. See `docs/offline-sync-design.md`.
  *
+ * A row whose `dependsOnEntityIds` still has an outstanding row elsewhere in
+ * the outbox for ANY listed id (e.g. a signature depending on its parent
+ * meeting log, or a meeting's completion depending on every signature
+ * collected for it) is skipped the same way — left `pending`, not attempted —
+ * until every dependency clears. A `create` row whose replay fails with a
+ * recognizable "already exists" error (see `isAlreadyExistsError`), or a
+ * `complete` row that fails with "already been completed" (see
+ * `isAlreadyCompletedError`), is treated as a success rather than a failure:
+ * the write actually landed on an earlier, now-unconfirmed attempt. See
+ * `docs/meeting-flow-design.md`.
+ *
  * A no-op if a flush is already running, so an `online` event, app boot, and
  * a manual "Retry now" click can't process the same row twice concurrently.
  * A row enqueued while a flush is already in flight (see `enqueueMutation`'s
@@ -162,6 +216,25 @@ export const flush = async (
     for (const row of rows) {
       if (poisonedEntityIds.has(row.entityId)) continue;
 
+      if (row.dependsOnEntityIds?.length) {
+        const outstandingCounts = await Promise.all(
+          row.dependsOnEntityIds.map((depId) =>
+            tailgateDb.outbox.where("entityId").equals(depId).count(),
+          ),
+        );
+        if (outstandingCounts.some((count) => count > 0)) {
+          // Left `pending` (not attempted, not failed) — the next flush
+          // retries it once every dependency clears. Also poisons this row's
+          // own entityId for the rest of *this* pass: a same-entityId
+          // follow-up row (e.g. a signature's blob-upload row, chained to
+          // its create via the ordinary same-entityId mechanism below) must
+          // not slip through just because this row was merely skipped
+          // rather than marked failed.
+          poisonedEntityIds.add(row.entityId);
+          continue;
+        }
+      }
+
       await withTimeout(
         tailgateDb.outbox.update(row.id, { status: "syncing" }),
         DEXIE_WRITE_TIMEOUT_MS,
@@ -178,6 +251,18 @@ export const flush = async (
           DEXIE_WRITE_TIMEOUT_MS,
         );
       } catch (error) {
+        if (isAlreadyExistsError(row, error) || isAlreadyCompletedError(row, error)) {
+          // The write actually landed on an earlier attempt — treat this
+          // exactly like success: delete the row, don't poison its
+          // entityId, and (if this is the watched row) let the caller's
+          // promise resolve normally instead of rejecting.
+          await withTimeout(
+            tailgateDb.outbox.delete(row.id),
+            DEXIE_WRITE_TIMEOUT_MS,
+          );
+          continue;
+        }
+
         poisonedEntityIds.add(row.entityId);
 
         if (

@@ -1,12 +1,13 @@
 const { supabase } = require("../utility/supabaseClient");
 const { AppError } = require("../utility/AppError");
 const { composeTalkMarkdown } = require("../utility/composeTalkMarkdown");
+const translation = require("./translation");
 
 // The columns every talks query selects, and the snake_case -> camelCase
 // mapper applied to each row before it leaves the service. Services never leak
 // DB column names to the controller layer.
 const TALK_COLUMNS =
-  "id, slug, title, trade_tag, trade_tags, content, structured, attribution, is_global, company_id, created_at";
+  "id, slug, title, trade_tag, trade_tags, content, structured, attribution, quiz, translations, is_global, company_id, created_at";
 
 const toTalk = (row) => ({
   id: row.id,
@@ -17,10 +18,27 @@ const toTalk = (row) => ({
   content: row.content,
   structured: row.structured ?? null,
   attribution: row.attribution ?? null,
+  quiz: row.quiz ?? null,
+  translations: row.translations ?? null,
   isGlobal: row.is_global,
   companyId: row.company_id,
   createdAt: row.created_at,
 });
+
+// Best-effort: translates the given structured fields into every requested
+// language via the translation service, returning `null` when no languages
+// were requested (never an empty object) so the DB column stays `null`
+// rather than `{}` for an untranslated talk. A language that fails to
+// translate is simply omitted by translateStructuredFields -- never blocks
+// the talk itself from saving.
+const buildTranslations = async ({ title, structured, targetLanguages }) => {
+  if (!targetLanguages?.length) return null;
+  const result = await translation.translateStructuredFields(
+    { title, ...structured },
+    targetLanguages,
+  );
+  return Object.keys(result).length > 0 ? result : null;
+};
 
 // Every talk visible to a company: the shared global library plus that
 // company's own custom talks. Alphabetical by title — the client does trade
@@ -84,6 +102,7 @@ const create = async ({
   discussionQuestions,
   oshaStandards,
   estimatedMinutes,
+  targetLanguages,
 }) => {
   const structured = {
     summary: summary ?? null,
@@ -93,6 +112,12 @@ const create = async ({
     osha_standards: oshaStandards ?? [],
     estimated_minutes: estimatedMinutes ?? null,
   };
+
+  const translations = await buildTranslations({
+    title,
+    structured,
+    targetLanguages,
+  });
 
   const { data, error } = await supabase
     .from("toolbox_talks")
@@ -105,6 +130,7 @@ const create = async ({
       content: composeTalkMarkdown({ title, ...structured }),
       structured,
       attribution: null,
+      translations,
       is_global: false,
       company_id: companyId,
     })
@@ -167,6 +193,7 @@ const update = async ({
   discussionQuestions,
   oshaStandards,
   estimatedMinutes,
+  targetLanguages,
 }) => {
   await assertNotLoggedAnywhere(id);
 
@@ -179,6 +206,16 @@ const update = async ({
     estimated_minutes: estimatedMinutes ?? null,
   };
 
+  // Full-replace, same as `structured`: the submitted targetLanguages set
+  // becomes the complete `translations` object -- unchecking a previously
+  // translated language in the edit form drops it rather than leaving it
+  // stale against the just-edited English text.
+  const translations = await buildTranslations({
+    title,
+    structured,
+    targetLanguages,
+  });
+
   const { data, error } = await supabase
     .from("toolbox_talks")
     .update({
@@ -187,6 +224,7 @@ const update = async ({
       trade_tags: tradeTag ? [tradeTag] : [],
       content: composeTalkMarkdown({ title, ...structured }),
       structured,
+      translations,
     })
     .eq("id", id)
     .eq("company_id", companyId)

@@ -16,6 +16,8 @@ export interface ConfirmDialogProps {
   isBusy?: boolean;
   onConfirm: () => void;
   onClose: () => void;
+  /** Label for the cancel button (default: "Cancel"). */
+  cancelText?: string;
 }
 
 /** A minimal confirm-before-acting dialog built on the `Modal` primitive: a
@@ -30,12 +32,13 @@ export const ConfirmDialog = ({
   isBusy = false,
   onConfirm,
   onClose,
+  cancelText = "Cancel",
 }: ConfirmDialogProps) => (
   <Modal isOpen={isOpen} onClose={onClose} title={title} size="sm">
     <StyledConfirmBody>{children}</StyledConfirmBody>
     <StyledConfirmActions>
       <Button type="button" variant="outline" size="md" onClick={onClose}>
-        Cancel
+        {cancelText}
       </Button>
       <Button
         type="button"

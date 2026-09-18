@@ -72,6 +72,16 @@ CREATE TABLE toolbox_talks (
   -- read aloud/quizzed post-TTS-playback before a worker can sign. See
   -- docs/meeting-flow-design.md.
   quiz JSONB,
+  -- Per-language variants of the translatable prose fields only (title,
+  -- summary, talking_points, site_hazards_to_check, discussion_questions),
+  -- keyed by ISO 639-1 code (e.g. "es"). English stays implicit -- it's just
+  -- this row's own top-level/structured fields, never a "en" entry here.
+  -- Global (is_global=true) talks: populated only from an official
+  -- agency-published translation via the content pipeline -- never machine
+  -- translation. Custom (is_global=false) talks: populated by the Google
+  -- Cloud Translation API at create/edit time, gated to premium/enterprise
+  -- tier (see server/utility/entitlements.js). NULL = no translations yet.
+  translations JSONB,
   is_global BOOLEAN DEFAULT true,
   company_id UUID REFERENCES companies(id) ON DELETE CASCADE,
   created_at TIMESTAMPTZ DEFAULT NOW()
@@ -89,6 +99,7 @@ ALTER TABLE toolbox_talks ENABLE ROW LEVEL SECURITY;
 -- ALTER TABLE toolbox_talks ADD COLUMN IF NOT EXISTS structured JSONB;
 -- ALTER TABLE toolbox_talks ADD COLUMN IF NOT EXISTS attribution JSONB;
 -- ALTER TABLE toolbox_talks ADD COLUMN IF NOT EXISTS quiz JSONB;
+-- ALTER TABLE toolbox_talks ADD COLUMN IF NOT EXISTS translations JSONB;
 -- CREATE INDEX IF NOT EXISTS idx_toolbox_talks_trades ON toolbox_talks USING GIN (trade_tags);
 -- ALTER TABLE toolbox_talks ENABLE ROW LEVEL SECURITY;
 

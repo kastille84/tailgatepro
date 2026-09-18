@@ -152,6 +152,27 @@ describe("useUpdateTalk", () => {
     });
   });
 
+  it("passes targetLanguages through in the outbox payload when given", async () => {
+    vi.mocked(outbox.enqueueMutation).mockResolvedValue({} as never);
+
+    const { result } = renderHook(() => useUpdateTalk(), { wrapper });
+    await result.current.updateTalk({
+      id: "talk-2",
+      input: {
+        title: "Ladder Safety Refresher (Updated)",
+        talkingPoints: ["Inspect rungs before use"],
+        targetLanguages: ["es"],
+      },
+    });
+
+    expect(outbox.enqueueMutation).toHaveBeenCalledWith(
+      expect.objectContaining({
+        payload: expect.objectContaining({ targetLanguages: ["es"] }),
+      }),
+      mockReplayer,
+    );
+  });
+
   it("rolls back the optimistic patch, toasts the error (e.g. the 409 in-use guard), and rejects", async () => {
     vi.mocked(outbox.enqueueMutation).mockRejectedValue(
       new Error(

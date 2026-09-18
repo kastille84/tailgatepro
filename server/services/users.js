@@ -72,7 +72,7 @@ const createProfile = async ({ id, name, companyName, companyType }) => {
 const getUserContext = async (id) => {
   const { data, error } = await supabase
     .from("users")
-    .select("id, name, role, company_id")
+    .select("id, name, role, company_id, companies(tier)")
     .eq("id", id)
     .single();
 
@@ -87,6 +87,10 @@ const getUserContext = async (id) => {
     name: data.name,
     role: data.role,
     companyId: data.company_id,
+    // `companies` is a to-one embed via the company_id FK -- an object, not
+    // an array. Defensive fallback for the (schema-allowed but
+    // never-in-practice) case of a user with no company row yet.
+    tier: data.companies?.tier ?? null,
   };
 };
 

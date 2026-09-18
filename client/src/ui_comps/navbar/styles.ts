@@ -2,9 +2,7 @@ import styled from "styled-components";
 import { Link } from "react-router-dom";
 
 export const Nav = styled.header`
-  position: sticky;
-  top: 0;
-  z-index: 1000;
+  position: relative;
   display: flex;
   align-items: center;
   justify-content: space-between;
