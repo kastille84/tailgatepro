@@ -38,6 +38,7 @@ const mockCreateMeetingLog = vi.fn();
 const mockCreateSignature = vi.fn();
 const mockUploadSignatureBlob = vi.fn();
 const mockUploadCrewPhoto = vi.fn();
+const mockCompleteMeetingLog = vi.fn();
 vi.mock("../../../src/hooks/useCreateMeetingLog", () => ({
   useCreateMeetingLog: () => ({
     createMeetingLog: mockCreateMeetingLog,
@@ -60,6 +61,12 @@ vi.mock("../../../src/hooks/useUploadCrewPhoto", () => ({
   useUploadCrewPhoto: () => ({
     uploadCrewPhoto: mockUploadCrewPhoto,
     isUploading: false,
+  }),
+}));
+vi.mock("../../../src/hooks/useCompleteMeetingLog", () => ({
+  useCompleteMeetingLog: () => ({
+    completeMeetingLog: mockCompleteMeetingLog,
+    isCompleting: false,
   }),
 }));
 
@@ -244,6 +251,7 @@ beforeEach(async () => {
   mockCreateSignature.mockResolvedValue("sig-server-1");
   mockUploadSignatureBlob.mockResolvedValue(undefined);
   mockUploadCrewPhoto.mockResolvedValue(undefined);
+  mockCompleteMeetingLog.mockResolvedValue(undefined);
 });
 
 afterEach(async () => {
@@ -545,6 +553,66 @@ describe("MeetingWizard", () => {
     expect(await screen.findByTestId("signatures-step")).toBeDefined();
   });
 
+  it("resolves a resumed draft's talk once a slow talks fetch catches up, instead of staying blank", async () => {
+    mockUseTalks.mockReturnValue({
+      talks: [],
+      tradeOptions: [],
+      isLoading: true,
+      isError: false,
+    });
+
+    await putDraft({
+      projectId: "p1",
+      talkId: "t1",
+      status: "in_progress",
+      updatedAt: "2024-01-01T00:00:00.000Z",
+      data: { currentStep: "present", signers: [], photoBlob: undefined },
+    });
+
+    const { rerender } = renderWizard();
+
+    // The draft check is still waiting on isTalksLoading, so it hasn't
+    // reached hasCheckedDraft yet -- no resume prompt, no blank wizard body.
+    expect(screen.queryByText(/resume in-progress meeting/i)).toBeNull();
+
+    mockUseTalks.mockReturnValue({
+      talks: [talk],
+      tradeOptions: [{ value: "Roofing", label: "Roofing" }],
+      isLoading: false,
+      isError: false,
+    });
+    rerender(wizardTree());
+
+    expect(
+      await screen.findByText(/resume in-progress meeting/i),
+    ).toBeDefined();
+
+    fireEvent.click(screen.getByRole("button", { name: /keep draft/i }));
+
+    expect(await screen.findByTestId("talk-presenter")).toBeDefined();
+  });
+
+  it("falls back to the talk step with a toast when a resumed draft's talk no longer exists", async () => {
+    await putDraft({
+      projectId: "p1",
+      talkId: "deleted-talk",
+      status: "in_progress",
+      updatedAt: "2024-01-01T00:00:00.000Z",
+      data: { currentStep: "signatures", signers: [], photoBlob: undefined },
+    });
+
+    renderWizard();
+
+    expect(
+      await screen.findByText(/resume in-progress meeting/i),
+    ).toBeDefined();
+
+    fireEvent.click(screen.getByRole("button", { name: /keep draft/i }));
+
+    expect(await screen.findByTestId("talk-list")).toBeDefined();
+    expect(screen.queryByTestId("signatures-step")).toBeNull();
+  });
+
   it("discards the draft and starts fresh when Discard draft is confirmed", async () => {
     await putDraft({
       projectId: "p1",
@@ -615,6 +683,10 @@ describe("MeetingWizard", () => {
       meetingId: "meeting-1",
       blob: expect.any(File),
     });
+    expect(mockCompleteMeetingLog).toHaveBeenCalledWith({
+      meetingId: "meeting-1",
+      signatureIds: ["sig-server-1"],
+    });
     expect(
       await tailgateDb.meetingDraftCache.get(DRAFT_ROW_ID),
     ).toBeUndefined();
@@ -646,6 +718,7 @@ describe("MeetingWizard", () => {
     expect(mockCreateMeetingLog).toHaveBeenCalledTimes(1);
     expect(mockCreateSignature).toHaveBeenCalledTimes(1);
     expect(mockUploadSignatureBlob).toHaveBeenCalledTimes(2);
+    expect(mockCompleteMeetingLog).toHaveBeenCalledTimes(1);
   });
 
   it("shows a generic error when Save fails with something other than an Error", async () => {
@@ -683,6 +756,125 @@ describe("MeetingWizard", () => {
     fireEvent.click(await screen.findByRole("button", { name: /skip-photo/i }));
 
     expect(await screen.findByText(/2 signatures collected/i)).toBeDefined();
+  });
+
+  it("does not re-run completion on a retried Save once it already succeeded, but shows the failure otherwise", async () => {
+    mockCompleteMeetingLog.mockRejectedValueOnce(new Error("still syncing"));
+
+    renderWizard();
+
+    await advanceToPhotoStep();
+    fireEvent.click(await screen.findByRole("button", { name: /skip-photo/i }));
+
+    fireEvent.click(
+      await screen.findByRole("button", { name: /save meeting/i }),
+    );
+
+    expect((await screen.findByRole("alert")).textContent).toMatch(
+      /still syncing/i,
+    );
+    expect(mockNavigate).not.toHaveBeenCalled();
+    expect(
+      await tailgateDb.meetingDraftCache.get(DRAFT_ROW_ID),
+    ).toBeDefined();
+
+    fireEvent.click(screen.getByRole("button", { name: /save meeting/i }));
+
+    await waitFor(() =>
+      expect(mockNavigate).toHaveBeenCalledWith("/dashboard"),
+    );
+    expect(mockCreateMeetingLog).toHaveBeenCalledTimes(1);
+    expect(mockCreateSignature).toHaveBeenCalledTimes(1);
+    expect(mockCompleteMeetingLog).toHaveBeenCalledTimes(2);
+  });
+
+  it("does not call completeMeetingLog again when resuming a draft whose completion was already enqueued", async () => {
+    await putDraft({
+      projectId: "p1",
+      talkId: "t1",
+      status: "in_progress",
+      updatedAt: "2024-01-01T00:00:00.000Z",
+      data: {
+        currentStep: "save",
+        signers: [
+          {
+            localId: "s1",
+            workerName: "Jordan",
+            quizAnswers: null,
+            signatureBlob: new Blob(["a"], { type: "image/png" }),
+            signatureId: "sig-server-1",
+            blobUploaded: true,
+          },
+        ],
+        photoBlob: null,
+        meetingLogId: "meeting-1",
+        photoUploaded: false,
+        completionEnqueued: true,
+      },
+    });
+
+    renderWizard();
+
+    expect(
+      await screen.findByText(/resume in-progress meeting/i),
+    ).toBeDefined();
+    fireEvent.click(screen.getByRole("button", { name: /keep draft/i }));
+
+    fireEvent.click(
+      await screen.findByRole("button", { name: /save meeting/i }),
+    );
+
+    await waitFor(() =>
+      expect(mockNavigate).toHaveBeenCalledWith("/dashboard"),
+    );
+    expect(mockCreateMeetingLog).not.toHaveBeenCalled();
+    expect(mockCreateSignature).not.toHaveBeenCalled();
+    expect(mockCompleteMeetingLog).not.toHaveBeenCalled();
+  });
+
+  it("calls completeMeetingLog when resuming a draft that reached Save without it having enqueued yet", async () => {
+    await putDraft({
+      projectId: "p1",
+      talkId: "t1",
+      status: "in_progress",
+      updatedAt: "2024-01-01T00:00:00.000Z",
+      data: {
+        currentStep: "save",
+        signers: [
+          {
+            localId: "s1",
+            workerName: "Jordan",
+            quizAnswers: null,
+            signatureBlob: new Blob(["a"], { type: "image/png" }),
+            signatureId: "sig-server-1",
+            blobUploaded: true,
+          },
+        ],
+        photoBlob: null,
+        meetingLogId: "meeting-1",
+        photoUploaded: false,
+      },
+    });
+
+    renderWizard();
+
+    expect(
+      await screen.findByText(/resume in-progress meeting/i),
+    ).toBeDefined();
+    fireEvent.click(screen.getByRole("button", { name: /keep draft/i }));
+
+    fireEvent.click(
+      await screen.findByRole("button", { name: /save meeting/i }),
+    );
+
+    await waitFor(() =>
+      expect(mockCompleteMeetingLog).toHaveBeenCalledWith({
+        meetingId: "meeting-1",
+        signatureIds: ["sig-server-1"],
+      }),
+    );
+    expect(mockCreateMeetingLog).not.toHaveBeenCalled();
+    expect(mockCreateSignature).not.toHaveBeenCalled();
   });
 
   it("removes a collected signer before Save", async () => {

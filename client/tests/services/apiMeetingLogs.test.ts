@@ -1,6 +1,7 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import {
+  completeMeeting,
   createMeetingLog,
   uploadCrewPhoto,
 } from "../../src/services/apiMeetingLogs";
@@ -202,6 +203,65 @@ describe("apiMeetingLogs", () => {
       );
       await expect(
         uploadCrewPhoto("token-123", "meeting-1", new Blob(["x"])),
+      ).rejects.toThrow(GENERIC);
+    });
+  });
+
+  describe("completeMeeting", () => {
+    it("PATCHes with only the bearer token (no body) and returns the completed meeting log", async () => {
+      const fetchMock = vi.fn().mockResolvedValue({
+        ok: true,
+        status: 200,
+        json: async () => ({
+          success: true,
+          data: { ...meetingLog, completedAt: "2026-09-17T00:00:00.000Z" },
+        }),
+      });
+      vi.stubGlobal("fetch", fetchMock);
+
+      await expect(
+        completeMeeting("token-123", "meeting-1"),
+      ).resolves.toMatchObject({ completedAt: "2026-09-17T00:00:00.000Z" });
+
+      expect(fetchMock).toHaveBeenCalledWith(
+        "/api/meetings/meeting-1/complete",
+        expect.objectContaining({
+          method: "PATCH",
+          headers: { Authorization: "Bearer token-123" },
+          signal: expect.any(AbortSignal),
+        }),
+      );
+      expect(fetchMock.mock.calls[0][1]).not.toHaveProperty("body");
+    });
+
+    it("rejects with the backend error message on an error response", async () => {
+      vi.stubGlobal(
+        "fetch",
+        vi.fn().mockResolvedValue({
+          ok: false,
+          status: 409,
+          json: async () => ({
+            success: false,
+            error: "A meeting needs at least one signature before it can be completed.",
+          }),
+        }),
+      );
+      await expect(
+        completeMeeting("token-123", "meeting-1"),
+      ).rejects.toThrow("at least one signature");
+    });
+
+    it("rejects with the generic message when the response is unsuccessful without a body", async () => {
+      vi.stubGlobal(
+        "fetch",
+        vi.fn().mockResolvedValue({
+          ok: false,
+          status: 500,
+          json: async () => null,
+        }),
+      );
+      await expect(
+        completeMeeting("token-123", "meeting-1"),
       ).rejects.toThrow(GENERIC);
     });
   });

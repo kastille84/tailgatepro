@@ -36,8 +36,9 @@ interface SignaturesStepProps {
  * recorded per signature, not per meeting (docs/meeting-flow-design.md) --
  * each worker takes the quiz (when the talk has one) immediately before
  * signing. Continue is disabled until at least one signer is collected,
- * mirroring the server's "complete requires >=1 signature" rule even though
- * this wizard never calls complete() itself (docs/tasks.md Phase 4g/4h).
+ * mirroring the server's "complete requires >=1 signature" rule that
+ * `MeetingWizard.tsx`'s Save step enforces indirectly by only ever calling
+ * `completeMeetingLog` with the signers collected here.
  */
 export const SignaturesStep = ({
   talk,

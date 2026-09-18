@@ -67,7 +67,7 @@ describe("useCreateSignature", () => {
     expect(outbox.enqueueMutation).toHaveBeenCalled();
   });
 
-  it("enqueues a create with a generated id, dependsOnEntityId set to the meetingId, and returns the id", async () => {
+  it("enqueues a create with a generated id, dependsOnEntityIds set to the meetingId, and returns the id", async () => {
     vi.mocked(outbox.enqueueMutation).mockResolvedValue({} as never);
 
     const { result } = renderHook(() => useCreateSignature(), { wrapper });
@@ -90,7 +90,7 @@ describe("useCreateSignature", () => {
           workerName: "Jordan Smith",
           quizAnswers: [{ questionIndex: 0, selectedIndex: 1 }],
         },
-        dependsOnEntityId: "meeting-1",
+        dependsOnEntityIds: ["meeting-1"],
       },
       mockReplayer,
     );

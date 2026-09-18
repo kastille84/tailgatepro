@@ -8,8 +8,9 @@ import * as mediaBlobs from "../../src/utils/db/mediaBlobs";
 import { createReplayer } from "../../src/utils/db/replayRegistry";
 import type { OutboxRow } from "../../src/interfaces/sync";
 
-// Registers the "meeting_log" and "crew_photo" handlers as a side effect —
-// matches how it's actually wired up (a side-effect import in App.tsx).
+// Registers the "meeting_log", "crew_photo", and "meeting_completion"
+// handlers as a side effect — matches how it's actually wired up (a
+// side-effect import in App.tsx).
 import "../../src/services/meetingLogReplayHandler";
 
 const baseRow: OutboxRow = {
@@ -127,5 +128,44 @@ describe("meetingLogReplayHandler (entity: crew_photo)", () => {
     ).rejects.toThrow("network down");
 
     expect(mediaBlobs.deleteMediaBlob).not.toHaveBeenCalled();
+  });
+});
+
+describe("meetingLogReplayHandler (entity: meeting_completion)", () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
+
+  it("dispatches a complete row to apiMeetingLogs.completeMeeting with the row's entityId", async () => {
+    vi.mocked(apiMeetingLogs.completeMeeting).mockResolvedValue({} as never);
+
+    await createReplayer("token-123")({
+      ...baseRow,
+      entity: "meeting_completion",
+      op: "complete",
+      entityId: "meeting-1",
+      payload: {},
+    });
+
+    expect(apiMeetingLogs.completeMeeting).toHaveBeenCalledWith(
+      "token-123",
+      "meeting-1",
+    );
+  });
+
+  it("propagates the API error on failure", async () => {
+    vi.mocked(apiMeetingLogs.completeMeeting).mockRejectedValue(
+      new Error("A meeting needs at least one signature before it can be completed."),
+    );
+
+    await expect(
+      createReplayer("token-123")({
+        ...baseRow,
+        entity: "meeting_completion",
+        op: "complete",
+        entityId: "meeting-1",
+        payload: {},
+      }),
+    ).rejects.toThrow("at least one signature");
   });
 });

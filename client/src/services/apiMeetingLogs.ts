@@ -45,6 +45,32 @@ export const createMeetingLog = async (
 };
 
 /**
+ * PATCH /api/meetings/:meetingId/complete — finalize a meeting once it has
+ * >=1 signature. Reads no request body (the route validates only the `:id`
+ * URL param), so this sends only the `Authorization` header, unlike every
+ * other call in this file. A retried complete against a meeting that already
+ * landed 409s with a message the offline queue's `flush()` recognizes as
+ * "already synced" rather than a real failure — see `utils/db/outbox.ts`.
+ */
+export const completeMeeting = async (
+  accessToken: string,
+  meetingId: string,
+): Promise<MeetingLog> => {
+  const res = await fetchWithTimeout(`/api/meetings/${meetingId}/complete`, {
+    method: "PATCH",
+    headers: { Authorization: `Bearer ${accessToken}` },
+  });
+
+  const body = await res.json().catch(() => null);
+
+  if (!res.ok || !body?.success) {
+    throw new Error(body?.error ?? GENERIC_ERROR);
+  }
+
+  return body.data as MeetingLog;
+};
+
+/**
  * PUT /api/meetings/:meetingId/crew-photo — uploads the crew photo as a raw
  * binary body (not JSON, unlike every other call in this file), so the
  * `Content-Type` header carries the blob's actual mime type instead of

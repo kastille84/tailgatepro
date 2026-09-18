@@ -170,19 +170,31 @@ describe("enqueueMutation", () => {
     vi.useRealTimers();
   });
 
-  it("includes dependsOnEntityId on the row when given", async () => {
+  it("includes dependsOnEntityIds on the row when given", async () => {
     const row = await enqueueMutation({
       entity: "signature",
       entityId: "signature-1",
       op: "create",
       payload: {},
-      dependsOnEntityId: "meeting-1",
+      dependsOnEntityIds: ["meeting-1"],
     });
 
-    expect(row.dependsOnEntityId).toBe("meeting-1");
-    expect((await tailgateDb.outbox.get(row.id))?.dependsOnEntityId).toBe(
+    expect(row.dependsOnEntityIds).toEqual(["meeting-1"]);
+    expect((await tailgateDb.outbox.get(row.id))?.dependsOnEntityIds).toEqual([
       "meeting-1",
-    );
+    ]);
+  });
+
+  it("omits dependsOnEntityIds from the row when given an empty array", async () => {
+    const row = await enqueueMutation({
+      entity: "meeting_completion",
+      entityId: "meeting-1",
+      op: "complete",
+      payload: {},
+      dependsOnEntityIds: [],
+    });
+
+    expect(row.dependsOnEntityIds).toBeUndefined();
   });
 });
 
@@ -407,7 +419,7 @@ describe("flush", () => {
   });
 });
 
-describe("flush — dependsOnEntityId", () => {
+describe("flush — dependsOnEntityIds", () => {
   it("skips a row whose dependency is still in the outbox, leaving it pending", async () => {
     const calls: string[] = [];
     const replay = vi.fn(async (row: OutboxRow) => {
@@ -439,7 +451,7 @@ describe("flush — dependsOnEntityId", () => {
         lastError: null,
         createdAt: "2026-09-15T00:00:02.000Z",
         syncedAt: null,
-        dependsOnEntityId: "meeting-1",
+        dependsOnEntityIds: ["meeting-1"],
       },
     ]);
 
@@ -483,7 +495,7 @@ describe("flush — dependsOnEntityId", () => {
         lastError: null,
         createdAt: "2026-09-15T00:00:02.000Z",
         syncedAt: null,
-        dependsOnEntityId: "meeting-1",
+        dependsOnEntityIds: ["meeting-1"],
       },
     ]);
 
@@ -526,7 +538,7 @@ describe("flush — dependsOnEntityId", () => {
         lastError: null,
         createdAt: "2026-09-15T00:00:02.000Z",
         syncedAt: null,
-        dependsOnEntityId: "meeting-1",
+        dependsOnEntityIds: ["meeting-1"],
       },
       {
         // Chained to signature-create via the ordinary same-entityId
@@ -559,7 +571,122 @@ describe("flush — dependsOnEntityId", () => {
     );
   });
 
-  it("does not affect a row with no dependsOnEntityId (Projects/Talks regression)", async () => {
+  it("skips a row with two dependencies when only one has cleared", async () => {
+    const calls: string[] = [];
+    const replay = vi.fn(async (row: OutboxRow) => {
+      calls.push(row.id);
+      // signature-b's create fails again this pass, so it's still
+      // outstanding by the time the completion row is reached.
+      if (row.id === "signature-b-create") throw new Error("still down");
+    });
+
+    await tailgateDb.outbox.bulkAdd([
+      {
+        id: "signature-a-create",
+        entity: "signature",
+        entityId: "signature-a",
+        op: "create",
+        payload: {},
+        status: "pending",
+        attempts: 0,
+        lastError: null,
+        createdAt: "2026-09-17T00:00:01.000Z",
+        syncedAt: null,
+      },
+      {
+        id: "signature-b-create",
+        entity: "signature",
+        entityId: "signature-b",
+        op: "create",
+        payload: {},
+        status: "failed",
+        attempts: 3,
+        lastError: "still down",
+        createdAt: "2026-09-17T00:00:02.000Z",
+        syncedAt: null,
+      },
+      {
+        id: "meeting-complete",
+        entity: "meeting_completion",
+        entityId: "meeting-1",
+        op: "complete",
+        payload: {},
+        status: "pending",
+        attempts: 0,
+        lastError: null,
+        createdAt: "2026-09-17T00:00:03.000Z",
+        syncedAt: null,
+        dependsOnEntityIds: ["signature-a", "signature-b"],
+      },
+    ]);
+
+    await flush(replay);
+
+    // signature-a's create synced; signature-b's failed again this pass, so
+    // the completion row is still blocked on it and never attempted.
+    expect(calls).toEqual(["signature-a-create", "signature-b-create"]);
+    expect((await tailgateDb.outbox.get("meeting-complete"))?.status).toBe(
+      "pending",
+    );
+  });
+
+  it("attempts a row with two dependencies once both have cleared", async () => {
+    const calls: string[] = [];
+    const replay = vi.fn(async (row: OutboxRow) => {
+      calls.push(row.id);
+    });
+
+    await tailgateDb.outbox.bulkAdd([
+      {
+        id: "signature-a-create",
+        entity: "signature",
+        entityId: "signature-a",
+        op: "create",
+        payload: {},
+        status: "pending",
+        attempts: 0,
+        lastError: null,
+        createdAt: "2026-09-17T00:00:01.000Z",
+        syncedAt: null,
+      },
+      {
+        id: "signature-b-create",
+        entity: "signature",
+        entityId: "signature-b",
+        op: "create",
+        payload: {},
+        status: "pending",
+        attempts: 0,
+        lastError: null,
+        createdAt: "2026-09-17T00:00:02.000Z",
+        syncedAt: null,
+      },
+      {
+        id: "meeting-complete",
+        entity: "meeting_completion",
+        entityId: "meeting-1",
+        op: "complete",
+        payload: {},
+        status: "pending",
+        attempts: 0,
+        lastError: null,
+        createdAt: "2026-09-17T00:00:03.000Z",
+        syncedAt: null,
+        dependsOnEntityIds: ["signature-a", "signature-b"],
+      },
+    ]);
+
+    await flush(replay);
+
+    expect(calls).toEqual([
+      "signature-a-create",
+      "signature-b-create",
+      "meeting-complete",
+    ]);
+    expect(await tailgateDb.outbox.get("meeting-complete")).toBeUndefined();
+  });
+
+  it("does not affect a row with no dependsOnEntityIds (Projects/Talks regression)", async () => {
     const calls: string[] = [];
     const replay = vi.fn(async (row: OutboxRow) => {
       calls.push(row.id);
@@ -659,6 +786,97 @@ describe("flush — already-exists 409", () => {
         .mockRejectedValue(
           new Error(
             "This meeting has already been completed and can't be changed.",
+          ),
+        ),
+    );
+
+    const stored = await tailgateDb.outbox.get(row.id);
+    expect(stored?.status).toBe("failed");
+  });
+});
+
+describe("flush — already-completed 409", () => {
+  it("deletes (rather than fails) a complete row whose replay rejects with an 'already been completed' message", async () => {
+    const row = await enqueueMutation({
+      entity: "meeting_completion",
+      entityId: "meeting-1",
+      op: "complete",
+      payload: {},
+    });
+
+    await flush(
+      vi
+        .fn()
+        .mockRejectedValue(
+          new Error(
+            "This meeting has already been completed and can't be changed.",
+          ),
+        ),
+    );
+
+    expect(await tailgateDb.outbox.get(row.id)).toBeUndefined();
+    expect(await getPendingCount()).toBe(0);
+  });
+
+  it("resolves rather than rejects when the already-completed row is the watched row", async () => {
+    const replay = vi
+      .fn()
+      .mockRejectedValue(
+        new Error(
+          "This meeting has already been completed and can't be changed.",
+        ),
+      );
+    setOnline(true);
+
+    const row = await enqueueMutation(
+      {
+        entity: "meeting_completion",
+        entityId: "meeting-1",
+        op: "complete",
+        payload: {},
+      },
+      replay,
+    );
+
+    expect(await tailgateDb.outbox.get(row.id)).toBeUndefined();
+  });
+
+  it("does not treat an 'already been completed' message as synced on a non-complete op", async () => {
+    const row = await enqueueMutation({
+      entity: "meeting_log",
+      entityId: "meeting-1",
+      op: "update",
+      payload: {},
+    });
+
+    await flush(
+      vi
+        .fn()
+        .mockRejectedValue(
+          new Error(
+            "This meeting has already been completed and can't be changed.",
+          ),
+        ),
+    );
+
+    const stored = await tailgateDb.outbox.get(row.id);
+    expect(stored?.status).toBe("failed");
+  });
+
+  it("does not treat a differently-worded 409 as synced", async () => {
+    const row = await enqueueMutation({
+      entity: "meeting_completion",
+      entityId: "meeting-1",
+      op: "complete",
+      payload: {},
+    });
+
+    await flush(
+      vi
+        .fn()
+        .mockRejectedValue(
+          new Error(
+            "A meeting needs at least one signature before it can be completed.",
           ),
         ),
     );

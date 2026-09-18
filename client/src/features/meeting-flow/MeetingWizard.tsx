@@ -10,6 +10,7 @@ import { useCreateMeetingLog } from "../../hooks/useCreateMeetingLog";
 import { useCreateSignature } from "../../hooks/useCreateSignature";
 import { useUploadSignatureBlob } from "../../hooks/useUploadSignatureBlob";
 import { useUploadCrewPhoto } from "../../hooks/useUploadCrewPhoto";
+import { useCompleteMeetingLog } from "../../hooks/useCompleteMeetingLog";
 import {
   clearDraft,
   getActiveDraft,
@@ -52,8 +53,10 @@ type PendingResume = {
  * singleton `meetingDraftCache` row as the wizard advances so a foreman
  * interrupted mid-flow (locked screen, backgrounded tab, low battery) can
  * resume instead of losing already-collected signatures -- see
- * docs/meeting-flow-design.md's "Draft resume". Deliberately does not call
- * `PATCH /api/meetings/:id/complete` -- see docs/tasks.md Phase 4h.
+ * docs/meeting-flow-design.md's "Draft resume". The final Save step also
+ * enqueues a completion row once every signature has a checkpointed id, so
+ * `PATCH /api/meetings/:id/complete` fires once everything has actually
+ * synced -- see docs/tasks.md Phase 4h.
  */
 export const MeetingWizard = () => {
   const navigate = useNavigate();
@@ -86,6 +89,7 @@ export const MeetingWizard = () => {
   const { createSignature } = useCreateSignature();
   const { uploadSignatureBlob } = useUploadSignatureBlob();
   const { uploadCrewPhoto } = useUploadCrewPhoto();
+  const { completeMeetingLog } = useCompleteMeetingLog();
 
   const [hasCheckedDraft, setHasCheckedDraft] = useState(false);
   const [pendingResume, setPendingResume] = useState<PendingResume | null>(
@@ -111,18 +115,21 @@ export const MeetingWizard = () => {
   const checkpointsRef = useRef<{
     meetingLogId?: string;
     photoUploaded?: boolean;
+    completionEnqueued?: boolean;
   }>({});
 
   // Runs once, after both queries have settled, to check for and offer to
   // resume an in-progress draft. Guarded by hasCheckedDraft rather than an
   // empty dependency array so it correctly waits out the initial loading
-  // state of useProjects instead of racing it. Deliberately does NOT also
-  // wait on isTalksLoading: the project step (the wizard's first screen)
-  // doesn't need the talk list at all, so gating on it too would leave a
-  // slow/offline talks fetch blocking the user from even picking a project.
-  // A draft's talk is resolved against whatever `talks` holds at the moment
-  // the check runs -- if that list hasn't loaded yet, it's the same outcome
-  // as the talk having been deleted (falls back to no pre-selected talk).
+  // state of useProjects instead of racing it. Only waits on isTalksLoading
+  // when the draft actually references a talk (row.talkId set) -- a draft
+  // still at the project/talk step doesn't need the talk list at all, so
+  // gating on it too would leave a slow/offline talks fetch blocking the
+  // user from even picking a project. For a draft past the talk step, though,
+  // resolving row.talkId against a still-empty `talks` would wrongly look
+  // identical to the talk having been deleted, so this waits for that fetch
+  // to settle (re-running via the isTalksLoading/talks deps below) before
+  // deciding.
   useEffect(() => {
     if (hasCheckedDraft || isProjectsLoading) return;
 
@@ -144,6 +151,8 @@ export const MeetingWizard = () => {
         return;
       }
 
+      if (row.talkId && isTalksLoading) return;
+
       const talk = row.talkId
         ? talks.find((t) => t.id === row.talkId)
         : undefined;
@@ -159,7 +168,26 @@ export const MeetingWizard = () => {
     return () => {
       cancelled = true;
     };
-  }, [hasCheckedDraft, isProjectsLoading, projects, talks]);
+  }, [hasCheckedDraft, isProjectsLoading, isTalksLoading, projects, talks]);
+
+  // Safety net for a talk that's still missing after resume (e.g. deleted
+  // from the library between the draft being written and now, so the lookup
+  // above legitimately found nothing to resolve). Every step past "talk"
+  // requires selectedTalk to render (see the step guards below) -- without
+  // this, a missing talk would leave the wizard showing nothing.
+  useEffect(() => {
+    if (!hasCheckedDraft || selectedTalk) return;
+
+    const requiresTalk =
+      step === "present" ||
+      step === "signatures" ||
+      step === "photo" ||
+      step === "save";
+    if (!requiresTalk) return;
+
+    toast.error("That talk is no longer available. Pick another to continue.");
+    setStep("talk");
+  }, [hasCheckedDraft, selectedTalk, step]);
 
   // Every call site is reached only after the project step (and, for every
   // caller past "present", the talk step) has already committed a selection
@@ -176,6 +204,7 @@ export const MeetingWizard = () => {
       photoBlob: "photoBlob" in overrides ? overrides.photoBlob : photoBlob,
       meetingLogId: checkpointsRef.current.meetingLogId,
       photoUploaded: checkpointsRef.current.photoUploaded,
+      completionEnqueued: checkpointsRef.current.completionEnqueued,
     };
 
     void putDraft({
@@ -206,6 +235,7 @@ export const MeetingWizard = () => {
     checkpointsRef.current = {
       meetingLogId: data.meetingLogId,
       photoUploaded: data.photoUploaded,
+      completionEnqueued: data.completionEnqueued,
     };
     setStep(data.currentStep ?? "project");
     setPendingResume(null);
@@ -328,6 +358,17 @@ export const MeetingWizard = () => {
       if (photoBlob && !checkpointsRef.current.photoUploaded) {
         await uploadCrewPhoto({ meetingId: meetingLogId, blob: photoBlob });
         checkpointsRef.current.photoUploaded = true;
+        persistStep("save");
+      }
+
+      if (!checkpointsRef.current.completionEnqueued) {
+        await completeMeetingLog({
+          meetingId: meetingLogId,
+          // Every signer's loop above guarantees signatureId is set before
+          // falling through to this point.
+          signatureIds: nextSigners.map((s) => s.signatureId!),
+        });
+        checkpointsRef.current.completionEnqueued = true;
         persistStep("save");
       }
 

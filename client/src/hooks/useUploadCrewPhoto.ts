@@ -18,7 +18,7 @@ export interface UploadCrewPhotoInput {
  * the parent meeting log's own id (there's no separate crew-photo record —
  * see `interfaces/sync.ts`), which is what already chains this upload behind
  * its meeting log's create via the outbox's ordinary same-entityId ordering,
- * with no `dependsOnEntityId` needed. See `docs/meeting-flow-design.md`.
+ * with no `dependsOnEntityIds` needed. See `docs/meeting-flow-design.md`.
  */
 export const useUploadCrewPhoto = () => {
   const { session } = useAuth();

@@ -1,6 +1,10 @@
 import { registerReplayHandler } from "../utils/db/replayRegistry";
 import { deleteMediaBlob, getMediaBlob } from "../utils/db/mediaBlobs";
-import { createMeetingLog, uploadCrewPhoto } from "./apiMeetingLogs";
+import {
+  completeMeeting,
+  createMeetingLog,
+  uploadCrewPhoto,
+} from "./apiMeetingLogs";
 import type { CreateMeetingLogInput } from "./apiMeetingLogs";
 import type { OutboxRow } from "../interfaces/sync";
 
@@ -43,5 +47,18 @@ registerReplayHandler(
 
     await uploadCrewPhoto(accessToken, row.entityId, stored.blob);
     await deleteMediaBlob(mediaBlobId);
+  },
+);
+
+/**
+ * How the offline queue replays a "meeting_completion" outbox row — like
+ * `crew_photo`, there's no separate record of its own, so `entityId` is the
+ * meeting log's own id. Only one op is possible, so this calls
+ * `completeMeeting` directly rather than switching on `row.op`.
+ */
+registerReplayHandler(
+  "meeting_completion",
+  async (accessToken: string, row: OutboxRow): Promise<void> => {
+    await completeMeeting(accessToken, row.entityId);
   },
 );

@@ -17,7 +17,7 @@ import { queryClient } from "./utils/queryClient";
 import "./services/projectReplayHandler";
 // Same, for a "talk" outbox row.
 import "./services/talkReplayHandler";
-// Same, for "meeting_log" and "crew_photo" outbox rows.
+// Same, for "meeting_log", "crew_photo", and "meeting_completion" outbox rows.
 import "./services/meetingLogReplayHandler";
 // Same, for a "signature" outbox row.
 import "./services/signatureReplayHandler";

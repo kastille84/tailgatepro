@@ -121,7 +121,8 @@ and `docs/offline-sync-design.md` explicitly left `meeting_logs`/`signatures` ou
 schema for the same reason. This section is that extension.
 
 ```ts
-export type SyncEntity = "project" | "talk" | "meeting_log" | "signature" | "crew_photo";
+export type SyncEntity =
+  | "project" | "talk" | "meeting_log" | "signature" | "crew_photo" | "meeting_completion";
 ```
 
 **New problem Projects/Talks never had: cross-entity dependency.** A signature or crew-photo row's
@@ -136,19 +137,35 @@ optional field to `OutboxRow`:
 ```ts
 export interface OutboxRow {
   // ...existing fields unchanged...
-  /** If set, this row is skipped (left `pending`, not attempted) whenever the
-   *  row with this id is still in the outbox — i.e. its dependency hasn't
-   *  synced yet. Undefined for every existing Projects/Talks row and for any
-   *  row with no cross-entity dependency. */
-  dependsOnEntityId?: string;
+  /** If set, this row is skipped (left `pending`, not attempted) whenever ANY
+   *  row with one of these ids is still in the outbox — i.e. at least one
+   *  dependency hasn't synced yet. Undefined for every existing Projects/Talks
+   *  row and for any row with no cross-entity dependency. */
+  dependsOnEntityIds?: string[];
 }
 ```
 
-`flush()` treats a row with an unresolved `dependsOnEntityId` the same way it treats a poisoned
-entity: skip, don't attempt, leave it for the next pass. This is strictly additive — a row that never
-sets `dependsOnEntityId` (every Projects/Talks row, and any future entity that doesn't need it)
-behaves exactly as before. Regression tests must prove this explicitly, since `outbox.ts` is
+`flush()` treats a row with an unresolved `dependsOnEntityIds` entry the same way it treats a
+poisoned entity: skip, don't attempt, leave it for the next pass. This is strictly additive — a row
+that never sets `dependsOnEntityIds` (every Projects/Talks row, and any future entity that doesn't
+need it) behaves exactly as before. Regression tests must prove this explicitly, since `outbox.ts` is
 shared, already-shipped infrastructure that Projects and Talks depend on today.
+
+This started as a single `dependsOnEntityId: string` (one signature depends on its one parent
+meeting log) and was later widened to an array when Phase 4h wired up meeting completion: a
+`meeting_completion` row must wait for *every* signature collected in that meeting, not just one, so
+`dependsOnEntityIds` blocks on any outstanding row across the whole list. The completion row itself
+reuses its meeting log's own `entityId` (like `crew_photo` does) rather than needing a dependency for
+the meeting log — that ordering is already free via the outbox's same-entityId FIFO/poison mechanism.
+A retried `PATCH .../complete` against a meeting that already completed 409s with "already been
+completed"; `outbox.ts`'s `isAlreadyCompletedError` treats that the same way `isAlreadyExistsError`
+treats a duplicate create — a successful sync, not a failure. See `MeetingWizard.tsx`'s `handleSave`
+for the call site: it enqueues completion last, checkpointed (`completionEnqueued`) so a resumed
+draft never enqueues it twice, but does **not** wait for it to actually sync before clearing the
+draft and navigating away — a permanently-failed dependency (e.g. a discarded signature row) means
+that meeting's completion retries forever with no per-meeting visibility beyond the app's generic
+pending-sync badge. Accepted as a known limitation rather than new scope; see `docs/tasks.md` Phase
+4h.
 
 **Same pass, closing a Phase 3 loose end.** The Phase 3 audit (see the plan file) found that
 `docs/offline-sync-design.md`'s own "retried create idempotency" design was only half built: the

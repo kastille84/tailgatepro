@@ -9,7 +9,7 @@ import type { CreateSignatureInput } from "../services/apiSignatures";
 type CreateSignatureVariables = { meetingId: string } & CreateSignatureInput;
 
 /**
- * Wraps the create-signature mutation. `dependsOnEntityId` is set to the
+ * Wraps the create-signature mutation. `dependsOnEntityIds` is set to the
  * parent meeting log's id — a signature can't land server-side before its
  * meeting does, and (unlike a crew photo, which reuses its meeting's own
  * `entityId`) each signature under one meeting needs its own distinct
@@ -33,7 +33,7 @@ export const useCreateSignature = () => {
             string,
             unknown
           >,
-          dependsOnEntityId: meetingId,
+          dependsOnEntityIds: [meetingId],
         },
         session ? createReplayer(session.access_token) : undefined,
       ).then(() => undefined),

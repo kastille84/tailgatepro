@@ -19,7 +19,7 @@ export interface UploadSignatureBlobInput {
  * "signature"` and the *same* `entityId` as the signature's own create row,
  * so the outbox's ordinary same-entityId ordering already blocks this
  * upload from being attempted before its record exists — no
- * `dependsOnEntityId` needed here (unlike the signature create itself,
+ * `dependsOnEntityIds` needed here (unlike the signature create itself,
  * which depends on its parent meeting log). See
  * `docs/meeting-flow-design.md`.
  */

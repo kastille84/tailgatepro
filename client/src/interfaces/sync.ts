@@ -1,22 +1,27 @@
 /** Types for the offline write queue. See `docs/offline-sync-design.md` for the
  *  full design — schema, state machine, and conflict rule. */
 
-/** Domains the outbox can queue a write for. `"crew_photo"` has no separate
- *  record of its own — a meeting has at most one, stored as a column on
- *  `meeting_logs` — so a crew-photo row reuses its parent meeting log's own
- *  id as `entityId` rather than getting a distinct id space. See
+/** Domains the outbox can queue a write for. `"crew_photo"` and
+ *  `"meeting_completion"` have no separate record of their own — a meeting
+ *  has at most one crew photo (a column on `meeting_logs`) and exactly one
+ *  completion action — so both reuse their parent meeting log's own id as
+ *  `entityId` rather than getting a distinct id space. See
  *  `docs/meeting-flow-design.md`. */
 export type SyncEntity =
   | "project"
   | "talk"
   | "meeting_log"
   | "signature"
-  | "crew_photo";
+  | "crew_photo"
+  | "meeting_completion";
 
 /** The HTTP-shaped operation a queued row replays as. `archive` maps to
  *  `PATCH /api/projects/:id` with `{ archived: true | false }` — the payload's
- *  `archived` flag says whether it's archiving or restoring. */
-export type SyncOp = "create" | "update" | "archive" | "delete";
+ *  `archived` flag says whether it's archiving or restoring. `complete` maps
+ *  to `PATCH /api/meetings/:id/complete` (a `"meeting_completion"` row) —
+ *  kept distinct from `update` so the outbox can recognize a retried
+ *  already-completed replay as a success rather than a real failure. */
+export type SyncOp = "create" | "update" | "archive" | "delete" | "complete";
 
 /** Lifecycle of one queued mutation. `syncing` rows found at app boot are
  *  stale (the app closed mid-request) and get reset to `pending`. */
@@ -43,11 +48,13 @@ export interface OutboxRow {
    *  column — `projects` has no `synced_at`, so this state lives only here. */
   syncedAt: string | null;
   /** If set, this row is skipped (left `pending`, not attempted) for as long
-   *  as a row with this `entityId` is still in the outbox — i.e. its
-   *  dependency hasn't synced yet. Needed only where a write's parent record
-   *  has a genuinely different `entityId` and can't rely on the outbox's
-   *  existing same-`entityId` ordering (e.g. a signature depends on its
-   *  parent meeting log). Undefined for every Projects/Talks row and for any
-   *  row with no cross-entity dependency. See `docs/meeting-flow-design.md`. */
-  dependsOnEntityId?: string;
+   *  as ANY row with one of these `entityId`s is still in the outbox — i.e.
+   *  at least one dependency hasn't synced yet. Needed only where a write's
+   *  parent record(s) have a genuinely different `entityId` and can't rely on
+   *  the outbox's existing same-`entityId` ordering (e.g. a signature depends
+   *  on its parent meeting log; a meeting's completion depends on every
+   *  signature collected for it). Undefined for every Projects/Talks row and
+   *  for any row with no cross-entity dependency. See
+   *  `docs/meeting-flow-design.md`. */
+  dependsOnEntityIds?: string[];
 }

@@ -51,8 +51,9 @@ export interface DraftSigner {
 }
 
 /** The concrete shape of `MeetingDraftRow.data` (see its doc comment above).
- *  `meetingLogId`/`photoUploaded` are the same kind of Save-phase checkpoint
- *  as `DraftSigner`'s, for the meeting log and crew photo respectively. */
+ *  `meetingLogId`/`photoUploaded`/`completionEnqueued` are the same kind of
+ *  Save-phase checkpoint as `DraftSigner`'s, for the meeting log, crew photo,
+ *  and completion call respectively. */
 export interface MeetingDraftData {
   currentStep: WizardStep;
   signers: DraftSigner[];
@@ -61,4 +62,8 @@ export interface MeetingDraftData {
   photoBlob?: Blob | null;
   meetingLogId?: string;
   photoUploaded?: boolean;
+  /** Set once `handleSave` has enqueued the `PATCH .../complete` call, so a
+   *  draft resumed after a crash between that enqueue and `clearDraft()`
+   *  doesn't enqueue it a second time. */
+  completionEnqueued?: boolean;
 }

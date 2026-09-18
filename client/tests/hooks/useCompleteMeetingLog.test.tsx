@@ -8,13 +8,11 @@ import {
 } from "@tanstack/react-query";
 import toast from "react-hot-toast";
 
-import { useUploadSignatureBlob } from "../../src/hooks/useUploadSignatureBlob";
-import * as mediaBlobs from "../../src/utils/db/mediaBlobs";
+import { useCompleteMeetingLog } from "../../src/hooks/useCompleteMeetingLog";
 import * as outbox from "../../src/utils/db/outbox";
 import * as replayRegistry from "../../src/utils/db/replayRegistry";
 
 vi.mock("react-hot-toast");
-vi.mock("../../src/utils/db/mediaBlobs");
 vi.mock("../../src/utils/db/outbox");
 vi.mock("../../src/utils/db/replayRegistry");
 
@@ -24,9 +22,8 @@ vi.mock("../../src/context/auth", () => ({
 }));
 
 const mockReplayer = vi.fn();
-const blob = new Blob(["png-bytes"], { type: "image/png" });
 
-describe("useUploadSignatureBlob", () => {
+describe("useCompleteMeetingLog", () => {
   let queryClient: QueryClient;
 
   beforeEach(() => {
@@ -39,7 +36,6 @@ describe("useUploadSignatureBlob", () => {
     vi.clearAllMocks();
     mockUseAuth.mockReturnValue({ session: { access_token: "token-123" } });
     vi.mocked(replayRegistry.createReplayer).mockReturnValue(mockReplayer);
-    vi.mocked(mediaBlobs.storeMediaBlob).mockResolvedValue("blob-1");
   });
 
   afterEach(() => {
@@ -50,49 +46,41 @@ describe("useUploadSignatureBlob", () => {
     <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
   );
 
-  it("initializes with isUploading false", () => {
-    const { result } = renderHook(() => useUploadSignatureBlob(), {
-      wrapper,
-    });
-    expect(result.current.isUploading).toBe(false);
+  it("initializes with isCompleting false", () => {
+    const { result } = renderHook(() => useCompleteMeetingLog(), { wrapper });
+    expect(result.current.isCompleting).toBe(false);
   });
 
   it("runs mutationFn immediately even when TanStack Query's onlineManager reports offline", async () => {
     onlineManager.setOnline(false);
     vi.mocked(outbox.enqueueMutation).mockResolvedValue({} as never);
 
-    const { result } = renderHook(() => useUploadSignatureBlob(), {
-      wrapper,
-    });
-    await result.current.uploadSignatureBlob({
+    const { result } = renderHook(() => useCompleteMeetingLog(), { wrapper });
+    await result.current.completeMeetingLog({
       meetingId: "meeting-1",
-      signatureId: "signature-1",
-      blob,
+      signatureIds: ["signature-1"],
     });
 
     expect(outbox.enqueueMutation).toHaveBeenCalled();
   });
 
-  it("stores the blob locally, then enqueues an update row keyed by the signatureId (not dependsOnEntityIds — chained via same entityId as its create)", async () => {
+  it("enqueues a meeting_completion row keyed by the meetingId, depending on every signatureId", async () => {
     vi.mocked(outbox.enqueueMutation).mockResolvedValue({} as never);
 
-    const { result } = renderHook(() => useUploadSignatureBlob(), {
-      wrapper,
-    });
-    await result.current.uploadSignatureBlob({
+    const { result } = renderHook(() => useCompleteMeetingLog(), { wrapper });
+    await result.current.completeMeetingLog({
       meetingId: "meeting-1",
-      signatureId: "signature-1",
-      blob,
+      signatureIds: ["signature-1", "signature-2"],
     });
 
-    expect(mediaBlobs.storeMediaBlob).toHaveBeenCalledWith(blob);
     expect(replayRegistry.createReplayer).toHaveBeenCalledWith("token-123");
     expect(outbox.enqueueMutation).toHaveBeenCalledWith(
       {
-        entity: "signature",
-        entityId: "signature-1",
-        op: "update",
-        payload: { meetingId: "meeting-1", mediaBlobId: "blob-1" },
+        entity: "meeting_completion",
+        entityId: "meeting-1",
+        op: "complete",
+        payload: {},
+        dependsOnEntityIds: ["signature-1", "signature-2"],
       },
       mockReplayer,
     );
@@ -102,13 +90,10 @@ describe("useUploadSignatureBlob", () => {
     mockUseAuth.mockReturnValue({ session: null });
     vi.mocked(outbox.enqueueMutation).mockResolvedValue({} as never);
 
-    const { result } = renderHook(() => useUploadSignatureBlob(), {
-      wrapper,
-    });
-    await result.current.uploadSignatureBlob({
+    const { result } = renderHook(() => useCompleteMeetingLog(), { wrapper });
+    await result.current.completeMeetingLog({
       meetingId: "meeting-1",
-      signatureId: "signature-1",
-      blob,
+      signatureIds: ["signature-1"],
     });
 
     expect(replayRegistry.createReplayer).not.toHaveBeenCalled();
@@ -120,22 +105,19 @@ describe("useUploadSignatureBlob", () => {
 
   it("toasts and rejects when enqueue fails", async () => {
     vi.mocked(outbox.enqueueMutation).mockRejectedValue(
-      new Error("This meeting has already been completed"),
+      new Error("Couldn't save your change locally — try again."),
     );
 
-    const { result } = renderHook(() => useUploadSignatureBlob(), {
-      wrapper,
-    });
+    const { result } = renderHook(() => useCompleteMeetingLog(), { wrapper });
 
     await expect(
-      result.current.uploadSignatureBlob({
+      result.current.completeMeetingLog({
         meetingId: "meeting-1",
-        signatureId: "signature-1",
-        blob,
+        signatureIds: ["signature-1"],
       }),
-    ).rejects.toThrow("This meeting has already been completed");
+    ).rejects.toThrow("Couldn't save your change locally");
     expect(toast.error).toHaveBeenCalledWith(
-      "This meeting has already been completed",
+      "Couldn't save your change locally — try again.",
     );
   });
 });
