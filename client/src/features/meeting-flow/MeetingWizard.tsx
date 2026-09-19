@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import toast from "react-hot-toast";
+import { HiArrowLeft, HiArrowRight } from "react-icons/hi2";
 
 import { useProjects } from "../../hooks/useProjects";
 import { useTalks } from "../../hooks/useTalks";
@@ -34,6 +35,7 @@ import type {
 } from "../../interfaces/meetingDraft";
 import {
   StyledStepEyebrow,
+  StyledStepHeaderRow,
   StyledStepHint,
   StyledStepTitle,
   StyledSummaryLine,
@@ -95,6 +97,9 @@ export const MeetingWizard = () => {
   const [pendingResume, setPendingResume] = useState<PendingResume | null>(
     null,
   );
+  const [pendingBackTarget, setPendingBackTarget] = useState<WizardStep | null>(
+    null,
+  );
 
   const [step, setStep] = useState<WizardStep>("project");
   const [selectedProject, setSelectedProject] = useState<Project | undefined>(
@@ -108,6 +113,12 @@ export const MeetingWizard = () => {
 
   const [isSaving, setIsSaving] = useState(false);
   const [saveError, setSaveError] = useState<string | null>(null);
+  // Mirrors checkpointsRef.current.meetingLogId for render purposes only --
+  // refs can't be read during render (react-hooks/refs), so this tracks the
+  // one bit the "save" step's JSX needs to know: has a Save attempt already
+  // committed a meeting log server-side, past which point going Back is
+  // unsafe (see the "save" step render below).
+  const [meetingLogCommitted, setMeetingLogCommitted] = useState(false);
 
   // Save-phase checkpoints. Mutated in place (not React state) and mirrored
   // into the persisted draft, so a retried Save after a partial failure never
@@ -189,11 +200,14 @@ export const MeetingWizard = () => {
     setStep("talk");
   }, [hasCheckedDraft, selectedTalk, step]);
 
-  // Every call site is reached only after the project step (and, for every
-  // caller past "present", the talk step) has already committed a selection
-  // -- see the step guards below -- so a non-null assertion here documents a
-  // real invariant rather than adding a runtime check for a state that can't
-  // occur, per this codebase's error-handling convention.
+  // Every call site is reached only after the project step has already
+  // committed a selection -- see the step guards below -- so a non-null
+  // assertion on selectedProject documents a real invariant rather than
+  // adding a runtime check for a state that can't occur, per this codebase's
+  // error-handling convention. selectedTalk is different: Back can now land
+  // here on the "project" step (via goToStep("project")) before any talk has
+  // ever been picked, so it falls back to null exactly like
+  // handleSelectProject's own explicit `talkId: null` does at that same edge.
   const persistStep = (
     nextStep: WizardStep,
     overrides: Partial<Pick<MeetingDraftData, "signers" | "photoBlob">> = {},
@@ -209,7 +223,7 @@ export const MeetingWizard = () => {
 
     void putDraft({
       projectId: selectedProject!.id,
-      talkId: selectedTalk!.id,
+      talkId: selectedTalk?.id ?? null,
       status: "in_progress",
       updatedAt: new Date().toISOString(),
       data: data as unknown as Record<string, unknown>,
@@ -237,9 +251,53 @@ export const MeetingWizard = () => {
       photoUploaded: data.photoUploaded,
       completionEnqueued: data.completionEnqueued,
     };
+    setMeetingLogCommitted(!!data.meetingLogId);
     setStep(data.currentStep ?? "project");
     setPendingResume(null);
   };
+
+  const goToStep = (target: WizardStep) => {
+    setStep(target);
+    persistStep(target);
+  };
+
+  // Going back to "talk" or "project" while signers are already collected
+  // would strand them -- a DraftSigner's quizAnswers are scored against
+  // whichever talk was selected at signing time, so changing the talk after
+  // the fact leaves them referring to a quiz the crew was never shown. Every
+  // other backward step (present/signatures/photo/save) is non-destructive,
+  // since none of them let the talk or project change.
+  const handleBack = (target: WizardStep) => {
+    const destructive =
+      (target === "talk" || target === "project") && signers.length > 0;
+    if (destructive) {
+      setPendingBackTarget(target);
+      return;
+    }
+    goToStep(target);
+  };
+
+  const confirmDestructiveBack = () => {
+    // onConfirm only ever fires while the dialog is open, which is gated on
+    // pendingBackTarget being set (isOpen={!!pendingBackTarget} below).
+    const target = pendingBackTarget!;
+    setSigners([]);
+    setPendingBackTarget(null);
+    setStep(target);
+    persistStep(target, { signers: [] });
+  };
+
+  const renderBackButton = (target: WizardStep) => (
+    <Button
+      type="button"
+      variant="outline"
+      size="sm"
+      leftIcon={<HiArrowLeft aria-hidden="true" />}
+      onClick={() => handleBack(target)}
+    >
+      Back
+    </Button>
+  );
 
   const handleSelectProject = (project: Project) => {
     setSelectedProject(project);
@@ -324,6 +382,7 @@ export const MeetingWizard = () => {
           talkId: selectedTalk!.id,
         });
         checkpointsRef.current.meetingLogId = meetingLogId;
+        setMeetingLogCommitted(true);
         persistStep("save");
       }
 
@@ -409,6 +468,21 @@ export const MeetingWizard = () => {
         left off.
       </ConfirmDialog>
 
+      <ConfirmDialog
+        isOpen={!!pendingBackTarget}
+        title="Discard collected signatures?"
+        confirmLabel="Discard and go back"
+        cancelText="Stay here"
+        confirmVariant="danger"
+        onConfirm={confirmDestructiveBack}
+        onClose={() => setPendingBackTarget(null)}
+      >
+        Going back to{" "}
+        {pendingBackTarget === "project" ? "the project step" : "pick a different talk"}{" "}
+        will discard the {signers.length} signature
+        {signers.length === 1 ? "" : "s"} already collected for this talk.
+      </ConfirmDialog>
+
       {step === "project" && (
         <>
           <StyledStepEyebrow>Step 1 of 6</StyledStepEyebrow>
@@ -427,7 +501,10 @@ export const MeetingWizard = () => {
 
       {step === "talk" && (
         <>
-          <StyledStepEyebrow>Step 2 of 6</StyledStepEyebrow>
+          <StyledStepHeaderRow>
+            <StyledStepEyebrow>Step 2 of 6</StyledStepEyebrow>
+            {renderBackButton("project")}
+          </StyledStepHeaderRow>
           <StyledStepTitle>Pick a talk</StyledStepTitle>
           <StyledStepHint>Select a talk to present to the crew.</StyledStepHint>
           <TalkFilters
@@ -459,7 +536,10 @@ export const MeetingWizard = () => {
 
       {step === "present" && selectedTalk && (
         <>
-          <StyledStepEyebrow>Step 3 of 6</StyledStepEyebrow>
+          <StyledStepHeaderRow>
+            <StyledStepEyebrow>Step 3 of 6</StyledStepEyebrow>
+            {renderBackButton("talk")}
+          </StyledStepHeaderRow>
           <StyledStepTitle>{selectedTalk.title}</StyledStepTitle>
           <TalkPresenter
             talk={selectedTalk}
@@ -470,7 +550,10 @@ export const MeetingWizard = () => {
 
       {step === "signatures" && selectedTalk && (
         <>
-          <StyledStepEyebrow>Step 4 of 6</StyledStepEyebrow>
+          <StyledStepHeaderRow>
+            <StyledStepEyebrow>Step 4 of 6</StyledStepEyebrow>
+            {renderBackButton("present")}
+          </StyledStepHeaderRow>
           <StyledStepTitle>Collect signatures</StyledStepTitle>
           <SignaturesStep
             talk={selectedTalk}
@@ -484,7 +567,10 @@ export const MeetingWizard = () => {
 
       {step === "photo" && (
         <>
-          <StyledStepEyebrow>Step 5 of 6</StyledStepEyebrow>
+          <StyledStepHeaderRow>
+            <StyledStepEyebrow>Step 5 of 6</StyledStepEyebrow>
+            {renderBackButton("signatures")}
+          </StyledStepHeaderRow>
           <StyledStepTitle>Crew photo</StyledStepTitle>
           <PhotoCapture
             onCapture={handlePhotoCapture}
@@ -495,7 +581,14 @@ export const MeetingWizard = () => {
 
       {step === "save" && (
         <>
-          <StyledStepEyebrow>Step 6 of 6</StyledStepEyebrow>
+          <StyledStepHeaderRow>
+            <StyledStepEyebrow>Step 6 of 6</StyledStepEyebrow>
+            {/* Hidden once a Save attempt has actually started writing to
+                the server (meetingLogId checkpointed) -- going back at that
+                point would risk re-picking state against a meeting log that
+                already exists remotely. */}
+            {!meetingLogCommitted && renderBackButton("photo")}
+          </StyledStepHeaderRow>
           <StyledStepTitle>Save this meeting</StyledStepTitle>
           <StyledSummaryLine>
             {signers.length} signature{signers.length === 1 ? "" : "s"}{" "}
@@ -504,7 +597,12 @@ export const MeetingWizard = () => {
           {saveError && (
             <StyledWizardError role="alert">{saveError}</StyledWizardError>
           )}
-          <Button type="button" onClick={handleSave} loading={isSaving}>
+          <Button
+            type="button"
+            onClick={handleSave}
+            loading={isSaving}
+            rightIcon={<HiArrowRight aria-hidden="true" />}
+          >
             Save meeting
           </Button>
         </>

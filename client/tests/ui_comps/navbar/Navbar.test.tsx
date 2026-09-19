@@ -59,6 +59,7 @@ describe("Navbar", () => {
     expect(screen.queryByRole("button", { name: /^login$/i })).toBeNull();
     expect(screen.queryByRole("button", { name: /^sign up$/i })).toBeNull();
     expect(screen.queryByRole("link", { name: /dashboard/i })).toBeNull();
+    expect(screen.queryByRole("link", { name: /settings/i })).toBeNull();
     expect(screen.queryByRole("button", { name: /logout/i })).toBeNull();
   });
 
@@ -95,6 +96,9 @@ describe("Navbar", () => {
     expect(
       screen.getByRole("link", { name: /toolbox talks/i }).getAttribute("href"),
     ).toBe("/talks");
+    expect(
+      screen.getByRole("link", { name: /settings/i }).getAttribute("href"),
+    ).toBe("/settings");
     expect(screen.queryByRole("button", { name: /^login$/i })).toBeNull();
 
     fireEvent.click(screen.getByRole("button", { name: /logout/i }));

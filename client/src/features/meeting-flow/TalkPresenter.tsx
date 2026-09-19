@@ -1,4 +1,5 @@
 import { useMemo, useState } from "react";
+import { HiArrowRight } from "react-icons/hi2";
 
 import { Button } from "../../ui_comps/button";
 import { FormField } from "../../ui_comps/form";
@@ -204,7 +205,11 @@ export const TalkPresenter = ({ talk, onContinue }: TalkPresenterProps) => {
       )}
 
       <StyledPresenterActions>
-        <Button type="button" onClick={onContinue}>
+        <Button
+          type="button"
+          onClick={onContinue}
+          rightIcon={<HiArrowRight aria-hidden="true" />}
+        >
           Continue
         </Button>
       </StyledPresenterActions>

@@ -645,6 +645,32 @@ below for why (dependsOnEntityId doesn't support "wait for N rows" yet).
       skip, collect 2+ signatures (with and without a quiz), skip photo, save; reconnect and confirm
       rows land in Supabase with correct `company_id` and server-computed `quiz_score`, blobs land in
       their private buckets; reload mid-wizard and confirm the draft resumes
+- [x] Follow-up: Back navigation. Plan:
+      `~/.claude/plans/for-the-wizard-should-woolly-river.md`. The wizard was strictly forward-only;
+      added a `Back` control (`HiArrowLeft`) per step in `MeetingWizard.tsx`, guarded so backing up
+      to "talk" or "project" while ≥1 signer is already collected shows a confirm dialog (reusing
+      `ConfirmDialog`) warning that those signatures/quiz answers — scored against whichever talk was
+      selected at signing time — will be discarded; confirming clears `signers` and navigates, "Stay
+      here" is a no-op. Back is hidden on the "save" step once a Save attempt has actually created the
+      meeting log server-side (tracked via a new `meetingLogCommitted` state mirroring
+      `checkpointsRef.current.meetingLogId`, since refs can't be read during render —
+      `react-hooks/refs`). Back navigation persists the draft too (`persistStep`), so a resumed draft
+      reopens on the step the foreman was actually looking at, not just the furthest-forward step
+      reached. `HiArrowRight` added to every button that already advances the wizard (`TalkPresenter`'s
+      Continue, `SignaturesStep`'s step-level Continue, `PhotoCapture`'s Use photo/Skip photo,
+      `MeetingWizard`'s Save meeting), matching the codebase's existing `react-icons/hi2` +
+      `Button` `leftIcon`/`rightIcon` convention. Caught and fixed in the same pass: `persistStep`'s
+      `talkId: selectedTalk!.id` assertion crashed when backing up from "talk" to "project" before any
+      talk had ever been selected — changed to `selectedTalk?.id ?? null`, mirroring
+      `handleSelectProject`'s own explicit `talkId: null` at that same edge. 9 new test cases in
+      `MeetingWizard.test.tsx` (34 total, was 27); full client suite 802 tests, only the 2
+      pre-existing/documented `PhotoCapture.test.tsx` camera-mock timing flakes failing (unrelated);
+      100% coverage maintained on every touched file; `npx eslint` clean on every touched file except
+      the pre-existing, unrelated `MeetingWizard.tsx:200` (`setStep` in the resume-safety-net effect,
+      predates this change); `tsc -b` shows no new errors (still only the pre-existing `Input.tsx`
+      failures). Manual smoke still owed: back up through each step confirming the discard-confirm
+      dialog fires only when expected, and that Back disappears on "save" after a real (not just
+      mocked) partial-failure Save.
 
 ### 4h — Verification, hardening, docs, Phase 5 hook · status: code/docs complete;
 
@@ -1070,14 +1096,66 @@ ships, so it isn't forgotten.
       indent formatting doesn't alter the underlying decoded character
       content. Full `npm run test:server` suite: **265/265 passing** (up
       from 263).
-- [ ] **Not yet built** — full tier-gated PDF branding
-      (`docs/pricing-and-positioning-strategy_V2.md`: Trade Pro+ "Custom
-      Branding: Upload logo, remove watermark"). Needs a `companies` logo
-      column, a Storage bucket for logos, a client upload UI, and
-      `pdfGeneration.js`/`pdfGenerationQueue.js` branching on
-      `company.tier !== "basic"` to embed the logo and skip the watermark
-      instead of always printing it. `companies.tier` already exists in the
-      schema, so this is additive, not a rework, once scoped.
+- [x] **Tier-gated PDF branding** — Trade Pro+ (`companies.tier` `premium`/
+      `enterprise`) companies can upload a logo; it's embedded in generated
+      meeting-log PDFs and the free-tier watermark is skipped for them.
+      Decided upfront: a Pro+ company with no logo uploaded yet gets neither
+      the logo nor the watermark (tier alone gates the watermark,
+      independent of whether a logo exists — never punish a paying company
+      for not having gotten to the upload yet); logo upload is a direct
+      `useMutation`, **not** routed through the offline sync outbox (an
+      office/admin action, not part of the connectivity-unreliable job-site
+      meeting flow); the new `/settings` page renders for every signed-in
+      user, only the upload control itself is tier-gated (Trade Free sees an
+      upsell in its place). Signup-time logo capture is explicitly deferred
+      until a billing/checkout flow lets a user choose Trade Pro at signup —
+      today every self-serve signup is hardcoded to `basic`
+      (`server/services/users.js`), so there's nothing to gate at that point
+      yet. - Schema: `companies.logo_path TEXT` (nullable, a Storage path never a
+        URL — `Supabase_SQL.sql` + `Supabase_Schema.md`) - Storage: new private `company-logos` bucket
+        (`scripts/setup-storage-buckets.js`), path `{companyId}/logo` - `server/utility/entitlements.js` gained `hasBrandingAccess`, sharing
+        `TRANSLATION_TIERS` — the identical Trade Pro+ paywall - `server/services/companies.js` gained its first write op,
+        `updateLogo(companyId, logoPath)`, plus `logoPath` on `getById` - `server/services/pdfGeneration.js`: `renderMeetingLogPdf` gained a
+        `logoBuffer` param; the watermark block is now
+        `if (!hasBrandingAccess(company?.tier))`; a small (`fit: [120, 60]`)
+        logo renders in the header when entitled and a buffer is given,
+        using the existing `ensureRoomFor` pagination helper - `server/services/pdfGenerationQueue.js` gained a best-effort logo
+        download (mirrors the existing crew-photo pattern exactly — a
+        failed/missing logo degrades to `null`, never aborts the PDF) - New `server/routes/companies.js` + `server/controllers/companies.js`
+        (first files for this domain): `PUT /api/companies/logo` (raw
+        `image/*` body, 5MB limit, 403s via `hasBrandingAccess` for `basic`)
+        and `GET /api/companies/logo-url` (5-minute signed URL, 404 until a
+        logo exists); mounted `/api/companies` in `server.js` - Server tests: new `companies.test.js` (7) + `controllers/companies.test.js`
+        (8); `pdfGeneration.test.js` +6, `pdfGenerationQueue.test.js` +3. Full
+        `npm run test:server` suite: **286/286 passing** - Client: `interfaces/company.ts` gained a `Company` type; new
+        `services/apiCompanies.ts`, `hooks/useCompanyLogo.ts` +
+        `hooks/useUploadCompanyLogo.ts`; `useCurrentUser.ts` gained
+        `hasBrandingAccess` (mirrors `hasTranslationAccess`); new
+        `features/company-settings/LogoUpload.tsx` (modeled on
+        `PhotoCapture.tsx`'s fallback file-input pattern, select-then-confirm
+        shape); new `pages/Settings/` + `/settings` route under
+        `RequireAuth` + Navbar link - Client tests: new `apiCompanies.test.ts` (9), `useCompanyLogo.test.tsx`
+        (4), `useUploadCompanyLogo.test.tsx` (4), `LogoUpload.test.tsx` (9),
+        `Settings.test.tsx` (7); `useCurrentUser.test.tsx` +3,
+        `Navbar.test.tsx` +1. 100% coverage maintained on every new/touched
+        file (confirmed via a coverage run with the pre-existing, unrelated
+        `PhotoCapture.test.tsx` camera-mock flakes excluded, since this
+        repo's coverage reporter skips its report on any test failure) - Housekeeping: fixed a pre-existing stale assertion in
+        `pdfGeneration.test.js` (the GC CTA copy/colors had already changed
+        on disk before this work started; the test still expected the old
+        wording) - Verify (partial): booted the server and confirmed both new routes
+        return 401, not 404/the SPA fallback. Full curl-with-a-real-Bearer-
+        token pass (403 for `basic`, 200 + Storage object for Pro+, signed
+        URL, PDF embeds the logo/omits the watermark, cross-company 404 on
+        `logo-url`) still needs a live session token, same as every prior
+        sub-phase's manual-smoke item. Browser smoke (upload via `/settings`,
+        confirm it flows into a completed meeting's PDF) also still owed.
+- [ ] **Not yet built** — full tier-gating of PDF branding by *plan name*
+      rather than raw `tier` (e.g. if Trade Enterprise ever needs a
+      different branding capability than Trade Pro, `hasBrandingAccess`
+      would need to stop being a literal alias of `hasTranslationAccess`).
+      Not needed today — flagging only because the two gates currently share
+      one array on purpose (`server/utility/entitlements.js`).
 - [ ] **Not yet built** — GC "1-Click OSHA Defense Bundle" ZIP export
       (`docs/pricing-and-positioning-strategy_V2.md`'s GC Site Pro tier:
       "Download indexed ZIP of all site logs instantly"). When that gets

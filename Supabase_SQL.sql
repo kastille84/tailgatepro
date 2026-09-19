@@ -10,8 +10,16 @@ CREATE TABLE companies (
   name TEXT NOT NULL,
   company_type company_type NOT NULL,
   tier subscription_tier NOT NULL,
+  -- Storage path (company-logos bucket) of the uploaded company logo, not a
+  -- URL — the client always gets a signed URL from the server. NULL = no
+  -- logo uploaded yet (a normal state even for a Trade Pro+ company). Set
+  -- via PUT /api/companies/logo, gated to premium/enterprise tier (see
+  -- server/utility/entitlements.js).
+  logo_path TEXT,
   created_at TIMESTAMPTZ DEFAULT NOW()
 );
+-- If the table already exists from an earlier run, add the new column instead:
+-- ALTER TABLE companies ADD COLUMN IF NOT EXISTS logo_path TEXT;
 
 -- 2. Users
 CREATE TABLE users (

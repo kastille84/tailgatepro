@@ -57,6 +57,13 @@ const company = {
   name: "Acme Roofing",
   companyType: "subcontractor",
   tier: "basic",
+  logoPath: null,
+};
+
+const companyWithLogo = {
+  ...company,
+  tier: "premium",
+  logoPath: "company-1/logo",
 };
 
 const signatures = [
@@ -79,6 +86,7 @@ const pdfBuffer = Buffer.from("%PDF-1.3\n...");
 const downloadBlobImpl = async (bucket, path) => {
   if (bucket === "crew-photos") return Buffer.from("photo-bytes");
   if (bucket === "signatures") return Buffer.from(`sig-bytes:${path}`);
+  if (bucket === "company-logos") return Buffer.from("logo-bytes");
   throw new Error(`Unexpected bucket: ${bucket}`);
 };
 
@@ -136,6 +144,7 @@ describe("pdfGenerationQueue: enqueue", () => {
       ],
       crewPhotoBuffer: Buffer.from("photo-bytes"),
       company,
+      logoBuffer: null,
     });
     expect(storageService.uploadBlob).toHaveBeenCalledWith(
       "meeting-pdfs",
@@ -195,6 +204,60 @@ describe("pdfGenerationQueue: enqueue", () => {
     // Assert
     expect(pdfGeneration.renderMeetingLogPdf).toHaveBeenCalledWith(
       expect.objectContaining({ crewPhotoBuffer: null }),
+    );
+    expect(storageService.uploadBlob).toHaveBeenCalled();
+    expect(meetingLogsService.setFinalPdfUrl).toHaveBeenCalled();
+    expect(consoleErrorSpy).toHaveBeenCalled();
+  });
+
+  it("should download and pass through the company logo when the company has one uploaded", async () => {
+    // Arrange
+    companiesService.getById.mockResolvedValue(companyWithLogo);
+
+    // Act
+    await enqueue("meeting-1", "company-1");
+
+    // Assert
+    expect(storageService.downloadBlob).toHaveBeenCalledWith(
+      "company-logos",
+      "company-1/logo",
+    );
+    expect(pdfGeneration.renderMeetingLogPdf).toHaveBeenCalledWith(
+      expect.objectContaining({
+        company: companyWithLogo,
+        logoBuffer: Buffer.from("logo-bytes"),
+      }),
+    );
+  });
+
+  it("should not attempt a logo download when the company has no logoPath", async () => {
+    // Act
+    await enqueue("meeting-1", "company-1");
+
+    // Assert
+    expect(storageService.downloadBlob).not.toHaveBeenCalledWith(
+      "company-logos",
+      expect.anything(),
+    );
+    expect(pdfGeneration.renderMeetingLogPdf).toHaveBeenCalledWith(
+      expect.objectContaining({ logoBuffer: null }),
+    );
+  });
+
+  it("should still generate and upload the PDF when the logo download fails", async () => {
+    // Arrange
+    companiesService.getById.mockResolvedValue(companyWithLogo);
+    storageService.downloadBlob.mockImplementation(async (bucket, path) => {
+      if (bucket === "company-logos") throw new Error("not found");
+      return downloadBlobImpl(bucket, path);
+    });
+
+    // Act
+    await enqueue("meeting-1", "company-1");
+
+    // Assert
+    expect(pdfGeneration.renderMeetingLogPdf).toHaveBeenCalledWith(
+      expect.objectContaining({ logoBuffer: null }),
     );
     expect(storageService.uploadBlob).toHaveBeenCalled();
     expect(meetingLogsService.setFinalPdfUrl).toHaveBeenCalled();

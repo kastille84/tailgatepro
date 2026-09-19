@@ -11,4 +11,11 @@ const TRANSLATION_TIERS = ["premium", "enterprise"];
 
 const hasTranslationAccess = (tier) => TRANSLATION_TIERS.includes(tier);
 
-module.exports = { TRANSLATION_TIERS, hasTranslationAccess };
+// Custom PDF branding (upload logo, remove the free-tier watermark) is the
+// same Trade Pro/Enterprise paywall (client/src/data/plans.ts,
+// docs/pricing-and-positioning-strategy_V2.md) — reuses the identical tier
+// list rather than a separate constant, since both gates draw the exact same
+// line today.
+const hasBrandingAccess = (tier) => TRANSLATION_TIERS.includes(tier);
+
+module.exports = { TRANSLATION_TIERS, hasTranslationAccess, hasBrandingAccess };

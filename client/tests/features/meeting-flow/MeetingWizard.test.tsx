@@ -877,6 +877,159 @@ describe("MeetingWizard", () => {
     expect(mockCreateSignature).not.toHaveBeenCalled();
   });
 
+  it("goes back from talk to project without a confirmation when no signers are collected", async () => {
+    renderWizard();
+
+    fireEvent.click(
+      await screen.findByRole("button", { name: /select-project-p1/i }),
+    );
+    expect(await screen.findByTestId("talk-list")).toBeDefined();
+
+    fireEvent.click(screen.getByRole("button", { name: /^back$/i }));
+
+    expect(screen.queryByText(/discard collected signatures/i)).toBeNull();
+    expect(await screen.findByTestId("project-picker")).toBeDefined();
+  });
+
+  it("persists the draft's currentStep after navigating Back", async () => {
+    renderWizard();
+
+    fireEvent.click(
+      await screen.findByRole("button", { name: /select-project-p1/i }),
+    );
+    fireEvent.click(
+      await screen.findByRole("button", { name: /select-talk-t1/i }),
+    );
+    await screen.findByTestId("talk-presenter");
+
+    fireEvent.click(screen.getByRole("button", { name: /^back$/i }));
+
+    await waitFor(async () => {
+      const row = await tailgateDb.meetingDraftCache.get(DRAFT_ROW_ID);
+      expect(row?.data).toMatchObject({ currentStep: "talk" });
+    });
+  });
+
+  it("lets a foreman back up through present and signatures without a confirmation while no signers are collected yet", async () => {
+    renderWizard();
+
+    fireEvent.click(
+      await screen.findByRole("button", { name: /select-project-p1/i }),
+    );
+    fireEvent.click(
+      await screen.findByRole("button", { name: /select-talk-t1/i }),
+    );
+    fireEvent.click(
+      await screen.findByRole("button", { name: /presenter-continue/i }),
+    );
+    expect(await screen.findByTestId("signatures-step")).toBeDefined();
+
+    fireEvent.click(screen.getByRole("button", { name: /^back$/i }));
+
+    expect(screen.queryByText(/discard collected signatures/i)).toBeNull();
+    expect(await screen.findByTestId("talk-presenter")).toBeDefined();
+  });
+
+  it("confirms before discarding signatures when backing up past signatures to the talk step", async () => {
+    renderWizard();
+    await advanceToPhotoStep();
+
+    // photo -> signatures: non-destructive, no dialog
+    fireEvent.click(await screen.findByRole("button", { name: /^back$/i }));
+    expect(await screen.findByTestId("signatures-step")).toBeDefined();
+    expect(screen.queryByText(/discard collected signatures/i)).toBeNull();
+
+    // signatures -> present: non-destructive, no dialog
+    fireEvent.click(screen.getByRole("button", { name: /^back$/i }));
+    expect(await screen.findByTestId("talk-presenter")).toBeDefined();
+    expect(screen.queryByText(/discard collected signatures/i)).toBeNull();
+
+    // present -> talk: destructive, since a signer was already collected
+    fireEvent.click(screen.getByRole("button", { name: /^back$/i }));
+    expect(await screen.findByText(/discard collected signatures/i)).toBeDefined();
+
+    // "Stay here" is a no-op -- still on present, signer still collected
+    fireEvent.click(screen.getByRole("button", { name: /stay here/i }));
+    expect(screen.queryByTestId("talk-list")).toBeNull();
+    expect(await screen.findByTestId("talk-presenter")).toBeDefined();
+  });
+
+  it("discards collected signers and navigates back once the destructive back is confirmed", async () => {
+    renderWizard();
+    await advanceToPhotoStep();
+
+    fireEvent.click(await screen.findByRole("button", { name: /^back$/i })); // photo -> signatures
+    fireEvent.click(screen.getByRole("button", { name: /^back$/i })); // signatures -> present
+    fireEvent.click(screen.getByRole("button", { name: /^back$/i })); // present -> talk (destructive)
+
+    fireEvent.click(
+      await screen.findByRole("button", { name: /discard and go back/i }),
+    );
+
+    expect(await screen.findByTestId("talk-list")).toBeDefined();
+
+    fireEvent.click(screen.getByRole("button", { name: /select-talk-t1/i }));
+    fireEvent.click(
+      await screen.findByRole("button", { name: /presenter-continue/i }),
+    );
+    expect(await screen.findByText("signers:0")).toBeDefined();
+  });
+
+  it("uses 'the project step' wording when a destructive back targets project (a resumed draft still on the talk step)", async () => {
+    // The app's own flow always clears signers before a Back navigation can
+    // land back on "talk" with signers still collected -- this state is only
+    // reachable via a resumed draft, same fixture technique as the other
+    // "resumes a draft with ..." tests above.
+    await putDraft({
+      projectId: "p1",
+      talkId: null,
+      status: "in_progress",
+      updatedAt: "2024-01-01T00:00:00.000Z",
+      data: {
+        currentStep: "talk",
+        signers: [
+          {
+            localId: "s1",
+            workerName: "Jordan",
+            quizAnswers: null,
+            signatureBlob: new Blob(["a"], { type: "image/png" }),
+          },
+        ],
+        photoBlob: undefined,
+      },
+    });
+
+    renderWizard();
+    expect(
+      await screen.findByText(/resume in-progress meeting/i),
+    ).toBeDefined();
+    fireEvent.click(screen.getByRole("button", { name: /keep draft/i }));
+
+    expect(await screen.findByTestId("talk-list")).toBeDefined();
+    fireEvent.click(screen.getByRole("button", { name: /^back$/i }));
+
+    expect(await screen.findByText(/the project step/i)).toBeDefined();
+  });
+
+  it("hides the Back button on the save step once a Save attempt has created the meeting log", async () => {
+    mockUploadSignatureBlob.mockRejectedValueOnce(new Error("network blip"));
+
+    renderWizard();
+    await advanceToPhotoStep();
+    fireEvent.click(await screen.findByRole("button", { name: /skip-photo/i }));
+
+    expect(await screen.findByRole("button", { name: /^back$/i })).toBeDefined();
+
+    fireEvent.click(
+      screen.getByRole("button", { name: /save meeting/i }),
+    );
+
+    expect((await screen.findByRole("alert")).textContent).toMatch(
+      /network blip/i,
+    );
+    expect(screen.queryByRole("button", { name: /^back$/i })).toBeNull();
+  });
+
   it("removes a collected signer before Save", async () => {
     renderWizard();
 

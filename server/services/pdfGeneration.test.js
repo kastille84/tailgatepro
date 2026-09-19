@@ -152,7 +152,7 @@ describe("pdfGeneration: renderMeetingLogPdf", () => {
     const raw = buffer.toString("latin1");
 
     expect(text).toContain(
-      "Receiving safety reports like this from multiple subcontractors?",
+      "GC's, are you receiving many safety reports like this from multiple subcontractors?",
     );
     expect(text).toContain("Try TailgatePro free at getTailgatePro.com");
     // A link annotation's URI is stored as a literal string in the PDF
@@ -279,7 +279,7 @@ describe("pdfGeneration: renderMeetingLogPdf", () => {
     expect(text).toContain("(signature image unavailable)");
   });
 
-  it("always prints the free-tier watermark footer", async () => {
+  it("prints the free-tier watermark footer for a basic-tier company", async () => {
     const buffer = await renderMeetingLogPdf({
       meetingLog,
       project,
@@ -291,6 +291,77 @@ describe("pdfGeneration: renderMeetingLogPdf", () => {
 
     expect(text).toContain("Logged via TailgatePro");
     expect(text).toContain("upgrade to Trade Pro");
+  });
+
+  it("prints the free-tier watermark footer when no company is given", async () => {
+    const buffer = await renderMeetingLogPdf({
+      meetingLog,
+      project,
+      talk: talkWithAttributionAndQuiz,
+      signatures,
+    });
+    const text = decodeRenderedText(buffer);
+
+    expect(text).toContain("Logged via TailgatePro");
+  });
+
+  it.each(["premium", "enterprise"])(
+    "omits the free-tier watermark footer for a %s-tier company",
+    async (tier) => {
+      const buffer = await renderMeetingLogPdf({
+        meetingLog,
+        project,
+        talk: talkWithAttributionAndQuiz,
+        signatures,
+        company: { ...company, tier },
+      });
+      const text = decodeRenderedText(buffer);
+
+      expect(text).not.toContain("Logged via TailgatePro");
+      expect(text).not.toContain("upgrade to Trade Pro");
+    },
+  );
+
+  it("embeds the company logo for a Pro+ company when a logoBuffer is given, without throwing", async () => {
+    const buffer = await renderMeetingLogPdf({
+      meetingLog,
+      project,
+      talk: talkWithAttributionAndQuiz,
+      signatures,
+      company: { ...company, tier: "premium" },
+      logoBuffer: minimalPngBuffer,
+    });
+
+    expect(startsWithPdfHeader(buffer)).toBe(true);
+  });
+
+  it("renders neither a logo nor the watermark for a Pro+ company with no logo uploaded yet", async () => {
+    const buffer = await renderMeetingLogPdf({
+      meetingLog,
+      project,
+      talk: talkWithAttributionAndQuiz,
+      signatures,
+      company: { ...company, tier: "premium" },
+      logoBuffer: null,
+    });
+    const text = decodeRenderedText(buffer);
+
+    expect(text).not.toContain("Logged via TailgatePro");
+    expect(startsWithPdfHeader(buffer)).toBe(true);
+  });
+
+  it("does not embed a logo for a basic-tier company even if a logoBuffer is given", async () => {
+    const buffer = await renderMeetingLogPdf({
+      meetingLog,
+      project,
+      talk: talkWithAttributionAndQuiz,
+      signatures,
+      company,
+      logoBuffer: minimalPngBuffer,
+    });
+    const text = decodeRenderedText(buffer);
+
+    expect(text).toContain("Logged via TailgatePro");
   });
 
   it("flows content across multiple pages instead of clipping when the document is long", async () => {

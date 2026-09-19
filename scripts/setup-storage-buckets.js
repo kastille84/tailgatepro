@@ -14,7 +14,7 @@ require("dotenv").config();
 
 const { supabase } = require("../server/utility/supabaseClient");
 
-const BUCKETS = ["signatures", "crew-photos", "meeting-pdfs"];
+const BUCKETS = ["signatures", "crew-photos", "meeting-pdfs", "company-logos"];
 
 const main = async () => {
   const { data: existing, error: listError } = await supabase.storage.listBuckets();

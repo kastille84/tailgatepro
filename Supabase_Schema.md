@@ -10,6 +10,7 @@
 | `name` | Text | Not Null | Company name |
 | `company_type` | Enum | Not Null | `gc` or `subcontractor` |
 | `tier` | Enum | Not Null | `basic`, `premium`, `enterprise` |
+| `logo_path` | Text | Nullable | Storage path of the uploaded company logo (`company-logos` bucket); embedded in generated PDFs and removes the free-tier watermark for Trade Pro+ tiers |
 
 | Table: `users` | Type | Constraints | Description |
 | :--- | :--- | :--- | :--- |

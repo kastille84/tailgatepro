@@ -11,6 +11,7 @@
 // document.
 
 const PDFDocument = require("pdfkit");
+const { hasBrandingAccess } = require("../utility/entitlements");
 
 const BODY_FONT = "Helvetica";
 const BOLD_FONT = "Helvetica-Bold";
@@ -87,8 +88,10 @@ const bulletList = (doc, headingText, items) => {
  *   attached by the caller — this function does no Storage I/O itself).
  * @param {Buffer|null} [params.crewPhotoBuffer] - pre-fetched crew photo bytes, or `null` if none
  *   was uploaded / the caller chose not to embed it. This function does no Storage I/O itself.
- * @param {object|null} [params.company] - `toCompany` shape (name, ...) for the reporting
+ * @param {object|null} [params.company] - `toCompany` shape (name, tier, ...) for the reporting
  *   subcontractor, or `null` if unavailable.
+ * @param {Buffer|null} [params.logoBuffer] - pre-fetched company logo bytes, or `null` if the
+ *   company has no logo uploaded (or isn't Trade Pro+). This function does no Storage I/O itself.
  * @returns {Promise<Buffer>}
  */
 const renderMeetingLogPdf = ({
@@ -98,6 +101,7 @@ const renderMeetingLogPdf = ({
   signatures,
   crewPhotoBuffer = null,
   company = null,
+  logoBuffer = null,
 }) =>
   new Promise((resolve, reject) => {
     const doc = new PDFDocument({ margin: 50, compress: false });
@@ -107,6 +111,14 @@ const renderMeetingLogPdf = ({
     doc.on("error", reject);
 
     // Header
+    // Company logo — Trade Pro+ only, and only once one's been uploaded (a
+    // Pro+ company with no logo yet gets neither a logo nor the watermark
+    // below, never a placeholder).
+    if (hasBrandingAccess(company?.tier) && logoBuffer) {
+      ensureRoomFor(doc, 60);
+      doc.image(logoBuffer, { fit: [120, 60] });
+      doc.moveDown(0.5);
+    }
     doc.fontSize(20).font(BOLD_FONT).text("Toolbox Talk Safety Meeting Report");
     doc.font(BODY_FONT);
     doc.moveDown();
@@ -129,7 +141,11 @@ const renderMeetingLogPdf = ({
       "Hazards to check on site",
       talk?.structured?.site_hazards_to_check,
     );
-    bulletList(doc, "Discussion questions", talk?.structured?.discussion_questions);
+    bulletList(
+      doc,
+      "Discussion questions",
+      talk?.structured?.discussion_questions,
+    );
 
     // Attribution — CPWR/NIOSH licensing requirement (docs/content-attribution.md):
     // the Phase 5 PDF service must print the same credit shown in-app.
@@ -174,21 +190,32 @@ const renderMeetingLogPdf = ({
     }
 
     // Footer
-    doc.moveDown().fontSize(9).text(`Generated ${new Date().toISOString()}`);
+    doc
+      .moveDown()
+      .fontSize(9)
+      .text(`Generated ${formatDate(new Date().toISOString())}`);
 
     // Static free-tier watermark (docs/pricing-and-positioning-strategy_V2.md:
     // Trade Free PDFs carry this, Trade Pro+ removes it and adds the
-    // company's own logo instead — unconditional for now, tier-gating is a
-    // deferred follow-up, see docs/tasks.md). Uses pdfkit's built-in
-    // Helvetica-Oblique standard font, no font file to embed.
-    doc
-      .moveDown(0.25)
-      .font("Helvetica-Oblique")
-      .fontSize(8)
-      .fillColor("gray")
-      .text(
-        "Logged via TailgatePro (Free plan) — upgrade to Trade Pro to remove this watermark and add your company logo.",
-      );
+    // company's own logo instead — gated on hasBrandingAccess(company?.tier)
+    // alone, independent of whether a logo has actually been uploaded, so a
+    // paying Pro+ company never sees a "Free plan" watermark on its own
+    // report just because it hasn't uploaded a logo yet). Uses pdfkit's
+    // built-in Helvetica-Oblique standard font, no font file to embed.
+    if (!hasBrandingAccess(company?.tier)) {
+      doc
+        .moveDown(0.5)
+        .font("Helvetica-Oblique")
+        .fontSize(9)
+        .fillColor("red")
+        .text(
+          "Logged via TailgatePro (Free plan) — upgrade to Trade Pro to remove this watermark and add your company logo.",
+          {
+            link: CTA_URL,
+            underline: true,
+          },
+        );
+    }
 
     // GC growth CTA. This report often reaches a GC who has never used
     // TailgatePro at all — the subcontractor is the one with an account,
@@ -197,18 +224,20 @@ const renderMeetingLogPdf = ({
     // the free-tier watermark above (which is aimed at the paying
     // subcontractor about their own plan). Plain text only, no image, so it
     // auto-paginates fine on its own — no ensureRoomFor needed.
-    doc.moveDown(0.75);
+    doc.moveDown();
     doc
       .strokeColor("#cccccc")
       .moveTo(doc.page.margins.left, doc.y)
       .lineTo(doc.page.width - doc.page.margins.right, doc.y)
       .stroke();
-    doc.moveDown(0.5);
+    doc.moveDown();
     doc
       .font(BOLD_FONT)
       .fontSize(11)
       .fillColor("black") // reset — the watermark line above left fillColor as gray
-      .text("Receiving safety reports like this from multiple subcontractors?");
+      .text(
+        "GC's, are you receiving many safety reports like this from multiple subcontractors?",
+      );
     doc
       .font(BODY_FONT)
       .fontSize(10)
@@ -217,6 +246,7 @@ const renderMeetingLogPdf = ({
           "subcontractor's toolbox talks, signatures, and compliance status " +
           "— no more chasing paper.",
       );
+    doc.moveDown();
     doc
       .font(BOLD_FONT)
       .fillColor("#1a56db")

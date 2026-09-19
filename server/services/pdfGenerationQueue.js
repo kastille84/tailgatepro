@@ -26,6 +26,7 @@ const pdfGeneration = require("./pdfGeneration");
 const PDF_BUCKET = "meeting-pdfs";
 const CREW_PHOTO_BUCKET = "crew-photos";
 const SIGNATURE_BUCKET = "signatures";
+const LOGO_BUCKET = "company-logos";
 
 const enqueue = async (meetingLogId, companyId) => {
   try {
@@ -70,6 +71,25 @@ const enqueue = async (meetingLogId, companyId) => {
       }
     }
 
+    // The company's uploaded logo, downloaded the same best-effort way as
+    // the crew photo: a failed/missing logo degrades to no logo (and the
+    // watermark is gated on tier alone, not logo presence — see
+    // pdfGeneration.js), it never aborts the whole PDF.
+    let logoBuffer = null;
+    if (company?.logoPath) {
+      try {
+        logoBuffer = await storageService.downloadBlob(
+          LOGO_BUCKET,
+          company.logoPath,
+        );
+      } catch (logoError) {
+        console.error(
+          `pdfGenerationQueue: could not download company logo for meeting ${meetingLogId}`,
+          logoError,
+        );
+      }
+    }
+
     // Each signature's own drawn-image blob, downloaded the same
     // best-effort way as the crew photo: one signature's image failing to
     // download doesn't abort the whole PDF, it just prints without that
@@ -100,6 +120,7 @@ const enqueue = async (meetingLogId, companyId) => {
       signatures: signaturesWithImages,
       crewPhotoBuffer,
       company,
+      logoBuffer,
     });
 
     const path = meetingLogsService.pdfPath(meetingLogId);
