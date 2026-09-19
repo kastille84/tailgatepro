@@ -2,6 +2,8 @@
 const { supabase } = require("../utility/supabaseClient");
 const pdfGenerationQueue = require("./pdfGenerationQueue");
 const storageService = require("./storage");
+const projectsService = require("./projects");
+const companiesService = require("./companies");
 const {
   create,
   listForCompany,
@@ -10,6 +12,8 @@ const {
   assertNotCompleted,
   uploadCrewPhoto,
   getCrewPhotoUrl,
+  setFinalPdfUrl,
+  getPdfUrl,
 } = require("./meetingLogs");
 
 const MEETING_LOG_COLUMNS =
@@ -408,7 +412,10 @@ describe("meetingLogs service: complete", () => {
     expect(updateFn).toHaveBeenCalledWith({ completed_at: expect.any(String) });
     expect(updateEqId).toHaveBeenCalledWith("id", "meeting-1");
     expect(updateEqCompany).toHaveBeenCalledWith("company_id", "company-1");
-    expect(pdfGenerationQueue.enqueue).toHaveBeenCalledWith("meeting-1");
+    expect(pdfGenerationQueue.enqueue).toHaveBeenCalledWith(
+      "meeting-1",
+      "company-1",
+    );
     expect(result).toEqual(mappedCompleted);
   });
 
@@ -644,6 +651,136 @@ describe("meetingLogs service: getCrewPhotoUrl", () => {
 
     // Act & Assert
     await expect(getCrewPhotoUrl("missing", "company-1")).rejects.toMatchObject({
+      statusCode: 404,
+      message: "Meeting not found",
+    });
+  });
+});
+
+describe("meetingLogs service: setFinalPdfUrl", () => {
+  let eqCompany;
+  let eqId;
+  let updateFn;
+
+  beforeEach(() => {
+    eqCompany = vi.fn().mockResolvedValue({ error: null });
+    eqId = vi.fn(() => ({ eq: eqCompany }));
+    updateFn = vi.fn(() => ({ eq: eqId }));
+
+    fromSpy.mockReset();
+    fromSpy.mockImplementation((table) => {
+      if (table === "meeting_logs") return { update: updateFn };
+      throw new Error(`Unexpected table: ${table}`);
+    });
+  });
+
+  it("should persist final_pdf_url scoped to the meeting's company", async () => {
+    // Act
+    await setFinalPdfUrl("meeting-1", "company-1", "meeting-1/report.pdf");
+
+    // Assert
+    expect(updateFn).toHaveBeenCalledWith({
+      final_pdf_url: "meeting-1/report.pdf",
+    });
+    expect(eqId).toHaveBeenCalledWith("id", "meeting-1");
+    expect(eqCompany).toHaveBeenCalledWith("company_id", "company-1");
+  });
+
+  it("should throw a 502 AppError when the update fails", async () => {
+    // Arrange
+    eqCompany.mockResolvedValue({ error: new Error("db down") });
+
+    // Act & Assert
+    await expect(
+      setFinalPdfUrl("meeting-1", "company-1", "meeting-1/report.pdf"),
+    ).rejects.toMatchObject({
+      statusCode: 502,
+      message: "Could not save the generated PDF",
+    });
+  });
+});
+
+describe("meetingLogs service: getPdfUrl", () => {
+  let single;
+  let eqCompany;
+  let eqId;
+  let select;
+
+  beforeEach(() => {
+    single = vi.fn().mockResolvedValue({
+      data: { ...dbRow, final_pdf_url: "meeting-1/report.pdf" },
+      error: null,
+    });
+    eqCompany = vi.fn(() => ({ single }));
+    eqId = vi.fn(() => ({ eq: eqCompany }));
+    select = vi.fn(() => ({ eq: eqId }));
+
+    fromSpy.mockReset();
+    fromSpy.mockImplementation((table) => {
+      if (table === "meeting_logs") return { select };
+      throw new Error(`Unexpected table: ${table}`);
+    });
+
+    vi.spyOn(storageService, "getSignedUrl")
+      .mockReset()
+      .mockResolvedValue("https://signed.example/report.pdf");
+
+    vi.spyOn(projectsService, "getById").mockReset().mockResolvedValue({
+      id: "project-1",
+      ownerCompanyId: "company-1",
+      name: "Downtown Highrise",
+      gcCompanyId: null,
+      gcNameCustom: "Acme GC",
+      gcContactEmail: null,
+      status: "active",
+      archivedAt: null,
+      createdAt: "2026-09-09T00:00:00.000Z",
+    });
+
+    vi.spyOn(companiesService, "getById").mockReset().mockResolvedValue({
+      id: "company-1",
+      name: "Acme Roofing",
+      companyType: "subcontractor",
+      tier: "premium",
+    });
+  });
+
+  it("should return a 5-minute signed URL, named with a friendly filename built from the company, project, and meeting", async () => {
+    // Act
+    const url = await getPdfUrl("meeting-1", "company-1");
+
+    // Assert
+    expect(projectsService.getById).toHaveBeenCalledWith("project-1", "company-1");
+    expect(companiesService.getById).toHaveBeenCalledWith("company-1");
+    expect(storageService.getSignedUrl).toHaveBeenCalledWith(
+      "meeting-pdfs",
+      "meeting-1/report.pdf",
+      300,
+      "acme-roofing-downtown-highrise-undated-meeting1.pdf",
+    );
+    expect(url).toBe("https://signed.example/report.pdf");
+  });
+
+  it("should throw a 404 AppError when no PDF has been generated yet, without looking up the project or company", async () => {
+    // Arrange
+    single.mockResolvedValue({ data: dbRow, error: null }); // final_pdf_url: null
+
+    // Act & Assert
+    await expect(getPdfUrl("meeting-1", "company-1")).rejects.toMatchObject({
+      statusCode: 404,
+      message: "No PDF has been generated for this meeting yet",
+    });
+    expect(projectsService.getById).not.toHaveBeenCalled();
+    expect(companiesService.getById).not.toHaveBeenCalled();
+    expect(storageService.getSignedUrl).not.toHaveBeenCalled();
+  });
+
+  it("should propagate the meeting-not-found error", async () => {
+    // Arrange
+    single.mockResolvedValue({ data: null, error: { code: "PGRST116" } });
+
+    // Act & Assert
+    await expect(getPdfUrl("missing", "company-1")).rejects.toMatchObject({
       statusCode: 404,
       message: "Meeting not found",
     });

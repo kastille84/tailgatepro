@@ -7,6 +7,7 @@ const {
   completeMeeting,
   uploadCrewPhoto,
   getCrewPhotoUrl,
+  getPdfUrl,
 } = require("./meetingLogs");
 
 const listForCompanySpy = vi.spyOn(meetingLogsService, "listForCompany");
@@ -15,6 +16,7 @@ const createSpy = vi.spyOn(meetingLogsService, "create");
 const completeSpy = vi.spyOn(meetingLogsService, "complete");
 const uploadCrewPhotoSpy = vi.spyOn(meetingLogsService, "uploadCrewPhoto");
 const getCrewPhotoUrlSpy = vi.spyOn(meetingLogsService, "getCrewPhotoUrl");
+const getPdfUrlSpy = vi.spyOn(meetingLogsService, "getPdfUrl");
 
 const meeting = {
   id: "meeting-1",
@@ -41,6 +43,7 @@ describe("meetingLogs controller", () => {
     completeSpy.mockReset();
     uploadCrewPhotoSpy.mockReset();
     getCrewPhotoUrlSpy.mockReset();
+    getPdfUrlSpy.mockReset();
     req = {
       params: {},
       query: {},
@@ -288,6 +291,40 @@ describe("meetingLogs controller", () => {
 
       // Act
       await getCrewPhotoUrl(req, res, next);
+
+      // Assert
+      expect(next).toHaveBeenCalledWith(error);
+      expect(res.status).not.toHaveBeenCalled();
+    });
+  });
+
+  describe("getPdfUrl", () => {
+    it("should call the service with req.params.id + the caller's companyId and respond 200 with the signed url", async () => {
+      // Arrange
+      req.params = { id: "meeting-1" };
+      getPdfUrlSpy.mockResolvedValue("https://signed.example/report.pdf");
+
+      // Act
+      await getPdfUrl(req, res, next);
+
+      // Assert
+      expect(getPdfUrlSpy).toHaveBeenCalledWith("meeting-1", "company-1");
+      expect(res.status).toHaveBeenCalledWith(200);
+      expect(res.json).toHaveBeenCalledWith({
+        success: true,
+        data: { url: "https://signed.example/report.pdf" },
+      });
+      expect(next).not.toHaveBeenCalled();
+    });
+
+    it("should forward a service error to next() (e.g. no PDF generated yet)", async () => {
+      // Arrange
+      req.params = { id: "meeting-1" };
+      const error = new Error("No PDF has been generated for this meeting yet");
+      getPdfUrlSpy.mockRejectedValue(error);
+
+      // Act
+      await getPdfUrl(req, res, next);
 
       // Assert
       expect(next).toHaveBeenCalledWith(error);

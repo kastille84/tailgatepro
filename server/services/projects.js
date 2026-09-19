@@ -86,6 +86,28 @@ const create = async ({
   return toProject(data);
 };
 
+// A single project by id, scoped to the owning company — used by
+// pdfGenerationQueue.js to fetch the project a completed meeting belongs to.
+// Not the "owned-or-GC" visibility listForCompany grants; only the owner can
+// fetch a project directly by id, same scoping update/remove already use.
+const getById = async (id, companyId) => {
+  const { data, error } = await supabase
+    .from("projects")
+    .select(PROJECT_COLUMNS)
+    .eq("id", id)
+    .eq("owner_company_id", companyId)
+    .single();
+
+  if (error) {
+    if (error.code === "PGRST116") {
+      throw new AppError("Project not found", 404, { cause: error });
+    }
+    throw new AppError("Could not load the project", 502, { cause: error });
+  }
+
+  return toProject(data);
+};
+
 // Patches an existing project the caller's company owns. Ownership is enforced
 // in the query itself (`owner_company_id` eq the caller's company): a project
 // owned by another company is indistinguishable from a missing one (404), by
@@ -182,4 +204,4 @@ const remove = async ({ id, companyId }) => {
   return { id: data.id };
 };
 
-module.exports = { listForCompany, create, update, remove };
+module.exports = { listForCompany, getById, create, update, remove };

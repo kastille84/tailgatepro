@@ -1,7 +1,10 @@
 const { supabase } = require("../utility/supabaseClient");
 const { AppError } = require("../utility/AppError");
+const { buildPdfFilename } = require("../utility/pdfFilename");
 const pdfGenerationQueue = require("./pdfGenerationQueue");
 const storageService = require("./storage");
+const projectsService = require("./projects");
+const companiesService = require("./companies");
 
 // The columns every meeting_logs query selects, and the snake_case ->
 // camelCase mapper applied to each row before it leaves the service. Services
@@ -11,6 +14,8 @@ const MEETING_LOG_COLUMNS =
 
 const CREW_PHOTO_BUCKET = "crew-photos";
 const CREW_PHOTO_URL_TTL_SECONDS = 300;
+const PDF_BUCKET = "meeting-pdfs";
+const PDF_URL_TTL_SECONDS = 300;
 
 const toMeetingLog = (row) => ({
   id: row.id,
@@ -150,7 +155,8 @@ const assertNotCompleted = async (id, companyId) => {
 // Finalizes a meeting: requires at least one signature (an attendance record
 // with zero attendees isn't a valid completed meeting) and, once stamped,
 // locks the meeting_log and its signatures via assertNotCompleted. Triggers
-// the Phase 5 PDF-generation hook — a no-op today, see pdfGenerationQueue.js.
+// the Phase 5 PDF-generation pipeline (see pdfGenerationQueue.js) — soft-fail,
+// so a PDF/upload failure never unwinds completed_at or fails this call.
 const complete = async ({ id, companyId }) => {
   await assertNotCompleted(id, companyId);
 
@@ -188,7 +194,7 @@ const complete = async ({ id, companyId }) => {
     throw new AppError("Could not complete the meeting", 502, { cause: error });
   }
 
-  await pdfGenerationQueue.enqueue(id);
+  await pdfGenerationQueue.enqueue(id, companyId);
 
   return toMeetingLog(data);
 };
@@ -241,6 +247,68 @@ const getCrewPhotoUrl = async (id, companyId) => {
   );
 };
 
+// The path a meeting's generated PDF report lives at, relative to the
+// `meeting-pdfs` bucket. A meeting has at most one report (regenerating
+// overwrites the same object, same as crewPhotoPath), so there's no separate
+// report id in the path.
+const pdfPath = (id) => `${id}/report.pdf`;
+
+// Persists the Storage path of a meeting's generated PDF. Called by
+// pdfGenerationQueue.js once the upload succeeds; failures here are caught
+// and logged by the queue itself (soft-fail — see
+// docs/meeting-flow-design.md's "Phase 5 hook point"), never surfaced to the
+// caller of complete().
+const setFinalPdfUrl = async (id, companyId, path) => {
+  const { error } = await supabase
+    .from("meeting_logs")
+    .update({ final_pdf_url: path })
+    .eq("id", id)
+    .eq("company_id", companyId);
+
+  if (error) {
+    throw new AppError("Could not save the generated PDF", 502, { cause: error });
+  }
+};
+
+// A 5-minute signed URL for a meeting's generated PDF report, once one
+// exists — named for the browser's save-as dialog via buildPdfFilename
+// (reporting company + project + date + a short id, so a GC juggling
+// several subs on a site can tell whose report is whose, and multiple
+// downloads don't all land as "report.pdf"). The finalPdfUrl guard runs
+// first so a not-yet-generated PDF 404s without the extra lookups. A project
+// with any completed meeting log can never be hard-deleted (projects.remove's
+// own meeting_logs guard), so projectsService.getById is not expected to
+// 404 here in practice; companiesService.getById(companyId) looks up the
+// caller's own company (identical to meeting.companyId by construction of
+// getById's scoping filter, so no second id to reconcile) and can't 404
+// either — a genuine failure from either just propagates like anywhere else.
+const getPdfUrl = async (id, companyId) => {
+  const meeting = await getById(id, companyId);
+
+  if (!meeting.finalPdfUrl) {
+    throw new AppError("No PDF has been generated for this meeting yet", 404);
+  }
+
+  const [project, company] = await Promise.all([
+    projectsService.getById(meeting.projectId, companyId),
+    companiesService.getById(companyId),
+  ]);
+
+  const filename = buildPdfFilename({
+    companyName: company.name,
+    projectName: project.name,
+    completedAt: meeting.completedAt,
+    meetingLogId: meeting.id,
+  });
+
+  return storageService.getSignedUrl(
+    PDF_BUCKET,
+    meeting.finalPdfUrl,
+    PDF_URL_TTL_SECONDS,
+    filename,
+  );
+};
+
 module.exports = {
   create,
   listForCompany,
@@ -249,4 +317,7 @@ module.exports = {
   assertNotCompleted,
   uploadCrewPhoto,
   getCrewPhotoUrl,
+  pdfPath,
+  setFinalPdfUrl,
+  getPdfUrl,
 };

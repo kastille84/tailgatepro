@@ -84,3 +84,12 @@ exports.getCrewPhotoUrl = async (req, res, next) => {
     return next(error);
   }
 };
+
+exports.getPdfUrl = async (req, res, next) => {
+  try {
+    const url = await meetingLogsService.getPdfUrl(req.params.id, req.user.companyId);
+    return res.status(200).json({ success: true, data: { url } });
+  } catch (error) {
+    return next(error);
+  }
+};

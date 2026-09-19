@@ -2,7 +2,7 @@
 // `supabase.from` is looked up fresh at call time (not destructured), so a
 // single module-scope spy reconfigured per test is enough — no re-spying.
 const { supabase } = require("../utility/supabaseClient");
-const { listForCompany, create, update, remove } = require("./projects");
+const { listForCompany, getById, create, update, remove } = require("./projects");
 
 const PROJECT_COLUMNS =
   "id, owner_company_id, name, gc_company_id, gc_name_custom, gc_contact_email, status, archived_at, created_at";
@@ -83,6 +83,59 @@ describe("projects service: listForCompany", () => {
     await expect(listForCompany("company-1")).rejects.toMatchObject({
       statusCode: 502,
       message: "Could not load projects",
+    });
+  });
+});
+
+describe("projects service: getById", () => {
+  let single;
+  let eqOwner;
+  let eqId;
+  let select;
+
+  beforeEach(() => {
+    single = vi.fn().mockResolvedValue({ data: dbRow, error: null });
+    eqOwner = vi.fn(() => ({ single }));
+    eqId = vi.fn(() => ({ eq: eqOwner }));
+    select = vi.fn(() => ({ eq: eqId }));
+
+    fromSpy.mockReset();
+    fromSpy.mockImplementation((table) => {
+      if (table === "projects") return { select };
+      throw new Error(`Unexpected table: ${table}`);
+    });
+  });
+
+  it("should fetch one project scoped to the owning company, mapped to camelCase", async () => {
+    // Act
+    const result = await getById("project-1", "company-1");
+
+    // Assert
+    expect(select).toHaveBeenCalledWith(PROJECT_COLUMNS);
+    expect(eqId).toHaveBeenCalledWith("id", "project-1");
+    expect(eqOwner).toHaveBeenCalledWith("owner_company_id", "company-1");
+    expect(result).toEqual(mappedProject);
+  });
+
+  it("should throw a 404 AppError when no row matches the id and owning company", async () => {
+    // Arrange
+    single.mockResolvedValue({ data: null, error: { code: "PGRST116" } });
+
+    // Act & Assert
+    await expect(getById("missing", "company-1")).rejects.toMatchObject({
+      statusCode: 404,
+      message: "Project not found",
+    });
+  });
+
+  it("should throw a 502 AppError on any other query failure", async () => {
+    // Arrange
+    single.mockResolvedValue({ data: null, error: { code: "OTHER" } });
+
+    // Act & Assert
+    await expect(getById("project-1", "company-1")).rejects.toMatchObject({
+      statusCode: 502,
+      message: "Could not load the project",
     });
   });
 });

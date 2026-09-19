@@ -856,17 +856,235 @@ ships, so it isn't forgotten.
 - [x] Verify: `npm run test:server` — full suite 217/217 passing (up from
       206), no regressions
 
-### 5e — Server: orchestration + signed-URL endpoint
+### 5e — Server: orchestration + signed-URL endpoint · status: code complete; curl smoke with a real Bearer token pending
 
-- [ ] Implement `pdfGenerationQueue.js`'s `enqueue(meetingLogId)`: fetch the
-      meeting log + joined project/talk/signatures (reusing existing
-      services), call `pdfGeneration.renderMeetingLogPdf`,
-      `storage.uploadBlob` to the `meeting-pdfs` bucket
-      (`{meetingLogId}/report.pdf`), update `meeting_logs.final_pdf_url`;
-      wrapped so any failure is caught/logged per 5a's soft-fail decision
-- [ ] New `GET /api/meetings/:id/pdf-url` — signed URL, same shape as the
-      existing crew-photo-url endpoint
-- [ ] Service + controller tests
+- [x] Signature deviation from the original bullet: implemented as
+      `pdfGenerationQueue.enqueue(meetingLogId, companyId)`, not the
+      one-arg `enqueue(meetingLogId)` originally sketched. Every read the
+      pipeline needs (`meetingLogs.getById`, the new `projects.getById`,
+      `talks.getById`, `signatures.listForMeeting`) is company-scoped by
+      convention, and `complete()` already has `companyId` in scope — so the
+      one call site (`meetingLogs.js`'s `complete()`) now passes it through
+      rather than the queue bypassing scoping with a raw unscoped query.
+- [x] `server/services/storage.js` gained `downloadBlob(bucket, path)` (the
+      queue needs actual crew-photo bytes to embed; `storage.js` previously
+      only had `uploadBlob`/`getSignedUrl`) — converts Supabase Storage's
+      `Blob` to a `Buffer` via `arrayBuffer()`
+- [x] `server/services/projects.js` gained `getById(id, companyId)` (no
+      single-project getter existed; only `listForCompany`/`create`/
+      `update`/`remove`) — same scoped-`getById` pattern as
+      `meetingLogs.js`/`talks.js`
+- [x] `server/services/meetingLogs.js` gained `pdfPath(id)` (the
+      `{id}/report.pdf` Storage path, mirrors `crewPhotoPath`),
+      `setFinalPdfUrl(id, companyId, path)`, and `getPdfUrl(id, companyId)`
+      (direct mirror of `getCrewPhotoUrl`, 404s until a PDF exists)
+- [x] Implemented `server/services/pdfGenerationQueue.js`'s
+      `enqueue(meetingLogId, companyId)`: fetches the meeting log + its
+      project/talk/signatures (talk skipped when `talkId` is `null` —
+      `meeting_logs.talk_id` is `ON DELETE SET NULL`) via
+      `Promise.all`, best-effort downloads the crew photo (a download
+      failure degrades to no-photo rather than aborting the whole PDF),
+      calls `pdfGeneration.renderMeetingLogPdf`, uploads the result to the
+      `meeting-pdfs` bucket at `{meetingLogId}/report.pdf`, and persists the
+      path via `setFinalPdfUrl` — the whole function is wrapped in a single
+      try/catch that only logs, per 5a's soft-fail decision, so it can never
+      throw back into `complete()`. Required lazily `require`-ing both
+      `meetingLogs.js` and `signatures.js` from inside `enqueue()` instead of
+      at module top-level: `meetingLogs.js` already required this file
+      (to call `enqueue` from `complete()`), and `signatures.js` requires
+      `meetingLogs.js` — so a top-level require of either here would close a
+      circular-require loop. This codebase's `module.exports = {...}` style
+      (reassignment, not incremental `exports.x = ...`) means whichever
+      module in a cycle finishes loading second gets a stale, empty exports
+      object from the other; requiring lazily avoids that. Also required
+      `pdfGeneration.js` as the module object rather than destructuring
+      `renderMeetingLogPdf` off it — a destructured binding would have
+      captured the function reference at require-time, unreachable by
+      `vi.spyOn`'s property-replacement on the module object in tests.
+- [x] New `GET /api/meetings/:id/pdf-url` — signed URL, direct mirror of the
+      existing crew-photo-url endpoint (controller + route + validator)
+- [x] Tests: new `server/services/pdfGenerationQueue.test.js` (11 cases:
+      happy path with a crew photo, talk-less meeting, photo-less meeting,
+      photo-download failure still completes, and a parameterized case per
+      dependency confirming `enqueue` never throws — soft-fail contract);
+      `storage.test.js` +2 (`downloadBlob`), `projects.test.js` +3
+      (`getById`), `meetingLogs.test.js` +5 (`setFinalPdfUrl` ×2,
+      `getPdfUrl` ×3, updated the existing `complete()` assertion for the
+      new `enqueue(id, companyId)` signature), `controllers/meetingLogs.test.js`
+      +2 (`getPdfUrl`). Full `npm run test:server` suite: 240/240 passing
+      (up from 217)
+- [x] Verify (partial): booted the server and confirmed `GET
+    /api/meetings/:id/pdf-url` returns 401, not 404/the SPA fallback, same
+      as every other new server-only route in prior sub-phases. Full
+      curl-with-a-real-Bearer-token pass (complete a meeting, confirm a PDF
+      lands at `meeting-pdfs/{id}/report.pdf`, confirm the signed URL works,
+      confirm a cross-company 404) still needs a live session token — same
+      as every prior server-only sub-phase's manual-smoke item
+- [x] **Follow-up: friendly download filenames.** The Storage *path*
+      (`{meetingId}/report.pdf`) stayed as-is — Supabase's `createSignedUrl`
+      supports a `download` option that names the browser's save-as file
+      independent of the object's actual key, so there was no need to touch
+      `pdfPath`/`final_pdf_url` at all. New `server/utility/pdfFilename.js`
+      (`buildPdfFilename`, pure/no I/O — same category as
+      `composeTalkMarkdown.js`) builds
+      `{company-slug}-{project-slug}-{date}-{shortId}.pdf` — company
+      (the reporting subcontractor) first, since a GC managing several subs
+      on one site files/sorts OSHA paperwork by contractor first, and it's
+      also how multiple PDFs sort alphabetically in one folder or the future
+      ZIP bundle below; the short id (first 8 chars of the meeting log's own
+      id) guarantees uniqueness since company+project+date alone can still
+      collide (multiple talks, same company/project/day). `storage.js`'s
+      `getSignedUrl` gained an optional 4th `downloadFilename` param passed
+      through as `{ download: filename }` (backward compatible — every other
+      caller omits it). New `server/services/companies.js` (`getById(id)`,
+      unscoped — the id passed is always the caller's own verified
+      `companyId`, never a route param) — nothing in the request pipeline
+      previously loaded the caller's own company *name* (`req.user` only
+      carries `companyId`). `meetingLogs.js`'s `getPdfUrl` now fetches the
+      project and company in parallel (`Promise.all`, same pattern
+      `pdfGenerationQueue.js` uses) and passes the built filename through;
+      the `finalPdfUrl` guard still runs first so a not-yet-generated PDF
+      404s without either extra lookup. New `companies.test.js` (3 cases,
+      mirrors `projects.test.js`'s `getById` block minus ownership scoping);
+      `pdfFilename.test.js` (8 cases: normal names, unicode/special-char
+      stripping, whitespace collapsing, company-name fallback,
+      project-name fallback, 60-char truncation of each, missing-date
+      fallback, id-suffix extraction); `meetingLogs.test.js`'s `getPdfUrl`
+      block updated to mock `companiesService.getById` and assert the full
+      filename. Full `npm run test:server` suite: **252/252 passing** (up
+      from 240). Explicitly does **not** add the company name to the PDF's
+      own printed content (`pdfGeneration.js`'s layout) — filename-only,
+      flagged as a possible future look, not requested here.
+- [x] **Follow-up: PDF content pass.** The three items just flagged as "not
+      requested here" above, requested in the next turn after the user
+      opened an actual generated PDF: `pdfGeneration.js`'s header now prints
+      `Subcontractor: {company.name}` as its first line (mirrors the
+      filename's company-first ordering; falls back to `"Unknown"` when
+      `company` is omitted — `meeting_logs.company_id` is documented
+      nullable even though `create()` always populates it today);
+      `formatDate` now renders `"September 18, 2026 at 12:00 PM UTC"`
+      instead of the raw ISO timestamp (native `Intl.DateTimeFormat`,
+      `timeZone: "UTC"` pinned for determinism, `"UTC"` appended manually
+      since `Intl` won't combine `dateStyle`/`timeStyle` presets with
+      `timeZoneName` — no new dependency; `dayjs`/`moment` are both in
+      `package.json` but unused anywhere server-side, not worth entangling
+      here); each signer's row now embeds their actual drawn signature image
+      (`doc.image(signature.imageBuffer, { fit: [200, 80] })`) instead of
+      just their typed name, printing `"(signature image unavailable)"`
+      when one couldn't be downloaded. `pdfGenerationQueue.js` now fetches
+      the company (`companiesService`, required at module top level — no
+      reverse dependency, unlike the already-lazy `meetingLogs`/
+      `signatures`) alongside project/talk/signatures, and downloads each
+      signature's PNG blob the same best-effort way the crew photo already
+      was (one signer's image failing to download doesn't abort the whole
+      PDF, same soft-fail precedent). Also added a static, unconditional
+      watermark footer line (`"Logged via TailgatePro (Free plan) —
+      upgrade to Trade Pro to remove this watermark and add your company
+      logo."`, `Helvetica-Oblique` + gray fill, pdfkit's built-in font, no
+      file to embed) after the user asked how PDF branding is being
+      handled — `docs/pricing-and-positioning-strategy_V2.md` already
+      promises exactly this as the Trade Free default with Trade Pro+
+      removing it via custom logo upload; **full tier-gating is deferred**,
+      see the new bullet below. Tests: `pdfGeneration.test.js` 8→13 cases
+      (company rendered + `"Unknown"` fallback, human-readable date
+      assertion, a real minimal-PNG signature image embed that doesn't
+      throw — no prior test in this file exercised `doc.image()` with an
+      actual buffer, the crew-photo tests only covered the "no photo"
+      branch — the unavailable-image fallback note, and the watermark
+      text); `pdfGenerationQueue.test.js` 11→13 cases (company fetch +
+      per-signature image download wired into the happy-path assertion, a
+      new one-signature-image-fails-without-affecting-others case, and
+      `companiesService.getById` added to the never-throws `it.each`
+      parameterization). Full `npm run test:server` suite: **259/259
+      passing** (up from 252).
+- [x] **Follow-up: fixed a pagination bug the signature-image embed exposed.**
+      The user generated a PDF and found the crew photo cut off at the
+      bottom of page 1 with nothing on page 2. Root cause: pdfkit's
+      `doc.text()` auto-paginates (checks remaining page height, calls
+      `addPage()` internally) but `doc.image()` does not — an image near
+      the bottom of a page just gets clipped at the boundary, and whatever
+      renders *after* it correctly flows to the next page, leaving the
+      image itself stranded/cut off with nothing "using" the new page. This
+      bug already existed for the crew photo but got much easier to hit
+      once each signer also got an ~80px embedded signature image this
+      session (the doc got taller, so the crew-photo section lands near a
+      page boundary far more often). Fix: new exported `ensureRoomFor(doc,
+      height)` in `pdfGeneration.js` — checks `doc.page.height -
+      doc.page.margins.bottom - doc.y` against the needed height and calls
+      `doc.addPage()` proactively if it won't fit; called before both
+      `doc.image()` sites (320 for the crew photo section — heading + image
+      kept together so the heading doesn't get orphaned alone at a page
+      bottom — and 80 for each signature image), sized to each `fit`
+      bounding box (a safe upper bound, since `fit` only ever scales an
+      image down). Exported specifically for direct unit testing against a
+      fake `doc` object, since pagination math isn't practically assertable
+      from this file's usual decoded-PDF-text black-box tests. Tests:
+      `pdfGeneration.test.js` 13→17 cases — 3 new `ensureRoomFor` unit tests
+      (enough room / not enough room / exact-boundary edge case) plus 1
+      integration smoke test rendering 6 signers with images and a crew
+      photo, then counting `/Type /Page` object occurrences in the raw
+      (uncompressed) PDF bytes to confirm the document actually spans
+      multiple pages rather than silently overflowing one. Full
+      `npm run test:server` suite: **263/263 passing** (up from 259).
+- [x] **Follow-up: visual hierarchy + GC growth CTA.** The user asked for
+      more visual hierarchy (bullets weren't indented, key labels/headings
+      weren't bold) and for closing marketing copy enticing whichever GC
+      receives the PDF to try TailgatePro — confirmed the recipient is
+      often a GC with no TailgatePro account at all (the subcontractor is
+      the one with an account), and confirmed the link target,
+      `https://www.getTailgatePro.com` (no production domain existed
+      anywhere in the codebase before this — no env var, no docs reference;
+      not fabricated). New `labelLine(doc, label, value)` (bold label +
+      normal-weight value on one line via pdfkit's `{ continued: true }`)
+      and `heading(doc, text, size)` (bold section heading, explicit font
+      reset after — pdfkit's font/fillColor are both stateful, confirmed by
+      hand, which is also why the new CTA block below explicitly resets
+      `fillColor("black")` since the watermark line above it left the fill
+      gray) helpers, both using pdfkit's built-in `Helvetica-Bold` (no font
+      file to embed). Applied to the doc title, all 5 header label lines
+      (`Subcontractor`/`Project`/`General contractor`/`Talk`/`Completed`),
+      and every section heading (`Summary`, `Talking points`, `Hazards to
+      check on site`, `Discussion questions`, `Attendance & signatures`,
+      `Crew photo`). `bulletList()`'s items now render with
+      `{ indent: 20, indentAllLines: true }` (the latter so a wrapped long
+      item's continuation lines stay aligned under the bullet). New GC CTA
+      block after the existing free-tier watermark (kept separate and
+      unchanged — that one nudges the *paying subcontractor* to upgrade;
+      this new one targets *whoever opens the report*): a light horizontal
+      divider, a bold question, two lines of body copy, and a bold
+      blue-underlined clickable link (`{ link: CTA_URL, underline: true }`)
+      reading "Try TailgatePro free at getTailgatePro.com". Confirmed a
+      link annotation's URI is stored as a literal string in the raw PDF
+      bytes (not hex-encoded glyph runs like visible text), so it's
+      directly assertable. Rendered an actual sample PDF (realistic
+      fixture, saved to the session scratchpad) and visually read it back
+      page-by-page to confirm the result — bold/indent/reset all render
+      correctly with no state leaking between sections (attribution and
+      signer-name lines stay plain, confirming every bold block's reset
+      works). Tests: `pdfGeneration.test.js` 17→19 cases — one new bullet-
+      content assertion (closing a pre-existing gap: no test previously
+      checked that talking-point/hazard/discussion-question text actually
+      renders) and one new CTA test (headline/body/link text via the
+      existing decode helper, plus the literal URL asserted against the raw
+      un-decoded buffer). No existing assertion needed to change — bold/
+      indent formatting doesn't alter the underlying decoded character
+      content. Full `npm run test:server` suite: **265/265 passing** (up
+      from 263).
+- [ ] **Not yet built** — full tier-gated PDF branding
+      (`docs/pricing-and-positioning-strategy_V2.md`: Trade Pro+ "Custom
+      Branding: Upload logo, remove watermark"). Needs a `companies` logo
+      column, a Storage bucket for logos, a client upload UI, and
+      `pdfGeneration.js`/`pdfGenerationQueue.js` branching on
+      `company.tier !== "basic"` to embed the logo and skip the watermark
+      instead of always printing it. `companies.tier` already exists in the
+      schema, so this is additive, not a rework, once scoped.
+- [ ] **Not yet built** — GC "1-Click OSHA Defense Bundle" ZIP export
+      (`docs/pricing-and-positioning-strategy_V2.md`'s GC Site Pro tier:
+      "Download indexed ZIP of all site logs instantly"). When that gets
+      scoped, reuse `server/utility/pdfFilename.js`'s `buildPdfFilename` for
+      each entry's name rather than reinventing naming — same reason it was
+      written as a standalone pure helper instead of inlined into
+      `getPdfUrl`.
 
 ### 5f — Server: email delivery
 

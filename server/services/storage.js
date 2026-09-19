@@ -23,10 +23,18 @@ const uploadBlob = async (bucket, path, buffer, contentType) => {
   }
 };
 
-const getSignedUrl = async (bucket, path, ttlSeconds) => {
+// `downloadFilename`, when given, sets the signed URL's `download` option —
+// Supabase serves the response with a Content-Disposition naming it that,
+// independent of the object's actual Storage path/key. Every caller that
+// omits it keeps today's behavior exactly (no `options` object passed).
+const getSignedUrl = async (bucket, path, ttlSeconds, downloadFilename) => {
   const { data, error } = await supabase.storage
     .from(bucket)
-    .createSignedUrl(path, ttlSeconds);
+    .createSignedUrl(
+      path,
+      ttlSeconds,
+      downloadFilename ? { download: downloadFilename } : undefined,
+    );
 
   if (error) {
     throw new AppError("Could not generate a download link", 502, {
@@ -37,4 +45,19 @@ const getSignedUrl = async (bucket, path, ttlSeconds) => {
   return data.signedUrl;
 };
 
-module.exports = { uploadBlob, getSignedUrl };
+// Downloads a blob's raw bytes — used by pdfGenerationQueue.js to fetch a
+// crew photo to embed in the generated PDF. Supabase's storage client hands
+// back a Blob, not a Buffer; every other server-side consumer of file bytes
+// in this codebase (multer-free raw body uploads) works with Buffers, so the
+// conversion happens once here rather than at each call site.
+const downloadBlob = async (bucket, path) => {
+  const { data, error } = await supabase.storage.from(bucket).download(path);
+
+  if (error) {
+    throw new AppError("Could not download the file", 502, { cause: error });
+  }
+
+  return Buffer.from(await data.arrayBuffer());
+};
+
+module.exports = { uploadBlob, getSignedUrl, downloadBlob };
