@@ -18,13 +18,14 @@ exports.listProjects = async (req, res, next) => {
 exports.createProject = async (req, res, next) => {
   try {
     // The request body has already been validated by the validate middleware.
-    const { id, name, gcCompanyId, gcNameCustom } = req.body;
+    const { id, name, gcCompanyId, gcNameCustom, gcContactEmail } = req.body;
     const data = await projectsService.create({
       id,
       ownerCompanyId: req.user.companyId,
       name,
       gcCompanyId,
       gcNameCustom,
+      gcContactEmail,
     });
     return res.status(201).json({ success: true, data });
   } catch (error) {
@@ -34,11 +35,12 @@ exports.createProject = async (req, res, next) => {
 
 exports.updateProject = async (req, res, next) => {
   try {
-    const { name, status, gcCompanyId, gcNameCustom, archived } = req.body;
+    const { name, status, gcCompanyId, gcNameCustom, gcContactEmail, archived } =
+      req.body;
     const data = await projectsService.update({
       id: req.params.id,
       companyId: req.user.companyId,
-      patch: { name, status, gcCompanyId, gcNameCustom, archived },
+      patch: { name, status, gcCompanyId, gcNameCustom, gcContactEmail, archived },
     });
     return res.status(200).json({ success: true, data });
   } catch (error) {

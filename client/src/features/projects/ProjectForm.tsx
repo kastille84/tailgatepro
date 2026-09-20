@@ -33,6 +33,14 @@ const projectSchema = z.object({
     .trim()
     .min(1, "Enter the general contractor for this project")
     .max(120, "GC name is too long"),
+  // Optional: RHF's native text input always yields a string, never
+  // `undefined`, so `.or(z.literal(""))` is what makes this genuinely
+  // optional — `.optional()` alone only skips `undefined`.
+  gcContactEmail: z
+    .string()
+    .trim()
+    .email("Enter a valid email address")
+    .or(z.literal("")),
   status: z.enum(["active", "completed"]).optional(),
 });
 
@@ -88,6 +96,7 @@ export const ProjectForm = ({ isOpen, onClose, project }: ProjectFormProps) => {
     defaultValues: {
       name: project?.name ?? "",
       gcNameCustom: project?.gcNameCustom ?? "",
+      gcContactEmail: project?.gcContactEmail ?? "",
       status: project?.status ?? "active",
     },
   });
@@ -100,6 +109,7 @@ export const ProjectForm = ({ isOpen, onClose, project }: ProjectFormProps) => {
           patch: {
             name: values.name,
             gcNameCustom: values.gcNameCustom,
+            gcContactEmail: values.gcContactEmail || null,
             status: values.status,
           },
         });
@@ -107,6 +117,7 @@ export const ProjectForm = ({ isOpen, onClose, project }: ProjectFormProps) => {
         await createProject({
           name: values.name,
           gcNameCustom: values.gcNameCustom,
+          gcContactEmail: values.gcContactEmail || null,
         });
       }
       onClose();
@@ -117,6 +128,7 @@ export const ProjectForm = ({ isOpen, onClose, project }: ProjectFormProps) => {
 
   const nameId = "project-name";
   const gcId = "project-gc";
+  const gcContactEmailId = "project-gc-email";
   const statusId = "project-status";
 
   return (
@@ -147,6 +159,20 @@ export const ProjectForm = ({ isOpen, onClose, project }: ProjectFormProps) => {
             placeholder="Acme Construction"
             hasError={!!errors.gcNameCustom}
             {...register("gcNameCustom")}
+          />
+        </FormField>
+
+        <FormField
+          id={gcContactEmailId}
+          label="GC contact email (optional)"
+          error={errors.gcContactEmail?.message}
+        >
+          <TextInput
+            id={gcContactEmailId}
+            type="email"
+            placeholder="gc@example.com"
+            hasError={!!errors.gcContactEmail}
+            {...register("gcContactEmail")}
           />
         </FormField>
 

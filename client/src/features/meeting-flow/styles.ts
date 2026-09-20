@@ -148,6 +148,13 @@ export const StyledWizardWrapper = styled.div`
   gap: 1.6rem;
 `;
 
+export const StyledStepHeaderRow = styled.div`
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1.2rem;
+`;
+
 export const StyledStepEyebrow = styled.p`
   margin: 0;
   text-transform: uppercase;

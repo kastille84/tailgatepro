@@ -2,10 +2,10 @@
 // `supabase.from` is looked up fresh at call time (not destructured), so a
 // single module-scope spy reconfigured per test is enough — no re-spying.
 const { supabase } = require("../utility/supabaseClient");
-const { listForCompany, create, update, remove } = require("./projects");
+const { listForCompany, getById, create, update, remove } = require("./projects");
 
 const PROJECT_COLUMNS =
-  "id, owner_company_id, name, gc_company_id, gc_name_custom, status, archived_at, created_at";
+  "id, owner_company_id, name, gc_company_id, gc_name_custom, gc_contact_email, status, archived_at, created_at";
 
 const dbRow = {
   id: "project-1",
@@ -13,6 +13,7 @@ const dbRow = {
   name: "Downtown Highrise",
   gc_company_id: null,
   gc_name_custom: "Acme GC",
+  gc_contact_email: null,
   status: "active",
   archived_at: null,
   created_at: "2026-09-09T00:00:00.000Z",
@@ -24,6 +25,7 @@ const mappedProject = {
   name: "Downtown Highrise",
   gcCompanyId: null,
   gcNameCustom: "Acme GC",
+  gcContactEmail: null,
   status: "active",
   archivedAt: null,
   createdAt: "2026-09-09T00:00:00.000Z",
@@ -85,6 +87,59 @@ describe("projects service: listForCompany", () => {
   });
 });
 
+describe("projects service: getById", () => {
+  let single;
+  let eqOwner;
+  let eqId;
+  let select;
+
+  beforeEach(() => {
+    single = vi.fn().mockResolvedValue({ data: dbRow, error: null });
+    eqOwner = vi.fn(() => ({ single }));
+    eqId = vi.fn(() => ({ eq: eqOwner }));
+    select = vi.fn(() => ({ eq: eqId }));
+
+    fromSpy.mockReset();
+    fromSpy.mockImplementation((table) => {
+      if (table === "projects") return { select };
+      throw new Error(`Unexpected table: ${table}`);
+    });
+  });
+
+  it("should fetch one project scoped to the owning company, mapped to camelCase", async () => {
+    // Act
+    const result = await getById("project-1", "company-1");
+
+    // Assert
+    expect(select).toHaveBeenCalledWith(PROJECT_COLUMNS);
+    expect(eqId).toHaveBeenCalledWith("id", "project-1");
+    expect(eqOwner).toHaveBeenCalledWith("owner_company_id", "company-1");
+    expect(result).toEqual(mappedProject);
+  });
+
+  it("should throw a 404 AppError when no row matches the id and owning company", async () => {
+    // Arrange
+    single.mockResolvedValue({ data: null, error: { code: "PGRST116" } });
+
+    // Act & Assert
+    await expect(getById("missing", "company-1")).rejects.toMatchObject({
+      statusCode: 404,
+      message: "Project not found",
+    });
+  });
+
+  it("should throw a 502 AppError on any other query failure", async () => {
+    // Arrange
+    single.mockResolvedValue({ data: null, error: { code: "OTHER" } });
+
+    // Act & Assert
+    await expect(getById("project-1", "company-1")).rejects.toMatchObject({
+      statusCode: 502,
+      message: "Could not load the project",
+    });
+  });
+});
+
 describe("projects service: create", () => {
   let single;
   let select;
@@ -120,9 +175,20 @@ describe("projects service: create", () => {
       name: "Downtown Highrise",
       gc_company_id: null,
       gc_name_custom: "Acme GC",
+      gc_contact_email: null,
     });
     expect(select).toHaveBeenCalledWith(PROJECT_COLUMNS);
     expect(result).toEqual(mappedProject);
+  });
+
+  it("should insert a given gcContactEmail rather than coalescing it to null", async () => {
+    // Act
+    await create({ ...payload, gcContactEmail: "gc@example.com" });
+
+    // Assert
+    expect(insert).toHaveBeenCalledWith(
+      expect.objectContaining({ gc_contact_email: "gc@example.com" }),
+    );
   });
 
   it("should throw a 409 AppError when the project id is already used", async () => {
@@ -207,18 +273,23 @@ describe("projects service: update", () => {
     expect(result).toEqual({ ...mappedProject, status: "completed" });
   });
 
-  it("should map gcCompanyId / gcNameCustom patch keys to their DB column names", async () => {
+  it("should map gcCompanyId / gcNameCustom / gcContactEmail patch keys to their DB column names", async () => {
     // Act
     await update({
       id: "project-1",
       companyId: "company-1",
-      patch: { gcCompanyId: "gc-9", gcNameCustom: "New GC" },
+      patch: {
+        gcCompanyId: "gc-9",
+        gcNameCustom: "New GC",
+        gcContactEmail: "new@gc.com",
+      },
     });
 
     // Assert
     expect(updateFn).toHaveBeenCalledWith({
       gc_company_id: "gc-9",
       gc_name_custom: "New GC",
+      gc_contact_email: "new@gc.com",
     });
   });
 

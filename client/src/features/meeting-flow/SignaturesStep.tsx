@@ -1,4 +1,5 @@
 import { useRef, useState } from "react";
+import { HiArrowRight } from "react-icons/hi2";
 
 import { Button } from "../../ui_comps/button";
 import { FormField, TextInput } from "../../ui_comps/form";
@@ -205,6 +206,7 @@ export const SignaturesStep = ({
           size="md"
           onClick={onContinue}
           disabled={signers.length === 0}
+          rightIcon={<HiArrowRight aria-hidden="true" />}
         >
           Continue
         </Button>

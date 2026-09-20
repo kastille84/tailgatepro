@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useId, useRef, useState } from "react";
+import { HiArrowRight } from "react-icons/hi2";
 
 import { Button } from "../../ui_comps/button";
 import { dataUrlToBlob } from "../../ui_comps/signature-pad";
@@ -226,7 +227,12 @@ export const PhotoCapture = ({ onCapture, onSkip }: PhotoCaptureProps) => {
             <Button type="button" variant="outline" size="md" onClick={handleRetake}>
               Retake photo
             </Button>
-            <Button type="button" size="md" onClick={handleConfirm}>
+            <Button
+              type="button"
+              size="md"
+              onClick={handleConfirm}
+              rightIcon={<HiArrowRight aria-hidden="true" />}
+            >
               Use photo
             </Button>
           </StyledPhotoActions>
@@ -247,7 +253,13 @@ export const PhotoCapture = ({ onCapture, onSkip }: PhotoCaptureProps) => {
       )}
 
       <StyledPhotoActions>
-        <Button type="button" variant="outline" size="md" onClick={handleSkip}>
+        <Button
+          type="button"
+          variant="outline"
+          size="md"
+          onClick={handleSkip}
+          rightIcon={<HiArrowRight aria-hidden="true" />}
+        >
           Skip photo
         </Button>
       </StyledPhotoActions>

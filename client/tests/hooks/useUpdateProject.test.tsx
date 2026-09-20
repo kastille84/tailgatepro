@@ -29,6 +29,7 @@ const project = {
   name: "Site",
   gcCompanyId: null,
   gcNameCustom: "GC",
+  gcContactEmail: null,
   status: "active" as const,
   archivedAt: null,
   createdAt: "2026-09-09",

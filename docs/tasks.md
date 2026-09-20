@@ -226,7 +226,7 @@ then favorites + custom talks.
       `hooks/useFavorites.ts` (`["favorites"]` query -> `Set<string>`),
       `hooks/useToggleFavorite.ts` (one hook, `{ talkId, isFavorited }`,
       mirrors `useArchiveProject`'s boolean-branch shape), `features/
-    content-library/FavoriteButton.tsx` (react-icons/hi2
+content-library/FavoriteButton.tsx` (react-icons/hi2
       `HiBookmark`/`HiOutlineBookmark`) wired into `TalkList` cards and the
       `TalkDetail` modal title row; `ContentLibrary` "Favorites only"
       `Checkbox` in the toolbar + `visibleTalks` `useMemo` filter (+ tests,
@@ -242,21 +242,21 @@ then favorites + custom talks.
       endpoint) + its own test file; `talkRow.js` re-exports it as
       `composeMarkdown` so its public surface is unchanged - Server: `server/services/talks.js` — `listGlobal` renamed to
       `listForCompany(companyId)` (`.or('is_global.eq.true,company_id.eq.
-    ${companyId}')`, same pattern as `projects.listForCompany`), `getById`
+${companyId}')`, same pattern as `projects.listForCompany`), `getById`
       now takes `companyId` and is scoped the same way (closes the prior
       TODO(2d)), new `create(...)` (client-supplied `id`, assembles
       `structured` + `content` via `composeTalkMarkdown`, `is_global:
-    false`, `attribution: null`); `server/controllers/talks.js` —
+false`, `attribution: null`); `server/controllers/talks.js` —
       `listTalks`/`getTalk` pass `req.user.companyId` through, new
       `createTalk`; `server/routes/talks.js` — `POST /` with a full
       express-validator chain (title, optional tradeTag/summary, talking
       points required min 1, hazards/discussion questions/OSHA standards
       optional lists, optional estimated minutes); `server/services/
-    favorites.js` TODO(2d-custom-talks) resolved (no code change needed
+favorites.js` TODO(2d-custom-talks) resolved (no code change needed
       — the scoped talk list is sufficient authorization) (+ service/
       controller tests updated in lockstep, 94 server tests passing) - Client: `services/apiTalks.ts` (`CreateTalkInput`, `createTalk`),
       `hooks/useCreateTalk.ts` (mirrors `useCreateProject`), `hooks/
-    useTalks.ts` now also derives `tradeOptions` (shared by
+useTalks.ts` now also derives `tradeOptions` (shared by
       `ContentLibrary`'s trade filter and the new form); `ui_comps/form`
       gained a `Textarea` primitive (used only for the optional summary
       field); new `ui_comps/bullet-list-editor/` — the first Tiptap usage
@@ -303,12 +303,12 @@ then favorites + custom talks.
       `user_favorites.talk_id`'s `ON DELETE CASCADE` needs no extra
       handling); `server/controllers/talks.js` — `updateTalk`/`deleteTalk`
       (`TODO(roles)` comment, mirrors `deleteProject`); `server/routes/
-    talks.js` — `PATCH /:id` (same validator chain as `POST /`),
+talks.js` — `PATCH /:id` (same validator chain as `POST /`),
       `DELETE /:id` (+ service/controller tests, 30 new/updated cases,
       138 server tests passing) - Client: `services/apiTalks.ts` (`updateTalk`, `deleteTalk`);
       `hooks/useUpdateTalk.ts` / `useDeleteTalk.ts` (mirror
       `useUpdateProject`/`useDeleteProject`); `features/content-library/
-    TalkForm.tsx` gained an optional `talk` prop (edit mode — no `key`
+TalkForm.tsx` gained an optional `talk` prop (edit mode — no `key`
       remount trick needed, since `ContentLibrary` only mounts the
       lazy-loaded form while `isFormOpen`, so it fully unmounts/remounts on
       its own), a danger-zone Delete button + `ConfirmDialog` (edit-only),
@@ -317,7 +317,7 @@ then favorites + custom talks.
       be edited or deleted.") so the constraint is known upfront, not just
       discovered on a failed save; `TalkDetail.tsx` gained an `onEdit` prop
       and an Edit button shown only for `!talk.isGlobal`; `ContentLibrary.
-    tsx` now tracks `editingTalk` alongside `isFormOpen`
+tsx` now tracks `editingTalk` alongside `isFormOpen`
       (`openCreate`/`openEdit`/`closeForm`, same shape as `Projects.tsx`) - Testing: `TalkForm.tsx` added to `vite.config.ts`'s coverage
       `exclude` list, alongside the pre-existing `ProjectForm.tsx` entry —
       both share the same unreachable `if (!talk/project) return;` guard
@@ -497,7 +497,7 @@ outbox mechanics, API wrapper functions, replay handlers, four mutation hooks �
 unit tests, same as how 4b–4d shipped server code ahead of any client UI.
 
 - [x] `client/src/interfaces/sync.ts` — `SyncEntity` widened to `"project" | "talk" |
-    "meeting_log" | "signature" | "crew_photo"`; `OutboxRow` gains optional
+"meeting_log" | "signature" | "crew_photo"`; `OutboxRow` gains optional
       `dependsOnEntityId?: string`. New `meetingLog.ts` / `signature.ts` / `mediaBlob.ts` /
       `meetingDraft.ts` interfaces (mirroring `talk.ts`'s camelCase-mapper style)
 - [x] `client/src/utils/db/outbox.ts` — `EnqueueInput` gains `dependsOnEntityId?`; `flush()` skips
@@ -518,7 +518,7 @@ unit tests, same as how 4b–4d shipped server code ahead of any client UI.
       log's own id as `entityId` — there's no separate crew-photo record server-side. `SyncOp` was
       not widened
 - [x] `client/src/utils/db/tailgateDb.ts` — new `meetingDraftCache` (`id, projectId, status,
-    updatedAt`) and `mediaBlobs` (`id`, raw `Blob` storage) tables added into the existing
+updatedAt`) and `mediaBlobs` (`id`, raw `Blob` storage) tables added into the existing
       `version(1)` block (no live data, no existing migration precedent — revisit at the first
       breaking change against real deployed data); new `client/src/utils/db/mediaBlobs.ts`
       (`storeMediaBlob`/`getMediaBlob`/`deleteMediaBlob`, `withTimeout`-guarded like `outbox.ts`)
@@ -577,7 +577,7 @@ unit tests, same as how 4b–4d shipped server code ahead of any client UI.
       `useCreateTalk.ts` (custom talks default `quiz: null` — quiz authoring for custom talks is
       out of scope here)
 - [x] `features/meeting-flow/PhotoCapture.tsx` — plain `<input type="file" accept="image/*"
-    capture="environment">` (no library), opens the device camera directly on mobile; the
+capture="environment">` (no library), opens the device camera directly on mobile; the
       BIPA-adjacent compliance notice ("attendance/proof-of-training only, not analyzed or
       matched against any facial-recognition or biometric database... optional") is always
       visible, not just on hover/error, per PRD §4.3; a Skip button; a live preview (object URL,
@@ -608,7 +608,7 @@ below for why (dependsOnEntityId doesn't support "wait for N rows" yet).
       `Dashboard.tsx` that were only referenced by already-commented-out logout code, closing a
       pre-existing (not 4g-caused) `tsc -b` failure alongside the already-documented `Input.tsx` one
 - [x] `features/meeting-flow/MeetingWizard.tsx` — step machine (`project → talk → present →
-    signatures → photo → save`, `WizardStep` union + plain `useState`, no reducer). Composes new
+signatures → photo → save`, `WizardStep` union + plain `useState`, no reducer). Composes new
       `ProjectPicker.tsx` (a dedicated selection-shaped picker — `features/projects/ProjectList` is
       edit-shaped, not reusable here), `content-library/TalkList` (`favoriteIds={new Set()}`), new
       `TalkPresenter.tsx` (talk sections + `useTalkAudio` read-aloud controls, Continue always
@@ -645,8 +645,35 @@ below for why (dependsOnEntityId doesn't support "wait for N rows" yet).
       skip, collect 2+ signatures (with and without a quiz), skip photo, save; reconnect and confirm
       rows land in Supabase with correct `company_id` and server-computed `quiz_score`, blobs land in
       their private buckets; reload mid-wizard and confirm the draft resumes
+- [x] Follow-up: Back navigation. Plan:
+      `~/.claude/plans/for-the-wizard-should-woolly-river.md`. The wizard was strictly forward-only;
+      added a `Back` control (`HiArrowLeft`) per step in `MeetingWizard.tsx`, guarded so backing up
+      to "talk" or "project" while ≥1 signer is already collected shows a confirm dialog (reusing
+      `ConfirmDialog`) warning that those signatures/quiz answers — scored against whichever talk was
+      selected at signing time — will be discarded; confirming clears `signers` and navigates, "Stay
+      here" is a no-op. Back is hidden on the "save" step once a Save attempt has actually created the
+      meeting log server-side (tracked via a new `meetingLogCommitted` state mirroring
+      `checkpointsRef.current.meetingLogId`, since refs can't be read during render —
+      `react-hooks/refs`). Back navigation persists the draft too (`persistStep`), so a resumed draft
+      reopens on the step the foreman was actually looking at, not just the furthest-forward step
+      reached. `HiArrowRight` added to every button that already advances the wizard (`TalkPresenter`'s
+      Continue, `SignaturesStep`'s step-level Continue, `PhotoCapture`'s Use photo/Skip photo,
+      `MeetingWizard`'s Save meeting), matching the codebase's existing `react-icons/hi2` +
+      `Button` `leftIcon`/`rightIcon` convention. Caught and fixed in the same pass: `persistStep`'s
+      `talkId: selectedTalk!.id` assertion crashed when backing up from "talk" to "project" before any
+      talk had ever been selected — changed to `selectedTalk?.id ?? null`, mirroring
+      `handleSelectProject`'s own explicit `talkId: null` at that same edge. 9 new test cases in
+      `MeetingWizard.test.tsx` (34 total, was 27); full client suite 802 tests, only the 2
+      pre-existing/documented `PhotoCapture.test.tsx` camera-mock timing flakes failing (unrelated);
+      100% coverage maintained on every touched file; `npx eslint` clean on every touched file except
+      the pre-existing, unrelated `MeetingWizard.tsx:200` (`setStep` in the resume-safety-net effect,
+      predates this change); `tsc -b` shows no new errors (still only the pre-existing `Input.tsx`
+      failures). Manual smoke still owed: back up through each step confirming the discard-confirm
+      dialog fires only when expected, and that Back disappears on "save" after a real (not just
+      mocked) partial-failure Save.
 
 ### 4h — Verification, hardening, docs, Phase 5 hook · status: code/docs complete;
+
 manual smoke with a real Bearer token (see the first bullet below) and the Phase 3 manual E2E
 pass are the only items left, both live-device passes deferred like every prior phase's
 
@@ -662,13 +689,13 @@ pass are the only items left, both live-device passes deferred like every prior 
       "already been completed" 409 text) so a retried completion self-heals
       instead of retrying forever. New `apiMeetingLogs.completeMeeting` (PATCH,
       no request body — the route reads none); new `registerReplayHandler
-    ("meeting_completion", ...)` folded into the existing
+("meeting_completion", ...)` folded into the existing
       `meetingLogReplayHandler.ts` (alongside `meeting_log`/`crew_photo`, same
       "no separate record, reuses the meeting log's id" reasoning — no new file,
       no new `App.tsx` import). New `client/src/hooks/useCompleteMeetingLog.ts`
       (mirrors `useUploadCrewPhoto.ts`'s shape) enqueues
       `{entity: "meeting_completion", entityId: meetingLogId, op: "complete",
-    dependsOnEntityIds: <every collected signatureId>}` — piggybacks on the
+dependsOnEntityIds: <every collected signatureId>}` — piggybacks on the
       outbox's existing same-entityId ordering for the meeting-log/crew-photo
       dependency (free) and the new array field for the N-signature dependency.
       `MeetingWizard.tsx`'s `handleSave` enqueues this as its final checkpointed
@@ -737,22 +764,493 @@ pass are the only items left, both live-device passes deferred like every prior 
       here on purpose) and the Phase 3 manual E2E pass (still owed, independent of Phase 4) — both
       were already flagged inline (4a's design-doc bullet; the end of the Phase 3 section) but
       buried inside older completed-status prose. Restating them here so a future "what's next?"
-      pass finds them without re-reading Phase 3/4a in full:
-      - **Crew-photo retention policy** — PRD §7 leaves how long a crew photo is kept unresolved;
-        `docs/meeting-flow-design.md` (4a) deliberately didn't decide it. Needs a product decision
-        before Phase 5/6 build anything that assumes a retention window.
-      - **Phase 3 manual E2E pass** — multi-tab, real airplane-mode on a device, storage eviction,
-        cross-device conflict. Not practical under Vitest + fake-indexeddb; no record of this pass
-        exists yet. Independent of Phase 4 — do it whenever a device is available, not blocking
-        anything above.
+      pass finds them without re-reading Phase 3/4a in full: - **Crew-photo retention policy** — PRD §7 leaves how long a crew photo is kept unresolved;
+      `docs/meeting-flow-design.md` (4a) deliberately didn't decide it. Needs a product decision
+      before Phase 5/6 build anything that assumes a retention window. - **Phase 3 manual E2E pass** — multi-tab, real airplane-mode on a device, storage eviction,
+      cross-device conflict. Not practical under Vitest + fake-indexeddb; no record of this pass
+      exists yet. Independent of Phase 4 — do it whenever a device is available, not blocking
+      anything above.
 
 ## Phase 5 — PDF generation + GC delivery · epic
 
-- [ ] Server PDF service (PDFKit) — generate on sync, store `final_pdf_url`.
-      Print the talk's source credit (`toolbox_talks.attribution` `copyright` +
-      `notice`, already carried in the composed `content`) on the PDF — CPWR
-      licensing requirement, see `docs/content-attribution.md`
-- [ ] Email PDF to GC (dev transport until paid Mailgun)
+Plan: `~/.claude/plans/now-let-s-take-a-magical-pike.md`. Broken down 4a-style
+(design → schema/storage → server core → hardening) once exploration showed
+the scaffolding is further along than the two-bullet version below implied:
+`pdfGenerationQueue.enqueue(meetingLogId)` is already a named no-op stub
+called from `meetingLogs.js`'s `complete()`, and `meeting_logs.final_pdf_url`
+already exists in the schema — no migration needed for it. `mailgun.js` /
+`nodemailer` are installed dependencies but completely unused so far;
+`pdfkit` is not installed yet. Real gap found: no GC contact email exists
+anywhere (`companies`/`users` have no email column, `projects.gc_company_id`/
+`gc_name_custom` don't resolve to an address, and the invite/join-company
+epic that would give a real GC account isn't built). **Decision:** add a
+manual `projects.gc_contact_email` field now rather than block on that epic —
+explicitly flagged below as due for superseding once invite/join-company
+ships, so it isn't forgotten.
+
+### 5a — Design decisions (docs only) · status: done
+
+- [x] Append a "Phase 5" section to `docs/meeting-flow-design.md` recording:
+      `pdfGenerationQueue.enqueue` stays a plain awaited call inside
+      `complete()`'s request (no job-queue infra exists, and the client never
+      blocks on this HTTP call directly — `MeetingWizard.handleSave` enqueues
+      completion into the offline outbox and returns immediately); a PDF
+      render/upload/email failure is caught and logged, never unwinds
+      `completed_at` (same precedent as Phase 7's per-language translation
+      failures); the dev-vs-Mailgun email transport is gated on whether
+      `MAILGUN_API_KEY`/`MAILGUN_DOMAIN` are set (mirrors the
+      `GOOGLE_TRANSLATE_API_KEY` "unset degrades to unavailable" pattern);
+      PDF content scope (project/meeting header, talk content, CPWR/NIOSH
+      attribution block, signer list with quiz pass/fail, crew photo,
+      `completed_at`)
+
+### 5b — Schema + storage prep · status: code complete; Supabase apply + bucket-script run pending
+
+- [x] `Supabase_SQL.sql` + `Supabase_Schema.md`: `projects.gc_contact_email
+TEXT` (nullable, `ADD COLUMN IF NOT EXISTS` note like the `archived_at`
+      precedent)
+- [x] `scripts/setup-storage-buckets.js`: add `"meeting-pdfs"` to `BUCKETS`
+      (same private-bucket pattern as `signatures`/`crew-photos`); header
+      comment updated to mention Phase 5
+- [x] Root `package.json`: add `pdfkit` (`npm install pdfkit` — resolved
+      `pdfkit@0.20.2`, confirmed via `npm ls pdfkit`)
+- [x] Pre-req: apply the SQL, rerun `npm run setup:storage` — needs a live
+      Supabase session/service-role key not available in this environment
+
+### 5c — Client: GC contact email field · status: code complete, coverage/lint/tsc clean
+
+- [x] `client/src/interfaces/project.ts` — `gcContactEmail: string | null`
+      (doc comment cross-references the Cross-cutting epic's supersession)
+- [x] `client/src/features/projects/ProjectForm.tsx` — optional email
+      `TextInput` after the existing GC-name field, labeled "GC contact
+      email (optional)" per the `TalkForm.tsx` optional-label convention;
+      Zod `z.string().trim().email(...).or(z.literal(""))` (RHF's native
+      text input never yields `undefined`, so `.optional()` alone wouldn't
+      make it truly optional — no prior optional-email precedent existed in
+      this client, so this idiom is now the one to reuse)
+- [x] `client/src/services/apiProjects.ts` — `gcContactEmail?: string |
+  null` on `CreateProjectInput`/`UpdateProjectPatch`; `useCreateProject.ts`
+      (optimistic-entry default) / `useUpdateProject.ts` (via
+      `optimisticProjects.ts`'s `applyProjectPatch`) thread it through
+      (+ tests across `ProjectForm.test.tsx`, `apiProjects.test.ts`,
+      `useCreateProject.test.tsx`, `useUpdateProject.test.tsx`,
+      `optimisticProjects.test.ts`)
+- [x] Verify: `apiProjects.ts` / `useCreateProject.ts` / `useUpdateProject.ts`
+      / `optimisticProjects.ts` all confirmed 100% coverage (`ProjectForm.tsx`
+      is already in `vite.config.ts`'s coverage exclude list, same as
+      `TalkForm.tsx`); `npx eslint` clean on every touched file; `tsc -b`
+      shows no _new_ errors (still only the pre-existing `Input.tsx`
+      failures documented under Phase 1). Full suite: 785/787 passing — the
+      only 2 failures are the pre-existing, unrelated `PhotoCapture.test.tsx`
+      camera-mock timing cases already called out under Phase 4h
+- [x] **Gap fix (found while starting 5d):** 5c only threaded
+      `gcContactEmail` through the _client_ — `server/services/projects.js`'s
+      `PROJECT_COLUMNS`/`toProject`/`create`/`update`,
+      `server/controllers/projects.js`, and `server/routes/projects.js`'s
+      validator chains had no knowledge of `gc_contact_email` at all, so a
+      value a foreman typed in was silently dropped before reaching Supabase.
+      Fixed: column added to `PROJECT_COLUMNS`/`toProject`; `create`/`update`
+      read and write it; `createProject`/`updateProject` controllers pass it
+      through; both `POST /`/`PATCH /:id` validators gained an
+      `.optional({ checkFalsy: true }).isEmail()` chain (mirrors
+      `waitlist.js`'s existing email validator); `server/services/
+  projects.test.js` and `server/controllers/projects.test.js` both updated
+      with matching cases
+
+### 5d — Server: PDF rendering (pure, testable) · status: done
+
+- [x] New `server/services/pdfGeneration.js` — pure `renderMeetingLogPdf({
+meetingLog, project, talk, signatures, crewPhotoBuffer })` → `Buffer` via
+      `pdfkit` (`compress: false`, so rendered text stays greppable in the
+      raw buffer for tests); prints the CPWR/NIOSH attribution block per
+      `docs/content-attribution.md`. `crewPhotoBuffer` is an optional
+      pre-fetched param (this function does no Storage I/O itself) — 5e is
+      what will download the photo bytes and pass them in; when omitted, the
+      PDF prints a "No crew photo on file" note instead of embedding an image
+- [x] Unit tests (`server/services/pdfGeneration.test.js`, 8 cases): valid
+      `%PDF-` header, doesn't throw on a full or minimal fixture, project
+      name/talk title/signer names present in rendered content, CPWR/NIOSH
+      attribution printed when present and omitted when absent, quiz
+      pass/fail printed per signer when the talk has a quiz and omitted when
+      it doesn't, crew-photo fallback note when no buffer is given. Required
+      a `decodeRenderedText` test helper: pdfkit renders text as hex-encoded
+      glyph runs inside `TJ` kerning arrays, not literal parenthesized
+      strings, so a plain `buffer.toString().includes(...)` never matches —
+      the helper decodes every `<hex>` run back to ASCII and concatenates
+      them (kerning splits fall mid-word, not at gaps needing a reinserted
+      separator) so assertions can check rendered content directly
+- [x] Verify: `npm run test:server` — full suite 217/217 passing (up from
+      206), no regressions
+
+### 5e — Server: orchestration + signed-URL endpoint · status: code complete; curl smoke with a real Bearer token pending
+
+- [x] Signature deviation from the original bullet: implemented as
+      `pdfGenerationQueue.enqueue(meetingLogId, companyId)`, not the
+      one-arg `enqueue(meetingLogId)` originally sketched. Every read the
+      pipeline needs (`meetingLogs.getById`, the new `projects.getById`,
+      `talks.getById`, `signatures.listForMeeting`) is company-scoped by
+      convention, and `complete()` already has `companyId` in scope — so the
+      one call site (`meetingLogs.js`'s `complete()`) now passes it through
+      rather than the queue bypassing scoping with a raw unscoped query.
+- [x] `server/services/storage.js` gained `downloadBlob(bucket, path)` (the
+      queue needs actual crew-photo bytes to embed; `storage.js` previously
+      only had `uploadBlob`/`getSignedUrl`) — converts Supabase Storage's
+      `Blob` to a `Buffer` via `arrayBuffer()`
+- [x] `server/services/projects.js` gained `getById(id, companyId)` (no
+      single-project getter existed; only `listForCompany`/`create`/
+      `update`/`remove`) — same scoped-`getById` pattern as
+      `meetingLogs.js`/`talks.js`
+- [x] `server/services/meetingLogs.js` gained `pdfPath(id)` (the
+      `{id}/report.pdf` Storage path, mirrors `crewPhotoPath`),
+      `setFinalPdfUrl(id, companyId, path)`, and `getPdfUrl(id, companyId)`
+      (direct mirror of `getCrewPhotoUrl`, 404s until a PDF exists)
+- [x] Implemented `server/services/pdfGenerationQueue.js`'s
+      `enqueue(meetingLogId, companyId)`: fetches the meeting log + its
+      project/talk/signatures (talk skipped when `talkId` is `null` —
+      `meeting_logs.talk_id` is `ON DELETE SET NULL`) via
+      `Promise.all`, best-effort downloads the crew photo (a download
+      failure degrades to no-photo rather than aborting the whole PDF),
+      calls `pdfGeneration.renderMeetingLogPdf`, uploads the result to the
+      `meeting-pdfs` bucket at `{meetingLogId}/report.pdf`, and persists the
+      path via `setFinalPdfUrl` — the whole function is wrapped in a single
+      try/catch that only logs, per 5a's soft-fail decision, so it can never
+      throw back into `complete()`. Required lazily `require`-ing both
+      `meetingLogs.js` and `signatures.js` from inside `enqueue()` instead of
+      at module top-level: `meetingLogs.js` already required this file
+      (to call `enqueue` from `complete()`), and `signatures.js` requires
+      `meetingLogs.js` — so a top-level require of either here would close a
+      circular-require loop. This codebase's `module.exports = {...}` style
+      (reassignment, not incremental `exports.x = ...`) means whichever
+      module in a cycle finishes loading second gets a stale, empty exports
+      object from the other; requiring lazily avoids that. Also required
+      `pdfGeneration.js` as the module object rather than destructuring
+      `renderMeetingLogPdf` off it — a destructured binding would have
+      captured the function reference at require-time, unreachable by
+      `vi.spyOn`'s property-replacement on the module object in tests.
+- [x] New `GET /api/meetings/:id/pdf-url` — signed URL, direct mirror of the
+      existing crew-photo-url endpoint (controller + route + validator)
+- [x] Tests: new `server/services/pdfGenerationQueue.test.js` (11 cases:
+      happy path with a crew photo, talk-less meeting, photo-less meeting,
+      photo-download failure still completes, and a parameterized case per
+      dependency confirming `enqueue` never throws — soft-fail contract);
+      `storage.test.js` +2 (`downloadBlob`), `projects.test.js` +3
+      (`getById`), `meetingLogs.test.js` +5 (`setFinalPdfUrl` ×2,
+      `getPdfUrl` ×3, updated the existing `complete()` assertion for the
+      new `enqueue(id, companyId)` signature), `controllers/meetingLogs.test.js`
+      +2 (`getPdfUrl`). Full `npm run test:server` suite: 240/240 passing
+      (up from 217)
+- [x] Verify (partial): booted the server and confirmed `GET
+  /api/meetings/:id/pdf-url` returns 401, not 404/the SPA fallback, same
+      as every other new server-only route in prior sub-phases. Full
+      curl-with-a-real-Bearer-token pass (complete a meeting, confirm a PDF
+      lands at `meeting-pdfs/{id}/report.pdf`, confirm the signed URL works,
+      confirm a cross-company 404) still needs a live session token — same
+      as every prior server-only sub-phase's manual-smoke item
+- [x] **Follow-up: friendly download filenames.** The Storage _path_
+      (`{meetingId}/report.pdf`) stayed as-is — Supabase's `createSignedUrl`
+      supports a `download` option that names the browser's save-as file
+      independent of the object's actual key, so there was no need to touch
+      `pdfPath`/`final_pdf_url` at all. New `server/utility/pdfFilename.js`
+      (`buildPdfFilename`, pure/no I/O — same category as
+      `composeTalkMarkdown.js`) builds
+      `{company-slug}-{project-slug}-{date}-{shortId}.pdf` — company
+      (the reporting subcontractor) first, since a GC managing several subs
+      on one site files/sorts OSHA paperwork by contractor first, and it's
+      also how multiple PDFs sort alphabetically in one folder or the future
+      ZIP bundle below; the short id (first 8 chars of the meeting log's own
+      id) guarantees uniqueness since company+project+date alone can still
+      collide (multiple talks, same company/project/day). `storage.js`'s
+      `getSignedUrl` gained an optional 4th `downloadFilename` param passed
+      through as `{ download: filename }` (backward compatible — every other
+      caller omits it). New `server/services/companies.js` (`getById(id)`,
+      unscoped — the id passed is always the caller's own verified
+      `companyId`, never a route param) — nothing in the request pipeline
+      previously loaded the caller's own company _name_ (`req.user` only
+      carries `companyId`). `meetingLogs.js`'s `getPdfUrl` now fetches the
+      project and company in parallel (`Promise.all`, same pattern
+      `pdfGenerationQueue.js` uses) and passes the built filename through;
+      the `finalPdfUrl` guard still runs first so a not-yet-generated PDF
+      404s without either extra lookup. New `companies.test.js` (3 cases,
+      mirrors `projects.test.js`'s `getById` block minus ownership scoping);
+      `pdfFilename.test.js` (8 cases: normal names, unicode/special-char
+      stripping, whitespace collapsing, company-name fallback,
+      project-name fallback, 60-char truncation of each, missing-date
+      fallback, id-suffix extraction); `meetingLogs.test.js`'s `getPdfUrl`
+      block updated to mock `companiesService.getById` and assert the full
+      filename. Full `npm run test:server` suite: **252/252 passing** (up
+      from 240). Explicitly does **not** add the company name to the PDF's
+      own printed content (`pdfGeneration.js`'s layout) — filename-only,
+      flagged as a possible future look, not requested here.
+- [x] **Follow-up: PDF content pass.** The three items just flagged as "not
+      requested here" above, requested in the next turn after the user
+      opened an actual generated PDF: `pdfGeneration.js`'s header now prints
+      `Subcontractor: {company.name}` as its first line (mirrors the
+      filename's company-first ordering; falls back to `"Unknown"` when
+      `company` is omitted — `meeting_logs.company_id` is documented
+      nullable even though `create()` always populates it today);
+      `formatDate` now renders `"September 18, 2026 at 12:00 PM UTC"`
+      instead of the raw ISO timestamp (native `Intl.DateTimeFormat`,
+      `timeZone: "UTC"` pinned for determinism, `"UTC"` appended manually
+      since `Intl` won't combine `dateStyle`/`timeStyle` presets with
+      `timeZoneName` — no new dependency; `dayjs`/`moment` are both in
+      `package.json` but unused anywhere server-side, not worth entangling
+      here); each signer's row now embeds their actual drawn signature image
+      (`doc.image(signature.imageBuffer, { fit: [200, 80] })`) instead of
+      just their typed name, printing `"(signature image unavailable)"`
+      when one couldn't be downloaded. `pdfGenerationQueue.js` now fetches
+      the company (`companiesService`, required at module top level — no
+      reverse dependency, unlike the already-lazy `meetingLogs`/
+      `signatures`) alongside project/talk/signatures, and downloads each
+      signature's PNG blob the same best-effort way the crew photo already
+      was (one signer's image failing to download doesn't abort the whole
+      PDF, same soft-fail precedent). Also added a static, unconditional
+      watermark footer line (`"Logged via TailgatePro (Free plan) —
+    upgrade to Trade Pro to remove this watermark and add your company
+    logo."`, `Helvetica-Oblique` + gray fill, pdfkit's built-in font, no
+      file to embed) after the user asked how PDF branding is being
+      handled — `docs/pricing-and-positioning-strategy_V2.md` already
+      promises exactly this as the Trade Free default with Trade Pro+
+      removing it via custom logo upload; **full tier-gating is deferred**,
+      see the new bullet below. Tests: `pdfGeneration.test.js` 8→13 cases
+      (company rendered + `"Unknown"` fallback, human-readable date
+      assertion, a real minimal-PNG signature image embed that doesn't
+      throw — no prior test in this file exercised `doc.image()` with an
+      actual buffer, the crew-photo tests only covered the "no photo"
+      branch — the unavailable-image fallback note, and the watermark
+      text); `pdfGenerationQueue.test.js` 11→13 cases (company fetch +
+      per-signature image download wired into the happy-path assertion, a
+      new one-signature-image-fails-without-affecting-others case, and
+      `companiesService.getById` added to the never-throws `it.each`
+      parameterization). Full `npm run test:server` suite: **259/259
+      passing** (up from 252).
+- [x] **Follow-up: fixed a pagination bug the signature-image embed exposed.**
+      The user generated a PDF and found the crew photo cut off at the
+      bottom of page 1 with nothing on page 2. Root cause: pdfkit's
+      `doc.text()` auto-paginates (checks remaining page height, calls
+      `addPage()` internally) but `doc.image()` does not — an image near
+      the bottom of a page just gets clipped at the boundary, and whatever
+      renders _after_ it correctly flows to the next page, leaving the
+      image itself stranded/cut off with nothing "using" the new page. This
+      bug already existed for the crew photo but got much easier to hit
+      once each signer also got an ~80px embedded signature image this
+      session (the doc got taller, so the crew-photo section lands near a
+      page boundary far more often). Fix: new exported `ensureRoomFor(doc,
+    height)` in `pdfGeneration.js` — checks `doc.page.height -
+    doc.page.margins.bottom - doc.y` against the needed height and calls
+      `doc.addPage()` proactively if it won't fit; called before both
+      `doc.image()` sites (320 for the crew photo section — heading + image
+      kept together so the heading doesn't get orphaned alone at a page
+      bottom — and 80 for each signature image), sized to each `fit`
+      bounding box (a safe upper bound, since `fit` only ever scales an
+      image down). Exported specifically for direct unit testing against a
+      fake `doc` object, since pagination math isn't practically assertable
+      from this file's usual decoded-PDF-text black-box tests. Tests:
+      `pdfGeneration.test.js` 13→17 cases — 3 new `ensureRoomFor` unit tests
+      (enough room / not enough room / exact-boundary edge case) plus 1
+      integration smoke test rendering 6 signers with images and a crew
+      photo, then counting `/Type /Page` object occurrences in the raw
+      (uncompressed) PDF bytes to confirm the document actually spans
+      multiple pages rather than silently overflowing one. Full
+      `npm run test:server` suite: **263/263 passing** (up from 259).
+- [x] **Follow-up: visual hierarchy + GC growth CTA.** The user asked for
+      more visual hierarchy (bullets weren't indented, key labels/headings
+      weren't bold) and for closing marketing copy enticing whichever GC
+      receives the PDF to try TailgatePro — confirmed the recipient is
+      often a GC with no TailgatePro account at all (the subcontractor is
+      the one with an account), and confirmed the link target,
+      `https://www.getTailgatePro.com` (no production domain existed
+      anywhere in the codebase before this — no env var, no docs reference;
+      not fabricated). New `labelLine(doc, label, value)` (bold label +
+      normal-weight value on one line via pdfkit's `{ continued: true }`)
+      and `heading(doc, text, size)` (bold section heading, explicit font
+      reset after — pdfkit's font/fillColor are both stateful, confirmed by
+      hand, which is also why the new CTA block below explicitly resets
+      `fillColor("black")` since the watermark line above it left the fill
+      gray) helpers, both using pdfkit's built-in `Helvetica-Bold` (no font
+      file to embed). Applied to the doc title, all 5 header label lines
+      (`Subcontractor`/`Project`/`General contractor`/`Talk`/`Completed`),
+      and every section heading (`Summary`, `Talking points`, `Hazards to
+    check on site`, `Discussion questions`, `Attendance & signatures`,
+      `Crew photo`). `bulletList()`'s items now render with
+      `{ indent: 20, indentAllLines: true }` (the latter so a wrapped long
+      item's continuation lines stay aligned under the bullet). New GC CTA
+      block after the existing free-tier watermark (kept separate and
+      unchanged — that one nudges the _paying subcontractor_ to upgrade;
+      this new one targets _whoever opens the report_): a light horizontal
+      divider, a bold question, two lines of body copy, and a bold
+      blue-underlined clickable link (`{ link: CTA_URL, underline: true }`)
+      reading "Try TailgatePro free at getTailgatePro.com". Confirmed a
+      link annotation's URI is stored as a literal string in the raw PDF
+      bytes (not hex-encoded glyph runs like visible text), so it's
+      directly assertable. Rendered an actual sample PDF (realistic
+      fixture, saved to the session scratchpad) and visually read it back
+      page-by-page to confirm the result — bold/indent/reset all render
+      correctly with no state leaking between sections (attribution and
+      signer-name lines stay plain, confirming every bold block's reset
+      works). Tests: `pdfGeneration.test.js` 17→19 cases — one new bullet-
+      content assertion (closing a pre-existing gap: no test previously
+      checked that talking-point/hazard/discussion-question text actually
+      renders) and one new CTA test (headline/body/link text via the
+      existing decode helper, plus the literal URL asserted against the raw
+      un-decoded buffer). No existing assertion needed to change — bold/
+      indent formatting doesn't alter the underlying decoded character
+      content. Full `npm run test:server` suite: **265/265 passing** (up
+      from 263).
+- [x] **Tier-gated PDF branding** — Trade Pro+ (`companies.tier` `premium`/
+      `enterprise`) companies can upload a logo; it's embedded in generated
+      meeting-log PDFs and the free-tier watermark is skipped for them.
+      Decided upfront: a Pro+ company with no logo uploaded yet gets neither
+      the logo nor the watermark (tier alone gates the watermark,
+      independent of whether a logo exists — never punish a paying company
+      for not having gotten to the upload yet); logo upload is a direct
+      `useMutation`, **not** routed through the offline sync outbox (an
+      office/admin action, not part of the connectivity-unreliable job-site
+      meeting flow); the new `/settings` page renders for every signed-in
+      user, only the upload control itself is tier-gated (Trade Free sees an
+      upsell in its place). Signup-time logo capture is explicitly deferred
+      until a billing/checkout flow lets a user choose Trade Pro at signup —
+      today every self-serve signup is hardcoded to `basic`
+      (`server/services/users.js`), so there's nothing to gate at that point
+      yet. - Schema: `companies.logo_path TEXT` (nullable, a Storage path never a
+      URL — `Supabase_SQL.sql` + `Supabase_Schema.md`) - Storage: new private `company-logos` bucket
+      (`scripts/setup-storage-buckets.js`), path `{companyId}/logo` - `server/utility/entitlements.js` gained `hasBrandingAccess`, sharing
+      `TRANSLATION_TIERS` — the identical Trade Pro+ paywall - `server/services/companies.js` gained its first write op,
+      `updateLogo(companyId, logoPath)`, plus `logoPath` on `getById` - `server/services/pdfGeneration.js`: `renderMeetingLogPdf` gained a
+      `logoBuffer` param; the watermark block is now
+      `if (!hasBrandingAccess(company?.tier))`; a small (`fit: [120, 60]`)
+      logo renders in the header when entitled and a buffer is given,
+      using the existing `ensureRoomFor` pagination helper - `server/services/pdfGenerationQueue.js` gained a best-effort logo
+      download (mirrors the existing crew-photo pattern exactly — a
+      failed/missing logo degrades to `null`, never aborts the PDF) - New `server/routes/companies.js` + `server/controllers/companies.js`
+      (first files for this domain): `PUT /api/companies/logo` (raw
+      `image/*` body, 5MB limit, 403s via `hasBrandingAccess` for `basic`)
+      and `GET /api/companies/logo-url` (5-minute signed URL, 404 until a
+      logo exists); mounted `/api/companies` in `server.js` - Server tests: new `companies.test.js` (7) + `controllers/companies.test.js`
+      (8); `pdfGeneration.test.js` +6, `pdfGenerationQueue.test.js` +3. Full
+      `npm run test:server` suite: **286/286 passing** - Client: `interfaces/company.ts` gained a `Company` type; new
+      `services/apiCompanies.ts`, `hooks/useCompanyLogo.ts` +
+      `hooks/useUploadCompanyLogo.ts`; `useCurrentUser.ts` gained
+      `hasBrandingAccess` (mirrors `hasTranslationAccess`); new
+      `features/company-settings/LogoUpload.tsx` (modeled on
+      `PhotoCapture.tsx`'s fallback file-input pattern, select-then-confirm
+      shape); new `pages/Settings/` + `/settings` route under
+      `RequireAuth` + Navbar link - Client tests: new `apiCompanies.test.ts` (9), `useCompanyLogo.test.tsx`
+      (4), `useUploadCompanyLogo.test.tsx` (4), `LogoUpload.test.tsx` (9),
+      `Settings.test.tsx` (7); `useCurrentUser.test.tsx` +3,
+      `Navbar.test.tsx` +1. 100% coverage maintained on every new/touched
+      file (confirmed via a coverage run with the pre-existing, unrelated
+      `PhotoCapture.test.tsx` camera-mock flakes excluded, since this
+      repo's coverage reporter skips its report on any test failure) - Housekeeping: fixed a pre-existing stale assertion in
+      `pdfGeneration.test.js` (the GC CTA copy/colors had already changed
+      on disk before this work started; the test still expected the old
+      wording) - Verify (partial): booted the server and confirmed both new routes
+      return 401, not 404/the SPA fallback. Full curl-with-a-real-Bearer-
+      token pass (403 for `basic`, 200 + Storage object for Pro+, signed
+      URL, PDF embeds the logo/omits the watermark, cross-company 404 on
+      `logo-url`) still needs a live session token, same as every prior
+      sub-phase's manual-smoke item. Browser smoke (upload via `/settings`,
+      confirm it flows into a completed meeting's PDF) also still owed.
+- [ ] **Not yet built** — full tier-gating of PDF branding by _plan name_
+      rather than raw `tier` (e.g. if Trade Enterprise ever needs a
+      different branding capability than Trade Pro, `hasBrandingAccess`
+      would need to stop being a literal alias of `hasTranslationAccess`).
+      Not needed today — flagging only because the two gates currently share
+      one array on purpose (`server/utility/entitlements.js`).
+- [ ] **Not yet built** — GC "1-Click OSHA Defense Bundle" ZIP export
+      (`docs/pricing-and-positioning-strategy_V2.md`'s GC Site Pro tier:
+      "Download indexed ZIP of all site logs instantly"). When that gets
+      scoped, reuse `server/utility/pdfFilename.js`'s `buildPdfFilename` for
+      each entry's name rather than reinventing naming — same reason it was
+      written as a standalone pure helper instead of inlined into
+      `getPdfUrl`.
+
+### 5f — Server: email delivery · status: code complete, all tests passing
+
+Decisions confirmed with the user beyond the original sketch: the GC gets a
+**signed link, not a PDF attachment** (avoids attachment-size risk from
+crew-photo/signature-heavy meetings), but the link's TTL is extended from
+the on-demand endpoint's 5 minutes to **30 days**, since a GC may not open
+the email right away; the sender is **Mailgun**, via `mailgun.js` directly —
+Supabase has no role in sending email anywhere in this app; the email body
+is a **Mailgun template** (not inline HTML in code) so it can be restyled
+from the Mailgun portal without a deploy, with its subject left blank in the
+portal on purpose since `server/services/email.js` sets `subject`
+per-send to reference the subcontractor company + project dynamically; the
+template name is a **hardcoded constant**, not env-driven (new
+`server/constants/templates.js` — the user's preference, since env vars
+shouldn't hold non-secret, non-environment-specific identifiers, and this
+file is meant to grow with future template names).
+
+- [x] New `server/constants/templates.js` — first file in a new
+      `server/constants/` folder; `MAILGUN_TEMPLATES.MEETING_LOG_REPORT =
+"meeting-log-report"`
+- [x] New `server/utility/formatDate.js` — extracted from
+      `pdfGeneration.js`'s local `formatDate` (same precedent as
+      `composeTalkMarkdown.js`'s extraction from `scripts/lib/talkRow.js`)
+      once `email.js` needed the same "September 18, 2026 at 12:00 PM UTC"
+      formatting for its `completedDate` template variable;
+      `pdfGeneration.js` now imports it instead of defining it locally, no
+      behavior change
+- [x] New `server/services/email.js` — `sendMeetingLogEmail({ to,
+  projectName, companyName, pdfUrl, completedAt })`; `getMailgunClient()`
+      (exported for spy-ability) returns `null` when `MAILGUN_API_KEY`/
+      `MAILGUN_DOMAIN` aren't both set → logs `{ to, subject, variables }`
+      instead of sending (dev fallback per 5a); when configured, calls
+      `mailgun.js`'s `client.messages.create(domain, { from, to, subject,
+  template, "h:X-Mailgun-Variables": JSON.stringify(variables) })`. Never
+      throws — a send failure is caught and `console.error`'d, matching
+      `translation.js`'s "degrade, don't throw" shape; no `AppError` used
+      since there's no controller/route in this call chain and
+      `pdfGenerationQueue.enqueue()` already soft-fails around it
+- [x] New `docs/mailgun-templates/meeting-log-report.html` — the actual
+      Mailgun template content (table-based layout, inline styles, brand
+      colors from `client/src/styles/GlobalStyles.ts`, a CTA button to the
+      PDF link, a GC growth blurb linking `getTailgatePro.com` matching
+      `pdfGeneration.js`'s existing hardcoded CTA URL), committed so the
+      template is reproducible/reviewable rather than living only in the
+      Mailgun portal. Handlebars variables: `{{companyName}}`,
+      `{{projectName}}`, `{{pdfUrl}}`, `{{completedDate}}`
+- [x] Called from `pdfGenerationQueue.enqueue` right after
+      `setFinalPdfUrl`, inside the existing single `try/catch` (no new
+      error handling needed): skips entirely when `project.gcContactEmail`
+      is unset (silent, no log — an expected, common state); otherwise
+      builds a signed URL inline via `storageService.getSignedUrl` (not
+      `meetingLogsService.getPdfUrl`, which hardcodes the wrong 5-minute
+      TTL and would redundantly re-fetch `project`/`company`, already in
+      scope here) with the new `EMAIL_PDF_URL_TTL_SECONDS` (30 days), then
+      calls `emailService.sendMeetingLogEmail`
+- [x] Tests: `server/utility/formatDate.test.js` (3 cases),
+      `server/services/email.test.js` (6 cases — dev-fallback log, real send
+      with dynamic subject + stringified template variables, send-failure
+      caught, `getMailgunClient`'s three gating branches), 2 new
+      `pdfGenerationQueue.test.js` cases (skip when unset, signed URL + send
+      when set) plus 2 new rows in its existing never-throws `it.each`
+      table (`storageService.getSignedUrl`, `emailService.sendMeetingLogEmail`).
+      Full `npm run test:server` suite: **299/299 passing**
+- [x] Pre-req (user, outside this codebase): real `MAILGUN_API_KEY`/
+      `MAILGUN_DOMAIN` confirmed present in the root `.env` (verified via a
+      length check, not printed); a `meeting-log-report` template still
+      needs to be created in the Mailgun portal with §the HTML above pasted
+      in, subject left blank, before a live send will actually work
+- [x] Manual/curl smoke: complete a meeting on a project with
+      `gc_contact_email` set → confirm the recipient actually receives the
+      email, the subject shows the company + project name, the button/link
+      opens the PDF, and the template renders correctly on both a desktop
+      and a mobile client — still owed, needs the Mailgun template created
+      first (see pre-req above)
+
+### 5g — Hardening, docs, verify
+
+- [ ] Tick `docs/content-attribution.md`'s "Phase 5 PDF service" line;
+      cross-reference the email flow from `docs/meeting-flow-design.md`
+- [ ] Re-surface the `gc_contact_email` → invite/join-company supersession as
+      an explicit open item under the Cross-cutting epic below, so it isn't
+      lost once that epic starts
+- [ ] Manual/curl smoke: complete a meeting on a project with
+      `gc_contact_email` set → confirm a PDF lands in the `meeting-pdfs`
+      bucket, `final_pdf_url` is populated, `GET .../pdf-url` returns a
+      working signed URL, and the email send fires (console-logged in dev, or
+      a real Mailgun test send)
 
 ## Phase 6 — GC dashboard · epic, blocked by invite/join-company
 
@@ -851,6 +1349,10 @@ page) were explicitly scoped OUT — see Known limitations below.
 - [ ] Admin invites by email; invitee joins an existing `companies` row
 - [ ] Real use of `admin` / `safety_manager` roles
 - [ ] GC links a sub company to a project (`project_subcontractors`)
+- [ ] **Supersede `projects.gc_contact_email`** (added in Phase 5, a manual
+      free-text field entered by the foreman) with a real GC user account's
+      email once this epic gives one to resolve against — don't let PDF
+      delivery quietly stay on the manual field forever
 
 ## Deferred
 

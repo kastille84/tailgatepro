@@ -30,6 +30,11 @@ export const useCurrentUser = () => {
   return {
     tier,
     hasTranslationAccess: tier !== null && TRANSLATION_TIERS.includes(tier),
+    // Custom PDF branding (upload logo, remove watermark) is the same
+    // Trade Pro/Enterprise paywall as translation — reuses the identical
+    // tier list, same reasoning as server/utility/entitlements.js's
+    // hasBrandingAccess.
+    hasBrandingAccess: tier !== null && TRANSLATION_TIERS.includes(tier),
     isLoading: query.isLoading,
   };
 };

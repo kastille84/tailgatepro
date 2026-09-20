@@ -11,6 +11,7 @@ const {
   completeMeeting,
   uploadCrewPhoto,
   getCrewPhotoUrl,
+  getPdfUrl,
 } = require("../controllers/meetingLogs");
 const signaturesRoutes = require("./signatures");
 
@@ -102,6 +103,18 @@ router.get(
   [param("id").isUUID().withMessage("A valid meeting id is required")],
   validate,
   getCrewPhotoUrl,
+);
+
+// GET /api/meetings/:id/pdf-url — a short-lived signed URL for the generated
+// PDF report, same shape as crew-photo-url. 404s until pdfGenerationQueue has
+// finished generating one (see server/services/pdfGenerationQueue.js).
+router.get(
+  "/:id/pdf-url",
+  requireAuth,
+  loadUserContext,
+  [param("id").isUUID().withMessage("A valid meeting id is required")],
+  validate,
+  getPdfUrl,
 );
 
 // Nested under /api/meetings/:meetingId/signatures — see

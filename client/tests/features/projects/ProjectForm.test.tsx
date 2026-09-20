@@ -43,6 +43,7 @@ const editProject: Project = {
   name: "Old Name",
   gcCompanyId: null,
   gcNameCustom: "Old GC",
+  gcContactEmail: null,
   status: "active",
   archivedAt: null,
   createdAt: "x",
@@ -79,9 +80,53 @@ describe("ProjectForm", () => {
       expect(mockCreate).toHaveBeenCalledWith({
         name: "Downtown Highrise",
         gcNameCustom: "Acme GC",
+        gcContactEmail: null,
       }),
     );
     await waitFor(() => expect(onClose).toHaveBeenCalled());
+  });
+
+  it("includes a valid GC contact email when provided", async () => {
+    renderForm();
+
+    fireEvent.change(screen.getByLabelText(/project name/i), {
+      target: { value: "Downtown Highrise" },
+    });
+    fireEvent.change(screen.getByLabelText(/general contractor/i), {
+      target: { value: "Acme GC" },
+    });
+    fireEvent.change(screen.getByLabelText(/gc contact email/i), {
+      target: { value: "gc@example.com" },
+    });
+    fireEvent.click(screen.getByRole("button", { name: /create project/i }));
+
+    await waitFor(() =>
+      expect(mockCreate).toHaveBeenCalledWith({
+        name: "Downtown Highrise",
+        gcNameCustom: "Acme GC",
+        gcContactEmail: "gc@example.com",
+      }),
+    );
+  });
+
+  it("shows a validation error for an invalid GC contact email and does not submit", async () => {
+    renderForm();
+
+    fireEvent.change(screen.getByLabelText(/project name/i), {
+      target: { value: "Downtown Highrise" },
+    });
+    fireEvent.change(screen.getByLabelText(/general contractor/i), {
+      target: { value: "Acme GC" },
+    });
+    fireEvent.change(screen.getByLabelText(/gc contact email/i), {
+      target: { value: "not-an-email" },
+    });
+    fireEvent.click(screen.getByRole("button", { name: /create project/i }));
+
+    await waitFor(() =>
+      expect(screen.getByText(/enter a valid email address/i)).toBeDefined(),
+    );
+    expect(mockCreate).not.toHaveBeenCalled();
   });
 
   it("shows validation errors and does not submit when fields are empty", async () => {
@@ -132,6 +177,7 @@ describe("ProjectForm", () => {
         patch: {
           name: "New Name",
           gcNameCustom: "Old GC",
+          gcContactEmail: null,
           status: "active",
         },
       }),

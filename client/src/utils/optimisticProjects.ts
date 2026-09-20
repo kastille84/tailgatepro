@@ -58,6 +58,9 @@ export const applyProjectPatch = (
   ...(patch.gcNameCustom !== undefined && {
     gcNameCustom: patch.gcNameCustom,
   }),
+  ...(patch.gcContactEmail !== undefined && {
+    gcContactEmail: patch.gcContactEmail,
+  }),
   ...(patch.archived !== undefined && {
     archivedAt: patch.archived ? new Date().toISOString() : null,
   }),

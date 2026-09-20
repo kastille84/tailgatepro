@@ -42,6 +42,7 @@ describe("useCurrentUser", () => {
     expect(apiUsers.getCurrentUser).toHaveBeenCalledWith("token-123");
     expect(result.current.tier).toBe("premium");
     expect(result.current.hasTranslationAccess).toBe(true);
+    expect(result.current.hasBrandingAccess).toBe(true);
   });
 
   it("reports hasTranslationAccess true for enterprise tier", async () => {
@@ -56,6 +57,7 @@ describe("useCurrentUser", () => {
 
     await waitFor(() => expect(result.current.tier).toBe("enterprise"));
     expect(result.current.hasTranslationAccess).toBe(true);
+    expect(result.current.hasBrandingAccess).toBe(true);
   });
 
   it("reports hasTranslationAccess false for basic tier", async () => {
@@ -70,9 +72,10 @@ describe("useCurrentUser", () => {
 
     await waitFor(() => expect(result.current.tier).toBe("basic"));
     expect(result.current.hasTranslationAccess).toBe(false);
+    expect(result.current.hasBrandingAccess).toBe(false);
   });
 
-  it("defaults tier to null and hasTranslationAccess to false before the query resolves / without a session", () => {
+  it("defaults tier to null and hasTranslationAccess/hasBrandingAccess to false before the query resolves / without a session", () => {
     mockUseAuth.mockReturnValue({ session: null });
 
     const { result } = renderHook(() => useCurrentUser(), { wrapper });
@@ -80,5 +83,6 @@ describe("useCurrentUser", () => {
     expect(apiUsers.getCurrentUser).not.toHaveBeenCalled();
     expect(result.current.tier).toBeNull();
     expect(result.current.hasTranslationAccess).toBe(false);
+    expect(result.current.hasBrandingAccess).toBe(false);
   });
 });

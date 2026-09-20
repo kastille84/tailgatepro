@@ -37,6 +37,7 @@ import { Dashboard } from "./pages/Dashboard";
 import { Projects } from "./pages/Projects";
 import { ContentLibrary } from "./pages/ContentLibrary";
 import { MeetingFlow } from "./pages/MeetingFlow";
+import { Settings } from "./pages/Settings";
 
 // Pins Navbar + SyncStatusBanner together as one scroll-fixed block, so the
 // banner never scrolls away from the nav it sits under.
@@ -93,6 +94,7 @@ function App() {
                         path="/meetings/new"
                         element={<MeetingFlow />}
                       ></Route>
+                      <Route path="/settings" element={<Settings />}></Route>
                     </Route>
                   </Routes>
                 </BrowserRouter>

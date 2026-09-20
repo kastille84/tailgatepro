@@ -17,6 +17,7 @@ const project = (overrides: Partial<Project> = {}): Project => ({
   name: "Site",
   gcCompanyId: null,
   gcNameCustom: "Acme GC",
+  gcContactEmail: null,
   status: "active",
   archivedAt: null,
   createdAt: "2026-09-13T00:00:00.000Z",
@@ -40,6 +41,7 @@ describe("optimisticProjects", () => {
         status: "completed",
         gcCompanyId: "gc-1",
         gcNameCustom: "New GC",
+        gcContactEmail: "new@gc.com",
       });
 
       expect(patched).toEqual(
@@ -48,6 +50,7 @@ describe("optimisticProjects", () => {
           status: "completed",
           gcCompanyId: "gc-1",
           gcNameCustom: "New GC",
+          gcContactEmail: "new@gc.com",
         }),
       );
     });
