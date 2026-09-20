@@ -89,6 +89,7 @@ describe("email service: sendMeetingLogEmail", () => {
     expect(domain).toBe("mg.example.com");
     expect(data.to).toEqual([params.to]);
     expect(data.from).toContain("mg.example.com");
+    expect(data["h:Reply-To"]).toBe("support@mg.example.com");
     expect(data.template).toBe(MAILGUN_TEMPLATES.MEETING_LOG_REPORT);
     expect(data.subject).toContain(params.companyName);
     expect(data.subject).toContain(params.projectName);

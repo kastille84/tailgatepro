@@ -226,7 +226,7 @@ then favorites + custom talks.
       `hooks/useFavorites.ts` (`["favorites"]` query -> `Set<string>`),
       `hooks/useToggleFavorite.ts` (one hook, `{ talkId, isFavorited }`,
       mirrors `useArchiveProject`'s boolean-branch shape), `features/
-  content-library/FavoriteButton.tsx` (react-icons/hi2
+content-library/FavoriteButton.tsx` (react-icons/hi2
       `HiBookmark`/`HiOutlineBookmark`) wired into `TalkList` cards and the
       `TalkDetail` modal title row; `ContentLibrary` "Favorites only"
       `Checkbox` in the toolbar + `visibleTalks` `useMemo` filter (+ tests,
@@ -242,21 +242,21 @@ then favorites + custom talks.
       endpoint) + its own test file; `talkRow.js` re-exports it as
       `composeMarkdown` so its public surface is unchanged - Server: `server/services/talks.js` — `listGlobal` renamed to
       `listForCompany(companyId)` (`.or('is_global.eq.true,company_id.eq.
-  ${companyId}')`, same pattern as `projects.listForCompany`), `getById`
+${companyId}')`, same pattern as `projects.listForCompany`), `getById`
       now takes `companyId` and is scoped the same way (closes the prior
       TODO(2d)), new `create(...)` (client-supplied `id`, assembles
       `structured` + `content` via `composeTalkMarkdown`, `is_global:
-  false`, `attribution: null`); `server/controllers/talks.js` —
+false`, `attribution: null`); `server/controllers/talks.js` —
       `listTalks`/`getTalk` pass `req.user.companyId` through, new
       `createTalk`; `server/routes/talks.js` — `POST /` with a full
       express-validator chain (title, optional tradeTag/summary, talking
       points required min 1, hazards/discussion questions/OSHA standards
       optional lists, optional estimated minutes); `server/services/
-  favorites.js` TODO(2d-custom-talks) resolved (no code change needed
+favorites.js` TODO(2d-custom-talks) resolved (no code change needed
       — the scoped talk list is sufficient authorization) (+ service/
       controller tests updated in lockstep, 94 server tests passing) - Client: `services/apiTalks.ts` (`CreateTalkInput`, `createTalk`),
       `hooks/useCreateTalk.ts` (mirrors `useCreateProject`), `hooks/
-  useTalks.ts` now also derives `tradeOptions` (shared by
+useTalks.ts` now also derives `tradeOptions` (shared by
       `ContentLibrary`'s trade filter and the new form); `ui_comps/form`
       gained a `Textarea` primitive (used only for the optional summary
       field); new `ui_comps/bullet-list-editor/` — the first Tiptap usage
@@ -303,12 +303,12 @@ then favorites + custom talks.
       `user_favorites.talk_id`'s `ON DELETE CASCADE` needs no extra
       handling); `server/controllers/talks.js` — `updateTalk`/`deleteTalk`
       (`TODO(roles)` comment, mirrors `deleteProject`); `server/routes/
-  talks.js` — `PATCH /:id` (same validator chain as `POST /`),
+talks.js` — `PATCH /:id` (same validator chain as `POST /`),
       `DELETE /:id` (+ service/controller tests, 30 new/updated cases,
       138 server tests passing) - Client: `services/apiTalks.ts` (`updateTalk`, `deleteTalk`);
       `hooks/useUpdateTalk.ts` / `useDeleteTalk.ts` (mirror
       `useUpdateProject`/`useDeleteProject`); `features/content-library/
-  TalkForm.tsx` gained an optional `talk` prop (edit mode — no `key`
+TalkForm.tsx` gained an optional `talk` prop (edit mode — no `key`
       remount trick needed, since `ContentLibrary` only mounts the
       lazy-loaded form while `isFormOpen`, so it fully unmounts/remounts on
       its own), a danger-zone Delete button + `ConfirmDialog` (edit-only),
@@ -317,7 +317,7 @@ then favorites + custom talks.
       be edited or deleted.") so the constraint is known upfront, not just
       discovered on a failed save; `TalkDetail.tsx` gained an `onEdit` prop
       and an Edit button shown only for `!talk.isGlobal`; `ContentLibrary.
-  tsx` now tracks `editingTalk` alongside `isFormOpen`
+tsx` now tracks `editingTalk` alongside `isFormOpen`
       (`openCreate`/`openEdit`/`closeForm`, same shape as `Projects.tsx`) - Testing: `TalkForm.tsx` added to `vite.config.ts`'s coverage
       `exclude` list, alongside the pre-existing `ProjectForm.tsx` entry —
       both share the same unreachable `if (!talk/project) return;` guard
@@ -497,7 +497,7 @@ outbox mechanics, API wrapper functions, replay handlers, four mutation hooks �
 unit tests, same as how 4b–4d shipped server code ahead of any client UI.
 
 - [x] `client/src/interfaces/sync.ts` — `SyncEntity` widened to `"project" | "talk" |
-  "meeting_log" | "signature" | "crew_photo"`; `OutboxRow` gains optional
+"meeting_log" | "signature" | "crew_photo"`; `OutboxRow` gains optional
       `dependsOnEntityId?: string`. New `meetingLog.ts` / `signature.ts` / `mediaBlob.ts` /
       `meetingDraft.ts` interfaces (mirroring `talk.ts`'s camelCase-mapper style)
 - [x] `client/src/utils/db/outbox.ts` — `EnqueueInput` gains `dependsOnEntityId?`; `flush()` skips
@@ -518,7 +518,7 @@ unit tests, same as how 4b–4d shipped server code ahead of any client UI.
       log's own id as `entityId` — there's no separate crew-photo record server-side. `SyncOp` was
       not widened
 - [x] `client/src/utils/db/tailgateDb.ts` — new `meetingDraftCache` (`id, projectId, status,
-  updatedAt`) and `mediaBlobs` (`id`, raw `Blob` storage) tables added into the existing
+updatedAt`) and `mediaBlobs` (`id`, raw `Blob` storage) tables added into the existing
       `version(1)` block (no live data, no existing migration precedent — revisit at the first
       breaking change against real deployed data); new `client/src/utils/db/mediaBlobs.ts`
       (`storeMediaBlob`/`getMediaBlob`/`deleteMediaBlob`, `withTimeout`-guarded like `outbox.ts`)
@@ -577,7 +577,7 @@ unit tests, same as how 4b–4d shipped server code ahead of any client UI.
       `useCreateTalk.ts` (custom talks default `quiz: null` — quiz authoring for custom talks is
       out of scope here)
 - [x] `features/meeting-flow/PhotoCapture.tsx` — plain `<input type="file" accept="image/*"
-  capture="environment">` (no library), opens the device camera directly on mobile; the
+capture="environment">` (no library), opens the device camera directly on mobile; the
       BIPA-adjacent compliance notice ("attendance/proof-of-training only, not analyzed or
       matched against any facial-recognition or biometric database... optional") is always
       visible, not just on hover/error, per PRD §4.3; a Skip button; a live preview (object URL,
@@ -608,7 +608,7 @@ below for why (dependsOnEntityId doesn't support "wait for N rows" yet).
       `Dashboard.tsx` that were only referenced by already-commented-out logout code, closing a
       pre-existing (not 4g-caused) `tsc -b` failure alongside the already-documented `Input.tsx` one
 - [x] `features/meeting-flow/MeetingWizard.tsx` — step machine (`project → talk → present →
-  signatures → photo → save`, `WizardStep` union + plain `useState`, no reducer). Composes new
+signatures → photo → save`, `WizardStep` union + plain `useState`, no reducer). Composes new
       `ProjectPicker.tsx` (a dedicated selection-shaped picker — `features/projects/ProjectList` is
       edit-shaped, not reusable here), `content-library/TalkList` (`favoriteIds={new Set()}`), new
       `TalkPresenter.tsx` (talk sections + `useTalkAudio` read-aloud controls, Continue always
@@ -689,13 +689,13 @@ pass are the only items left, both live-device passes deferred like every prior 
       "already been completed" 409 text) so a retried completion self-heals
       instead of retrying forever. New `apiMeetingLogs.completeMeeting` (PATCH,
       no request body — the route reads none); new `registerReplayHandler
-  ("meeting_completion", ...)` folded into the existing
+("meeting_completion", ...)` folded into the existing
       `meetingLogReplayHandler.ts` (alongside `meeting_log`/`crew_photo`, same
       "no separate record, reuses the meeting log's id" reasoning — no new file,
       no new `App.tsx` import). New `client/src/hooks/useCompleteMeetingLog.ts`
       (mirrors `useUploadCrewPhoto.ts`'s shape) enqueues
       `{entity: "meeting_completion", entityId: meetingLogId, op: "complete",
-  dependsOnEntityIds: <every collected signatureId>}` — piggybacks on the
+dependsOnEntityIds: <every collected signatureId>}` — piggybacks on the
       outbox's existing same-entityId ordering for the meeting-log/crew-photo
       dependency (free) and the new array field for the N-signature dependency.
       `MeetingWizard.tsx`'s `handleSave` enqueues this as its final checkpointed
@@ -807,7 +807,7 @@ ships, so it isn't forgotten.
 ### 5b — Schema + storage prep · status: code complete; Supabase apply + bucket-script run pending
 
 - [x] `Supabase_SQL.sql` + `Supabase_Schema.md`: `projects.gc_contact_email
-  TEXT` (nullable, `ADD COLUMN IF NOT EXISTS` note like the `archived_at`
+TEXT` (nullable, `ADD COLUMN IF NOT EXISTS` note like the `archived_at`
       precedent)
 - [x] `scripts/setup-storage-buckets.js`: add `"meeting-pdfs"` to `BUCKETS`
       (same private-bucket pattern as `signatures`/`crew-photos`); header
@@ -829,7 +829,7 @@ ships, so it isn't forgotten.
       make it truly optional — no prior optional-email precedent existed in
       this client, so this idiom is now the one to reuse)
 - [x] `client/src/services/apiProjects.ts` — `gcContactEmail?: string |
-    null` on `CreateProjectInput`/`UpdateProjectPatch`; `useCreateProject.ts`
+  null` on `CreateProjectInput`/`UpdateProjectPatch`; `useCreateProject.ts`
       (optimistic-entry default) / `useUpdateProject.ts` (via
       `optimisticProjects.ts`'s `applyProjectPatch`) thread it through
       (+ tests across `ProjectForm.test.tsx`, `apiProjects.test.ts`,
@@ -839,12 +839,12 @@ ships, so it isn't forgotten.
       / `optimisticProjects.ts` all confirmed 100% coverage (`ProjectForm.tsx`
       is already in `vite.config.ts`'s coverage exclude list, same as
       `TalkForm.tsx`); `npx eslint` clean on every touched file; `tsc -b`
-      shows no *new* errors (still only the pre-existing `Input.tsx`
+      shows no _new_ errors (still only the pre-existing `Input.tsx`
       failures documented under Phase 1). Full suite: 785/787 passing — the
       only 2 failures are the pre-existing, unrelated `PhotoCapture.test.tsx`
       camera-mock timing cases already called out under Phase 4h
 - [x] **Gap fix (found while starting 5d):** 5c only threaded
-      `gcContactEmail` through the *client* — `server/services/projects.js`'s
+      `gcContactEmail` through the _client_ — `server/services/projects.js`'s
       `PROJECT_COLUMNS`/`toProject`/`create`/`update`,
       `server/controllers/projects.js`, and `server/routes/projects.js`'s
       validator chains had no knowledge of `gc_contact_email` at all, so a
@@ -854,13 +854,13 @@ ships, so it isn't forgotten.
       through; both `POST /`/`PATCH /:id` validators gained an
       `.optional({ checkFalsy: true }).isEmail()` chain (mirrors
       `waitlist.js`'s existing email validator); `server/services/
-    projects.test.js` and `server/controllers/projects.test.js` both updated
+  projects.test.js` and `server/controllers/projects.test.js` both updated
       with matching cases
 
 ### 5d — Server: PDF rendering (pure, testable) · status: done
 
 - [x] New `server/services/pdfGeneration.js` — pure `renderMeetingLogPdf({
-  meetingLog, project, talk, signatures, crewPhotoBuffer })` → `Buffer` via
+meetingLog, project, talk, signatures, crewPhotoBuffer })` → `Buffer` via
       `pdfkit` (`compress: false`, so rendered text stays greppable in the
       raw buffer for tests); prints the CPWR/NIOSH attribution block per
       `docs/content-attribution.md`. `crewPhotoBuffer` is an optional
@@ -940,13 +940,13 @@ ships, so it isn't forgotten.
       +2 (`getPdfUrl`). Full `npm run test:server` suite: 240/240 passing
       (up from 217)
 - [x] Verify (partial): booted the server and confirmed `GET
-    /api/meetings/:id/pdf-url` returns 401, not 404/the SPA fallback, same
+  /api/meetings/:id/pdf-url` returns 401, not 404/the SPA fallback, same
       as every other new server-only route in prior sub-phases. Full
       curl-with-a-real-Bearer-token pass (complete a meeting, confirm a PDF
       lands at `meeting-pdfs/{id}/report.pdf`, confirm the signed URL works,
       confirm a cross-company 404) still needs a live session token — same
       as every prior server-only sub-phase's manual-smoke item
-- [x] **Follow-up: friendly download filenames.** The Storage *path*
+- [x] **Follow-up: friendly download filenames.** The Storage _path_
       (`{meetingId}/report.pdf`) stayed as-is — Supabase's `createSignedUrl`
       supports a `download` option that names the browser's save-as file
       independent of the object's actual key, so there was no need to touch
@@ -965,7 +965,7 @@ ships, so it isn't forgotten.
       caller omits it). New `server/services/companies.js` (`getById(id)`,
       unscoped — the id passed is always the caller's own verified
       `companyId`, never a route param) — nothing in the request pipeline
-      previously loaded the caller's own company *name* (`req.user` only
+      previously loaded the caller's own company _name_ (`req.user` only
       carries `companyId`). `meetingLogs.js`'s `getPdfUrl` now fetches the
       project and company in parallel (`Promise.all`, same pattern
       `pdfGenerationQueue.js` uses) and passes the built filename through;
@@ -1005,8 +1005,8 @@ ships, so it isn't forgotten.
       was (one signer's image failing to download doesn't abort the whole
       PDF, same soft-fail precedent). Also added a static, unconditional
       watermark footer line (`"Logged via TailgatePro (Free plan) —
-      upgrade to Trade Pro to remove this watermark and add your company
-      logo."`, `Helvetica-Oblique` + gray fill, pdfkit's built-in font, no
+    upgrade to Trade Pro to remove this watermark and add your company
+    logo."`, `Helvetica-Oblique` + gray fill, pdfkit's built-in font, no
       file to embed) after the user asked how PDF branding is being
       handled — `docs/pricing-and-positioning-strategy_V2.md` already
       promises exactly this as the Trade Free default with Trade Pro+
@@ -1029,14 +1029,14 @@ ships, so it isn't forgotten.
       `doc.text()` auto-paginates (checks remaining page height, calls
       `addPage()` internally) but `doc.image()` does not — an image near
       the bottom of a page just gets clipped at the boundary, and whatever
-      renders *after* it correctly flows to the next page, leaving the
+      renders _after_ it correctly flows to the next page, leaving the
       image itself stranded/cut off with nothing "using" the new page. This
       bug already existed for the crew photo but got much easier to hit
       once each signer also got an ~80px embedded signature image this
       session (the doc got taller, so the crew-photo section lands near a
       page boundary far more often). Fix: new exported `ensureRoomFor(doc,
-      height)` in `pdfGeneration.js` — checks `doc.page.height -
-      doc.page.margins.bottom - doc.y` against the needed height and calls
+    height)` in `pdfGeneration.js` — checks `doc.page.height -
+    doc.page.margins.bottom - doc.y` against the needed height and calls
       `doc.addPage()` proactively if it won't fit; called before both
       `doc.image()` sites (320 for the crew photo section — heading + image
       kept together so the heading doesn't get orphaned alone at a page
@@ -1070,13 +1070,13 @@ ships, so it isn't forgotten.
       file to embed). Applied to the doc title, all 5 header label lines
       (`Subcontractor`/`Project`/`General contractor`/`Talk`/`Completed`),
       and every section heading (`Summary`, `Talking points`, `Hazards to
-      check on site`, `Discussion questions`, `Attendance & signatures`,
+    check on site`, `Discussion questions`, `Attendance & signatures`,
       `Crew photo`). `bulletList()`'s items now render with
       `{ indent: 20, indentAllLines: true }` (the latter so a wrapped long
       item's continuation lines stay aligned under the bullet). New GC CTA
       block after the existing free-tier watermark (kept separate and
-      unchanged — that one nudges the *paying subcontractor* to upgrade;
-      this new one targets *whoever opens the report*): a light horizontal
+      unchanged — that one nudges the _paying subcontractor_ to upgrade;
+      this new one targets _whoever opens the report_): a light horizontal
       divider, a bold question, two lines of body copy, and a bold
       blue-underlined clickable link (`{ link: CTA_URL, underline: true }`)
       reading "Try TailgatePro free at getTailgatePro.com". Confirmed a
@@ -1112,45 +1112,45 @@ ships, so it isn't forgotten.
       today every self-serve signup is hardcoded to `basic`
       (`server/services/users.js`), so there's nothing to gate at that point
       yet. - Schema: `companies.logo_path TEXT` (nullable, a Storage path never a
-        URL — `Supabase_SQL.sql` + `Supabase_Schema.md`) - Storage: new private `company-logos` bucket
-        (`scripts/setup-storage-buckets.js`), path `{companyId}/logo` - `server/utility/entitlements.js` gained `hasBrandingAccess`, sharing
-        `TRANSLATION_TIERS` — the identical Trade Pro+ paywall - `server/services/companies.js` gained its first write op,
-        `updateLogo(companyId, logoPath)`, plus `logoPath` on `getById` - `server/services/pdfGeneration.js`: `renderMeetingLogPdf` gained a
-        `logoBuffer` param; the watermark block is now
-        `if (!hasBrandingAccess(company?.tier))`; a small (`fit: [120, 60]`)
-        logo renders in the header when entitled and a buffer is given,
-        using the existing `ensureRoomFor` pagination helper - `server/services/pdfGenerationQueue.js` gained a best-effort logo
-        download (mirrors the existing crew-photo pattern exactly — a
-        failed/missing logo degrades to `null`, never aborts the PDF) - New `server/routes/companies.js` + `server/controllers/companies.js`
-        (first files for this domain): `PUT /api/companies/logo` (raw
-        `image/*` body, 5MB limit, 403s via `hasBrandingAccess` for `basic`)
-        and `GET /api/companies/logo-url` (5-minute signed URL, 404 until a
-        logo exists); mounted `/api/companies` in `server.js` - Server tests: new `companies.test.js` (7) + `controllers/companies.test.js`
-        (8); `pdfGeneration.test.js` +6, `pdfGenerationQueue.test.js` +3. Full
-        `npm run test:server` suite: **286/286 passing** - Client: `interfaces/company.ts` gained a `Company` type; new
-        `services/apiCompanies.ts`, `hooks/useCompanyLogo.ts` +
-        `hooks/useUploadCompanyLogo.ts`; `useCurrentUser.ts` gained
-        `hasBrandingAccess` (mirrors `hasTranslationAccess`); new
-        `features/company-settings/LogoUpload.tsx` (modeled on
-        `PhotoCapture.tsx`'s fallback file-input pattern, select-then-confirm
-        shape); new `pages/Settings/` + `/settings` route under
-        `RequireAuth` + Navbar link - Client tests: new `apiCompanies.test.ts` (9), `useCompanyLogo.test.tsx`
-        (4), `useUploadCompanyLogo.test.tsx` (4), `LogoUpload.test.tsx` (9),
-        `Settings.test.tsx` (7); `useCurrentUser.test.tsx` +3,
-        `Navbar.test.tsx` +1. 100% coverage maintained on every new/touched
-        file (confirmed via a coverage run with the pre-existing, unrelated
-        `PhotoCapture.test.tsx` camera-mock flakes excluded, since this
-        repo's coverage reporter skips its report on any test failure) - Housekeeping: fixed a pre-existing stale assertion in
-        `pdfGeneration.test.js` (the GC CTA copy/colors had already changed
-        on disk before this work started; the test still expected the old
-        wording) - Verify (partial): booted the server and confirmed both new routes
-        return 401, not 404/the SPA fallback. Full curl-with-a-real-Bearer-
-        token pass (403 for `basic`, 200 + Storage object for Pro+, signed
-        URL, PDF embeds the logo/omits the watermark, cross-company 404 on
-        `logo-url`) still needs a live session token, same as every prior
-        sub-phase's manual-smoke item. Browser smoke (upload via `/settings`,
-        confirm it flows into a completed meeting's PDF) also still owed.
-- [ ] **Not yet built** — full tier-gating of PDF branding by *plan name*
+      URL — `Supabase_SQL.sql` + `Supabase_Schema.md`) - Storage: new private `company-logos` bucket
+      (`scripts/setup-storage-buckets.js`), path `{companyId}/logo` - `server/utility/entitlements.js` gained `hasBrandingAccess`, sharing
+      `TRANSLATION_TIERS` — the identical Trade Pro+ paywall - `server/services/companies.js` gained its first write op,
+      `updateLogo(companyId, logoPath)`, plus `logoPath` on `getById` - `server/services/pdfGeneration.js`: `renderMeetingLogPdf` gained a
+      `logoBuffer` param; the watermark block is now
+      `if (!hasBrandingAccess(company?.tier))`; a small (`fit: [120, 60]`)
+      logo renders in the header when entitled and a buffer is given,
+      using the existing `ensureRoomFor` pagination helper - `server/services/pdfGenerationQueue.js` gained a best-effort logo
+      download (mirrors the existing crew-photo pattern exactly — a
+      failed/missing logo degrades to `null`, never aborts the PDF) - New `server/routes/companies.js` + `server/controllers/companies.js`
+      (first files for this domain): `PUT /api/companies/logo` (raw
+      `image/*` body, 5MB limit, 403s via `hasBrandingAccess` for `basic`)
+      and `GET /api/companies/logo-url` (5-minute signed URL, 404 until a
+      logo exists); mounted `/api/companies` in `server.js` - Server tests: new `companies.test.js` (7) + `controllers/companies.test.js`
+      (8); `pdfGeneration.test.js` +6, `pdfGenerationQueue.test.js` +3. Full
+      `npm run test:server` suite: **286/286 passing** - Client: `interfaces/company.ts` gained a `Company` type; new
+      `services/apiCompanies.ts`, `hooks/useCompanyLogo.ts` +
+      `hooks/useUploadCompanyLogo.ts`; `useCurrentUser.ts` gained
+      `hasBrandingAccess` (mirrors `hasTranslationAccess`); new
+      `features/company-settings/LogoUpload.tsx` (modeled on
+      `PhotoCapture.tsx`'s fallback file-input pattern, select-then-confirm
+      shape); new `pages/Settings/` + `/settings` route under
+      `RequireAuth` + Navbar link - Client tests: new `apiCompanies.test.ts` (9), `useCompanyLogo.test.tsx`
+      (4), `useUploadCompanyLogo.test.tsx` (4), `LogoUpload.test.tsx` (9),
+      `Settings.test.tsx` (7); `useCurrentUser.test.tsx` +3,
+      `Navbar.test.tsx` +1. 100% coverage maintained on every new/touched
+      file (confirmed via a coverage run with the pre-existing, unrelated
+      `PhotoCapture.test.tsx` camera-mock flakes excluded, since this
+      repo's coverage reporter skips its report on any test failure) - Housekeeping: fixed a pre-existing stale assertion in
+      `pdfGeneration.test.js` (the GC CTA copy/colors had already changed
+      on disk before this work started; the test still expected the old
+      wording) - Verify (partial): booted the server and confirmed both new routes
+      return 401, not 404/the SPA fallback. Full curl-with-a-real-Bearer-
+      token pass (403 for `basic`, 200 + Storage object for Pro+, signed
+      URL, PDF embeds the logo/omits the watermark, cross-company 404 on
+      `logo-url`) still needs a live session token, same as every prior
+      sub-phase's manual-smoke item. Browser smoke (upload via `/settings`,
+      confirm it flows into a completed meeting's PDF) also still owed.
+- [ ] **Not yet built** — full tier-gating of PDF branding by _plan name_
       rather than raw `tier` (e.g. if Trade Enterprise ever needs a
       different branding capability than Trade Pro, `hasBrandingAccess`
       would need to stop being a literal alias of `hasTranslationAccess`).
@@ -1183,7 +1183,7 @@ file is meant to grow with future template names).
 
 - [x] New `server/constants/templates.js` — first file in a new
       `server/constants/` folder; `MAILGUN_TEMPLATES.MEETING_LOG_REPORT =
-  "meeting-log-report"`
+"meeting-log-report"`
 - [x] New `server/utility/formatDate.js` — extracted from
       `pdfGeneration.js`'s local `formatDate` (same precedent as
       `composeTalkMarkdown.js`'s extraction from `scripts/lib/talkRow.js`)
@@ -1192,12 +1192,12 @@ file is meant to grow with future template names).
       `pdfGeneration.js` now imports it instead of defining it locally, no
       behavior change
 - [x] New `server/services/email.js` — `sendMeetingLogEmail({ to,
-    projectName, companyName, pdfUrl, completedAt })`; `getMailgunClient()`
+  projectName, companyName, pdfUrl, completedAt })`; `getMailgunClient()`
       (exported for spy-ability) returns `null` when `MAILGUN_API_KEY`/
       `MAILGUN_DOMAIN` aren't both set → logs `{ to, subject, variables }`
       instead of sending (dev fallback per 5a); when configured, calls
       `mailgun.js`'s `client.messages.create(domain, { from, to, subject,
-    template, "h:X-Mailgun-Variables": JSON.stringify(variables) })`. Never
+  template, "h:X-Mailgun-Variables": JSON.stringify(variables) })`. Never
       throws — a send failure is caught and `console.error`'d, matching
       `translation.js`'s "degrade, don't throw" shape; no `AppError` used
       since there's no controller/route in this call chain and
@@ -1232,7 +1232,7 @@ file is meant to grow with future template names).
       length check, not printed); a `meeting-log-report` template still
       needs to be created in the Mailgun portal with §the HTML above pasted
       in, subject left blank, before a live send will actually work
-- [ ] Manual/curl smoke: complete a meeting on a project with
+- [x] Manual/curl smoke: complete a meeting on a project with
       `gc_contact_email` set → confirm the recipient actually receives the
       email, the subject shows the company + project name, the button/link
       opens the PDF, and the template renders correctly on both a desktop

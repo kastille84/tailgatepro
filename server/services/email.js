@@ -43,26 +43,43 @@ const getMailgunClient = () => {
  * @param {{ to: string, projectName: string, companyName: string,
  *   pdfUrl: string, completedAt: string }} params
  */
-const sendMeetingLogEmail = async ({ to, projectName, companyName, pdfUrl, completedAt }) => {
+const sendMeetingLogEmail = async ({
+  to,
+  projectName,
+  companyName,
+  pdfUrl,
+  completedAt,
+}) => {
   const subject = `New Toolbox Talk Report: ${companyName} — ${projectName}`;
 
   // Property access (module.exports.getMailgunClient), not the bare local
   // reference -- required so vi.spyOn on the exports object intercepts it.
   const mg = module.exports.getMailgunClient();
-  const variables = { companyName, projectName, pdfUrl, completedDate: formatDate(completedAt) };
+  const variables = {
+    companyName,
+    projectName,
+    pdfUrl,
+    completedDate: formatDate(completedAt),
+  };
 
   if (!mg) {
-    console.log("[email] Mailgun not configured -- logging instead of sending.", {
-      to,
-      subject,
-      variables,
-    });
+    console.log(
+      "[email] Mailgun not configured -- logging instead of sending.",
+      {
+        to,
+        subject,
+        variables,
+      },
+    );
     return;
   }
 
   try {
     await mg.client.messages.create(mg.domain, {
-      from: `TailgatePro <mailgun@${mg.domain}>`,
+      from: `TailgatePro <support@${mg.domain}>`,
+      // Set explicitly so replies don't fall back to a Reply-To stored on the
+      // Mailgun template version in the portal.
+      "h:Reply-To": `support@${mg.domain}`,
       to: [to],
       subject,
       template: MAILGUN_TEMPLATES.MEETING_LOG_REPORT,
