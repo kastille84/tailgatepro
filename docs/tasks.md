@@ -1164,15 +1164,80 @@ ships, so it isn't forgotten.
       written as a standalone pure helper instead of inlined into
       `getPdfUrl`.
 
-### 5f — Server: email delivery
+### 5f — Server: email delivery · status: code complete, all tests passing
 
-- [ ] New `server/services/email.js` — sends via `mailgun.js` when
-      `MAILGUN_API_KEY`/`MAILGUN_DOMAIN` are set, else logs the message (dev
-      fallback per 5a); `sendMeetingLogEmail({ to, projectName, pdfUrl })`
-- [ ] Called from `pdfGenerationQueue.enqueue` after a successful upload,
-      using `project.gc_contact_email` as the recipient (silently skipped
-      when unset — it's an optional field)
-- [ ] Tests (mock the mailgun client; cover the dev-fallback branch)
+Decisions confirmed with the user beyond the original sketch: the GC gets a
+**signed link, not a PDF attachment** (avoids attachment-size risk from
+crew-photo/signature-heavy meetings), but the link's TTL is extended from
+the on-demand endpoint's 5 minutes to **30 days**, since a GC may not open
+the email right away; the sender is **Mailgun**, via `mailgun.js` directly —
+Supabase has no role in sending email anywhere in this app; the email body
+is a **Mailgun template** (not inline HTML in code) so it can be restyled
+from the Mailgun portal without a deploy, with its subject left blank in the
+portal on purpose since `server/services/email.js` sets `subject`
+per-send to reference the subcontractor company + project dynamically; the
+template name is a **hardcoded constant**, not env-driven (new
+`server/constants/templates.js` — the user's preference, since env vars
+shouldn't hold non-secret, non-environment-specific identifiers, and this
+file is meant to grow with future template names).
+
+- [x] New `server/constants/templates.js` — first file in a new
+      `server/constants/` folder; `MAILGUN_TEMPLATES.MEETING_LOG_REPORT =
+  "meeting-log-report"`
+- [x] New `server/utility/formatDate.js` — extracted from
+      `pdfGeneration.js`'s local `formatDate` (same precedent as
+      `composeTalkMarkdown.js`'s extraction from `scripts/lib/talkRow.js`)
+      once `email.js` needed the same "September 18, 2026 at 12:00 PM UTC"
+      formatting for its `completedDate` template variable;
+      `pdfGeneration.js` now imports it instead of defining it locally, no
+      behavior change
+- [x] New `server/services/email.js` — `sendMeetingLogEmail({ to,
+    projectName, companyName, pdfUrl, completedAt })`; `getMailgunClient()`
+      (exported for spy-ability) returns `null` when `MAILGUN_API_KEY`/
+      `MAILGUN_DOMAIN` aren't both set → logs `{ to, subject, variables }`
+      instead of sending (dev fallback per 5a); when configured, calls
+      `mailgun.js`'s `client.messages.create(domain, { from, to, subject,
+    template, "h:X-Mailgun-Variables": JSON.stringify(variables) })`. Never
+      throws — a send failure is caught and `console.error`'d, matching
+      `translation.js`'s "degrade, don't throw" shape; no `AppError` used
+      since there's no controller/route in this call chain and
+      `pdfGenerationQueue.enqueue()` already soft-fails around it
+- [x] New `docs/mailgun-templates/meeting-log-report.html` — the actual
+      Mailgun template content (table-based layout, inline styles, brand
+      colors from `client/src/styles/GlobalStyles.ts`, a CTA button to the
+      PDF link, a GC growth blurb linking `getTailgatePro.com` matching
+      `pdfGeneration.js`'s existing hardcoded CTA URL), committed so the
+      template is reproducible/reviewable rather than living only in the
+      Mailgun portal. Handlebars variables: `{{companyName}}`,
+      `{{projectName}}`, `{{pdfUrl}}`, `{{completedDate}}`
+- [x] Called from `pdfGenerationQueue.enqueue` right after
+      `setFinalPdfUrl`, inside the existing single `try/catch` (no new
+      error handling needed): skips entirely when `project.gcContactEmail`
+      is unset (silent, no log — an expected, common state); otherwise
+      builds a signed URL inline via `storageService.getSignedUrl` (not
+      `meetingLogsService.getPdfUrl`, which hardcodes the wrong 5-minute
+      TTL and would redundantly re-fetch `project`/`company`, already in
+      scope here) with the new `EMAIL_PDF_URL_TTL_SECONDS` (30 days), then
+      calls `emailService.sendMeetingLogEmail`
+- [x] Tests: `server/utility/formatDate.test.js` (3 cases),
+      `server/services/email.test.js` (6 cases — dev-fallback log, real send
+      with dynamic subject + stringified template variables, send-failure
+      caught, `getMailgunClient`'s three gating branches), 2 new
+      `pdfGenerationQueue.test.js` cases (skip when unset, signed URL + send
+      when set) plus 2 new rows in its existing never-throws `it.each`
+      table (`storageService.getSignedUrl`, `emailService.sendMeetingLogEmail`).
+      Full `npm run test:server` suite: **299/299 passing**
+- [x] Pre-req (user, outside this codebase): real `MAILGUN_API_KEY`/
+      `MAILGUN_DOMAIN` confirmed present in the root `.env` (verified via a
+      length check, not printed); a `meeting-log-report` template still
+      needs to be created in the Mailgun portal with §the HTML above pasted
+      in, subject left blank, before a live send will actually work
+- [ ] Manual/curl smoke: complete a meeting on a project with
+      `gc_contact_email` set → confirm the recipient actually receives the
+      email, the subject shows the company + project name, the button/link
+      opens the PDF, and the template renders correctly on both a desktop
+      and a mobile client — still owed, needs the Mailgun template created
+      first (see pre-req above)
 
 ### 5g — Hardening, docs, verify
 

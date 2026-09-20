@@ -1,0 +1,258 @@
+<!--
+  Mailgun template: meeting-log-report (see server/constants/templates.js's
+  MAILGUN_TEMPLATES.MEETING_LOG_REPORT). Paste the <!doctype html> document
+  below into the Mailgun portal's template editor for a template with that
+  exact name. Leave the template's own subject blank -- server/services/
+  email.js sets `subject` per-send so it can reference the subcontractor
+  company + project dynamically.
+
+  Handlebars variables sent by email.js's h:X-Mailgun-Variables payload:
+    {{companyName}}    - the reporting subcontractor's name
+    {{projectName}}    - the project the meeting was held on
+    {{pdfUrl}}         - a signed, time-limited (30 day) download link
+    {{completedDate}}  - human-readable, e.g. "September 18, 2026 at 12:00 PM UTC"
+-->
+<!doctype html>
+<html lang="en" xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="color-scheme" content="light" />
+    <meta name="supported-color-schemes" content="light" />
+    <title>Toolbox Talk Meeting Report</title>
+  </head>
+  <body
+    style="
+      margin: 0;
+      padding: 0;
+      background-color: #f4f5f7;
+      -webkit-text-size-adjust: 100%;
+      -ms-text-size-adjust: 100%;
+    "
+  >
+    <div style="display: none; max-height: 0; overflow: hidden; mso-hide: all">
+      A new toolbox talk meeting report from {{companyName}} is ready to view.
+    </div>
+
+    <table
+      role="presentation"
+      width="100%"
+      cellpadding="0"
+      cellspacing="0"
+      border="0"
+      style="background-color: #f4f5f7"
+    >
+      <tr>
+        <td align="center" style="padding: 32px 16px">
+          <table
+            role="presentation"
+            width="600"
+            cellpadding="0"
+            cellspacing="0"
+            border="0"
+            style="
+              width: 100%;
+              max-width: 600px;
+              background-color: #ffffff;
+              border-radius: 8px;
+              overflow: hidden;
+            "
+          >
+            <tr>
+              <td style="background-color: #1a2a3a; padding: 24px 32px">
+                <span
+                  style="
+                    font-family: Arial, Helvetica, sans-serif;
+                    font-size: 20px;
+                    font-weight: bold;
+                    color: #ffffff;
+                  "
+                  >TailgatePro</span
+                >
+              </td>
+            </tr>
+
+            <tr>
+              <td
+                style="
+                  padding: 32px;
+                  font-family: Arial, Helvetica, sans-serif;
+                  color: #1a2a3a;
+                "
+              >
+                <h1
+                  style="
+                    margin: 0 0 16px;
+                    font-size: 20px;
+                    line-height: 28px;
+                    color: #1a2a3a;
+                  "
+                >
+                  New toolbox talk meeting report
+                </h1>
+                <p
+                  style="
+                    margin: 0 0 16px;
+                    font-size: 15px;
+                    line-height: 22px;
+                    color: #1a2a3a;
+                  "
+                >
+                  <strong>{{companyName}}</strong> completed a toolbox talk
+                  safety meeting on your project,
+                  <strong>{{projectName}}</strong>, on {{completedDate}}.
+                </p>
+                <p
+                  style="
+                    margin: 0 0 24px;
+                    font-size: 15px;
+                    line-height: 22px;
+                    color: #1a2a3a;
+                  "
+                >
+                  The signed meeting report, including attendee signatures and
+                  any recorded quiz results, is ready to download.
+                </p>
+
+                <table
+                  role="presentation"
+                  cellpadding="0"
+                  cellspacing="0"
+                  border="0"
+                >
+                  <tr>
+                    <td style="border-radius: 6px; background-color: #ff5f15">
+                      <a
+                        href="{{pdfUrl}}"
+                        target="_blank"
+                        style="
+                          display: inline-block;
+                          padding: 14px 28px;
+                          font-family: Arial, Helvetica, sans-serif;
+                          font-size: 15px;
+                          font-weight: bold;
+                          color: #ffffff;
+                          text-decoration: none;
+                          border-radius: 6px;
+                        "
+                        >Download meeting report (PDF)</a
+                      >
+                    </td>
+                  </tr>
+                </table>
+
+                <p
+                  style="
+                    margin: 24px 0 0;
+                    font-size: 13px;
+                    line-height: 20px;
+                    color: #738699;
+                  "
+                >
+                  If the button doesn't work, copy and paste this link into your
+                  browser:<br />
+                  <a
+                    href="{{pdfUrl}}"
+                    style="color: #ff5f15; word-break: break-all"
+                    >{{pdfUrl}}</a
+                  >
+                </p>
+                <p
+                  style="
+                    margin: 16px 0 0;
+                    font-size: 13px;
+                    line-height: 20px;
+                    color: #738699;
+                  "
+                >
+                  This link expires 30 days from when it was sent. If it has
+                  expired, ask {{companyName}} to resend the report.
+                </p>
+              </td>
+            </tr>
+
+            <tr>
+              <td style="padding: 0 32px">
+                <hr
+                  style="border: none; border-top: 1px solid #dadddf; margin: 0"
+                />
+              </td>
+            </tr>
+
+            <tr>
+              <td
+                style="
+                  padding: 24px 32px;
+                  font-family: Arial, Helvetica, sans-serif;
+                "
+              >
+                <p
+                  style="
+                    margin: 0 0 8px;
+                    font-size: 14px;
+                    font-weight: bold;
+                    color: #1a2a3a;
+                  "
+                >
+                  Hey GCs, do you know about TailgatePro?
+                </p>
+                <p
+                  style="
+                    margin: 0 0 8px;
+                    font-size: 14px;
+                    font-weight: bold;
+                    color: #1a2a3a;
+                  "
+                >
+                  Manage multiple subcontractors on this site?
+                </p>
+                <p
+                  style="
+                    margin: 0 0 12px;
+                    font-size: 13px;
+                    line-height: 20px;
+                    color: #738699;
+                  "
+                >
+                  TailgatePro gives general contractors one dashboard for every
+                  crew's toolbox talks, signatures, and compliance records — no
+                  more chasing paper.
+                </p>
+                <a
+                  href="https://www.getTailgatePro.com"
+                  style="
+                    font-size: 13px;
+                    font-weight: bold;
+                    color: #ff5f15;
+                    text-decoration: underline;
+                  "
+                  >Try TailgatePro free at getTailgatePro.com</a
+                >
+              </td>
+            </tr>
+
+            <tr>
+              <td style="padding: 20px 32px; background-color: #f4f5f7">
+                <p
+                  style="
+                    margin: 0;
+                    font-size: 12px;
+                    line-height: 18px;
+                    color: #9fa5ac;
+                    font-family: Arial, Helvetica, sans-serif;
+                  "
+                >
+                  This is an automated notification sent by TailgatePro on
+                  behalf of {{companyName}}. You are receiving it because you
+                  were listed as the general contractor contact for
+                  {{projectName}}.
+                </p>
+              </td>
+            </tr>
+          </table>
+        </td>
+      </tr>
+    </table>
+  </body>
+</html>

@@ -5,9 +5,8 @@
 // `meeting-pdfs` bucket, and records its path on meeting_logs.final_pdf_url.
 //
 // Soft-fail, per the design doc: every failure is caught and logged here,
-// never thrown, so a render/upload problem can't unwind complete()'s
-// completed_at stamp or fail that request. Email delivery (Phase 5f) is not
-// implemented here yet.
+// never thrown, so a render/upload/email problem can't unwind complete()'s
+// completed_at stamp or fail that request.
 const projectsService = require("./projects");
 const talksService = require("./talks");
 const storageService = require("./storage");
@@ -22,11 +21,21 @@ const companiesService = require("./companies");
 // property-replacement on the module object (used in
 // pdfGenerationQueue.test.js) wouldn't reach.
 const pdfGeneration = require("./pdfGeneration");
+const { buildPdfFilename } = require("../utility/pdfFilename");
+// email.js's own require chain (mailgun.js, form-data, envUtils,
+// formatDate) has no service-layer requires and nothing in it requires this
+// file back, so — like pdfGeneration/companiesService above — it's safe at
+// the top level, unlike meetingLogsService/signaturesService below.
+const emailService = require("./email");
 
 const PDF_BUCKET = "meeting-pdfs";
 const CREW_PHOTO_BUCKET = "crew-photos";
 const SIGNATURE_BUCKET = "signatures";
 const LOGO_BUCKET = "company-logos";
+// A GC may not open this email for days — much longer-lived than
+// meetingLogs.js's PDF_URL_TTL_SECONDS (300s), which is only used for the
+// on-demand signed-URL endpoint consumed immediately by a logged-in user.
+const EMAIL_PDF_URL_TTL_SECONDS = 60 * 60 * 24 * 30; // 30 days
 
 const enqueue = async (meetingLogId, companyId) => {
   try {
@@ -126,6 +135,33 @@ const enqueue = async (meetingLogId, companyId) => {
     const path = meetingLogsService.pdfPath(meetingLogId);
     await storageService.uploadBlob(PDF_BUCKET, path, pdfBuffer, "application/pdf");
     await meetingLogsService.setFinalPdfUrl(meetingLogId, companyId, path);
+
+    // gc_contact_email is an optional, manually-entered field (Phase 5c) --
+    // silently skip when unset, per docs/tasks.md 5f. No log for the skip
+    // itself; it's an expected, common state, not a failure.
+    if (project.gcContactEmail) {
+      const filename = buildPdfFilename({
+        companyName: company.name,
+        projectName: project.name,
+        completedAt: meetingLog.completedAt,
+        meetingLogId: meetingLog.id,
+      });
+
+      const pdfUrl = await storageService.getSignedUrl(
+        PDF_BUCKET,
+        path,
+        EMAIL_PDF_URL_TTL_SECONDS,
+        filename,
+      );
+
+      await emailService.sendMeetingLogEmail({
+        to: project.gcContactEmail,
+        projectName: project.name,
+        companyName: company.name,
+        pdfUrl,
+        completedAt: meetingLog.completedAt,
+      });
+    }
   } catch (error) {
     console.error(
       `pdfGenerationQueue: failed to generate a PDF for meeting ${meetingLogId}`,

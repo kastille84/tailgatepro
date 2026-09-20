@@ -12,28 +12,13 @@
 
 const PDFDocument = require("pdfkit");
 const { hasBrandingAccess } = require("../utility/entitlements");
+const { formatDate } = require("../utility/formatDate");
 
 const BODY_FONT = "Helvetica";
 const BOLD_FONT = "Helvetica-Bold";
 // Confirmed with the user — no production domain exists elsewhere in this
 // codebase yet (pre-launch), this is the one place it's hardcoded.
 const CTA_URL = "https://www.getTailgatePro.com";
-
-// Renders as e.g. "September 18, 2026 at 12:00 PM UTC". `timeZone: "UTC"` is
-// pinned explicitly (every other timestamp in this codebase is UTC) so the
-// output is deterministic regardless of the host machine's local timezone;
-// "UTC" is appended manually because Intl won't combine the dateStyle/
-// timeStyle presets with timeZoneName in one call.
-const formatDate = (isoString) => {
-  if (!isoString) return "Unknown";
-  const date = new Date(isoString);
-  if (Number.isNaN(date.getTime())) return "Unknown";
-  return `${new Intl.DateTimeFormat("en-US", {
-    dateStyle: "long",
-    timeStyle: "short",
-    timeZone: "UTC",
-  }).format(date)} UTC`;
-};
 
 // pdfkit auto-paginates wrapped text (checks remaining page height and
 // calls addPage() internally) but not images — an image near the bottom of

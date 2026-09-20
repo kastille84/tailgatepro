@@ -256,6 +256,20 @@ link) to the console instead of sending. This is the same "unset degrades to una
 hard error" shape `GOOGLE_TRANSLATE_API_KEY` uses in Phase 7, and satisfies `docs/tasks.md`'s "dev
 transport until paid Mailgun" phrasing without inventing a separate test-mode flag.
 
+**5f implementation note: Mailgun template, not inline HTML, and a longer link TTL.** When 5f was
+actually built, the email body was authored as a Mailgun template (`docs/mailgun-templates/
+meeting-log-report.html`, pasted into the Mailgun portal under the name
+`server/constants/templates.js`'s `MAILGUN_TEMPLATES.MEETING_LOG_REPORT`) rather than inline HTML
+strings in `email.js` — easier to restyle without a code change. The template's own subject is left
+blank on purpose: `server/services/email.js` passes `subject` as a sibling of `template` in the
+`messages.create` call, so it can reference the subcontractor company + project dynamically per
+send, which a static template subject couldn't do. The signed PDF link also got a much longer TTL
+than first sketched here — 30 days, not the 5-minute `PDF_URL_TTL_SECONDS` the on-demand
+`GET .../pdf-url` endpoint uses — since a GC may not open the email for days, and it's built inline
+via `storageService.getSignedUrl` inside `pdfGenerationQueue.enqueue()` rather than through
+`meetingLogsService.getPdfUrl` (which hardcodes the 5-minute TTL with no override), avoiding a
+redundant re-fetch of `project`/`company` that `enqueue()` already has in scope.
+
 **PDF content scope.** The generated PDF covers: a project/meeting header (project name, talk title,
 date); the talk's structured content (talking points, hazards, discussion questions); the CPWR/NIOSH
 attribution block (`toolbox_talks.attribution`'s `copyright` + `notice`) per

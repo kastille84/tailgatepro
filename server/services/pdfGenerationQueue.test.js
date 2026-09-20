@@ -9,6 +9,7 @@ const signaturesService = require("./signatures");
 const storageService = require("./storage");
 const companiesService = require("./companies");
 const pdfGeneration = require("./pdfGeneration");
+const emailService = require("./email");
 const { enqueue } = require("./pdfGenerationQueue");
 
 const meetingLog = {
@@ -105,7 +106,11 @@ describe("pdfGenerationQueue: enqueue", () => {
     vi.spyOn(companiesService, "getById").mockReset().mockResolvedValue(company);
     vi.spyOn(storageService, "downloadBlob").mockReset().mockImplementation(downloadBlobImpl);
     vi.spyOn(storageService, "uploadBlob").mockReset().mockResolvedValue(undefined);
+    vi.spyOn(storageService, "getSignedUrl")
+      .mockReset()
+      .mockResolvedValue("https://signed.example/report.pdf");
     vi.spyOn(pdfGeneration, "renderMeetingLogPdf").mockReset().mockResolvedValue(pdfBuffer);
+    vi.spyOn(emailService, "sendMeetingLogEmail").mockReset().mockResolvedValue(undefined);
 
     consoleErrorSpy = vi.spyOn(console, "error").mockImplementation(() => {});
   });
@@ -157,6 +162,39 @@ describe("pdfGenerationQueue: enqueue", () => {
       "company-1",
       "meeting-1/report.pdf",
     );
+    expect(consoleErrorSpy).not.toHaveBeenCalled();
+  });
+
+  it("should not build a signed URL or send an email when the project has no gc_contact_email", async () => {
+    // Act — the default fixture project has gcContactEmail: null
+    await enqueue("meeting-1", "company-1");
+
+    // Assert
+    expect(storageService.getSignedUrl).not.toHaveBeenCalled();
+    expect(emailService.sendMeetingLogEmail).not.toHaveBeenCalled();
+  });
+
+  it("should build a signed URL and email the GC contact when the project has a gc_contact_email", async () => {
+    // Arrange
+    projectsService.getById.mockResolvedValue({ ...project, gcContactEmail: "gc@example.com" });
+
+    // Act
+    await enqueue("meeting-1", "company-1");
+
+    // Assert
+    expect(storageService.getSignedUrl).toHaveBeenCalledWith(
+      "meeting-pdfs",
+      "meeting-1/report.pdf",
+      60 * 60 * 24 * 30,
+      expect.any(String),
+    );
+    expect(emailService.sendMeetingLogEmail).toHaveBeenCalledWith({
+      to: "gc@example.com",
+      projectName: project.name,
+      companyName: company.name,
+      pdfUrl: "https://signed.example/report.pdf",
+      completedAt: meetingLog.completedAt,
+    });
     expect(consoleErrorSpy).not.toHaveBeenCalled();
   });
 
@@ -321,6 +359,20 @@ describe("pdfGenerationQueue: enqueue", () => {
     [
       "meetingLogsService.setFinalPdfUrl",
       () => meetingLogsService.setFinalPdfUrl.mockRejectedValue(new Error("boom")),
+    ],
+    [
+      "storageService.getSignedUrl",
+      () => {
+        projectsService.getById.mockResolvedValue({ ...project, gcContactEmail: "gc@example.com" });
+        storageService.getSignedUrl.mockRejectedValue(new Error("boom"));
+      },
+    ],
+    [
+      "emailService.sendMeetingLogEmail",
+      () => {
+        projectsService.getById.mockResolvedValue({ ...project, gcContactEmail: "gc@example.com" });
+        emailService.sendMeetingLogEmail.mockRejectedValue(new Error("boom"));
+      },
     ],
   ])("should never throw when %s fails — it catches and logs instead", async (_label, arrange) => {
     // Arrange
