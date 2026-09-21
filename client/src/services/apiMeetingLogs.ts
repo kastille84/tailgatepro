@@ -46,19 +46,26 @@ export const createMeetingLog = async (
 
 /**
  * PATCH /api/meetings/:meetingId/complete — finalize a meeting once it has
- * >=1 signature. Reads no request body (the route validates only the `:id`
- * URL param), so this sends only the `Authorization` header, unlike every
- * other call in this file. A retried complete against a meeting that already
- * landed 409s with a message the offline queue's `flush()` recognizes as
- * "already synced" rather than a real failure — see `utils/db/outbox.ts`.
+ * >=1 signature. `heldAt` (an ISO timestamp for when the meeting was actually
+ * held) is optional: when omitted — a completion queued by an older build —
+ * this sends only the `Authorization` header and no body, and the server
+ * falls back to its own receipt time. A retried complete against a meeting
+ * that already landed 409s with a message the offline queue's `flush()`
+ * recognizes as "already synced" rather than a real failure — see
+ * `utils/db/outbox.ts`.
  */
 export const completeMeeting = async (
   accessToken: string,
   meetingId: string,
+  heldAt?: string,
 ): Promise<MeetingLog> => {
   const res = await fetchWithTimeout(`/api/meetings/${meetingId}/complete`, {
     method: "PATCH",
-    headers: { Authorization: `Bearer ${accessToken}` },
+    headers: {
+      Authorization: `Bearer ${accessToken}`,
+      ...(heldAt && { "Content-Type": "application/json" }),
+    },
+    ...(heldAt && { body: JSON.stringify({ heldAt }) }),
   });
 
   const body = await res.json().catch(() => null);

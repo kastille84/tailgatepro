@@ -23,10 +23,15 @@ const slugify = (text) =>
 // chars) guarantees uniqueness even when the same company completes
 // multiple talks for the same project on the same day — company + project +
 // date alone can still collide.
-const buildPdfFilename = ({ companyName, projectName, completedAt, meetingLogId }) => {
+//
+// `meetingDate` is an ISO timestamp for when the meeting was held (the meeting
+// log's `heldAt`, not the server-receipt `completedAt` — an offline meeting
+// synced the next day must be filed under the day it actually happened). Its
+// first 10 characters are the UTC calendar date.
+const buildPdfFilename = ({ companyName, projectName, meetingDate, meetingLogId }) => {
   const companySlug = slugify(companyName) || "company";
   const projectSlug = slugify(projectName) || "project";
-  const date = completedAt ? completedAt.slice(0, 10) : "undated";
+  const date = meetingDate ? meetingDate.slice(0, 10) : "undated";
   const shortId = meetingLogId.replace(/-/g, "").slice(0, 8);
   return `${companySlug}-${projectSlug}-${date}-${shortId}.pdf`;
 };

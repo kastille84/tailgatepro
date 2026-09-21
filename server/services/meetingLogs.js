@@ -1,6 +1,7 @@
 const { supabase } = require("../utility/supabaseClient");
 const { AppError } = require("../utility/AppError");
 const { buildPdfFilename } = require("../utility/pdfFilename");
+const { resolveHeldAt } = require("../utility/heldAt");
 const pdfGenerationQueue = require("./pdfGenerationQueue");
 const storageService = require("./storage");
 const projectsService = require("./projects");
@@ -10,13 +11,19 @@ const companiesService = require("./companies");
 // camelCase mapper applied to each row before it leaves the service. Services
 // never leak DB column names to the controller layer.
 const MEETING_LOG_COLUMNS =
-  "id, project_id, talk_id, foreman_id, company_id, crew_photo_url, final_pdf_url, completed_at, synced_at, created_at";
+  "id, project_id, talk_id, foreman_id, company_id, crew_photo_url, final_pdf_url, completed_at, held_at, synced_at, created_at";
 
 const CREW_PHOTO_BUCKET = "crew-photos";
 const CREW_PHOTO_URL_TTL_SECONDS = 300;
 const PDF_BUCKET = "meeting-pdfs";
 const PDF_URL_TTL_SECONDS = 300;
 
+// `completedAt` is the server-receipt audit stamp; `heldAt` is when the meeting
+// was actually held (client-reported, see utility/heldAt.js) and is what the
+// PDF, its filename, the email and GC compliance windows all use. It falls
+// back to `completed_at` here, once, for any completed row whose `held_at` was
+// never populated, so no consumer has to repeat that fallback. Both are null
+// for a meeting still in progress.
 const toMeetingLog = (row) => ({
   id: row.id,
   projectId: row.project_id,
@@ -26,6 +33,7 @@ const toMeetingLog = (row) => ({
   crewPhotoUrl: row.crew_photo_url,
   finalPdfUrl: row.final_pdf_url,
   completedAt: row.completed_at,
+  heldAt: row.held_at ?? row.completed_at,
   syncedAt: row.synced_at,
   createdAt: row.created_at,
 });
@@ -157,7 +165,13 @@ const assertNotCompleted = async (id, companyId) => {
 // locks the meeting_log and its signatures via assertNotCompleted. Triggers
 // the Phase 5 PDF-generation pipeline (see pdfGenerationQueue.js) — soft-fail,
 // so a PDF/upload failure never unwinds completed_at or fails this call.
-const complete = async ({ id, companyId }) => {
+//
+// `completed_at` is stamped at server receipt (the audit record); `held_at` is
+// the optional client-reported time the meeting was actually held, resolved by
+// resolveHeldAt (which falls back to receipt time and never throws — see
+// utility/heldAt.js for why a bad value must not fail this call). Both use the
+// same `now` so an on-time completion has identical timestamps.
+const complete = async ({ id, companyId, heldAt }) => {
   await assertNotCompleted(id, companyId);
 
   const { data: signatures, error: signaturesError } = await supabase
@@ -179,9 +193,13 @@ const complete = async ({ id, companyId }) => {
     );
   }
 
+  const now = new Date();
   const { data, error } = await supabase
     .from("meeting_logs")
-    .update({ completed_at: new Date().toISOString() })
+    .update({
+      completed_at: now.toISOString(),
+      held_at: resolveHeldAt({ heldAt, now }),
+    })
     .eq("id", id)
     .eq("company_id", companyId)
     .select(MEETING_LOG_COLUMNS)
@@ -297,7 +315,7 @@ const getPdfUrl = async (id, companyId) => {
   const filename = buildPdfFilename({
     companyName: company.name,
     projectName: project.name,
-    completedAt: meeting.completedAt,
+    meetingDate: meeting.heldAt,
     meetingLogId: meeting.id,
   });
 

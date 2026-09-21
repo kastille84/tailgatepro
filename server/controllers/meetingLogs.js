@@ -50,6 +50,7 @@ exports.completeMeeting = async (req, res, next) => {
     const data = await meetingLogsService.complete({
       id: req.params.id,
       companyId: req.user.companyId,
+      heldAt: req.body?.heldAt,
     });
     return res.status(200).json({ success: true, data });
   } catch (error) {

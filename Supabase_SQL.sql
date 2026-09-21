@@ -16,10 +16,27 @@ CREATE TABLE companies (
   -- via PUT /api/companies/logo, gated to premium/enterprise tier (see
   -- server/utility/entitlements.js).
   logo_path TEXT,
-  created_at TIMESTAMPTZ DEFAULT NOW()
+  -- GC-only (Phase 6): the code a subcontractor enters to link one of its
+  -- projects to this GC (sets projects.gc_company_id). 8 characters from an
+  -- unambiguous uppercase alphabet, generated server-side on the GC's first
+  -- GET /api/companies/join-code. NULL = not generated yet (and always NULL
+  -- for a subcontractor). See docs/gc-dashboard-design.md.
+  join_code TEXT UNIQUE,
+  created_at TIMESTAMPTZ DEFAULT NOW(),
+  CONSTRAINT check_join_code_gc_only CHECK (
+    join_code IS NULL OR company_type = 'gc'
+  )
 );
--- If the table already exists from an earlier run, add the new column instead:
+
+-- Server-only table: enable RLS with NO policies so the public anon key is
+-- denied all access. The server's service-role key bypasses RLS and still works.
+ALTER TABLE companies ENABLE ROW LEVEL SECURITY;
+
+-- If the table already exists from an earlier run, add the new column(s) instead:
 -- ALTER TABLE companies ADD COLUMN IF NOT EXISTS logo_path TEXT;
+-- ALTER TABLE companies ADD COLUMN IF NOT EXISTS join_code TEXT UNIQUE;
+-- ALTER TABLE companies ADD CONSTRAINT check_join_code_gc_only CHECK (join_code IS NULL OR company_type = 'gc');
+-- ALTER TABLE companies ENABLE ROW LEVEL SECURITY;
 
 -- 2. Users
 CREATE TABLE users (
@@ -29,6 +46,12 @@ CREATE TABLE users (
   name TEXT NOT NULL,
   created_at TIMESTAMPTZ DEFAULT NOW()
 );
+
+-- Server-only table: enable RLS with NO policies so the public anon key is
+-- denied all access. The server's service-role key bypasses RLS and still works.
+-- If the table already exists from an earlier run:
+-- ALTER TABLE users ENABLE ROW LEVEL SECURITY;
+ALTER TABLE users ENABLE ROW LEVEL SECURITY;
 
 -- 3. Projects
 CREATE TABLE projects (
@@ -51,15 +74,28 @@ CREATE TABLE projects (
     gc_company_id IS NOT NULL OR gc_name_custom IS NOT NULL
   )
 );
+
+-- Server-only table: enable RLS with NO policies so the public anon key is
+-- denied all access. The server's service-role key bypasses RLS and still works.
+ALTER TABLE projects ENABLE ROW LEVEL SECURITY;
+
 -- If the table already exists from an earlier run, add the new column(s) instead:
 -- ALTER TABLE projects ADD COLUMN IF NOT EXISTS archived_at TIMESTAMPTZ;
 -- ALTER TABLE projects ADD COLUMN IF NOT EXISTS gc_contact_email TEXT;
+-- ALTER TABLE projects ENABLE ROW LEVEL SECURITY;
+
 -- 4. Project Subcontractors (Many-to-Many)
 CREATE TABLE project_subcontractors (
   project_id UUID REFERENCES projects(id) ON DELETE CASCADE,
   sub_id UUID REFERENCES companies(id) ON DELETE CASCADE,
   PRIMARY KEY (project_id, sub_id)
 );
+
+-- Server-only table: enable RLS with NO policies so the public anon key is
+-- denied all access. The server's service-role key bypasses RLS and still works.
+-- If the table already exists from an earlier run:
+-- ALTER TABLE project_subcontractors ENABLE ROW LEVEL SECURITY;
+ALTER TABLE project_subcontractors ENABLE ROW LEVEL SECURITY;
 
 -- 5. Toolbox Talks (Content Library)
 CREATE TABLE toolbox_talks (
@@ -129,8 +165,7 @@ CREATE TABLE user_favorites (
 -- Server-only table: enable RLS with NO policies so the public anon key is
 -- denied all access. The server's service-role key bypasses RLS and still
 -- works (docs/data-access.md). This is a new table, so it gets RLS enabled
--- at creation instead of joining the pre-existing gap tracked in
--- docs/tasks.md for projects/companies/users/etc.
+-- at creation, same as every other table in this file.
 ALTER TABLE user_favorites ENABLE ROW LEVEL SECURITY;
 
 -- 7. Meeting Logs
@@ -149,6 +184,13 @@ CREATE TABLE meeting_logs (
   -- signatures against further changes (see docs/meeting-flow-design.md) and
   -- is the Phase 5 PDF-generation trigger point.
   completed_at TIMESTAMPTZ,
+  -- Phase 6: when the meeting was actually held, as reported by the client at
+  -- completion (the wizard's local time). completed_at is stamped at server
+  -- RECEIPT, so an offline meeting synced after midnight would otherwise land
+  -- on the wrong day. held_at drives GC compliance windows and the PDF's date;
+  -- completed_at stays as the server-side audit stamp. NULL = still in
+  -- progress. See docs/gc-dashboard-design.md.
+  held_at TIMESTAMPTZ,
   synced_at TIMESTAMPTZ,
   created_at TIMESTAMPTZ DEFAULT NOW()
 );
@@ -160,8 +202,11 @@ ALTER TABLE meeting_logs ENABLE ROW LEVEL SECURITY;
 -- If the table already exists from an earlier run, add the new columns instead:
 -- ALTER TABLE meeting_logs ADD COLUMN IF NOT EXISTS company_id UUID REFERENCES companies(id);
 -- ALTER TABLE meeting_logs ADD COLUMN IF NOT EXISTS completed_at TIMESTAMPTZ;
+-- ALTER TABLE meeting_logs ADD COLUMN IF NOT EXISTS held_at TIMESTAMPTZ;
 -- ALTER TABLE meeting_logs ENABLE ROW LEVEL SECURITY;
 -- UPDATE meeting_logs SET company_id = (SELECT owner_company_id FROM projects WHERE projects.id = meeting_logs.project_id) WHERE company_id IS NULL;
+-- Backfill (Phase 6): existing completed meetings keep the date they have today.
+-- UPDATE meeting_logs SET held_at = completed_at WHERE held_at IS NULL AND completed_at IS NOT NULL;
 
 -- 8. Signatures
 CREATE TABLE signatures (

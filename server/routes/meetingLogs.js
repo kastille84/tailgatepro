@@ -68,12 +68,22 @@ router.post(
 // PATCH /api/meetings/:id/complete — finalize a meeting once it has >=1
 // signature. There is no general-purpose edit route — a meeting log is either
 // an in-progress client-side draft or a completed record; see
-// docs/meeting-flow-design.md.
+// docs/meeting-flow-design.md. `heldAt` (when the meeting was actually held)
+// is optional: completions already queued in a client's offline outbox before
+// it existed carry no body, and the service falls back to receipt time. Only
+// its format is checked here — whether it's plausible is the service's call
+// (utility/heldAt.js), and it must never reject on that.
 router.patch(
   "/:id/complete",
   requireAuth,
   loadUserContext,
-  [param("id").isUUID().withMessage("A valid meeting id is required")],
+  [
+    param("id").isUUID().withMessage("A valid meeting id is required"),
+    body("heldAt")
+      .optional()
+      .isISO8601()
+      .withMessage("heldAt must be an ISO 8601 timestamp"),
+  ],
   validate,
   completeMeeting,
 );

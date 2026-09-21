@@ -21,6 +21,9 @@ const meetingLog = {
   crewPhotoUrl: "meeting-1/photo.jpg",
   finalPdfUrl: null,
   completedAt: "2026-09-14T01:00:00.000Z",
+  // Held the previous evening, synced/completed after midnight UTC — distinct
+  // from completedAt so the tests below can prove which one is used.
+  heldAt: "2026-09-13T22:30:00.000Z",
   syncedAt: null,
   createdAt: "2026-09-14T00:00:00.000Z",
 };
@@ -182,18 +185,20 @@ describe("pdfGenerationQueue: enqueue", () => {
     await enqueue("meeting-1", "company-1");
 
     // Assert
+    // The filename carries the date the meeting was held (2026-09-13), not the
+    // server-receipt date (2026-09-14).
     expect(storageService.getSignedUrl).toHaveBeenCalledWith(
       "meeting-pdfs",
       "meeting-1/report.pdf",
       60 * 60 * 24 * 30,
-      expect.any(String),
+      expect.stringContaining("2026-09-13"),
     );
     expect(emailService.sendMeetingLogEmail).toHaveBeenCalledWith({
       to: "gc@example.com",
       projectName: project.name,
       companyName: company.name,
       pdfUrl: "https://signed.example/report.pdf",
-      completedAt: meetingLog.completedAt,
+      meetingDate: meetingLog.heldAt,
     });
     expect(consoleErrorSpy).not.toHaveBeenCalled();
   });

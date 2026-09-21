@@ -7,7 +7,7 @@ describe("buildPdfFilename", () => {
     const filename = buildPdfFilename({
       companyName: "Acme Roofing",
       projectName: "Downtown Highrise",
-      completedAt: "2026-09-14T01:23:45.000Z",
+      meetingDate: "2026-09-14T01:23:45.000Z",
       meetingLogId: "a1b2c3d4-e5f6-7890-abcd-ef1234567890",
     });
 
@@ -20,7 +20,7 @@ describe("buildPdfFilename", () => {
     const filename = buildPdfFilename({
       companyName: "J&R Contracting",
       projectName: "Café & Bar — Phase 2 (Rënovation)!!",
-      completedAt: "2026-09-14T00:00:00.000Z",
+      meetingDate: "2026-09-14T00:00:00.000Z",
       meetingLogId: "11111111-2222-3333-4444-555555555555",
     });
 
@@ -33,7 +33,7 @@ describe("buildPdfFilename", () => {
     const filename = buildPdfFilename({
       companyName: "  Acme   Roofing  ",
       projectName: "  Main   Street   Project  ",
-      completedAt: "2026-09-14T00:00:00.000Z",
+      meetingDate: "2026-09-14T00:00:00.000Z",
       meetingLogId: "aaaaaaaa-0000-0000-0000-000000000000",
     });
 
@@ -47,7 +47,7 @@ describe("buildPdfFilename", () => {
       buildPdfFilename({
         companyName: "",
         projectName: "Site A",
-        completedAt: "2026-09-14T00:00:00.000Z",
+        meetingDate: "2026-09-14T00:00:00.000Z",
         meetingLogId: "aaaaaaaa-0000-0000-0000-000000000000",
       }),
     ).toBe("company-site-a-2026-09-14-aaaaaaaa.pdf");
@@ -56,7 +56,7 @@ describe("buildPdfFilename", () => {
       buildPdfFilename({
         companyName: undefined,
         projectName: "Site A",
-        completedAt: "2026-09-14T00:00:00.000Z",
+        meetingDate: "2026-09-14T00:00:00.000Z",
         meetingLogId: "aaaaaaaa-0000-0000-0000-000000000000",
       }),
     ).toBe("company-site-a-2026-09-14-aaaaaaaa.pdf");
@@ -65,7 +65,7 @@ describe("buildPdfFilename", () => {
       buildPdfFilename({
         companyName: "!!!",
         projectName: "Site A",
-        completedAt: "2026-09-14T00:00:00.000Z",
+        meetingDate: "2026-09-14T00:00:00.000Z",
         meetingLogId: "aaaaaaaa-0000-0000-0000-000000000000",
       }),
     ).toBe("company-site-a-2026-09-14-aaaaaaaa.pdf");
@@ -77,7 +77,7 @@ describe("buildPdfFilename", () => {
       buildPdfFilename({
         companyName: "Acme Roofing",
         projectName: "",
-        completedAt: "2026-09-14T00:00:00.000Z",
+        meetingDate: "2026-09-14T00:00:00.000Z",
         meetingLogId: "aaaaaaaa-0000-0000-0000-000000000000",
       }),
     ).toBe("acme-roofing-project-2026-09-14-aaaaaaaa.pdf");
@@ -86,7 +86,7 @@ describe("buildPdfFilename", () => {
       buildPdfFilename({
         companyName: "Acme Roofing",
         projectName: undefined,
-        completedAt: "2026-09-14T00:00:00.000Z",
+        meetingDate: "2026-09-14T00:00:00.000Z",
         meetingLogId: "aaaaaaaa-0000-0000-0000-000000000000",
       }),
     ).toBe("acme-roofing-project-2026-09-14-aaaaaaaa.pdf");
@@ -95,7 +95,7 @@ describe("buildPdfFilename", () => {
       buildPdfFilename({
         companyName: "Acme Roofing",
         projectName: "!!!",
-        completedAt: "2026-09-14T00:00:00.000Z",
+        meetingDate: "2026-09-14T00:00:00.000Z",
         meetingLogId: "aaaaaaaa-0000-0000-0000-000000000000",
       }),
     ).toBe("acme-roofing-project-2026-09-14-aaaaaaaa.pdf");
@@ -106,7 +106,7 @@ describe("buildPdfFilename", () => {
     const filename = buildPdfFilename({
       companyName: "A".repeat(100),
       projectName: "B".repeat(100),
-      completedAt: "2026-09-14T00:00:00.000Z",
+      meetingDate: "2026-09-14T00:00:00.000Z",
       meetingLogId: "aaaaaaaa-0000-0000-0000-000000000000",
     });
 
@@ -116,12 +116,12 @@ describe("buildPdfFilename", () => {
     );
   });
 
-  it("should fall back to 'undated' when completedAt is missing", () => {
+  it("should fall back to 'undated' when meetingDate is missing", () => {
     // Act
     const filename = buildPdfFilename({
       companyName: "Acme Roofing",
       projectName: "Downtown Highrise",
-      completedAt: null,
+      meetingDate: null,
       meetingLogId: "aaaaaaaa-0000-0000-0000-000000000000",
     });
 
@@ -134,7 +134,7 @@ describe("buildPdfFilename", () => {
     const filename = buildPdfFilename({
       companyName: "Acme",
       projectName: "Site A",
-      completedAt: "2026-09-14T00:00:00.000Z",
+      meetingDate: "2026-09-14T00:00:00.000Z",
       meetingLogId: "ab-cd-ef-01-234567890",
     });
 

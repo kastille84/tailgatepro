@@ -40,6 +40,7 @@ describe("useCompleteMeetingLog", () => {
 
   afterEach(() => {
     onlineManager.setOnline(true);
+    vi.useRealTimers();
   });
 
   const wrapper = ({ children }: { children: React.ReactNode }) => (
@@ -64,7 +65,9 @@ describe("useCompleteMeetingLog", () => {
     expect(outbox.enqueueMutation).toHaveBeenCalled();
   });
 
-  it("enqueues a meeting_completion row keyed by the meetingId, depending on every signatureId", async () => {
+  it("enqueues a meeting_completion row keyed by the meetingId, depending on every signatureId, stamped with when the meeting was held", async () => {
+    vi.useFakeTimers({ toFake: ["Date"] });
+    vi.setSystemTime(new Date("2026-09-20T22:30:00.000Z"));
     vi.mocked(outbox.enqueueMutation).mockResolvedValue({} as never);
 
     const { result } = renderHook(() => useCompleteMeetingLog(), { wrapper });
@@ -79,7 +82,9 @@ describe("useCompleteMeetingLog", () => {
         entity: "meeting_completion",
         entityId: "meeting-1",
         op: "complete",
-        payload: {},
+        // Captured at enqueue time, so a completion that syncs days later
+        // still records when the meeting actually happened.
+        payload: { heldAt: "2026-09-20T22:30:00.000Z" },
         dependsOnEntityIds: ["signature-1", "signature-2"],
       },
       mockReplayer,

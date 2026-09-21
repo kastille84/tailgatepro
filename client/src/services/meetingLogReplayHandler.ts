@@ -54,11 +54,16 @@ registerReplayHandler(
  * How the offline queue replays a "meeting_completion" outbox row — like
  * `crew_photo`, there's no separate record of its own, so `entityId` is the
  * meeting log's own id. Only one op is possible, so this calls
- * `completeMeeting` directly rather than switching on `row.op`.
+ * `completeMeeting` directly rather than switching on `row.op`. The payload's
+ * `heldAt` is when the foreman actually finished the meeting, captured at
+ * enqueue time so a completion synced days later still records the real
+ * time; rows queued before it existed have an empty payload, so it's
+ * `undefined` there and the server falls back to its own receipt time.
  */
 registerReplayHandler(
   "meeting_completion",
   async (accessToken: string, row: OutboxRow): Promise<void> => {
-    await completeMeeting(accessToken, row.entityId);
+    const { heldAt } = row.payload as { heldAt?: string };
+    await completeMeeting(accessToken, row.entityId, heldAt);
   },
 );

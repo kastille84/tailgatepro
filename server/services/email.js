@@ -41,14 +41,16 @@ const getMailgunClient = () => {
  * gc_contact_email on file) must not call this at all.
  *
  * @param {{ to: string, projectName: string, companyName: string,
- *   pdfUrl: string, completedAt: string }} params
+ *   pdfUrl: string, meetingDate: string }} params `meetingDate` is when the meeting was held
+ *   (the meeting log's `heldAt`), rendered into the template's `completedDate` variable — that
+ *   variable name is fixed by the live Mailgun template, so it isn't renamed to match.
  */
 const sendMeetingLogEmail = async ({
   to,
   projectName,
   companyName,
   pdfUrl,
-  completedAt,
+  meetingDate,
 }) => {
   const subject = `New Toolbox Talk Report: ${companyName} — ${projectName}`;
 
@@ -59,7 +61,7 @@ const sendMeetingLogEmail = async ({
     companyName,
     projectName,
     pdfUrl,
-    completedDate: formatDate(completedAt),
+    completedDate: formatDate(meetingDate),
   };
 
   if (!mg) {

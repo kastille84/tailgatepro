@@ -27,6 +27,7 @@ const meeting = {
   crewPhotoUrl: null,
   finalPdfUrl: null,
   completedAt: null,
+  heldAt: null,
   syncedAt: null,
   createdAt: "2026-09-14T00:00:00.000Z",
 };
@@ -204,6 +205,38 @@ describe("meetingLogs controller", () => {
       });
       expect(res.status).toHaveBeenCalledWith(200);
       expect(res.json).toHaveBeenCalledWith({ success: true, data: completed });
+      expect(next).not.toHaveBeenCalled();
+    });
+
+    it("should forward the client-reported req.body.heldAt to the service", async () => {
+      // Arrange
+      req.params = { id: "meeting-1" };
+      req.body = { heldAt: "2026-09-20T22:30:00.000Z" };
+      completeSpy.mockResolvedValue(meeting);
+
+      // Act
+      await completeMeeting(req, res, next);
+
+      // Assert
+      expect(completeSpy).toHaveBeenCalledWith({
+        id: "meeting-1",
+        companyId: "company-1",
+        heldAt: "2026-09-20T22:30:00.000Z",
+      });
+    });
+
+    it("should pass an undefined heldAt (not throw) when the request has no body at all", async () => {
+      // Arrange — completions queued by an older client carry no body
+      req.params = { id: "meeting-1" };
+      req.body = undefined;
+      completeSpy.mockResolvedValue(meeting);
+
+      // Act
+      await completeMeeting(req, res, next);
+
+      // Assert
+      expect(completeSpy.mock.calls[0][0].heldAt).toBeUndefined();
+      expect(res.status).toHaveBeenCalledWith(200);
       expect(next).not.toHaveBeenCalled();
     });
 

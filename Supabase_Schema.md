@@ -11,6 +11,7 @@
 | `company_type` | Enum | Not Null | `gc` or `subcontractor` |
 | `tier` | Enum | Not Null | `basic`, `premium`, `enterprise` |
 | `logo_path` | Text | Nullable | Storage path of the uploaded company logo (`company-logos` bucket); embedded in generated PDFs and removes the free-tier watermark for Trade Pro+ tiers |
+| `join_code` | Text | Unique (Nullable) | GC-only (Phase 6): the 8-character code a subcontractor enters to link a project to this GC. Generated server-side on the GC's first `GET /api/companies/join-code`; always `NULL` for a subcontractor (**CHECK** `check_join_code_gc_only`: `join_code IS NULL OR company_type = 'gc'`). See `docs/gc-dashboard-design.md` |
 
 | Table: `users` | Type | Constraints | Description |
 | :--- | :--- | :--- | :--- |
@@ -18,6 +19,8 @@
 | `company_id` | UUID | FK -> `companies.id` | The company they belong to |
 | `role` | Enum | Not Null | `admin`, `safety_manager`, `foreman` |
 | `name` | Text | Not Null | User's full name |
+
+> RLS: enabled with no policies (server-brokered, deny-all) on `companies` and `users` — see `docs/data-access.md`.
 
 ### 2. Projects & Access
 
@@ -39,6 +42,8 @@
 | `project_id` | UUID | FK -> `projects.id` (ON DELETE CASCADE) | |
 | `sub_id` | UUID | FK -> `companies.id` (ON DELETE CASCADE) | Subcontractor assigned to site |
 | **PK** | | **Composite** | `(project_id, sub_id)` |
+
+> RLS: enabled with no policies (server-brokered, deny-all) on `projects` and `project_subcontractors` — see `docs/data-access.md`.
 
 ### 3. Content Library
 
@@ -79,7 +84,8 @@
 | `company_id` | UUID | FK -> `companies.id` (Nullable) | Denormalized from `projects.owner_company_id` at create, so the service layer can scope access with a single-column filter (Phase 4, see `docs/meeting-flow-design.md`) |
 | `crew_photo_url`| Text | Nullable | Supabase Storage path |
 | `final_pdf_url` | Text | Nullable | Supabase Storage path for GC |
-| `completed_at` | Timestamptz| Nullable | Set once >=1 signature exists; locks the record and triggers Phase 5 PDF generation |
+| `completed_at` | Timestamptz| Nullable | Set once >=1 signature exists; locks the record and triggers Phase 5 PDF generation. Stamped at **server receipt** — an audit stamp, not the time the meeting happened |
+| `held_at` | Timestamptz| Nullable | Phase 6: when the meeting was actually held, as reported by the client at completion (the wizard's local time). Drives GC compliance windows and the PDF's meeting date/filename; backfilled from `completed_at` for existing rows. See `docs/gc-dashboard-design.md` |
 | `synced_at` | Timestamptz| Nullable | Used for offline-sync tracking |
 
 > RLS: enabled with no policies (server-brokered, deny-all) — see `docs/data-access.md`.
