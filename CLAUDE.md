@@ -19,24 +19,13 @@ Each package has its own `node_modules` and its own `.env`. Run `npm install` in
 
 ## Commands
 
-### Running the app (from repo root)
-
-- `npm run dev` — runs server + client together via `concurrently`.
-- `npm run server` — server only (`nodemon server.js`), port `5000`.
-- `npm run client` — client only (proxies to `npm run dev --prefix client`).
-- `npm run start-prod` — builds the client, then starts the server, which serves `client/dist` statically and falls back to `index.html` for SPA routes.
-
 ### Client (from `client/`)
 
 - `npm run dev` — Vite dev server on **`https://localhost:5173`**. It runs over HTTPS with a self-signed cert (`@vitejs/plugin-basic-ssl`) and binds all interfaces (`host: true`). Expect a browser cert warning.
-- `npm run build` — `tsc -b && vite build` (type errors fail the build).
-- `npm run lint` — ESLint (flat config, `client/eslint.config.js`).
-- `npm run preview` — serve the production build locally.
 
 ### Tests
 
 - Unit testing standard is **Vitest only — never Jest** (`.github/copilot-instructions.md`, `docs/unit-testing.md`).
-- Run all: `npx vitest run` (from `client/`). Watch: `npx vitest`. Single file: `npx vitest path/to/file.test.tsx`. By name: `npx vitest -t "should validate password"`. Coverage: `npx vitest run --coverage`.
 - Client Vitest config (in `client/vite.config.ts`) runs in **browser mode** (Playwright, Chromium, `headless: false`), expects specs under `client/tests/**/*.test.{ts,tsx}`, loads `client/setupTests.ts`, and enforces **90% coverage thresholds**. Those test dirs/files do not exist yet — create them when adding the first test.
 - Server-side tests use Vitest too (confirmed with the maintainer as of the auth feature): a root `vitest.config.js` runs specs matching `server/**/*.test.js` (`npm run test:server`, or `npm test` from root, which runs both server and client suites). Root devDependencies still list `mocha`/`chai`/`sinon` — these are unused legacy leftovers, not the standard. Server test files must be plain CommonJS (`require`/`module.exports`, no `import` statements) — see the note at the top of `server/middlewares/requireAuth.test.js` for why: mixing `import` in a test file with a `require()`-based CJS module under test can produce two separate module instances, silently defeating any mock/spy on the CJS one.
 
@@ -55,8 +44,6 @@ Per `docs/coding-style.md` and `docs/folder-structure.md`, keep strict separatio
 `server.js` binds a global error-handling middleware last. Currently every route mount and the cron-job callbacks in `server.js` are commented out or reference not-yet-defined functions — wiring them up is expected work, not a bug to "fix" by deleting.
 
 ### Client
-
-Folder conventions (`docs/folder-structure.md`) — most of these are planned, not present: `features/`, `services/` (API-call functions per domain, e.g. `apiAuth`), `pages/`, `partials/` (modal contents), `ui_comps/` (reusable primitives), `context/`, `hooks/`, `interfaces/`, `constants/`, `data/`, `utils/`, `styles/`.
 
 `client/src/App.tsx` composes providers in this order: `AuthProvider` → styled-components `ThemeProvider` → `QueryClientProvider` → `GlobalStyles` → `BrowserRouter`. `main.tsx` currently renders without `StrictMode`.
 
@@ -83,8 +70,7 @@ Add new keys to both the prod and non-prod branches of the relevant function.
 
 ### Database (Supabase / PostgreSQL)
 
-Schema is documented in `Supabase_Schema.md`; the runnable DDL is `Supabase_SQL.sql`. Core tables: `companies`, `users` (id references `auth.users`), `projects`, `project_subcontractors` (composite PK), `toolbox_talks` (content library, `trade_tag`-indexed), `meeting_logs`, `signatures`.
-
+Schema is documented in `Supabase_Schema.md`; the runnable DDL is `Supabase_SQL.sql`.
 **Offline-sync rule:** every table's `id` is a `UUID` with no DB default. Primary keys must be **generated client-side** (`crypto.randomUUID()`) before writing to IndexedDB, so offline records don't collide on sync. `meeting_logs.synced_at` tracks sync state.
 
 ## Styling conventions
@@ -119,17 +105,3 @@ other docs files:
 - Docs reference client primitives at `src/components/ui-comps/`; the actual path is `client/src/ui_comps/`.
 - `docs/ui-styling.md` mentions `theme.spacing`, `theme.typography`, and named breakpoints (`mobile`/`tablet`/`desktop`); `theme.ts` currently defines `colors`, `shadows`, `borderRadius`, and numeric `breakpoints` keys (`xs`–`2xl`) only.
 - This file (above) says client Vitest runs in **browser mode** (Playwright, Chromium) with **90%** coverage thresholds; `client/vite.config.ts` actually configures `environment: "jsdom"` and 100% global coverage thresholds (statements/branches/functions/lines). Write new client tests against the real jsdom config and expect full coverage, not 90%.
-
-## Constructing and Gathering Content Library
-
-When user asks to create or add to the safety talk library, you will work with 3 agents to get the work done.
-| agent | src | task |
-| safety-collector | .claude/agents/talks/safety-collector.md | harvest raw safet talks |
-| safety-structurer | .claude/agents/talks/safety-structurer.md | convert raw files into standardized JSON |
-| safety-auditor | .claude/agents/talks/safety-auditor.md | audit the processed files |
-
-### How to Run This Workflow in Claude Code
-
-1. **Step 1:** Run `@safety-collector` to harvest raw safety talks into `data/raw/`.
-2. **Step 2:** Run `@safety-structurer` to convert raw files into standardized JSON in `data/processed/`.
-3. **Step 3:** Run `@safety-auditor` to audit the processed files and append compliance flags or approval status.

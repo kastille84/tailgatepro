@@ -70,7 +70,9 @@ spoofing hole: a sub could inject itself into any company's dashboard.
 
 - New `companies.join_code TEXT UNIQUE`, nullable, meaningful only for `company_type = 'gc'`.
 - 8 characters from an unambiguous uppercase alphabet (no `0/O/1/I/L`), so it survives being read aloud
-  or typed with gloves on; ~10^12 combinations. Input is trimmed and uppercased before lookup.
+  or typed with gloves on; ~10^12 combinations. Input is trimmed and uppercased before lookup. Built in 6c
+  (`server/utility/joinCode.js`): the alphabet is `ABCDEFGHJKMNPQRSTUVWXYZ23456789` (31 characters,
+  ~8.5×10^11 codes), drawn with `crypto.randomInt`.
 - Generated **server-side, lazily** on the GC's first `GET /api/companies/join-code`. It isn't an
   offline-written record, so the client-generated-UUID rule (`CLAUDE.md`) doesn't apply.
 - Linking is online-only (it needs a server lookup), with an explicit offline message in the UI.
@@ -83,14 +85,19 @@ spoofing hole: a sub could inject itself into any company's dashboard.
 
 ### Link semantics
 
-`POST /api/projects/:id/link-gc { joinCode }` (owner-scoped, subcontractor callers):
+`POST /api/projects/:id/link-gc { joinCode }` (owner-scoped; **subcontractor accounts only** — a GC account
+gets `403` via `requireSubcontractorCompany`, so a GC can't attach its own project to another GC, which
+would later show up as a phantom "sub" on that GC's dashboard):
 
 - Unknown code → `404`. Code belongs to the caller's own company → `422`.
 - Already linked to the **same** GC → idempotent `200`. Linked to a **different** registered GC → `409`
   ("unlink first") — silently re-pointing a project would move a sub's history between GCs.
-- Sets `gc_company_id`; **keeps `gc_name_custom`**, filling it with the GC company's name if empty, so
-  `check_gc_info` still holds after an unlink.
-- Upserts `(project_id, owner_company_id)` into `project_subcontractors`.
+- Sets `gc_company_id` and **overwrites `gc_name_custom` with the GC company's registered name**, so every
+  screen that shows it (project list, picker, PDF) shows the real name, and `check_gc_info` still holds after
+  an unlink. *Superseded the original "keep the sub's text, fill only if empty" rule:* create already
+  requires a GC name, so that fill branch could never fire and a sub who typed "Turner" would keep seeing
+  "Turner" after linking to "Turner Construction Inc." The sub's originally typed text is not preserved.
+- Upserts `(project_id, sub_id)` (the owning sub's company) into `project_subcontractors`.
 
 `DELETE /api/projects/:id/link-gc` sets `gc_company_id` to `NULL` and deletes the `project_subcontractors`
 row. `gc_name_custom` is retained, which satisfies `check_gc_info`.

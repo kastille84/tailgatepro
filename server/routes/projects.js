@@ -5,10 +5,15 @@ const { requireAuth } = require("../middlewares/requireAuth");
 const { loadUserContext } = require("../middlewares/loadUserContext");
 const { validate } = require("../middlewares/validate");
 const {
+  requireSubcontractorCompany,
+} = require("../middlewares/requireSubcontractorCompany");
+const {
   listProjects,
   createProject,
   updateProject,
   deleteProject,
+  linkGc,
+  unlinkGc,
 } = require("../controllers/projects");
 
 const router = express.Router();
@@ -20,8 +25,9 @@ const router = express.Router();
 router.get("/", requireAuth, loadUserContext, listProjects);
 
 // POST /api/projects — create a project. `id` is client-generated (offline-sync
-// convention). At least one of gcCompanyId / gcNameCustom is required; the DB
-// `check_gc_info` constraint is the backstop.
+// convention). gcNameCustom is required; the DB `check_gc_info` constraint is
+// the backstop. gcCompanyId is not accepted — POST /:id/link-gc is the only way
+// to attach a registered GC.
 router.post(
   "/",
   requireAuth,
@@ -34,13 +40,10 @@ router.post(
       .withMessage("Project name is required")
       .isLength({ max: 120 })
       .withMessage("Project name is too long"),
-    body("gcCompanyId")
-      .optional({ checkFalsy: true })
-      .isUUID()
-      .withMessage("Invalid GC company"),
     body("gcNameCustom")
-      .optional({ checkFalsy: true })
       .trim()
+      .notEmpty()
+      .withMessage("Enter the general contractor for this project")
       .isLength({ max: 120 })
       .withMessage("GC name is too long"),
     body("gcContactEmail")
@@ -49,12 +52,6 @@ router.post(
       .isEmail()
       .withMessage("Invalid GC contact email")
       .normalizeEmail({ gmail_remove_dots: false }),
-    body("gcNameCustom").custom((value, { req }) => {
-      if (!req.body.gcCompanyId && !req.body.gcNameCustom) {
-        throw new Error("Enter the general contractor for this project");
-      }
-      return true;
-    }),
   ],
   validate,
   createProject,
@@ -79,10 +76,6 @@ router.patch(
       .optional()
       .isIn(["active", "completed"])
       .withMessage("Invalid status"),
-    body("gcCompanyId")
-      .optional({ checkFalsy: true })
-      .isUUID()
-      .withMessage("Invalid GC company"),
     body("gcNameCustom")
       .optional({ checkFalsy: true })
       .trim()
@@ -102,6 +95,40 @@ router.patch(
   ],
   validate,
   updateProject,
+);
+
+// POST /api/projects/:id/link-gc — a subcontractor links its own project to a GC
+// by entering the GC's join code. Subcontractor-only (403 for a GC account).
+router.post(
+  "/:id/link-gc",
+  requireAuth,
+  loadUserContext,
+  requireSubcontractorCompany,
+  [
+    param("id").isUUID().withMessage("A valid project id is required"),
+    body("joinCode")
+      .isString()
+      .withMessage("Enter the GC's join code")
+      .trim()
+      .notEmpty()
+      .withMessage("Enter the GC's join code")
+      .isLength({ max: 32 })
+      .withMessage("That join code is too long"),
+  ],
+  validate,
+  linkGc,
+);
+
+// DELETE /api/projects/:id/link-gc — clears the GC link (the project stays and
+// keeps its GC name). Same subcontractor-only guard.
+router.delete(
+  "/:id/link-gc",
+  requireAuth,
+  loadUserContext,
+  requireSubcontractorCompany,
+  [param("id").isUUID().withMessage("A valid project id is required")],
+  validate,
+  unlinkGc,
 );
 
 // DELETE /api/projects/:id — hard-delete a project the caller's company owns.

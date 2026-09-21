@@ -1,5 +1,6 @@
 const { supabase } = require("../utility/supabaseClient");
 const { AppError } = require("../utility/AppError");
+const companiesService = require("./companies");
 
 // The columns every projects query selects, and the snake_case -> camelCase
 // mapper applied to each row before it leaves the service. Services never leak
@@ -46,12 +47,13 @@ const listForCompany = async (companyId, { includeArchived = false } = {}) => {
 // Inserts a project with the client-supplied `id` (the offline-sync convention:
 // PKs are generated client-side so offline records don't collide on sync). The
 // DB `check_gc_info` constraint guarantees at least one of gc_company_id /
-// gc_name_custom is present.
+// gc_name_custom is present. gc_company_id is deliberately not accepted here —
+// linkGc (below) is the only writer of it, so a project can't claim a GC
+// company without a join code.
 const create = async ({
   id,
   ownerCompanyId,
   name,
-  gcCompanyId,
   gcNameCustom,
   gcContactEmail,
 }) => {
@@ -61,7 +63,6 @@ const create = async ({
       id,
       owner_company_id: ownerCompanyId,
       name,
-      gc_company_id: gcCompanyId ?? null,
       gc_name_custom: gcNameCustom ?? null,
       gc_contact_email: gcContactEmail ?? null,
     })
@@ -121,7 +122,6 @@ const update = async ({ id, companyId, patch }) => {
   const nextPatch = {};
   if (patch.name !== undefined) nextPatch.name = patch.name;
   if (patch.status !== undefined) nextPatch.status = patch.status;
-  if (patch.gcCompanyId !== undefined) nextPatch.gc_company_id = patch.gcCompanyId;
   if (patch.gcNameCustom !== undefined) {
     nextPatch.gc_name_custom = patch.gcNameCustom;
   }
@@ -204,4 +204,128 @@ const remove = async ({ id, companyId }) => {
   return { id: data.id };
 };
 
-module.exports = { listForCompany, getById, create, update, remove };
+// Links a project the caller's (subcontractor) company owns to a GC via the GC's
+// join code — the only path that sets projects.gc_company_id. Order matters:
+// the project is fetched owner-scoped first (another company's project 404s,
+// same as everywhere), then the code is resolved.
+//
+// gc_name_custom is overwritten with the GC's registered company name so every
+// screen that shows it (project list, picker, PDF) shows the real name, not
+// whatever the sub typed at create time. It's left in place on unlink, which
+// keeps check_gc_info satisfied.
+//
+// Linking to the GC the project already has is idempotent and still re-upserts
+// the roster row, so a retry heals a link whose roster write failed. The roster
+// (project_subcontractors) is informational only — authorization keys on
+// projects.gc_company_id, so a drift between the two writes is never a
+// security issue (supabase-js has no cross-table transaction).
+const linkGc = async ({ projectId, companyId, joinCode }) => {
+  const project = await getById(projectId, companyId);
+  const gc = await companiesService.getByJoinCode(joinCode);
+
+  if (gc.id === companyId) {
+    throw new AppError("That is your own company's join code", 422);
+  }
+  if (project.gcCompanyId && project.gcCompanyId !== gc.id) {
+    throw new AppError(
+      "This project is already linked to a different general contractor. Unlink it first.",
+      409,
+    );
+  }
+
+  let linked = project;
+  if (project.gcCompanyId !== gc.id) {
+    // `.is("gc_company_id", null)` makes the read-then-write above race-safe: if
+    // a concurrent request linked it in between, nothing matches.
+    const { data, error } = await supabase
+      .from("projects")
+      .update({ gc_company_id: gc.id, gc_name_custom: gc.name })
+      .eq("id", projectId)
+      .eq("owner_company_id", companyId)
+      .is("gc_company_id", null)
+      .select(PROJECT_COLUMNS)
+      .single();
+
+    if (error) {
+      // PGRST116 = no row matched: the project was linked by another request
+      // after we read it.
+      if (error.code === "PGRST116") {
+        throw new AppError(
+          "This project was just changed. Reload and try again.",
+          409,
+          { cause: error },
+        );
+      }
+      throw new AppError("Could not link the project", 502, { cause: error });
+    }
+    linked = toProject(data);
+  }
+
+  const { error: rosterError } = await supabase
+    .from("project_subcontractors")
+    .upsert(
+      { project_id: projectId, sub_id: companyId },
+      { onConflict: "project_id,sub_id", ignoreDuplicates: true },
+    );
+
+  if (rosterError) {
+    throw new AppError("Could not link the project", 502, {
+      cause: rosterError,
+    });
+  }
+
+  return linked;
+};
+
+// Clears the GC link on a project the caller's company owns and drops its
+// roster row. gc_name_custom is kept (it now holds the GC's name), so
+// check_gc_info still holds. Unlinking a project that isn't linked is a no-op.
+const unlinkGc = async ({ projectId, companyId }) => {
+  const { data, error } = await supabase
+    .from("projects")
+    .update({ gc_company_id: null })
+    .eq("id", projectId)
+    .eq("owner_company_id", companyId)
+    .select(PROJECT_COLUMNS)
+    .single();
+
+  if (error) {
+    // PGRST116 = the id doesn't exist or isn't owned by this company.
+    if (error.code === "PGRST116") {
+      throw new AppError("Project not found", 404, { cause: error });
+    }
+    // 23514 = check_gc_info: no GC name left to fall back on.
+    if (error.code === "23514") {
+      throw new AppError(
+        "Add a general contractor name before unlinking",
+        422,
+        { cause: error },
+      );
+    }
+    throw new AppError("Could not unlink the project", 502, { cause: error });
+  }
+
+  const { error: rosterError } = await supabase
+    .from("project_subcontractors")
+    .delete()
+    .eq("project_id", projectId)
+    .eq("sub_id", companyId);
+
+  if (rosterError) {
+    throw new AppError("Could not unlink the project", 502, {
+      cause: rosterError,
+    });
+  }
+
+  return toProject(data);
+};
+
+module.exports = {
+  listForCompany,
+  getById,
+  create,
+  update,
+  remove,
+  linkGc,
+  unlinkGc,
+};

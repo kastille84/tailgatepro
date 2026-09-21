@@ -32,6 +32,19 @@ exports.uploadLogo = async (req, res, next) => {
   }
 };
 
+// GC-only (requireGcCompany runs before this). The code is created on the
+// first call and returned unchanged on every call after.
+exports.getJoinCode = async (req, res, next) => {
+  try {
+    const joinCode = await companiesService.getOrCreateJoinCode(
+      req.user.companyId,
+    );
+    return res.status(200).json({ success: true, data: { joinCode } });
+  } catch (error) {
+    return next(error);
+  }
+};
+
 exports.getLogoUrl = async (req, res, next) => {
   try {
     const company = await companiesService.getById(req.user.companyId);

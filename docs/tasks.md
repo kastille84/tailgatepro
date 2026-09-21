@@ -1412,26 +1412,52 @@ completion row is enqueued), so `MeetingWizard.tsx` and its tests are unchanged.
       on the GC detail view; (4) `heldAt` is stamped when the completion row is enqueued, so a save resumed after
       an interruption stamps the resume time rather than the first Save tap
 
-### 6c — Server: GC identity + link endpoints · status: not started
+### 6c — Server: GC identity + link endpoints · status: code complete; live smoke pending
 
-- [ ] `getUserContext` / `loadUserContext` add `companyType` to `req.user`; new `requireGcCompany` middleware
-      (403 otherwise)
-- [ ] GC: `GET /api/companies/join-code` (lazily creates the code)
-- [ ] Sub: `POST /api/projects/:id/link-gc { joinCode }` and `DELETE /api/projects/:id/link-gc` — owner-scoped;
-      sets/clears `gc_company_id`, upserts/deletes the `project_subcontractors` row; `AppError` for bad code
-      (404) / already linked
-- [ ] Remove `gcCompanyId` from `POST`/`PATCH /api/projects` (validators in `server/routes/projects.js`,
-      `server/controllers/projects.js`, `create`/`update` in `server/services/projects.js`) so the link
-      endpoints are the only writer; keep `gcNameCustom` required on create (`check_gc_info`). On link, keep
-      `gc_name_custom` (fill with the GC's name if empty) so unlink stays legal
-- [ ] Tests (CommonJS, `server/**/*.test.js`) for every layer
+Plan: `~/.claude/plans/let-s-work-on-6c-melodic-oasis.md`. Decided while planning (both differ from the 6a
+design doc, which is updated to match):
+
+- **Link/unlink are subcontractor-only** — a new `requireSubcontractorCompany` guard (403 for a GC account), next
+  to `requireGcCompany`. Otherwise a GC could attach its own project to another GC and show up as a phantom sub on
+  that GC's dashboard in 6e
+- **Link overwrites `gc_name_custom` with the GC's registered name** (replacing the 6a "keep, fill if empty"
+  rule, whose fill branch could never fire because create already requires a GC name). No `gcCompanyName` field
+  is added to the projects payload — every screen already reads `gcNameCustom`. The sub's typed text is not
+  preserved; unlink keeps the name so `check_gc_info` still holds
+
+- [x] `getUserContext` / `loadUserContext` add `companyType` to `req.user` (also now on `GET /api/users/me`); new
+      `requireGcCompany` middleware (403 otherwise). `loadUserContext.test.js` was stale (no `tier`) — fixed
+- [x] GC: `GET /api/companies/join-code` (lazily creates the code). New `server/utility/joinCode.js` (8 chars from
+      `ABCDEFGHJKMNPQRSTUVWXYZ23456789`, `crypto.randomInt`). `getOrCreateJoinCode` is race-safe without a
+      transaction: the write is guarded by `.is("join_code", null)`, a unique collision (`23505`) retries up to 5
+      times, and a lost race re-reads the winner's code
+- [x] Sub: `POST /api/projects/:id/link-gc { joinCode }` and `DELETE /api/projects/:id/link-gc` — owner-scoped;
+      sets/clears `gc_company_id`, upserts/deletes the `project_subcontractors` row. Bad code `404`, own company's
+      code `422`, already linked to a *different* GC `409`, same GC idempotent `200` (and it re-upserts the roster
+      row, so a retry heals a half-failed link). The link update is guarded with `.is("gc_company_id", null)`, so a
+      concurrent link returns `409` instead of overwriting
+- [x] Remove `gcCompanyId` from `POST`/`PATCH /api/projects` (validators, controller, `create`/`update`) so the
+      link endpoints are the only writer; `gcNameCustom` is now a plain required field on create (`check_gc_info`).
+      The client never sent `gcCompanyId`, and unknown body fields are ignored, so nothing breaks
+- [x] Tests (CommonJS, `server/**/*.test.js`) for every layer: server suite **356/356 passing** (up from 316; run
+      with dummy `SUPABASE_*` env vars since `vitest.config.js` doesn't load `.env`)
+- [ ] Verify (user, needs live Supabase with the 6b SQL applied, one `gc` and one `subcontractor` account): GC
+      `GET /api/companies/join-code` twice → same code; sub `POST …/link-gc` → `gcCompanyId` set, roster row
+      exists, `gc_name_custom` now the GC's registered name; repeat → 200; a different GC's code → 409; own code →
+      422; junk code → 404; GC token on `link-gc` → 403; sub token on `join-code` → 403; `DELETE …/link-gc` →
+      `gcCompanyId` null, roster row gone, name kept; `POST /api/projects` with a `gcCompanyId` in the body → ignored
+- [ ] Known pre-existing gap, not fixed here: `PATCH` with `gcNameCustom: ""` slips past `check_gc_info` (the
+      validator's `checkFalsy` lets the empty string through), leaving an empty custom name
 
 ### 6d — Client: identity + linking UI · status: not started
 
 - [ ] `useCurrentUser` also returns `role`, `companyId`, `companyType` (already fetched, currently discarded)
 - [ ] GC side: show/copy the join code in Settings
 - [ ] Sub side: "Link to a GC" field on the project form/list; fix `ProjectList` showing the raw `gcCompanyId`
-      (server returns the GC company name); online-only with an offline message
+      (after a link `gcNameCustom` holds the GC's registered name — the server does not return a separate
+      `gcCompanyName`, so `gcNameCustom ?? gcCompanyId` is enough; `ProjectPicker` has the same expression);
+      online-only with an offline message. Link/unlink are subcontractor-only (a GC gets 403), so hide the field
+      for GC accounts
 - [ ] `useLinkProjectToGc` domain hook (wraps TanStack `useMutation`, not inline) + `apiProjects.ts` calls
 - [ ] Remove the now-dead client `gcCompanyId` write paths (`apiProjects.ts` payload types,
       `useCreateProject.ts`, `optimisticProjects.ts`); the read-only `Project.gcCompanyId` stays
@@ -1578,6 +1604,12 @@ page) were explicitly scoped OUT — see Known limitations below.
 - [ ] Real use of `admin` / `safety_manager` roles
 - [ ] GC links a sub company to a project (`project_subcontractors`) — slim version (GC join code) lands in
       Phase 6b–6d; this item covers whatever richer flow follows
+- [ ] **GC-owned jobsite + GC invites subcontractor companies** — a GC with an account creates the jobsite and
+      invites sub *companies* by email; subs' talks attach to it. Would supersede the Phase 6 join-code link and
+      6e's group-by-name jobsite grouping (see `docs/gc-dashboard-design.md`, the GC-owned canonical jobsite
+      notes). Distinct from "Admin invites by email" above, which is about users joining one company. Nothing in
+      6c blocks it: the join-code link only sets `gc_company_id` and writes the `(project_id, sub_id)` roster row
+      a GC-owned model would reuse
 - [ ] **Supersede `projects.gc_contact_email`** (added in Phase 5, a manual
       free-text field entered by the foreman) with a real GC user account's
       email once this epic gives one to resolve against — don't let PDF
