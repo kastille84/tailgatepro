@@ -62,7 +62,8 @@ export const useCreateProject = () => {
         // Unknown until the write syncs — never read in the UI (interfaces/project.ts).
         ownerCompanyId: "",
         name: payload.name,
-        gcCompanyId: payload.gcCompanyId ?? null,
+        // Only `linkProjectToGc` can set this, so a new project is never linked.
+        gcCompanyId: null,
         gcNameCustom: payload.gcNameCustom ?? null,
         gcContactEmail: payload.gcContactEmail ?? null,
         status: "active",

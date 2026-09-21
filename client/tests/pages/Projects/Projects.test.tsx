@@ -8,9 +8,13 @@ import theme from "../../../src/styles/theme";
 
 const mockUseAuth = vi.fn();
 const mockUseProjects = vi.fn();
+const mockUseCurrentUser = vi.fn();
 
 vi.mock("../../../src/context/auth", () => ({
   useAuth: () => mockUseAuth(),
+}));
+vi.mock("../../../src/hooks/useCurrentUser", () => ({
+  useCurrentUser: () => mockUseCurrentUser(),
 }));
 vi.mock("../../../src/hooks/useProjects", () => ({
   useProjects: (...args: unknown[]) => mockUseProjects(...args),
@@ -22,14 +26,35 @@ vi.mock("../../../src/features/projects", () => ({
   ProjectList: ({
     projects,
     onEdit,
+    onLinkGc,
   }: {
     projects: { id: string }[];
     onEdit: (p: { id: string }) => void;
+    onLinkGc?: (p: { id: string }) => void;
   }) => (
     <div data-testid="project-list">
       {projects.length} projects
       <button type="button" onClick={() => onEdit({ id: "p1" })}>
         stub-edit
+      </button>
+      {onLinkGc && (
+        <button type="button" onClick={() => onLinkGc({ id: "p1" })}>
+          stub-link
+        </button>
+      )}
+    </div>
+  ),
+  GcLinkModal: ({
+    project,
+    onClose,
+  }: {
+    project: { id: string };
+    onClose: () => void;
+  }) => (
+    <div role="dialog">
+      link {project.id}
+      <button type="button" onClick={onClose}>
+        stub-link-close
       </button>
     </div>
   ),
@@ -63,6 +88,7 @@ describe("Projects page", () => {
   beforeEach(() => {
     vi.clearAllMocks();
     mockUseAuth.mockReturnValue({ user: { email: "a@b.com" }, loading: false });
+    mockUseCurrentUser.mockReturnValue({ isSubcontractor: true });
     mockUseProjects.mockReturnValue({
       projects: [],
       isLoading: false,
@@ -135,6 +161,24 @@ describe("Projects page", () => {
 
     fireEvent.click(screen.getByRole("button", { name: /stub-edit/i }));
     expect(screen.getByRole("dialog").textContent).toContain("edit p1");
+  });
+
+  it("lets a subcontractor open the link-to-GC modal from a list row and close it again", () => {
+    renderPage();
+    expect(screen.queryByRole("dialog")).toBeNull();
+
+    fireEvent.click(screen.getByRole("button", { name: /stub-link$/i }));
+    expect(screen.getByRole("dialog").textContent).toContain("link p1");
+
+    fireEvent.click(screen.getByRole("button", { name: /stub-link-close/i }));
+    expect(screen.queryByRole("dialog")).toBeNull();
+  });
+
+  it("offers no link-to-GC action to a GC company or while the profile is still loading", () => {
+    mockUseCurrentUser.mockReturnValue({ isSubcontractor: false });
+    renderPage();
+
+    expect(screen.queryByRole("button", { name: /stub-link$/i })).toBeNull();
   });
 
   it("asks useProjects to include archived projects when the toggle is checked", () => {

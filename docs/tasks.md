@@ -1449,19 +1449,52 @@ design doc, which is updated to match):
 - [ ] Known pre-existing gap, not fixed here: `PATCH` with `gcNameCustom: ""` slips past `check_gc_info` (the
       validator's `checkFalsy` lets the empty string through), leaving an empty custom name
 
-### 6d — Client: identity + linking UI · status: not started
+### 6d — Client: identity + linking UI · status: code complete; live smoke pending
 
-- [ ] `useCurrentUser` also returns `role`, `companyId`, `companyType` (already fetched, currently discarded)
-- [ ] GC side: show/copy the join code in Settings
-- [ ] Sub side: "Link to a GC" field on the project form/list; fix `ProjectList` showing the raw `gcCompanyId`
-      (after a link `gcNameCustom` holds the GC's registered name — the server does not return a separate
-      `gcCompanyName`, so `gcNameCustom ?? gcCompanyId` is enough; `ProjectPicker` has the same expression);
-      online-only with an offline message. Link/unlink are subcontractor-only (a GC gets 403), so hide the field
-      for GC accounts
-- [ ] `useLinkProjectToGc` domain hook (wraps TanStack `useMutation`, not inline) + `apiProjects.ts` calls
-- [ ] Remove the now-dead client `gcCompanyId` write paths (`apiProjects.ts` payload types,
-      `useCreateProject.ts`, `optimisticProjects.ts`); the read-only `Project.gcCompanyId` stays
-- [ ] Tests at the 100% jsdom coverage threshold
+Plan: `~/.claude/plans/let-s-work-on-6d-glimmering-cookie.md`. Online-only — no outbox, no Dexie changes.
+
+- [x] `useCurrentUser` also returns `role`, `companyId`, `companyType`, plus derived `isGc` / `isSubcontractor`
+      (both false until the profile loads, so GC/sub-only UI never flashes). `CurrentUser` gains `companyType`
+- [x] GC side: new `useJoinCode` (query, enabled only for a GC so a sub never hits the 403) +
+      `apiCompanies.getJoinCode` + `features/company-settings/JoinCodeCard` (large code, Copy button, toast on
+      success, "select it manually" toast if the clipboard is unavailable); Settings renders it in a GC-only section
+- [x] Sub side: a per-card action on the Projects list. `ProjectList` takes an optional `onLinkGc` and renders
+      "Link to GC" (or "Unlink GC" once linked) on each live, non-archived card; `Projects.tsx` passes it only when
+      `isSubcontractor`, so a GC never sees it. It opens the new `features/projects/GcLinkModal`, mounted only while
+      open (fresh, empty field each time): not linked → join-code field (upper-cased on send) + Cancel / "Link to
+      GC"; linked → confirm-unlink text + Cancel / "Unlink"; offline → note + disabled controls. Success closes
+      the modal. (First built as a `GcLinkSection` inside the edit modal; moved out at the user's request)
+- [x] `ProjectList` / `ProjectPicker` no longer fall back to the raw `gcCompanyId` (`gcNameCustom ?? "—"`; after a
+      link `gcNameCustom` holds the GC's registered name). `ProjectList` also shows a "GC linked" badge
+- [x] `useLinkProjectToGc` domain hook (two `useMutation`s: link + unlink; `networkMode: "always"` so an offline
+      attempt fails fast instead of hanging paused) + `apiProjects.linkProjectToGc` / `unlinkProjectFromGc`. On
+      success it invalidates the `["projects"]` lists and toasts; errors toast the server message (404 bad code /
+      422 own code / 409 other GC)
+- [x] Removed the dead client `gcCompanyId` write paths (`CreateProjectInput`, `UpdateProjectPatch`,
+      `useCreateProject`'s optimistic entry, `applyProjectPatch`); read-only `Project.gcCompanyId` stays
+- [x] Deviations / decisions made while building:
+  - the link action is its own modal rather than part of the edit form, so linking never discards unsaved
+    name/email edits and there is no stale edit-form snapshot to worry about
+  - the link action is hidden for **archived** projects; one button switches label with link state instead of two
+  - cards now wrap (`StyledCardActions`, `flex-wrap`) so the extra button drops under the name on narrow screens
+  - the "General contractor" text input is **`readOnly` once linked** — it then holds the GC's registered name and
+    editing it would drift from the linked company
+  - the raw-id fallback was *dropped* rather than kept as `gcNameCustom ?? gcCompanyId`: check_gc_info means a
+    linked project always has a name, so the id branch was unreachable and would only ever leak a UUID
+- [x] Tests: 365 passing across the touched areas (hooks, services, features/projects, features/company-settings,
+      pages/Settings, pages/Projects, ProjectPicker, optimisticProjects); every changed source file is at **100%**
+      statements/branches/functions/lines. `npx eslint` clean; `tsc -b` shows only the pre-existing `Input.tsx` errors.
+      New: `useJoinCode`, `useLinkProjectToGc`, `GcLinkModal`, `JoinCodeCard` suites. Full client run after the
+      rework: 886 passing, only the 2 pre-existing `PhotoCapture` failures
+- [ ] Verify (user, needs live Supabase with the 6b SQL applied, one `gc` and one `subcontractor` account): GC →
+      Settings shows a join code and Copy works; sub → project card "Link to GC" → enter the code → "Linked to <GC>"
+      toast and the modal closes, the card shows the GC's name + "GC linked" badge + "Unlink GC", and the edit form's
+      GC name input is read-only; bad / own / other-GC code each show the server error toast; "Unlink GC" → confirm
+      clears the link and keeps the name; a GC account sees no link action on cards; devtools offline → modal
+      controls disabled with the note; cards wrap cleanly at ~320px
+- [ ] Known limitation, tracked not fixed: a project created offline whose create is still queued in the outbox
+      doesn't exist on the server yet, so linking it returns 404 "Project not found" (surfaced via toast). The link
+      UI could later disable itself while the project has a pending outbox row
 
 ### 6e — Server: GC read APIs + compliance logic · status: not started
 

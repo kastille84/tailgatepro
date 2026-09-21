@@ -54,7 +54,6 @@ export const applyProjectPatch = (
   ...existing,
   ...(patch.name !== undefined && { name: patch.name }),
   ...(patch.status !== undefined && { status: patch.status }),
-  ...(patch.gcCompanyId !== undefined && { gcCompanyId: patch.gcCompanyId }),
   ...(patch.gcNameCustom !== undefined && {
     gcNameCustom: patch.gcNameCustom,
   }),

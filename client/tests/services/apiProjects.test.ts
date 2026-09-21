@@ -3,7 +3,9 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import {
   createProject,
   deleteProject,
+  linkProjectToGc,
   listProjects,
+  unlinkProjectFromGc,
   updateProject,
 } from "../../src/services/apiProjects";
 import { DEFAULT_FETCH_TIMEOUT_MS } from "../../src/utils/fetchWithTimeout";
@@ -351,6 +353,123 @@ describe("apiProjects", () => {
       await expect(deleteProject("token-123", "project-1")).rejects.toThrow(
         GENERIC,
       );
+    });
+  });
+
+  describe("linkProjectToGc", () => {
+    it("POSTs the join code to /api/projects/:id/link-gc and returns the linked project", async () => {
+      const linked = { ...project, gcCompanyId: "gc-1", gcNameCustom: "Big GC" };
+      const fetchMock = vi.fn().mockResolvedValue({
+        ok: true,
+        status: 200,
+        json: async () => ({ success: true, data: linked }),
+      });
+      vi.stubGlobal("fetch", fetchMock);
+
+      await expect(
+        linkProjectToGc("token-123", "project-1", "K7M2Q9XB"),
+      ).resolves.toEqual(linked);
+      expect(fetchMock).toHaveBeenCalledWith(
+        "/api/projects/project-1/link-gc",
+        expect.objectContaining({
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: "Bearer token-123",
+          },
+          body: JSON.stringify({ joinCode: "K7M2Q9XB" }),
+          signal: expect.any(AbortSignal),
+        }),
+      );
+    });
+
+    it("rejects with the backend message for a bad join code", async () => {
+      vi.stubGlobal(
+        "fetch",
+        vi.fn().mockResolvedValue({
+          ok: false,
+          status: 404,
+          json: async () => ({
+            success: false,
+            error: "No general contractor matches that join code",
+          }),
+        }),
+      );
+
+      await expect(
+        linkProjectToGc("token-123", "project-1", "NOPE"),
+      ).rejects.toThrow("No general contractor matches that join code");
+    });
+
+    it("rejects with the generic message when the response body has no error field", async () => {
+      vi.stubGlobal(
+        "fetch",
+        vi.fn().mockResolvedValue({
+          ok: false,
+          status: 500,
+          json: async () => null,
+        }),
+      );
+
+      await expect(
+        linkProjectToGc("token-123", "project-1", "K7M2Q9XB"),
+      ).rejects.toThrow(GENERIC);
+    });
+  });
+
+  describe("unlinkProjectFromGc", () => {
+    it("DELETEs /api/projects/:id/link-gc and returns the unlinked project", async () => {
+      const fetchMock = vi.fn().mockResolvedValue({
+        ok: true,
+        status: 200,
+        json: async () => ({ success: true, data: project }),
+      });
+      vi.stubGlobal("fetch", fetchMock);
+
+      await expect(
+        unlinkProjectFromGc("token-123", "project-1"),
+      ).resolves.toEqual(project);
+      expect(fetchMock).toHaveBeenCalledWith(
+        "/api/projects/project-1/link-gc",
+        expect.objectContaining({
+          method: "DELETE",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: "Bearer token-123",
+          },
+          signal: expect.any(AbortSignal),
+        }),
+      );
+    });
+
+    it("rejects with the backend message on an error response", async () => {
+      vi.stubGlobal(
+        "fetch",
+        vi.fn().mockResolvedValue({
+          ok: false,
+          status: 403,
+          json: async () => ({ success: false, error: "Forbidden" }),
+        }),
+      );
+
+      await expect(
+        unlinkProjectFromGc("token-123", "project-1"),
+      ).rejects.toThrow("Forbidden");
+    });
+
+    it("rejects with the generic message when the response body has no error field", async () => {
+      vi.stubGlobal(
+        "fetch",
+        vi.fn().mockResolvedValue({
+          ok: false,
+          status: 500,
+          json: async () => ({ success: false }),
+        }),
+      );
+
+      await expect(
+        unlinkProjectFromGc("token-123", "project-1"),
+      ).rejects.toThrow(GENERIC);
     });
   });
 });

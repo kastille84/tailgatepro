@@ -184,6 +184,25 @@ describe("ProjectForm", () => {
     );
   });
 
+  it("lets the GC name be edited while the project is not linked to a GC", () => {
+    renderForm({ project: editProject });
+    expect(
+      (screen.getByLabelText(/general contractor/i) as HTMLInputElement)
+        .readOnly,
+    ).toBe(false);
+  });
+
+  it("makes the GC name read-only once the project is linked to a GC", () => {
+    renderForm({
+      project: { ...editProject, gcCompanyId: "gc-1", gcNameCustom: "Big GC" },
+    });
+    const input = screen.getByLabelText(
+      /general contractor/i,
+    ) as HTMLInputElement;
+    expect(input.readOnly).toBe(true);
+    expect(input.value).toBe("Big GC");
+  });
+
   it("has no danger zone in create mode", () => {
     renderForm();
     expect(

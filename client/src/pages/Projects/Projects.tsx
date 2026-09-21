@@ -1,12 +1,17 @@
 import { useState } from "react";
 
 import { useAuth } from "../../context/auth";
+import { useCurrentUser } from "../../hooks/useCurrentUser";
 import { useProjects } from "../../hooks/useProjects";
 import { Button } from "../../ui_comps/button";
 import { Checkbox } from "../../ui_comps/checkbox";
 import { Footer } from "../../ui_comps/footer";
 import { Spinner } from "../../ui_comps/spinner";
-import { ProjectForm, ProjectList } from "../../features/projects";
+import {
+  GcLinkModal,
+  ProjectForm,
+  ProjectList,
+} from "../../features/projects";
 import type { Project } from "../../interfaces/project";
 import {
   StyledContainer,
@@ -23,10 +28,13 @@ import {
 } from "./Projects.styles";
 
 /** The authenticated Projects section, reached from the Dashboard hub and the
- *  Navbar. Owns the create/edit modal state; the data comes from `useProjects`.
- *  Re-checks the session defensively even though it sits behind `RequireAuth`. */
+ *  Navbar. Owns the create/edit and link-to-GC modal state; the data comes from
+ *  `useProjects`. Re-checks the session defensively even though it sits behind
+ *  `RequireAuth`. */
 export const Projects = () => {
   const { user, loading } = useAuth();
+  // Linking a project to a GC is subcontractor-only (the server 403s a GC).
+  const { isSubcontractor } = useCurrentUser();
 
   const [showArchived, setShowArchived] = useState(false);
   const { projects, isLoading, isError } = useProjects(showArchived);
@@ -45,6 +53,12 @@ export const Projects = () => {
   };
 
   const closeForm = () => setIsFormOpen(false);
+
+  // Mounted only while a project is being linked/unlinked, so the join-code
+  // field starts empty each time.
+  const [linkingProject, setLinkingProject] = useState<Project | undefined>(
+    undefined,
+  );
 
   if (loading) {
     return (
@@ -99,7 +113,11 @@ export const Projects = () => {
             </StyledError>
           )}
           {!isLoading && !isError && (
-            <ProjectList projects={projects} onEdit={openEdit} />
+            <ProjectList
+              projects={projects}
+              onEdit={openEdit}
+              onLinkGc={isSubcontractor ? setLinkingProject : undefined}
+            />
           )}
         </StyledContainer>
       </StyledSection>
@@ -112,6 +130,13 @@ export const Projects = () => {
         onClose={closeForm}
         project={editing}
       />
+
+      {linkingProject && (
+        <GcLinkModal
+          project={linkingProject}
+          onClose={() => setLinkingProject(undefined)}
+        />
+      )}
     </StyledPage>
   );
 };

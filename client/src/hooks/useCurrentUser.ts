@@ -26,8 +26,17 @@ export const useCurrentUser = () => {
   });
 
   const tier = query.data?.tier ?? null;
+  const companyType = query.data?.companyType ?? null;
 
   return {
+    role: query.data?.role ?? null,
+    companyId: query.data?.companyId ?? null,
+    companyType,
+    // Both false until the profile loads, so GC-only / subcontractor-only UI
+    // stays hidden rather than flashing. UI hints only — the server enforces
+    // these with `requireGcCompany` / `requireSubcontractorCompany`.
+    isGc: companyType === "gc",
+    isSubcontractor: companyType === "subcontractor",
     tier,
     hasTranslationAccess: tier !== null && TRANSLATION_TIERS.includes(tier),
     // Custom PDF branding (upload logo, remove watermark) is the same

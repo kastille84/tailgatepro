@@ -160,6 +160,8 @@ describe("Signup page", () => {
     await waitFor(() => {
       expect(screen.getByText(/check your email/i)).toBeDefined();
     });
+    // The address is its own element so it can wrap on a narrow screen.
+    expect(screen.getByText("alex@example.com")).toBeDefined();
     expect(mockCreateProfile).not.toHaveBeenCalled();
     expect(mockNavigate).not.toHaveBeenCalled();
   });

@@ -31,6 +31,26 @@ export const getCompanyLogoUrl = async (
 };
 
 /**
+ * GET /api/companies/join-code — the GC's own join code, which subcontractors
+ * enter to link a project to it. The server creates the code on first request
+ * and 403s for a non-GC company.
+ */
+export const getJoinCode = async (accessToken: string): Promise<string> => {
+  const res = await fetchWithTimeout("/api/companies/join-code", {
+    method: "GET",
+    headers: { Authorization: `Bearer ${accessToken}` },
+  });
+
+  const body = await res.json().catch(() => null);
+
+  if (!res.ok || !body?.success) {
+    throw new Error(body?.error ?? GENERIC_ERROR);
+  }
+
+  return body.data.joinCode as string;
+};
+
+/**
  * PUT /api/companies/logo — uploads the caller's company logo as a raw binary
  * body (not JSON), so the `Content-Type` header carries the blob's actual
  * mime type — mirrors `apiMeetingLogs.ts`'s `uploadCrewPhoto`. The server

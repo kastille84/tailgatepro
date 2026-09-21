@@ -49,6 +49,20 @@ export const StyledHeadline = styled.h1`
   letter-spacing: -0.01em;
 `;
 
+// The address rides under the headline on its own line: an email is one
+// unbreakable "word", so without `overflow-wrap` a long one overflows the hero
+// and is clipped on a narrow phone.
+export const StyledHeadlineEmail = styled.span`
+  display: block;
+  margin-top: 0.8rem;
+  font-size: clamp(1.8rem, 4.5vw, 2.4rem);
+  line-height: 1.3;
+  font-weight: 600;
+  letter-spacing: 0;
+  color: ${({ theme }) => theme.colors.orange[400]};
+  overflow-wrap: anywhere;
+`;
+
 export const StyledLede = styled.p`
   margin: 0;
   text-align: center;

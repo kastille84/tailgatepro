@@ -19,9 +19,10 @@ import {
   StyledDangerZoneTitle,
 } from "./styles";
 
-// Mirrors the express-validator chains in server/routes/projects.js. Only the
-// free-text GC name is offered for now — linking a registered GC company waits
-// for the invite/join-company flow.
+// Mirrors the express-validator chains in server/routes/projects.js. The GC
+// name is free text; linking a registered GC company is a separate action
+// ("Link to GC" on the project list → GcLinkModal), which overwrites the name
+// with the GC's registered one.
 const projectSchema = z.object({
   name: z
     .string()
@@ -57,6 +58,7 @@ interface ProjectFormProps {
 export const ProjectForm = ({ isOpen, onClose, project }: ProjectFormProps) => {
   const isEdit = Boolean(project);
   const isArchived = Boolean(project?.archivedAt);
+  const isGcLinked = Boolean(project?.gcCompanyId);
   const { createProject, isCreating } = useCreateProject();
   const { updateProject, isUpdating } = useUpdateProject();
   const { archiveProject, isArchiving } = useArchiveProject();
@@ -157,6 +159,10 @@ export const ProjectForm = ({ isOpen, onClose, project }: ProjectFormProps) => {
             id={gcId}
             type="text"
             placeholder="Acme Construction"
+            // Once linked, this holds the GC's registered name; editing it
+            // would drift from the linked company. Unlink from the list to
+            // change it.
+            readOnly={isGcLinked}
             hasError={!!errors.gcNameCustom}
             {...register("gcNameCustom")}
           />

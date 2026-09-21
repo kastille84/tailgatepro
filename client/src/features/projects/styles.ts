@@ -13,20 +13,31 @@ export const StyledList = styled.ul`
 
 export const StyledCard = styled.li`
   display: flex;
+  flex-wrap: wrap;
   align-items: center;
-  gap: 1.6rem;
+  gap: 1.2rem 1.6rem;
   padding: 1.6rem;
   border: 0.1rem solid ${({ theme }) => theme.colors.navy[100]};
   border-radius: ${({ theme }) => theme.borderRadius.md};
   background-color: ${({ theme }) => theme.colors.concrete[100]};
 `;
 
+// 16rem basis: on a narrow screen the name takes the row and the badges/actions
+// wrap beneath it; from tablet up everything fits on one row.
 export const StyledCardMain = styled.div`
-  flex: 1;
+  flex: 1 1 16rem;
   min-width: 0;
   display: flex;
   flex-direction: column;
   gap: 0.4rem;
+`;
+
+/** Status/linked badges plus the card's action buttons. */
+export const StyledCardActions = styled.div`
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 1.2rem;
 `;
 
 export const StyledName = styled.h3`
@@ -73,6 +84,16 @@ export const StyledArchivedBadge = styled.span`
   border: 0.1rem dashed ${({ theme }) => theme.colors.navy[200]};
 `;
 
+export const StyledLinkedBadge = styled.span`
+  flex-shrink: 0;
+  padding: 0.4rem 0.9rem;
+  border-radius: ${({ theme }) => theme.borderRadius.sm};
+  font-size: 1.2rem;
+  font-weight: 700;
+  color: ${({ theme }) => theme.colors.navy[700]};
+  background-color: ${({ theme }) => theme.colors.orange[100]};
+`;
+
 export const StyledEmpty = styled.p`
   margin: 0;
   padding: 3.2rem 1.6rem;
@@ -88,6 +109,15 @@ export const StyledActions = styled.div`
   justify-content: flex-end;
   gap: 1.2rem;
   margin-top: 0.8rem;
+`;
+
+/** Explainer / offline copy inside the "Link to GC" modal. */
+export const StyledLinkNote = styled.p`
+  margin: 0;
+  font-size: 1.4rem;
+  font-weight: 500;
+  line-height: 1.6;
+  color: ${({ theme }) => theme.colors.navy[500]};
 `;
 
 /** "Danger zone" footer inside the edit modal: archive/restore + delete. */
