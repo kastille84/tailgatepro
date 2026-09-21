@@ -154,6 +154,11 @@ export const ProjectForm = ({ isOpen, onClose, project }: ProjectFormProps) => {
           id={gcId}
           label="General contractor"
           error={errors.gcNameCustom?.message}
+          hint={
+            isGcLinked
+              ? "Linked to a general contractor — this is their registered name. Unlink the project from the list to change it."
+              : undefined
+          }
         >
           <TextInput
             id={gcId}

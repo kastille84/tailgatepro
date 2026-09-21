@@ -1441,7 +1441,9 @@ design doc, which is updated to match):
       The client never sent `gcCompanyId`, and unknown body fields are ignored, so nothing breaks
 - [x] Tests (CommonJS, `server/**/*.test.js`) for every layer: server suite **356/356 passing** (up from 316; run
       with dummy `SUPABASE_*` env vars since `vitest.config.js` doesn't load `.env`)
-- [ ] Verify (user, needs live Supabase with the 6b SQL applied, one `gc` and one `subcontractor` account): GC
+- [ ] Verify (user, needs live Supabase with the 6b SQL applied, one `gc` and one `subcontractor` account). Happy
+      path already exercised through the 6d UI (GC got a code, sub linked a project with it, name updated); the
+      error/edge cases below remain: GC
       `GET /api/companies/join-code` twice → same code; sub `POST …/link-gc` → `gcCompanyId` set, roster row
       exists, `gc_name_custom` now the GC's registered name; repeat → 200; a different GC's code → 409; own code →
       422; junk code → 404; GC token on `link-gc` → 403; sub token on `join-code` → 403; `DELETE …/link-gc` →
@@ -1449,7 +1451,7 @@ design doc, which is updated to match):
 - [ ] Known pre-existing gap, not fixed here: `PATCH` with `gcNameCustom: ""` slips past `check_gc_info` (the
       validator's `checkFalsy` lets the empty string through), leaving an empty custom name
 
-### 6d — Client: identity + linking UI · status: code complete; live smoke pending
+### 6d — Client: identity + linking UI · status: code complete; happy-path smoke passed, edge cases pending
 
 Plan: `~/.claude/plans/let-s-work-on-6d-glimmering-cookie.md`. Online-only — no outbox, no Dexie changes.
 
@@ -1478,7 +1480,9 @@ Plan: `~/.claude/plans/let-s-work-on-6d-glimmering-cookie.md`. Online-only — n
   - the link action is hidden for **archived** projects; one button switches label with link state instead of two
   - cards now wrap (`StyledCardActions`, `flex-wrap`) so the extra button drops under the name on narrow screens
   - the "General contractor" text input is **`readOnly` once linked** — it then holds the GC's registered name and
-    editing it would drift from the linked company
+    editing it would drift from the linked company. It is styled as read-only via a new `&[readonly]` state on the
+    shared `ui_comps/form/Input` (gray fill, full-contrast text, dashed border, neutral focus ring) and carries a
+    hint explaining to unlink from the list to change it
   - the raw-id fallback was *dropped* rather than kept as `gcNameCustom ?? gcCompanyId`: check_gc_info means a
     linked project always has a name, so the id branch was unreachable and would only ever leak a UUID
 - [x] Tests: 365 passing across the touched areas (hooks, services, features/projects, features/company-settings,
@@ -1486,12 +1490,14 @@ Plan: `~/.claude/plans/let-s-work-on-6d-glimmering-cookie.md`. Online-only — n
       statements/branches/functions/lines. `npx eslint` clean; `tsc -b` shows only the pre-existing `Input.tsx` errors.
       New: `useJoinCode`, `useLinkProjectToGc`, `GcLinkModal`, `JoinCodeCard` suites. Full client run after the
       rework: 886 passing, only the 2 pre-existing `PhotoCapture` failures
-- [ ] Verify (user, needs live Supabase with the 6b SQL applied, one `gc` and one `subcontractor` account): GC →
-      Settings shows a join code and Copy works; sub → project card "Link to GC" → enter the code → "Linked to <GC>"
-      toast and the modal closes, the card shows the GC's name + "GC linked" badge + "Unlink GC", and the edit form's
-      GC name input is read-only; bad / own / other-GC code each show the server error toast; "Unlink GC" → confirm
-      clears the link and keeps the name; a GC account sees no link action on cards; devtools offline → modal
-      controls disabled with the note; cards wrap cleanly at ~320px
+- [x] Live smoke, happy path (user, real `gc` + `subcontractor` accounts): GC account showed a join code and the
+      user copied it; logged in as the subcontractor, clicked a project's "Link to GC", entered the code, and the
+      project's GC name updated to the GC's registered name. This also exercises 6c's `GET /api/companies/join-code`
+      and `POST /api/projects/:id/link-gc` end to end against live Supabase (so the 6b SQL is applied)
+- [ ] Live smoke, still to check: the card then shows "GC linked" + "Unlink GC" and the edit form's GC name field is
+      gray/read-only with its hint; a bad / own-company / other-GC code each show the server error toast; "Unlink
+      GC" → confirm clears the link and keeps the name; a GC account sees no link action on cards; devtools offline →
+      modal controls disabled with the note; cards wrap cleanly at ~320px
 - [ ] Known limitation, tracked not fixed: a project created offline whose create is still queued in the outbox
       doesn't exist on the server yet, so linking it returns 404 "Project not found" (surfaced via toast). The link
       UI could later disable itself while the project has a pending outbox row

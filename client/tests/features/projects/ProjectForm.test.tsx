@@ -203,6 +203,19 @@ describe("ProjectForm", () => {
     expect(input.value).toBe("Big GC");
   });
 
+  it("explains why the GC name is read-only when the project is linked, and not otherwise", () => {
+    const { unmount } = renderForm({
+      project: { ...editProject, gcCompanyId: "gc-1", gcNameCustom: "Big GC" },
+    });
+    expect(
+      screen.getByText(/unlink the project from the list to change it/i),
+    ).toBeDefined();
+    unmount();
+
+    renderForm({ project: editProject });
+    expect(screen.queryByText(/unlink the project from the list/i)).toBeNull();
+  });
+
   it("has no danger zone in create mode", () => {
     renderForm();
     expect(

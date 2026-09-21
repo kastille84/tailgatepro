@@ -39,6 +39,23 @@ describe("Input", () => {
     expect(input.getAttribute("aria-invalid")).toBe("true");
   });
 
+  it("renders a read-only input that is still focusable and styled as read-only", () => {
+    render(
+      <ThemeProvider theme={theme}>
+        <Input aria-label="Locked" readOnly defaultValue="Big GC" />
+      </ThemeProvider>,
+    );
+
+    const input = screen.getByLabelText(/locked/i) as HTMLInputElement;
+    expect(input.readOnly).toBe(true);
+    expect(input.value).toBe("Big GC");
+    input.focus();
+    expect(document.activeElement).toBe(input);
+    // Dashed border is part of the read-only look (not color alone). This
+    // relies on jsdom resolving the `[readonly]` attribute selector.
+    expect(getComputedStyle(input).borderStyle).toBe("dashed");
+  });
+
   it("exposes reusable form primitives for shared field layouts", () => {
     render(
       <ThemeProvider theme={theme}>

@@ -39,9 +39,26 @@ const StyledInput = styled.input<{ $hasError?: boolean }>`
     opacity: 0.65;
     background-color: ${({ theme }) => theme.colors.concrete[400]};
   }
+
+  /* Read-only: still focusable and copyable, so unlike :disabled it keeps
+     full-contrast text (no opacity fade) and signals "can't edit" with a gray
+     fill plus a dashed border, so it isn't conveyed by color alone. The
+     attribute selector is used because :read-only also matches disabled. */
+  &[readonly] {
+    border-style: dashed;
+    background-color: ${({ theme }) => theme.colors.concrete[600]};
+    color: ${({ theme }) => theme.colors.navy[500]};
+    cursor: not-allowed;
+  }
+
+  /* Neutral focus ring: the green one implies the field is editable. */
+  &[readonly]:focus {
+    border-color: ${({ theme }) => theme.colors.navy[400]};
+    box-shadow: 0 0 0 0.3rem ${({ theme }) => theme.colors.navy[100]};
+  }
 `;
 
-export const Input = ({ hasError = false, ref, ...props }: InputProps) => {
+export const Input =({ hasError = false, ref, ...props }: InputProps) => {
   return (
     <StyledInput
       ref={ref}
