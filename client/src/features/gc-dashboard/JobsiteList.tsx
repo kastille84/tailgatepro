@@ -3,6 +3,7 @@ import { SubComplianceRow } from "./SubComplianceRow";
 import {
   StyledEmpty,
   StyledJobsiteHeading,
+  StyledJobsiteLabel,
   StyledJobsiteSection,
   StyledSubList,
 } from "./styles";
@@ -28,6 +29,7 @@ export const JobsiteList = ({ jobsites, onSelectSub }: JobsiteListProps) => {
     <>
       {jobsites.map((jobsite) => (
         <StyledJobsiteSection key={jobsite.name}>
+          <StyledJobsiteLabel>Project</StyledJobsiteLabel>
           <StyledJobsiteHeading>{jobsite.name}</StyledJobsiteHeading>
           <StyledSubList>
             {jobsite.subs.map((sub) => (

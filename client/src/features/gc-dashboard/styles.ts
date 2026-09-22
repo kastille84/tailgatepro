@@ -36,9 +36,18 @@ export const StyledJobsiteSection = styled.section`
   margin-bottom: 2.4rem;
 `;
 
+export const StyledJobsiteLabel = styled.p`
+  margin: 0 0 0.2rem;
+  font-size: 1.2rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: ${({ theme }) => theme.colors.orange[400]};
+`;
+
 export const StyledJobsiteHeading = styled.h3`
   margin: 0 0 0.8rem;
-  font-size: 1.6rem;
+  font-size: 1.8rem;
   font-weight: 700;
   color: ${({ theme }) => theme.colors.navy[700]};
 `;
