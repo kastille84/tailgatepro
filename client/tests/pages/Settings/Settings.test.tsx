@@ -123,6 +123,21 @@ describe("Settings page", () => {
     },
   );
 
+  it("shows the GC Site Pro upsell, not the Trade Pro one, for a GC company", () => {
+    mockUseCurrentUser.mockReturnValue({ hasBrandingAccess: false, isGc: true });
+    renderPage();
+
+    expect(
+      screen.getByText(/custom branding is a gc site pro feature/i),
+    ).toBeDefined();
+    expect(
+      screen.queryByText(/custom branding is a trade pro feature/i),
+    ).toBeNull();
+    expect(
+      screen.getByRole("link", { name: /upgrade to gc site pro/i }),
+    ).toHaveProperty("href", expect.stringContaining("/pricing"));
+  });
+
   it("shows the join code section, fed by useJoinCode, for a GC company", () => {
     mockUseCurrentUser.mockReturnValue({
       hasBrandingAccess: false,

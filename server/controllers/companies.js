@@ -32,6 +32,18 @@ exports.uploadLogo = async (req, res, next) => {
   }
 };
 
+// The caller's own company profile (id, name, companyType, tier, logoPath) —
+// used by the client to prefill "my own company" fields (e.g. a GC's name/
+// email when creating a project) without a second free-text entry.
+exports.getMe = async (req, res, next) => {
+  try {
+    const data = await companiesService.getById(req.user.companyId);
+    return res.status(200).json({ success: true, data });
+  } catch (error) {
+    return next(error);
+  }
+};
+
 // GC-only (requireGcCompany runs before this). The code is created on the
 // first call and returned unchanged on every call after.
 exports.getJoinCode = async (req, res, next) => {

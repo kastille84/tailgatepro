@@ -7,9 +7,15 @@ const {
   uploadLogo,
   getLogoUrl,
   getJoinCode,
+  getMe,
 } = require("../controllers/companies");
 
 const router = express.Router();
+
+// GET /api/companies/me — the caller's own company profile (name, type,
+// tier, logo path). Scoped to req.user.companyId, same trust boundary as
+// every other route in this file.
+router.get("/me", requireAuth, loadUserContext, getMe);
 
 // PUT /api/companies/logo — upload/replace the caller's own company's logo.
 // Scoped to req.user.companyId only (no :id param — there is nothing else to

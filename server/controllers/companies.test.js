@@ -1,7 +1,7 @@
 // Plain CommonJS — see requireAuth.test.js for why (nested require() sharing).
 const companiesService = require("../services/companies");
 const storageService = require("../services/storage");
-const { uploadLogo, getLogoUrl, getJoinCode } = require("./companies");
+const { uploadLogo, getLogoUrl, getJoinCode, getMe } = require("./companies");
 
 const updateLogoSpy = vi.spyOn(companiesService, "updateLogo");
 const getByIdSpy = vi.spyOn(companiesService, "getById");
@@ -200,6 +200,34 @@ describe("companies controller", () => {
 
       // Act
       await getJoinCode(req, res, next);
+
+      // Assert
+      expect(next).toHaveBeenCalledWith(error);
+    });
+  });
+
+  describe("getMe", () => {
+    it("returns the caller's own company profile", async () => {
+      // Arrange
+      getByIdSpy.mockResolvedValue(company);
+
+      // Act
+      await getMe(req, res, next);
+
+      // Assert
+      expect(getByIdSpy).toHaveBeenCalledWith("company-1");
+      expect(res.status).toHaveBeenCalledWith(200);
+      expect(res.json).toHaveBeenCalledWith({ success: true, data: company });
+      expect(next).not.toHaveBeenCalled();
+    });
+
+    it("forwards a companiesService.getById failure to next", async () => {
+      // Arrange
+      const error = new Error("boom");
+      getByIdSpy.mockRejectedValue(error);
+
+      // Act
+      await getMe(req, res, next);
 
       // Assert
       expect(next).toHaveBeenCalledWith(error);

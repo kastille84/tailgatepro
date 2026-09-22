@@ -1559,17 +1559,56 @@ Plan: `~/.claude/plans/let-s-wok-on-6e-jolly-goblet.md`.
       `GET /api/gc/meetings/:id/pdf-url` opens a PDF named after the *sub*, not the GC; a subcontractor token on
       any `/api/gc/*` route → 403; another GC's meeting id, or an in-progress meeting id → 404
 
-### 6f — Client: GC dashboard UI · status: not started
+### 6f — Client: GC dashboard UI · status: code complete, 100% coverage on every touched file; manual smoke pending
 
-- [ ] `/gc` route guarded by new `RequireGc` (non-GC → `/dashboard`)
-- [ ] Enable the Dashboard "GC Compliance" card for GC companies only
-- [ ] Page: stat tiles (subs on site / logged today / missing), jobsite list, per-sub logged/missing pill (visual
-      reference `GcDashboardMockup.tsx`), drill-in to a sub's recent logs with "Open PDF" (signed URL fetched on
-      click, new tab)
-- [ ] Hooks `useGcOverview`, `useGcMeetings`, `useGcMeetingPdfUrl` + `apiGc.ts`; loading/error/empty/offline
-      states
-- [ ] Local `Styled*` components (copy `features/projects/styles.ts`; promote to `ui_comps` only if reused)
-- [ ] Tests at 100% coverage
+Plan: `~/.claude/plans/let-s-work-on-6f-logical-sunset.md`. Scoped to exactly the checklist below — the
+drill-in shows a sub's recent completed logs with "Open PDF", not the per-signer detail view
+(`GET /api/gc/meetings/:id`); `apiGc.ts` still wraps that endpoint for completeness, just unused by the UI
+this pass.
+
+- [x] `/gc` route guarded by new `RequireGc` (`client/src/features/authentication/RequireGc.tsx`, same shape
+      as `RequireAuth`, gated on `useCurrentUser().isGc`/`isLoading`, redirects a non-GC to `/dashboard`);
+      nested inside the existing `<Route element={<RequireAuth />}>` block in `App.tsx`
+- [x] Enabled the Dashboard "GC Compliance" card for GC companies only — `Dashboard.tsx` now calls
+      `useCurrentUser()` (mirrors `Projects.tsx`'s `isSubcontractor` one-liner) and swaps `StyledCardSoon` for
+      a live `StyledCard to="/gc"` (copy drops "Coming soon") when `isGc`
+- [x] `client/src/pages/GcDashboard/` (`GcDashboard.tsx` + styles + index) — hero, offline note
+      (`useOnlineStatus`), loading/error states, then `StatTiles` + `JobsiteList` on success, `SubMeetingsModal`
+      mounted unconditionally at the end (same placement as `TalkDetail`/`GcLinkModal`). Today's local
+      `date`/`tzOffset` computed inline from local `Date` getters (not `toISOString()`, which is UTC and would
+      misreport the date near local midnight)
+- [x] `client/src/features/gc-dashboard/` — `StatTiles` (three headline numbers), `JobsiteList` (empty state +
+      one section per jobsite), `SubComplianceRow` (whole row is the drill-in click target, `StyledStatusPill`
+      green/red keyed off `$status`), `SubMeetingsModal` (`Modal` from `ui_comps`, `useGcMeetings` scoped to the
+      sub's `projectId` and only enabled while open, each row's "Open PDF" wired to `useGcMeetingPdfUrl`,
+      disabled + relabeled "PDF pending" when `!pdfReady`, also disabled offline)
+- [x] Hooks `useGcOverview` / `useGcMeetings` (plain reads, no offline-cache fallback — this feature is
+      online-only per the design doc, so left at TanStack's default `networkMode`) / `useGcMeetingPdfUrl` (a
+      `useMutation`, `networkMode: "always"` mirroring `useLinkProjectToGc`, fetches the signed URL on click and
+      `window.open`s it, toasts on failure) + `client/src/services/apiGc.ts` (also exports `getGcMeetingById`
+      for the not-yet-built detail view) + `client/src/interfaces/gcDashboard.ts`
+- [x] Local `Styled*` components in `features/gc-dashboard/styles.ts`, copied from `features/projects/styles.ts`'s
+      vocabulary (`Styled` prefix, `$`-prefixed transient props, `theme` tokens, `rem`, mobile-first);
+      `pages/GcDashboard/GcDashboard.styles.ts` copies the hero/section/container/status/error vocabulary from
+      `Projects.styles.ts`. No `ui_comps` primitive added — matches the design doc's explicit call to promote
+      only if a second consumer appears
+- [x] Tests: 11 new test files (interfaces need none; `apiGc.test.ts`, `useGcOverview`/`useGcMeetings`/
+      `useGcMeetingPdfUrl` hook tests, `RequireGc.test.tsx`, `StatTiles`/`JobsiteList`/`SubComplianceRow`/
+      `SubMeetingsModal` component tests, `GcDashboard.test.tsx`) plus extended `Dashboard.test.tsx` and fixed
+      `App.test.tsx`'s `features/authentication` mock (it stubbed only `RequireAuth`; `App.tsx` now also
+      imports `RequireGc`, which broke every route-shell test until the mock added it). Full client suite: 932
+      tests passing (`PhotoCapture.test.tsx`'s 2 pre-existing camera-mock timing failures, noted under 6b2,
+      untouched and excluded to get a coverage read) at **100%** statements/branches/functions/lines on every
+      touched/new file. `npx eslint` clean on every new/changed file (the 10 repo-wide errors `npx eslint src
+      tests` surfaces are all pre-existing, in files this pass didn't touch — `MeetingWizard.tsx:200`,
+      `theme.ts`, `Input.tsx`, `useWaitlist.test.tsx`). `tsc -b` shows only the pre-existing `Input.tsx` failures
+      already documented under Phase 1
+- [ ] Manual smoke (needs a live GC account linked to ≥2 sub projects, one logged today, one not — same
+      live-Supabase prerequisite 6e's own verification item is still waiting on): dashboard card links to `/gc`;
+      overview shows correct stat tiles and per-sub pills; drilling into a sub opens its recent logs; "Open PDF"
+      opens a working signed URL in a new tab and is disabled with "PDF pending" when `pdfReady` is false; a
+      non-GC account visiting `/gc` directly is redirected to `/dashboard`; offline shows the note and disables
+      "Open PDF"
 
 ### 6g — Hardening, docs, verify · status: not started
 

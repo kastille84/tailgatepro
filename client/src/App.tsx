@@ -25,7 +25,11 @@ import "./services/signatureReplayHandler";
 import { Navbar } from "./ui_comps/navbar/Navbar";
 import { ScrollToTop } from "./ui_comps/scroll-to-top";
 import { SyncStatusBanner } from "./ui_comps/sync-status-banner";
-import { RequireAuth } from "./features/authentication";
+import {
+  RequireAuth,
+  RequireGc,
+  RequireSubcontractor,
+} from "./features/authentication";
 
 import { Landing } from "./pages/Landing";
 import { Pricing } from "./pages/Pricing";
@@ -38,6 +42,7 @@ import { Projects } from "./pages/Projects";
 import { ContentLibrary } from "./pages/ContentLibrary";
 import { MeetingFlow } from "./pages/MeetingFlow";
 import { Settings } from "./pages/Settings";
+import { GcDashboard } from "./pages/GcDashboard";
 
 // Pins Navbar + SyncStatusBanner together as one scroll-fixed block, so the
 // banner never scrolls away from the nav it sits under.
@@ -86,15 +91,20 @@ function App() {
                         element={<Dashboard />}
                       ></Route>
                       <Route path="/projects" element={<Projects />}></Route>
-                      <Route
-                        path="/talks"
-                        element={<ContentLibrary />}
-                      ></Route>
+                      <Route element={<RequireSubcontractor />}>
+                        <Route
+                          path="/talks"
+                          element={<ContentLibrary />}
+                        ></Route>
+                      </Route>
                       <Route
                         path="/meetings/new"
                         element={<MeetingFlow />}
                       ></Route>
                       <Route path="/settings" element={<Settings />}></Route>
+                      <Route element={<RequireGc />}>
+                        <Route path="/gc" element={<GcDashboard />}></Route>
+                      </Route>
                     </Route>
                   </Routes>
                 </BrowserRouter>
