@@ -230,14 +230,20 @@ bypass RLS); the repo's SQL defines none.
 
 ## Endpoint contract
 
-All under `requireAuth → loadUserContext → requireGcCompany`, `{ success, data }` responses, camelCase.
+All under `requireAuth → loadUserContext → requireGcCompany`, `{ success, data }` responses, camelCase. Built in
+6e (`server/services/gcDashboard.js`, `server/controllers/gc.js`, `server/routes/gc.js`); see `docs/tasks.md`'s
+6e entry for the small deviations from the table below, folded in here.
 
 | Endpoint | Returns |
 | --- | --- |
-| `GET /api/gc/overview?date&tzOffset` | `jobsites[]`: `{ name, subs[]: { companyId, companyName, projectId, status, lastLoggedAt, count } }` plus roll-up counts |
-| `GET /api/gc/meetings?projectId&from&to` | Completed logs for the GC's linked projects: `{ id, projectId, talkTitle, heldAt, completedAt, signerCount, pdfReady }` — `from`/`to` filter on `held_at` |
-| `GET /api/gc/meetings/:id` | Log detail + signers (`workerName`, `quizPassed`), with both `heldAt` and `completedAt` |
+| `GET /api/gc/overview?date&tzOffset` | `{ jobsites[], totals }` — each jobsite `{ name, subs[]: { companyId, companyName, projectId, status, lastLoggedAt, count } }`; `totals: { subs, logged, missing }` counts sub-per-jobsite entries |
+| `GET /api/gc/meetings?projectId&from&to` | Up to 200 completed logs (no pagination in v1) for the GC's linked projects, newest `held_at` first: `{ id, projectId, projectName, companyId, companyName, talkTitle, heldAt, completedAt, signerCount, pdfReady }` — `from`/`to` filter on `held_at` |
+| `GET /api/gc/meetings/:id` | Log detail (same fields as the list row) + `signers[]` (`workerName`, `quizPassed`), with both `heldAt` and `completedAt` |
 | `GET /api/gc/meetings/:id/pdf-url` | Signed URL (5-min TTL, filename from the *meeting's* company and `held_at` date); `404` if `!pdfReady` |
+
+`projectId`/`companyId`/`companyName` on meeting rows weren't in the original contract — added because a list
+spanning several subs and jobsites is unreadable without them. A jobsite that merges two of one sub's project
+rows (see "Jobsite grouping" above) reports that sub's **earliest** project id as `projectId`.
 
 Sub-side link endpoints (`POST`/`DELETE /api/projects/:id/link-gc`) and the GC's
 `GET /api/companies/join-code` are specified under "Join code" and "Link semantics."

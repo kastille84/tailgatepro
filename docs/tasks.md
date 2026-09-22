@@ -1502,22 +1502,62 @@ Plan: `~/.claude/plans/let-s-work-on-6d-glimmering-cookie.md`. Online-only — n
       doesn't exist on the server yet, so linking it returns 404 "Project not found" (surfaced via toast). The link
       UI could later disable itself while the project has a pending outbox row
 
-### 6e — Server: GC read APIs + compliance logic · status: not started
+### 6e — Server: GC read APIs + compliance logic · status: code complete; live smoke pending
 
-- [ ] Pure `server/utility/compliance.js` — roster + completed logs + period window (`start`, `end`) → per-sub
+Plan: `~/.claude/plans/let-s-wok-on-6e-jolly-goblet.md`.
+
+- [x] Pure `server/utility/compliance.js` — roster + completed logs + period window (`start`, `end`) → per-sub
       `logged|missing`, `lastLoggedAt`, count; knows nothing about "daily" (service derives today's window and
       passes it in); includes a multi-day-window test to lock cadence-agnosticism in
-- [ ] New `server/services/gcDashboard.js` with an `assertGcLinkedProject` authorization helper
-- [ ] Routes/controllers behind `requireAuth → loadUserContext → requireGcCompany`:
-      `GET /api/gc/overview?date&tzOffset`, `GET /api/gc/meetings?projectId&from&to`, `GET /api/gc/meetings/:id`
-      (detail + signatures), `GET /api/gc/meetings/:id/pdf-url` (reuse `buildPdfFilename`)
-- [ ] Only completed logs exposed; a non-linked project/meeting returns 404 (no 403 info leak); no crew-photo
-      or signature-image URLs via `/api/gc` (retention question still open); `pdfReady` flag on log rows
-- [ ] Period window and the `from`/`to` filter use `held_at` (decided in the 6a review; populated by 6b2); log
-      rows and the detail view return both `heldAt` and `completedAt`, so the UI can show a "received later" cue
-- [ ] GC `pdf-url` names the file from the _meeting's_ company and `heldAt ?? completedAt` (via the renamed
+- [x] Pure `server/utility/dayWindow.js` (new, not in the 6a design doc by name) — `{ date, tzOffset }` →
+      `{ start, end }` half-open UTC range. Rejects a malformed/impossible date or an out-of-range `tzOffset`
+      (±14h) with a 400 `AppError`; the server still never guesses a timezone
+- [x] Pure `server/utility/jobsites.js` (new) — `normalizeJobsiteName` + `groupProjectsIntoJobsites`, split out
+      of the service so the fuzzy-name-matching rule is independently testable
+- [x] New `server/services/gcDashboard.js` with an `assertGcLinkedProject` authorization helper (also used by
+      `getMeeting`/`getMeetingPdfUrl`, not just the overview) and `getOverview`/`listMeetings`/`getMeeting`/
+      `getMeetingPdfUrl`. `server/services/meetingLogs.js` now also exports `PDF_BUCKET`/`PDF_URL_TTL_SECONDS`
+      so the GC pdf-url path reuses them instead of redeclaring
+- [x] Routes/controllers (`server/routes/gc.js`, `server/controllers/gc.js`) behind
+      `requireAuth → loadUserContext → requireGcCompany` (applied once via `router.use`), mounted at `/api/gc`
+      in `server.js`: `GET /overview?date&tzOffset`, `GET /meetings?projectId&from&to`, `GET /meetings/:id`
+      (detail + signers), `GET /meetings/:id/pdf-url` (reuse `buildPdfFilename`)
+- [x] Only completed logs exposed (an in-progress meeting 404s, same as a missing one); a non-linked
+      project/meeting returns 404 (no 403 info leak); no crew-photo or signature-image URLs via `/api/gc`
+      (retention question still open); `pdfReady` flag on log rows. Covered by explicit "no leaked fields"
+      assertions in `gcDashboard.test.js`
+- [x] Period window and the `from`/`to` filter use `held_at` (decided in the 6a review; populated by 6b2); log
+      rows and the detail view return both `heldAt` and `completedAt`, so the UI can show a "received later" cue.
+      No `held_at ?? completed_at` fallback was needed in the SQL filters themselves — every completed row has
+      `held_at` set (6b2's backfill + `complete()` always stamping it) — but `toMeetingSummary`'s row mapper
+      still applies the fallback defensively, matching `meetingLogs.js`'s `toMeetingLog`
+- [x] GC `pdf-url` names the file from the _meeting's_ company and `heldAt ?? completedAt` (via the renamed
       `buildPdfFilename` param from 6b2)
-- [ ] Tests for every layer
+- [x] Tests for every layer: server suite **416/416 passing** (up from 356; run with dummy `SUPABASE_*` env
+      vars since `vitest.config.js` doesn't load `.env`) — new `compliance.test.js`, `dayWindow.test.js`,
+      `jobsites.test.js`, `gcDashboard.test.js`, `controllers/gc.test.js`. No ESLint config exists at the repo
+      root (server-side isn't linted at all, unlike the client) — nothing to run there
+- [x] Deviations from the 6a/6e design doc, made while building (all noted in `docs/gc-dashboard-design.md`'s
+      endpoint contract too):
+  - Meeting rows also carry `projectName`, `companyId`, `companyName` — the contract didn't list them, but a
+    list spanning several subs and jobsites is unreadable without them
+  - `GET /meetings` is capped at **200 rows**, no pagination in v1 (tracked below as a follow-up)
+  - Overview `totals` counts sub-**per-jobsite** entries (a sub missing on jobsite B is a real gap even if it
+    logged on jobsite A), plus a new `totals: { subs, logged, missing }` object on the overview response
+  - Owner company names are resolved with a second `companies … .in("id", ownerIds)` query rather than a
+    PostgREST embed, since `projects` has two FKs to `companies` and an embed needs a hint that can't be
+    verified without live Supabase
+  - A merged same-name/same-sub jobsite entry reports only the sub's **earliest** project id as `projectId`
+    (what a drill-in would open) — one more concrete argument for the GC-owned canonical jobsite model later
+- [ ] Not in this pass, tracked not dropped: pagination for `GET /meetings` past 200 rows; a DST-transition day
+      is treated as a flat 24h window by `dayWindow.js` (same simplification `held_at`'s formatting already has
+      per 6b2's known limitations)
+- [ ] Verify (user, needs live Supabase with the 6b/6b2/6c SQL and data applied, one `gc` account linked to at
+      least two subcontractor projects — one with a completed talk today, one without):
+      `GET /api/gc/overview?date=<today>&tzOffset=<n>` shows the logged sub with a `lastLoggedAt` and the other
+      `missing`; `GET /api/gc/meetings` and `GET /api/gc/meetings/:id` return the row/detail and signers;
+      `GET /api/gc/meetings/:id/pdf-url` opens a PDF named after the *sub*, not the GC; a subcontractor token on
+      any `/api/gc/*` route → 403; another GC's meeting id, or an in-progress meeting id → 404
 
 ### 6f — Client: GC dashboard UI · status: not started
 

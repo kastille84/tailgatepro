@@ -338,4 +338,9 @@ module.exports = {
   pdfPath,
   setFinalPdfUrl,
   getPdfUrl,
+  // Exposed so gcDashboard.js's own pdf-url lookup (built from the *meeting's*
+  // company, not the caller's — see docs/gc-dashboard-design.md) can reuse
+  // the same bucket/TTL instead of redeclaring them.
+  PDF_BUCKET,
+  PDF_URL_TTL_SECONDS,
 };
