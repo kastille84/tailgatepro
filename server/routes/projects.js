@@ -27,11 +27,15 @@ router.get("/", requireAuth, loadUserContext, listProjects);
 // POST /api/projects — create a project. `id` is client-generated (offline-sync
 // convention). gcNameCustom is required; the DB `check_gc_info` constraint is
 // the backstop. gcCompanyId is not accepted — POST /:id/link-gc is the only way
-// to attach a registered GC.
+// to attach a registered GC. Subcontractor-only: the project model is
+// sub-owned, and a GC-created project could never be linked to itself
+// (link-gc is also subcontractor-only), leaving an orphan row indistinguishable
+// from a sub's own site of the same name — see docs/gc-dashboard-design.md.
 router.post(
   "/",
   requireAuth,
   loadUserContext,
+  requireSubcontractorCompany,
   [
     body("id").isUUID().withMessage("A valid project id is required"),
     body("name")

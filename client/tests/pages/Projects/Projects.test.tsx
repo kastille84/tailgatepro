@@ -181,6 +181,15 @@ describe("Projects page", () => {
     expect(screen.queryByRole("button", { name: /stub-link$/i })).toBeNull();
   });
 
+  it("hides the New project control from a GC company or while the profile is still loading", () => {
+    mockUseCurrentUser.mockReturnValue({ isSubcontractor: false });
+    renderPage();
+
+    expect(
+      screen.queryByRole("button", { name: /new project/i }),
+    ).toBeNull();
+  });
+
   it("asks useProjects to include archived projects when the toggle is checked", () => {
     renderPage();
 

@@ -33,7 +33,10 @@ import {
  *  `RequireAuth`. */
 export const Projects = () => {
   const { user, loading } = useAuth();
-  // Linking a project to a GC is subcontractor-only (the server 403s a GC).
+  // Creating and linking a project to a GC are both subcontractor-only (the
+  // server 403s a GC on either) — the project model is sub-owned, and a
+  // GC-created project could never be linked to itself, leaving an orphan row
+  // that duplicates a sub's site of the same name.
   const { isSubcontractor } = useCurrentUser();
 
   const [showArchived, setShowArchived] = useState(false);
@@ -101,9 +104,11 @@ export const Projects = () => {
               checked={showArchived}
               onChange={(event) => setShowArchived(event.target.checked)}
             />
-            <Button variant="primary" size="md" onClick={openCreate}>
-              New project
-            </Button>
+            {isSubcontractor && (
+              <Button variant="primary" size="md" onClick={openCreate}>
+                New project
+              </Button>
+            )}
           </StyledToolbar>
 
           {isLoading && <Spinner center message="Loading projects…" />}
