@@ -60,9 +60,10 @@ CREATE TABLE projects (
   name TEXT NOT NULL,
   gc_company_id UUID REFERENCES companies(id) ON DELETE SET NULL,
   gc_name_custom TEXT,
-  -- Manual GC contact email for Phase 5 PDF delivery. Stopgap until the
-  -- invite/join-company flow provides a real GC account to email instead —
-  -- see docs/tasks.md's Cross-cutting epic.
+  -- Manual GC contact email for Phase 5 PDF delivery. Since Phase 8b, only a
+  -- fallback: PDF delivery prefers the linked gc_company_id's admin (a real
+  -- account) when one resolves, and only reads this field when unlinked or
+  -- the linked company has no admin yet — see docs/tasks.md's Phase 8 epic.
   gc_contact_email TEXT,
   status project_status DEFAULT 'active',
   -- Soft-delete / visibility state, orthogonal to `status`: NULL = live,

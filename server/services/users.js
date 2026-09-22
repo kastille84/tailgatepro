@@ -9,10 +9,11 @@ const { supabase } = require("../utility/supabaseClient");
 const { AppError } = require("../utility/AppError");
 
 // Creates the `companies` row and the `users` row for a newly self-signed-up
-// auth user. `role` is fixed to 'foreman' (lowest privilege) — this default
-// should be confirmed/overridden once company invite / admin-provisioning
-// flows exist. `tier` is fixed to 'basic' — self-serve signups don't choose a
-// billing tier yet.
+// auth user. `role` is 'admin' — the user creating a brand-new company is its
+// first administrator (Phase 8a). A future invited user (Phase 8c) will join
+// an existing company instead, at whatever role the inviting admin picks.
+// `tier` is fixed to 'basic' — self-serve signups don't choose a billing tier
+// yet.
 const createProfile = async ({ id, name, companyName, companyType }) => {
   const companyId = uuidv4();
 
@@ -34,7 +35,7 @@ const createProfile = async ({ id, name, companyName, companyType }) => {
     .insert({
       id,
       company_id: companyId,
-      role: "foreman",
+      role: "admin",
       name,
     })
     .select("id, name, role, company_id")
@@ -95,4 +96,43 @@ const getUserContext = async (id) => {
   };
 };
 
-module.exports = { createProfile, getUserContext };
+// Resolves a company's admin email, for Phase 8b's gc_contact_email
+// supersession: PDF delivery prefers this over the manually-typed stopgap
+// field once a project is linked to a real GC company. Auth emails live only
+// in Supabase Auth (auth.users), never the public `users` table, so this is a
+// two-step lookup: find the admin's row here, then ask the Auth Admin API for
+// their email (available because this module's `supabase` client already
+// uses the service-role key). If a company somehow has more than one admin
+// (e.g. a future 8c co-admin invite), the earliest-created one wins —
+// deterministic, not meaningful beyond "pick one". Returns null — not an
+// error — when the company has no admin yet (pre-8a legacy data); a genuine
+// lookup failure still throws, same as this module's other functions.
+const getAdminEmail = async (companyId) => {
+  const { data, error } = await supabase
+    .from("users")
+    .select("id")
+    .eq("company_id", companyId)
+    .eq("role", "admin")
+    .order("created_at", { ascending: true })
+    .limit(1);
+
+  if (error) {
+    throw new AppError("Could not look up the company's admin", 502, {
+      cause: error,
+    });
+  }
+  if (data.length === 0) return null;
+
+  const { data: authData, error: authError } =
+    await supabase.auth.admin.getUserById(data[0].id);
+
+  if (authError) {
+    throw new AppError("Could not look up the admin's email", 502, {
+      cause: authError,
+    });
+  }
+
+  return authData?.user?.email ?? null;
+};
+
+module.exports = { createProfile, getUserContext, getAdminEmail };

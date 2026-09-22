@@ -1,5 +1,6 @@
 const { supabase } = require("../utility/supabaseClient");
 const { AppError } = require("../utility/AppError");
+const { MANAGER_ROLES } = require("../constants/roles");
 const companiesService = require("./companies");
 
 // The columns every projects query selects, and the snake_case -> camelCase
@@ -115,10 +116,12 @@ const getById = async (id, companyId) => {
 // design. Only the keys actually present on `patch` are written.
 //
 // `archived` is a convenience alias: `true` stamps `archived_at` (archive),
-// `false` clears it (restore). TODO(roles): once the invite/roles epic wires up
-// `admin` / `safety_manager`, gate archive/restore (and delete) on role, not
-// just company ownership.
-const update = async ({ id, companyId, patch }) => {
+// `false` clears it (restore) — gated on `role` (Phase 8a) rather than just
+// company ownership, since any member of the owning company can rename a
+// project but only a manager should be able to archive/restore/delete one.
+// Gated here rather than as route middleware: this same PATCH handles plain
+// field edits too, which stay open to any company member.
+const update = async ({ id, companyId, role, patch }) => {
   const nextPatch = {};
   if (patch.name !== undefined) nextPatch.name = patch.name;
   if (patch.status !== undefined) nextPatch.status = patch.status;
@@ -129,6 +132,12 @@ const update = async ({ id, companyId, patch }) => {
     nextPatch.gc_contact_email = patch.gcContactEmail;
   }
   if (patch.archived !== undefined) {
+    if (!MANAGER_ROLES.includes(role)) {
+      throw new AppError(
+        "Only an admin or safety manager can archive or restore a project",
+        403,
+      );
+    }
     nextPatch.archived_at = patch.archived ? new Date().toISOString() : null;
   }
 
@@ -163,8 +172,16 @@ const update = async ({ id, companyId, patch }) => {
 // OSHA records the product exists to keep; the caller must archive instead.
 // `project_subcontractors` rows cascade away harmlessly, and Storage blob
 // cleanup (crew photos / PDFs) is a Phase 4 concern once buckets exist.
-// TODO(roles): gate on `admin` / `safety_manager` once roles are wired up.
-const remove = async ({ id, companyId }) => {
+// Gated on `role` (Phase 8a): only an admin/safety_manager, not just any
+// member of the owning company.
+const remove = async ({ id, companyId, role }) => {
+  if (!MANAGER_ROLES.includes(role)) {
+    throw new AppError(
+      "Only an admin or safety manager can delete a project",
+      403,
+    );
+  }
+
   const { data: logs, error: logsError } = await supabase
     .from("meeting_logs")
     .select("id")

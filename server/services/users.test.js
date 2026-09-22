@@ -4,13 +4,15 @@
 // these tests assert the company id it generates is a real UUID and that the
 // same id links both inserts, rather than pinning an exact fake value.
 const { supabase } = require("../utility/supabaseClient");
-const { createProfile, getUserContext } = require("./users");
+const { createProfile, getUserContext, getAdminEmail } = require("./users");
 
 const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
 // `supabase.from` is looked up fresh at call time (not destructured), so a
 // single module-scope spy reconfigured per test is enough — no re-spying.
 const fromSpy = vi.spyOn(supabase, "from");
+// Same reasoning for the Auth Admin API call getAdminEmail makes.
+const getUserByIdSpy = vi.spyOn(supabase.auth.admin, "getUserById");
 
 describe("users service: createProfile", () => {
   let companiesInsert;
@@ -36,7 +38,7 @@ describe("users service: createProfile", () => {
       data: {
         id: "auth-user-1",
         name: "Alex Builder",
-        role: "foreman",
+        role: "admin",
         company_id: "generated-company-id",
       },
       error: null,
@@ -76,14 +78,14 @@ describe("users service: createProfile", () => {
     expect(usersInsert).toHaveBeenCalledWith({
       id: "auth-user-1",
       company_id: companyInsertArgs.id,
-      role: "foreman",
+      role: "admin",
       name: "Alex Builder",
     });
     expect(companiesDelete).not.toHaveBeenCalled();
     expect(result).toEqual({
       id: "auth-user-1",
       name: "Alex Builder",
-      role: "foreman",
+      role: "admin",
       companyId: "generated-company-id",
     });
   });
@@ -214,6 +216,102 @@ describe("users service: getUserContext", () => {
     await expect(getUserContext("auth-user-1")).rejects.toMatchObject({
       statusCode: 404,
       message: "Profile not found",
+    });
+  });
+});
+
+describe("users service: getAdminEmail", () => {
+  let usersLimit;
+  let usersOrder;
+  let usersEqRole;
+  let usersEqCompany;
+  let usersSelect;
+
+  beforeEach(() => {
+    usersLimit = vi.fn().mockResolvedValue({
+      data: [{ id: "admin-user-1" }],
+      error: null,
+    });
+    usersOrder = vi.fn(() => ({ limit: usersLimit }));
+    usersEqRole = vi.fn(() => ({ order: usersOrder }));
+    usersEqCompany = vi.fn(() => ({ eq: usersEqRole }));
+    usersSelect = vi.fn(() => ({ eq: usersEqCompany }));
+
+    fromSpy.mockReset();
+    fromSpy.mockImplementation((table) => {
+      if (table === "users") return { select: usersSelect };
+      throw new Error(`Unexpected table: ${table}`);
+    });
+
+    getUserByIdSpy.mockReset().mockResolvedValue({
+      data: { user: { email: "admin@example.com" } },
+      error: null,
+    });
+  });
+
+  it("should return the earliest-created admin's email, looked up via the Auth Admin API", async () => {
+    // Act
+    const result = await getAdminEmail("company-1");
+
+    // Assert
+    expect(usersSelect).toHaveBeenCalledWith("id");
+    expect(usersEqCompany).toHaveBeenCalledWith("company_id", "company-1");
+    expect(usersEqRole).toHaveBeenCalledWith("role", "admin");
+    expect(usersOrder).toHaveBeenCalledWith("created_at", { ascending: true });
+    expect(usersLimit).toHaveBeenCalledWith(1);
+    expect(getUserByIdSpy).toHaveBeenCalledWith("admin-user-1");
+    expect(result).toBe("admin@example.com");
+  });
+
+  it("should return null when the company has no admin yet", async () => {
+    // Arrange
+    usersLimit.mockResolvedValue({ data: [], error: null });
+
+    // Act
+    const result = await getAdminEmail("company-1");
+
+    // Assert
+    expect(getUserByIdSpy).not.toHaveBeenCalled();
+    expect(result).toBeNull();
+  });
+
+  it("should return null when the auth user has no email on file", async () => {
+    // Arrange
+    getUserByIdSpy.mockResolvedValue({ data: { user: {} }, error: null });
+
+    // Act
+    const result = await getAdminEmail("company-1");
+
+    // Assert
+    expect(result).toBeNull();
+  });
+
+  it("should throw a 502 AppError when the users lookup fails", async () => {
+    // Arrange
+    usersLimit.mockResolvedValue({
+      data: null,
+      error: new Error("db down"),
+    });
+
+    // Act & Assert
+    await expect(getAdminEmail("company-1")).rejects.toMatchObject({
+      statusCode: 502,
+      message: "Could not look up the company's admin",
+    });
+    expect(getUserByIdSpy).not.toHaveBeenCalled();
+  });
+
+  it("should throw a 502 AppError when the Auth Admin API call fails", async () => {
+    // Arrange
+    getUserByIdSpy.mockResolvedValue({
+      data: null,
+      error: new Error("auth service down"),
+    });
+
+    // Act & Assert
+    await expect(getAdminEmail("company-1")).rejects.toMatchObject({
+      statusCode: 502,
+      message: "Could not look up the admin's email",
     });
   });
 });

@@ -320,11 +320,12 @@ describe("projects service: update", () => {
     expect(updateFn).toHaveBeenCalledWith({ name: "Renamed" });
   });
 
-  it("should stamp archived_at when archived is true", async () => {
+  it("should stamp archived_at when archived is true and the caller is an admin", async () => {
     // Act
     await update({
       id: "project-1",
       companyId: "company-1",
+      role: "admin",
       patch: { archived: true },
     });
 
@@ -334,16 +335,33 @@ describe("projects service: update", () => {
     expect(Number.isNaN(Date.parse(written.archived_at))).toBe(false);
   });
 
-  it("should clear archived_at when archived is false (restore)", async () => {
+  it("should clear archived_at when archived is false (restore) and the caller is a safety_manager", async () => {
     // Act
     await update({
       id: "project-1",
       companyId: "company-1",
+      role: "safety_manager",
       patch: { archived: false },
     });
 
     // Assert
     expect(updateFn).toHaveBeenCalledWith({ archived_at: null });
+  });
+
+  it("should throw a 403 AppError when archiving/restoring without a manager role", async () => {
+    // Act & Assert
+    await expect(
+      update({
+        id: "project-1",
+        companyId: "company-1",
+        role: "foreman",
+        patch: { archived: true },
+      }),
+    ).rejects.toMatchObject({
+      statusCode: 403,
+      message: "Only an admin or safety manager can archive or restore a project",
+    });
+    expect(updateFn).not.toHaveBeenCalled();
   });
 
   it("should throw a 404 AppError when no row matches the id and owning company", async () => {
@@ -429,7 +447,11 @@ describe("projects service: remove", () => {
 
   it("should delete a project with no meeting logs, scoped to the owning company", async () => {
     // Act
-    const result = await remove({ id: "project-1", companyId: "company-1" });
+    const result = await remove({
+      id: "project-1",
+      companyId: "company-1",
+      role: "admin",
+    });
 
     // Assert
     expect(logsSelect).toHaveBeenCalledWith("id");
@@ -439,13 +461,25 @@ describe("projects service: remove", () => {
     expect(result).toEqual({ id: "project-1" });
   });
 
+  it("should throw a 403 AppError when the caller isn't an admin or safety_manager", async () => {
+    // Act & Assert
+    await expect(
+      remove({ id: "project-1", companyId: "company-1", role: "foreman" }),
+    ).rejects.toMatchObject({
+      statusCode: 403,
+      message: "Only an admin or safety manager can delete a project",
+    });
+    expect(logsSelect).not.toHaveBeenCalled();
+    expect(deleteFn).not.toHaveBeenCalled();
+  });
+
   it("should throw a 409 AppError when the project has logged safety talks", async () => {
     // Arrange
     limit.mockResolvedValue({ data: [{ id: "log-1" }], error: null });
 
     // Act & Assert
     await expect(
-      remove({ id: "project-1", companyId: "company-1" }),
+      remove({ id: "project-1", companyId: "company-1", role: "admin" }),
     ).rejects.toMatchObject({
       statusCode: 409,
       message:
@@ -460,7 +494,7 @@ describe("projects service: remove", () => {
 
     // Act & Assert
     await expect(
-      remove({ id: "project-1", companyId: "company-1" }),
+      remove({ id: "project-1", companyId: "company-1", role: "admin" }),
     ).rejects.toMatchObject({
       statusCode: 502,
       message: "Could not delete the project",
@@ -476,7 +510,7 @@ describe("projects service: remove", () => {
 
     // Act & Assert
     await expect(
-      remove({ id: "project-1", companyId: "company-1" }),
+      remove({ id: "project-1", companyId: "company-1", role: "admin" }),
     ).rejects.toMatchObject({ statusCode: 404, message: "Project not found" });
   });
 
@@ -489,7 +523,7 @@ describe("projects service: remove", () => {
 
     // Act & Assert
     await expect(
-      remove({ id: "project-1", companyId: "company-1" }),
+      remove({ id: "project-1", companyId: "company-1", role: "admin" }),
     ).rejects.toMatchObject({
       statusCode: 502,
       message: "Could not delete the project",

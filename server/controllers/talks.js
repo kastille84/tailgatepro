@@ -112,8 +112,8 @@ exports.listTranslationLanguages = async (req, res, next) => {
   }
 };
 
-// TODO(roles): once `admin` / `safety_manager` are real, restrict delete to
-// those roles rather than any member of the owning company.
+// Manager-only (admin/safety_manager) — enforced by requireRole in the route,
+// not here (Phase 8a).
 exports.deleteTalk = async (req, res, next) => {
   try {
     const data = await talksService.remove({

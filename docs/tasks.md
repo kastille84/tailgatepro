@@ -85,10 +85,9 @@ Full rationale and phase feasibility notes live in the plan at
 
 ## Phase 1d — Project delete / archive · status: code complete; end-to-end smoke pending (needs `archived_at` column applied)
 
-Decisions: guarded hard delete **+** reversible archive; any member of the
-**owning** company (TODO: tighten to `admin`/`safety_manager` once roles are
-real); archive from any status, restorable; archived projects hidden from the
-default list.
+Decisions: guarded hard delete **+** reversible archive; gated to `admin`/`safety_manager` (tightened
+from "any member of the owning company" in Phase 8a, once roles became real); archive from any status,
+restorable; archived projects hidden from the default list.
 
 - [x] Schema: `projects.archived_at TIMESTAMPTZ` (nullable). `Supabase_SQL.sql`
       (+ `ALTER TABLE … ADD COLUMN IF NOT EXISTS` note), `Supabase_Schema.md`
@@ -1343,14 +1342,14 @@ SQL and schema docs only — no application code and no consumers yet (same shap
       and `held_at` rows; RLS notes under the Companies & Users and Projects & Access sections);
       `docs/data-access.md` mismatch bullet marked resolved-once-applied
 - [ ] Pre-req (user, outside this codebase): run `SELECT id, name FROM projects WHERE gc_company_id IS NOT
-  NULL;` — expect **no rows** (the client never set it; tell Claude if any appear) — then run the upgrade
+NULL;` — expect **no rows** (the client never set it; tell Claude if any appear) — then run the upgrade
       lines in the Supabase SQL editor: the `companies` and `meeting_logs` `ALTER`s, the four
       `ENABLE ROW LEVEL SECURITY` statements, and the `held_at` backfill `UPDATE`. If a trigger was ever
       created by hand in the dashboard, it must be `SECURITY DEFINER`
 - [ ] Verify after applying: `information_schema.columns` shows `companies.join_code` and
       `meeting_logs.held_at`; `SELECT relname, relrowsecurity FROM pg_class WHERE relname IN ('companies',
-  'users','projects','project_subcontractors')` is all `true`; `SELECT count(*) FROM meeting_logs WHERE
-  completed_at IS NOT NULL AND held_at IS NULL` is `0`; an anon-key request to
+'users','projects','project_subcontractors')` is all `true`; `SELECT count(*) FROM meeting_logs WHERE
+completed_at IS NOT NULL AND held_at IS NULL` is `0`; an anon-key request to
       `/rest/v1/companies?select=id` returns `[]`; the app still loads Projects/Dashboard (service role
       bypasses RLS)
 
@@ -1468,7 +1467,7 @@ design doc, which is updated to match):
       Tightening the constraint itself (e.g. `NULLIF(TRIM(gc_name_custom), '') IS NOT NULL`) is a separate schema
       migration, deliberately not done here — tracked as a follow-up below. Also fixed a misleading test at
       `server/services/projects.test.js` (was mocking a `23514` constraint violation for `patch: { gcNameCustom:
-      "" }`, a scenario the real constraint would never raise for `''` — changed to `null`, which genuinely can
+    "" }`, a scenario the real constraint would never raise for `''` — changed to `null`, which genuinely can
       violate it). The web client can't trigger this today (`ProjectForm.tsx`'s Zod schema requires a non-empty
       value and the field is `readOnly` once GC-linked) — only reachable via a direct API call. No route-level
       automated test added: this repo has no precedent for testing express-validator chains in isolation (no
@@ -1626,7 +1625,7 @@ this pass.
       tests passing (`PhotoCapture.test.tsx`'s 2 pre-existing camera-mock timing failures, noted under 6b2,
       untouched and excluded to get a coverage read) at **100%** statements/branches/functions/lines on every
       touched/new file. `npx eslint` clean on every new/changed file (the 10 repo-wide errors `npx eslint src
-  tests` surfaces are all pre-existing, in files this pass didn't touch — `MeetingWizard.tsx:200`,
+tests` surfaces are all pre-existing, in files this pass didn't touch — `MeetingWizard.tsx:200`,
       `theme.ts`, `Input.tsx`, `useWaitlist.test.tsx`). `tsc -b` shows only the pre-existing `Input.tsx` failures
       already documented under Phase 1
 - [x] Manual smoke (needs a live GC account linked to ≥2 sub projects, one logged today, one not — same
@@ -1753,22 +1752,126 @@ page) were explicitly scoped OUT — see Known limitations below.
       SaaS-product license) to resolve before any ingestion work, not a content-pipeline task to run
       as-is through `safety-collector`
 
-## Cross-cutting — Invite / join-company flow · epic, prerequisite for multi-user (Phase 6 no longer blocked on it — see 6b–6d's slim join-code link)
+## Phase 8 — Cross-cutting: roles, invites & GC-owned jobsite · epic, prerequisite for multi-user (Phase 6 no longer blocked on it — see 6b–6d's slim join-code link)
 
-- [ ] Admin invites by email; invitee joins an existing `companies` row
-- [ ] Real use of `admin` / `safety_manager` roles
-- [x] GC links a sub company to a project (`project_subcontractors`) — done: slim version (GC join code) shipped
-      in Phase 6b–6d. The richer flow (GC-owned jobsite, email invite) is the next bullet below, not this one
-- [ ] **GC-owned jobsite + GC invites subcontractor companies** — a GC with an account creates the jobsite and
-      invites sub _companies_ by email; subs' talks attach to it. Would supersede the Phase 6 join-code link and
-      6e's group-by-name jobsite grouping (see `docs/gc-dashboard-design.md`, the GC-owned canonical jobsite
-      notes). Distinct from "Admin invites by email" above, which is about users joining one company. Nothing in
-      6c blocks it: the join-code link only sets `gc_company_id` and writes the `(project_id, sub_id)` roster row
-      a GC-owned model would reuse
-- [ ] **Supersede `projects.gc_contact_email`** (added in Phase 5, a manual
-      free-text field entered by the foreman) with a real GC user account's
-      email once this epic gives one to resolve against — don't let PDF
-      delivery quietly stay on the manual field forever
+Split from a single flat "Cross-cutting" checklist into sequenced sub-phases, since the items mix very
+different sizes and dependencies (a role becoming real data vs. reworking project ownership entirely).
+Resequenced from the epic's original bullet order: 8b (`gc_contact_email` supersession) only needs 8a's
+real admin role, not the invite flow (8c) or the GC-owned jobsite rework (8d), so it ships early as a
+small win. Full rationale: `~/.claude/plans/let-s-work-on-the-lazy-rainbow.md`.
+
+### 8a — Roles become real · status: code complete; live smoke pending
+
+Give `admin`/`safety_manager` actual meaning instead of schema-only data. Previously every self-serve
+signup hardcoded `role: "foreman"` (`server/services/users.js` `createProfile`) and always created a
+brand-new `companies` row — no user had ever been created as `admin`/`safety_manager`, and grepping
+`server/` and `client/src/` found zero `role ===` checks anywhere.
+
+- [x] `createProfile`: the user who creates a brand-new `companies` row becomes `role: "admin"` instead
+      of the hardcoded `"foreman"` (still the only signup path today, until 8c adds join-existing-company)
+- [x] `requireRole(...roles)` middleware (`server/middlewares/requireRole.js`, same shape as
+      `requireGcCompany`/`requireSubcontractorCompany`) keyed on `req.user.role`. New
+      `server/constants/roles.js` exports `MANAGER_ROLES = ["admin", "safety_manager"]` so the route
+      middleware and any service-layer gate read the same list
+- [x] Applied to the two already-flagged TODOs, but **not the same way for both** (deviation from the
+      original bullet, decided while implementing): `DELETE /api/projects/:id` is delete-only, so it's
+      gated with `requireRole(...MANAGER_ROLES)` as router middleware. `PATCH /api/projects/:id` mixes a
+      role-gated action (`archived: true|false`, the archive/restore alias) with ungated plain-field
+      edits (name/status/GC fields) in one handler — router middleware can't gate just one body field, so
+      that check moved into `projectsService.update`/`remove` themselves (both now take a `role` param
+      and throw a 403 `AppError` when it's not in `MANAGER_ROLES`), matching where the original
+      `TODO(roles)` comments actually lived (`server/services/projects.js`, `update`/`remove`). Controllers
+      (`server/controllers/projects.js`) now pass `role: req.user.role` through alongside `companyId`.
+      Also updates this file's Phase 1d note (line 89) and its own stale TODO comments. A third
+      `TODO(roles)` turned up while grepping for the two named ones — `deleteTalk`
+      (`server/controllers/talks.js`, custom-talk delete) — gated the same way as `deleteProject`
+      (single-purpose route, `requireRole` at the router only, no service-layer duplicate needed)
+- [ ] Default role for a future invited (non-creating) user: left as a UI decision for 8c rather than a
+      code default — the invite form will let the inviting admin pick a role explicitly (defaulting the
+      form control to `foreman`), so there's no server-side "default role" to encode until that endpoint
+      exists
+- [x] Tests: `server/middlewares/requireRole.test.js` (new), plus updated/added coverage in
+      `server/services/users.test.js` (admin role on signup), `server/services/projects.test.js`
+      (403 cases for archive/restore/delete without a manager role), and `server/controllers/projects.test.js`
+      (role passthrough). Full server suite: **433/433 passing**
+- [ ] Verify (user, needs live Supabase): sign up a new account → `users.role` is `admin` in Supabase, not
+      `foreman`; as that admin, archive/restore and delete a project succeed; manually flip that user's
+      `role` to `foreman` in Supabase and retry — archive/restore/delete each 403 with "Only an admin or
+      safety manager can…", other PATCH fields (name, status, GC fields) still succeed
+
+### 8b — Supersede `projects.gc_contact_email` · status: code complete; live smoke pending
+
+Small, unblocked by 8a alone — a linked project already has a real `gc_company_id` pointing at a real
+GC company/account, so this doesn't need the invite flow (8c) or GC-owned jobsite (8d).
+
+- [x] `pdfGenerationQueue.js`: when `project.gcCompanyId` is set, resolve the PDF-delivery address from
+      that company's admin user instead of the stored free-text field; fall back to `gc_contact_email`
+      when unlinked or the linked GC company has no admin yet (pre-8a legacy data). New helper
+      `resolveGcContactEmail(project)` in `pdfGenerationQueue.js` does the lookup-then-fallback; new
+      `usersService.getAdminEmail(companyId)` (`server/services/users.js`) does the actual lookup
+- [x] Decide fallback/precedence rules for that no-admin-yet case — don't silently drop delivery.
+      **Decision, discovered while implementing:** neither `companies` nor the public `users` table has
+      an email column — Supabase Auth emails live only in `auth.users`, unreachable by a normal
+      PostgREST select. `getAdminEmail` is a two-step lookup: find the linked GC company's earliest
+      `role = 'admin'` row in `users`, then resolve that user's email via the Auth Admin API
+      (`supabase.auth.admin.getUserById`), available because `server/utility/supabaseClient.js`'s client
+      already uses the service-role key. Returns `null` (not an error) when the company has no admin yet;
+      `resolveGcContactEmail` treats `null` the same as a thrown lookup failure — both fall back to
+      `gc_contact_email` — so a temporary Auth API hiccup degrades gracefully instead of dropping the
+      email outright, consistent with this file's existing crew-photo/logo soft-fail pattern
+- [x] Leave the `gc_contact_email` column and the `ProjectForm.tsx` field in place (still needed for the
+      fallback case) — this item changes _resolution_, not schema. Updated its stopgap-framing comments
+      in `Supabase_SQL.sql`, `Supabase_Schema.md`, and `docs/meeting-flow-design.md` to describe the new
+      precedence instead of implying the whole Cross-cutting epic still gates it
+- [x] Tests: `pdfGenerationQueue.test.js` cases for linked-with-admin (admin wins over a stale
+      `gc_contact_email`), linked-no-admin (falls back), linked-with-a-failing-lookup (falls back, logs),
+      linked-with-neither (skips the email, as before), and unlinked (unchanged). New
+      `server/services/users.test.js` `getAdminEmail` cases (earliest-admin-wins, no-admin, no-email,
+      query failure, Auth API failure). Full server suite: **442/442 passing** (up from 433)
+- [x] Verify (user, needs live Supabase + Mailgun): link a sub's project to a GC via join code (as in
+      6c's smoke), complete a meeting on that project → the PDF email goes to the **GC admin's account
+      email**, not any `gc_contact_email` typed on the project; unlink (or use an unlinked project) with
+      a `gc_contact_email` set → email still goes to that manual address; unlinked with neither set →
+      no email sent, same as before this change
+
+### 8c — Admin invites by email; invitee joins existing company · status: not started
+
+- [ ] Invite table/token design (e.g. a `company_invites` row — id, company_id, email, role, token,
+      expires_at) + a token generator in `server/utility/` (pattern: `joinCode.js`, but a distinct
+      per-invite/per-email mechanism, not the GC-only `companies.join_code` column)
+- [ ] `POST /api/companies/invite` (admin/safety_manager only, via 8a's `requireRole`) — creates the
+      invite row, sends via the existing `email.js`/Mailgun pattern (new template alongside
+      `meeting-log-report.html`)
+- [ ] Invite-acceptance path: `createProfile` gains a lookup branch — an invited signup joins the
+      existing `companies` row at the invited role, instead of always creating a new one
+- [ ] Client: accept-invite route + an admin-side "invite teammate" UI (company settings, alongside
+      `JoinCodeCard.tsx`'s pattern)
+- [ ] Tests: server invite service/controller, acceptance branch in `users.test.js`, client invite form
+
+### 8d — GC-owned jobsite + GC invites subcontractor companies · status: not started
+
+Largest piece — supersedes the Phase 6 join-code link and 6e's group-by-name jobsite grouping
+(`server/utility/jobsites.js`). See `docs/gc-dashboard-design.md`'s "GC-owned canonical jobsite" notes
+(line 41) and "Explicitly not resolved here" (line 265) for the deferred-alternative rationale. Distinct
+from 8c's "admin invites by email," which is about users joining one company, not companies joining a
+jobsite. Nothing in 6c blocks it: the join-code link only sets `gc_company_id` and writes the
+`(project_id, sub_id)` roster row a GC-owned model would reuse.
+
+- [ ] Relax `projects.owner_company_id` (or introduce a distinct jobsite entity) so a GC can create a
+      jobsite directly, not just link an existing sub-owned project
+- [ ] GC-side jobsite create flow + sub-company invite-by-email (reuses 8c's invite-token/email infra,
+      scoped company-to-company instead of user-to-company)
+- [ ] Rework the sub's project picker + offline cache/outbox — currently assumes the sub always owns and
+      creates its own project rows
+- [ ] Make `project_subcontractors` load-bearing for authorization (today explicitly "a roster, never an
+      authorization source" per `docs/gc-dashboard-design.md` line 108)
+- [ ] Migration/backfill plan for jobsites already linked via the Phase 6 join code — don't strand
+      existing GC/sub links
+- [ ] Retire or dual-run `server/utility/jobsites.js`'s fuzzy name-grouping once real jobsite rows exist
+- [ ] Tests across server (schema/service/controller) and client (project picker, offline outbox)
+
+- [x] GC links a sub company to a project (`project_subcontractors`) — done: slim version (GC join code)
+      shipped in Phase 6b–6d, superseded by 8d above
 
 ## Deferred
 

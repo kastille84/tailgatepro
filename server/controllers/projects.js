@@ -38,6 +38,7 @@ exports.updateProject = async (req, res, next) => {
     const data = await projectsService.update({
       id: req.params.id,
       companyId: req.user.companyId,
+      role: req.user.role,
       patch: { name, status, gcNameCustom, gcContactEmail, archived },
     });
     return res.status(200).json({ success: true, data });
@@ -73,13 +74,12 @@ exports.unlinkGc = async (req, res, next) => {
   }
 };
 
-// TODO(roles): once `admin` / `safety_manager` are real, restrict delete (and
-// archive/restore) to those roles rather than any member of the owning company.
 exports.deleteProject = async (req, res, next) => {
   try {
     const data = await projectsService.remove({
       id: req.params.id,
       companyId: req.user.companyId,
+      role: req.user.role,
     });
     return res.status(200).json({ success: true, data });
   } catch (error) {

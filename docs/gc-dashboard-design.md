@@ -102,8 +102,11 @@ would later show up as a phantom "sub" on that GC's dashboard):
 `DELETE /api/projects/:id/link-gc` sets `gc_company_id` to `NULL` and deletes the `project_subcontractors`
 row. `gc_name_custom` is retained, which satisfies `check_gc_info`.
 
-`gc_contact_email` is untouched. Until the invite epic supersedes it, a linked project's PDF is emailed to
-that address *and* appears on the dashboard — dual delivery, on purpose.
+`gc_contact_email` itself is untouched by linking. Its role in PDF delivery changed in Phase 8b, though:
+once a project is linked, the PDF is emailed to the linked GC company's admin (a real account, resolved
+via the Auth Admin API), not `gc_contact_email` — that field is now only a fallback for an unlinked
+project or a linked company with no admin yet. Either way, the PDF still appears on the dashboard too —
+dual delivery, on purpose.
 
 ### `project_subcontractors` is a roster, never an authorization source
 
@@ -268,9 +271,13 @@ Sub-side link endpoints (`POST`/`DELETE /api/projects/:id/link-gc`) and the GC's
 undone only by that sub unlinking; the GC has no remove-sub or regenerate-code control in v1. Worth
 resolving by the invite epic at the latest.
 
-**Email invites, role enforcement, `gc_contact_email` supersession.** All stay in `docs/tasks.md`'s
-Cross-cutting epic. Any signed-in user in a GC company can see the dashboard and its join code in v1 —
-`admin` / `safety_manager` gating waits on roles being real.
+**Email invites, role enforcement, `gc_contact_email` supersession.** Tracked in `docs/tasks.md`'s Phase
+8 epic; two of its four items shipped since this was written. Roles are real as of Phase 8a (an
+`admin`/`safety_manager` gate exists and is enforced on project archive/restore/delete and custom-talk
+delete), and `gc_contact_email` was superseded for linked projects as of Phase 8b — but neither the GC
+dashboard nor the join-code endpoints picked up a role gate; any signed-in user in a GC company can still
+see the dashboard and its join code. Email invites (8c) and the GC-owned jobsite model (8d) remain
+unbuilt.
 
 **Configurable cadence, GC tier gating (blurred subs, 1-site cap), SMS nudges, Procore/ACC sync, OSHA
 Defense ZIP, cross-project scorecards.** Deferred; see `docs/tasks.md`.

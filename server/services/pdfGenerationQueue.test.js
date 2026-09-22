@@ -8,6 +8,7 @@ const talksService = require("./talks");
 const signaturesService = require("./signatures");
 const storageService = require("./storage");
 const companiesService = require("./companies");
+const usersService = require("./users");
 const pdfGeneration = require("./pdfGeneration");
 const emailService = require("./email");
 const { enqueue } = require("./pdfGenerationQueue");
@@ -107,6 +108,7 @@ describe("pdfGenerationQueue: enqueue", () => {
     vi.spyOn(talksService, "getById").mockReset().mockResolvedValue(talk);
     vi.spyOn(signaturesService, "listForMeeting").mockReset().mockResolvedValue(signatures);
     vi.spyOn(companiesService, "getById").mockReset().mockResolvedValue(company);
+    vi.spyOn(usersService, "getAdminEmail").mockReset().mockResolvedValue(null);
     vi.spyOn(storageService, "downloadBlob").mockReset().mockImplementation(downloadBlobImpl);
     vi.spyOn(storageService, "uploadBlob").mockReset().mockResolvedValue(undefined);
     vi.spyOn(storageService, "getSignedUrl")
@@ -168,11 +170,12 @@ describe("pdfGenerationQueue: enqueue", () => {
     expect(consoleErrorSpy).not.toHaveBeenCalled();
   });
 
-  it("should not build a signed URL or send an email when the project has no gc_contact_email", async () => {
-    // Act — the default fixture project has gcContactEmail: null
+  it("should not build a signed URL or send an email when the project is unlinked and has no gc_contact_email", async () => {
+    // Act — the default fixture project has gcCompanyId: null, gcContactEmail: null
     await enqueue("meeting-1", "company-1");
 
     // Assert
+    expect(usersService.getAdminEmail).not.toHaveBeenCalled();
     expect(storageService.getSignedUrl).not.toHaveBeenCalled();
     expect(emailService.sendMeetingLogEmail).not.toHaveBeenCalled();
   });
@@ -201,6 +204,81 @@ describe("pdfGenerationQueue: enqueue", () => {
       meetingDate: meetingLog.heldAt,
     });
     expect(consoleErrorSpy).not.toHaveBeenCalled();
+  });
+
+  it("should email the linked GC company's admin (Phase 8b) instead of gc_contact_email when both resolve", async () => {
+    // Arrange
+    projectsService.getById.mockResolvedValue({
+      ...project,
+      gcCompanyId: "gc-company-1",
+      gcContactEmail: "stale-manual@example.com",
+    });
+    usersService.getAdminEmail.mockResolvedValue("gc-admin@example.com");
+
+    // Act
+    await enqueue("meeting-1", "company-1");
+
+    // Assert
+    expect(usersService.getAdminEmail).toHaveBeenCalledWith("gc-company-1");
+    expect(emailService.sendMeetingLogEmail).toHaveBeenCalledWith(
+      expect.objectContaining({ to: "gc-admin@example.com" }),
+    );
+    expect(consoleErrorSpy).not.toHaveBeenCalled();
+  });
+
+  it("should fall back to gc_contact_email when the project is linked but the GC company has no admin yet", async () => {
+    // Arrange
+    projectsService.getById.mockResolvedValue({
+      ...project,
+      gcCompanyId: "gc-company-1",
+      gcContactEmail: "fallback@example.com",
+    });
+    usersService.getAdminEmail.mockResolvedValue(null);
+
+    // Act
+    await enqueue("meeting-1", "company-1");
+
+    // Assert
+    expect(emailService.sendMeetingLogEmail).toHaveBeenCalledWith(
+      expect.objectContaining({ to: "fallback@example.com" }),
+    );
+    expect(consoleErrorSpy).not.toHaveBeenCalled();
+  });
+
+  it("should fall back to gc_contact_email, logging the error, when resolving the linked GC's admin email fails", async () => {
+    // Arrange
+    projectsService.getById.mockResolvedValue({
+      ...project,
+      gcCompanyId: "gc-company-1",
+      gcContactEmail: "fallback@example.com",
+    });
+    usersService.getAdminEmail.mockRejectedValue(new Error("boom"));
+
+    // Act
+    await enqueue("meeting-1", "company-1");
+
+    // Assert
+    expect(emailService.sendMeetingLogEmail).toHaveBeenCalledWith(
+      expect.objectContaining({ to: "fallback@example.com" }),
+    );
+    expect(consoleErrorSpy).toHaveBeenCalled();
+  });
+
+  it("should skip the email entirely when the project is linked with no admin and has no gc_contact_email either", async () => {
+    // Arrange
+    projectsService.getById.mockResolvedValue({
+      ...project,
+      gcCompanyId: "gc-company-1",
+      gcContactEmail: null,
+    });
+    usersService.getAdminEmail.mockResolvedValue(null);
+
+    // Act
+    await enqueue("meeting-1", "company-1");
+
+    // Assert
+    expect(storageService.getSignedUrl).not.toHaveBeenCalled();
+    expect(emailService.sendMeetingLogEmail).not.toHaveBeenCalled();
   });
 
   it("should pass talk: null and skip fetching a talk when the meeting has none attached", async () => {

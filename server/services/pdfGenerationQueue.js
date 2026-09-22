@@ -10,12 +10,13 @@
 const projectsService = require("./projects");
 const talksService = require("./talks");
 const storageService = require("./storage");
-// companies.js has no reverse dependency anywhere in this file's require
-// chain (only needs supabase/AppError), so it's safe to require at the top
-// level — unlike meetingLogs.js/signatures.js below, which are required
-// lazily inside enqueue() to avoid a circular require (see the comment
-// there).
+// companies.js and users.js have no reverse dependency anywhere in this
+// file's require chain (only need supabase/AppError), so they're safe to
+// require at the top level — unlike meetingLogs.js/signatures.js below,
+// which are required lazily inside enqueue() to avoid a circular require
+// (see the comment there).
 const companiesService = require("./companies");
+const usersService = require("./users");
 // Required as the module object, not destructured: a destructured binding
 // would capture the function reference at require-time, which vi.spyOn's
 // property-replacement on the module object (used in
@@ -36,6 +37,28 @@ const LOGO_BUCKET = "company-logos";
 // meetingLogs.js's PDF_URL_TTL_SECONDS (300s), which is only used for the
 // on-demand signed-URL endpoint consumed immediately by a logged-in user.
 const EMAIL_PDF_URL_TTL_SECONDS = 60 * 60 * 24 * 30; // 30 days
+
+// Resolves who gets the completed PDF's email (Phase 8b): prefer the linked
+// GC company's admin — a real account — over gc_contact_email, the Phase 5c
+// stopgap of a manually-typed address. Falls back to the stopgap for an
+// unlinked project (no gcCompanyId) or a linked GC company with no admin yet
+// (pre-8a legacy data). A lookup failure degrades to the stopgap too, rather
+// than skipping the email outright — same best-effort shape as the crew
+// photo/logo downloads above.
+const resolveGcContactEmail = async (project) => {
+  if (project.gcCompanyId) {
+    try {
+      const adminEmail = await usersService.getAdminEmail(project.gcCompanyId);
+      if (adminEmail) return adminEmail;
+    } catch (error) {
+      console.error(
+        `pdfGenerationQueue: could not resolve the linked GC company's admin email for project ${project.id}`,
+        error,
+      );
+    }
+  }
+  return project.gcContactEmail ?? null;
+};
 
 const enqueue = async (meetingLogId, companyId) => {
   try {
@@ -136,10 +159,12 @@ const enqueue = async (meetingLogId, companyId) => {
     await storageService.uploadBlob(PDF_BUCKET, path, pdfBuffer, "application/pdf");
     await meetingLogsService.setFinalPdfUrl(meetingLogId, companyId, path);
 
-    // gc_contact_email is an optional, manually-entered field (Phase 5c) --
-    // silently skip when unset, per docs/tasks.md 5f. No log for the skip
-    // itself; it's an expected, common state, not a failure.
-    if (project.gcContactEmail) {
+    // Silently skip when neither a linked GC admin nor gc_contact_email
+    // resolves to anything (see resolveGcContactEmail above), per docs/tasks.md
+    // 5f/8b. No log for the skip itself; it's an expected, common state (e.g.
+    // an unlinked project with no manual email either), not a failure.
+    const gcContactEmail = await resolveGcContactEmail(project);
+    if (gcContactEmail) {
       const filename = buildPdfFilename({
         companyName: company.name,
         projectName: project.name,
@@ -155,7 +180,7 @@ const enqueue = async (meetingLogId, companyId) => {
       );
 
       await emailService.sendMeetingLogEmail({
-        to: project.gcContactEmail,
+        to: gcContactEmail,
         projectName: project.name,
         companyName: company.name,
         pdfUrl,

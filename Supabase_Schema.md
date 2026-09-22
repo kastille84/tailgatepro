@@ -31,7 +31,7 @@
 | `name` | Text | Not Null | E.g., "Downtown Highrise" |
 | `gc_company_id` | UUID | Nullable, FK -> `companies.id` (ON DELETE SET NULL) | The GC as a registered company, once one is linked |
 | `gc_name_custom` | Text | Nullable | Free-text GC name, used before a GC company is linked |
-| `gc_contact_email` | Text | Nullable | Manual contact email for PDF delivery (Phase 5); stopgap until the invite/join-company flow provides a real GC account (see `docs/tasks.md` Cross-cutting epic) |
+| `gc_contact_email` | Text | Nullable | Manual contact email for PDF delivery (Phase 5). Since Phase 8b, only a fallback: PDF delivery prefers the linked `gc_company_id`'s admin (a real account) when one resolves, and only reads this field when unlinked or the linked company has no admin yet (see `docs/tasks.md` Phase 8 epic) |
 | `status` | Enum | Default `active` | `active`, `completed` |
 | `archived_at` | Timestamptz | Nullable | `NULL` = live; a timestamp = archived (hidden from the default list, still restorable). Orthogonal to `status`. |
 | `created_at` | Timestamptz | Default `now()` | |
