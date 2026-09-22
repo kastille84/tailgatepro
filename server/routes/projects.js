@@ -81,8 +81,10 @@ router.patch(
       .isIn(["active", "completed"])
       .withMessage("Invalid status"),
     body("gcNameCustom")
-      .optional({ checkFalsy: true })
+      .optional()
       .trim()
+      .notEmpty()
+      .withMessage("GC name cannot be empty")
       .isLength({ max: 120 })
       .withMessage("GC name is too long"),
     body("gcContactEmail")

@@ -371,7 +371,7 @@ describe("projects service: update", () => {
       update({
         id: "project-1",
         companyId: "company-1",
-        patch: { gcNameCustom: "" },
+        patch: { gcNameCustom: null },
       }),
     ).rejects.toMatchObject({
       statusCode: 422,

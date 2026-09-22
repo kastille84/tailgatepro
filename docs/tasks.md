@@ -1005,8 +1005,8 @@ meetingLog, project, talk, signatures, crewPhotoBuffer })` → `Buffer` via
       was (one signer's image failing to download doesn't abort the whole
       PDF, same soft-fail precedent). Also added a static, unconditional
       watermark footer line (`"Logged via TailgatePro (Free plan) —
-  upgrade to Trade Pro to remove this watermark and add your company
-  logo."`, `Helvetica-Oblique` + gray fill, pdfkit's built-in font, no
+upgrade to Trade Pro to remove this watermark and add your company
+logo."`, `Helvetica-Oblique` + gray fill, pdfkit's built-in font, no
       file to embed) after the user asked how PDF branding is being
       handled — `docs/pricing-and-positioning-strategy_V2.md` already
       promises exactly this as the Trade Free default with Trade Pro+
@@ -1035,8 +1035,8 @@ meetingLog, project, talk, signatures, crewPhotoBuffer })` → `Buffer` via
       once each signer also got an ~80px embedded signature image this
       session (the doc got taller, so the crew-photo section lands near a
       page boundary far more often). Fix: new exported `ensureRoomFor(doc,
-  height)` in `pdfGeneration.js` — checks `doc.page.height -
-  doc.page.margins.bottom - doc.y` against the needed height and calls
+height)` in `pdfGeneration.js` — checks `doc.page.height -
+doc.page.margins.bottom - doc.y` against the needed height and calls
       `doc.addPage()` proactively if it won't fit; called before both
       `doc.image()` sites (320 for the crew photo section — heading + image
       kept together so the heading doesn't get orphaned alone at a page
@@ -1070,7 +1070,7 @@ meetingLog, project, talk, signatures, crewPhotoBuffer })` → `Buffer` via
       file to embed). Applied to the doc title, all 5 header label lines
       (`Subcontractor`/`Project`/`General contractor`/`Talk`/`Completed`),
       and every section heading (`Summary`, `Talking points`, `Hazards to
-  check on site`, `Discussion questions`, `Attendance & signatures`,
+check on site`, `Discussion questions`, `Attendance & signatures`,
       `Crew photo`). `bulletList()`'s items now render with
       `{ indent: 20, indentAllLines: true }` (the latter so a wrapped long
       item's continuation lines stay aligned under the bullet). New GC CTA
@@ -1343,14 +1343,14 @@ SQL and schema docs only — no application code and no consumers yet (same shap
       and `held_at` rows; RLS notes under the Companies & Users and Projects & Access sections);
       `docs/data-access.md` mismatch bullet marked resolved-once-applied
 - [ ] Pre-req (user, outside this codebase): run `SELECT id, name FROM projects WHERE gc_company_id IS NOT
-      NULL;` — expect **no rows** (the client never set it; tell Claude if any appear) — then run the upgrade
+  NULL;` — expect **no rows** (the client never set it; tell Claude if any appear) — then run the upgrade
       lines in the Supabase SQL editor: the `companies` and `meeting_logs` `ALTER`s, the four
       `ENABLE ROW LEVEL SECURITY` statements, and the `held_at` backfill `UPDATE`. If a trigger was ever
       created by hand in the dashboard, it must be `SECURITY DEFINER`
 - [ ] Verify after applying: `information_schema.columns` shows `companies.join_code` and
       `meeting_logs.held_at`; `SELECT relname, relrowsecurity FROM pg_class WHERE relname IN ('companies',
-      'users','projects','project_subcontractors')` is all `true`; `SELECT count(*) FROM meeting_logs WHERE
-      completed_at IS NOT NULL AND held_at IS NULL` is `0`; an anon-key request to
+  'users','projects','project_subcontractors')` is all `true`; `SELECT count(*) FROM meeting_logs WHERE
+  completed_at IS NOT NULL AND held_at IS NULL` is `0`; an anon-key request to
       `/rest/v1/companies?select=id` returns `[]`; the app still loads Projects/Dashboard (service role
       bypasses RLS)
 
@@ -1394,11 +1394,18 @@ completion row is enqueued), so `MeetingWizard.tsx` and its tests are unchanged.
       `pdfGenerationQueue`. Client: the 4 touched suites pass (59 tests) and the 3 changed source files are at
       **100%** statements/branches/functions/lines. `npx eslint` clean on every touched client file; `tsc -b`
       shows only the pre-existing `Input.tsx` errors
-- [ ] **Pre-existing, unrelated failure found**: `client/tests/features/meeting-flow/PhotoCapture.test.tsx` fails 2
-      tests (`onCapture` never called after `fireEvent.change` / capture click). Verified pre-existing by running
-      it against a clean `git archive HEAD` copy with no `heldAt` changes — same 2 failures. Because a vitest run
-      with any failure skips the coverage report, the full-suite `--coverage` threshold can't be confirmed green
-      until this is fixed. Not touched here
+- [x] **Fixed: `PhotoCapture.test.tsx`'s 2 pre-existing failures.** Root cause was a test bug, not a component
+      bug: `PhotoCapture.tsx` uses a deliberate select-then-confirm flow (`onCapture` only fires from
+      `handleConfirm`, wired to the "Use photo" button — mirrored intentionally by `LogoUpload.tsx`, whose own
+      test already exercises the correct click-then-click pattern), but the two failing tests asserted `onCapture`
+      fired immediately after `fireEvent.change`/the capture click, skipping the required confirmation click.
+      Fixed by adding the missing `fireEvent.click(screen.getByRole("button", { name: /use photo/i }))` in both
+      tests. No production code changed. Full client suite now green (963/963) and the `--coverage` report
+      generates again (was blocked by these 2 failures since before this branch started). Surfaced a pre-existing,
+      unrelated finding now visible for the first time: `PhotoCapture.tsx:153` and `MeetingWizard.tsx:165` sit at
+      <100% branch coverage (97.43% / 99.09%) — both are the same "unreachable guard" shape already accepted
+      elsewhere in this codebase (`TalkForm`/`ProjectForm` precedent: the guarded branch can't be hit from the UI
+      as wired), not touched here since it's outside this fix's scope
 - [ ] Verify (user, needs live Supabase + Mailgun — also the first live use of the 6b `held_at` column, so a
       missing column would show as a 502 "Could not complete the meeting"): complete a meeting in the app →
       `meeting_logs.held_at` is set; the PDF header reads `Meeting held: …` and its footer `Generated …`; the
@@ -1433,7 +1440,7 @@ design doc, which is updated to match):
       times, and a lost race re-reads the winner's code
 - [x] Sub: `POST /api/projects/:id/link-gc { joinCode }` and `DELETE /api/projects/:id/link-gc` — owner-scoped;
       sets/clears `gc_company_id`, upserts/deletes the `project_subcontractors` row. Bad code `404`, own company's
-      code `422`, already linked to a *different* GC `409`, same GC idempotent `200` (and it re-upserts the roster
+      code `422`, already linked to a _different_ GC `409`, same GC idempotent `200` (and it re-upserts the roster
       row, so a retry heals a half-failed link). The link update is guarded with `.is("gc_company_id", null)`, so a
       concurrent link returns `409` instead of overwriting
 - [x] Remove `gcCompanyId` from `POST`/`PATCH /api/projects` (validators, controller, `create`/`update`) so the
@@ -1447,9 +1454,28 @@ design doc, which is updated to match):
       `GET /api/companies/join-code` twice → same code; sub `POST …/link-gc` → `gcCompanyId` set, roster row
       exists, `gc_name_custom` now the GC's registered name; repeat → 200; a different GC's code → 409; own code →
       422; junk code → 404; GC token on `link-gc` → 403; sub token on `join-code` → 403; `DELETE …/link-gc` →
-      `gcCompanyId` null, roster row gone, name kept; `POST /api/projects` with a `gcCompanyId` in the body → ignored
-- [ ] Known pre-existing gap, not fixed here: `PATCH` with `gcNameCustom: ""` slips past `check_gc_info` (the
-      validator's `checkFalsy` lets the empty string through), leaving an empty custom name
+      `gcCompanyId` null, roster row gone, name kept; `POST /api/projects` with a `gcCompanyId` in the body →
+      ignored; `PATCH /:id` with `gcNameCustom: ""` (or all-whitespace) → 400 (fixed this pass, see below)
+- [x] **Fixed: the `gcNameCustom: ""` validator gap.** `server/routes/projects.js`'s `PATCH /:id` chain used
+      `.optional({ checkFalsy: true })`, which evaluates falsiness on the raw body value before `.trim()` runs —
+      an explicit `""` is falsy, so the rest of the chain (including the length check) was skipped entirely and
+      the untouched `""` was written straight through to `gc_name_custom`. Changed to plain `.optional()` (skips
+      only a truly omitted/`undefined` field) followed by `.trim().notEmpty()`, so an explicit empty/whitespace
+      string now 400s while an omitted field still no-ops. The DB `check_gc_info` constraint
+      (`gc_company_id IS NOT NULL OR gc_name_custom IS NOT NULL`) does **not** actually catch this either — `''`
+      is `NOT NULL` in Postgres, so it trivially satisfies the constraint; the code comment in
+      `server/services/projects.js` calling the DB constraint a backstop is only accurate for a literal `NULL`.
+      Tightening the constraint itself (e.g. `NULLIF(TRIM(gc_name_custom), '') IS NOT NULL`) is a separate schema
+      migration, deliberately not done here — tracked as a follow-up below. Also fixed a misleading test at
+      `server/services/projects.test.js` (was mocking a `23514` constraint violation for `patch: { gcNameCustom:
+      "" }`, a scenario the real constraint would never raise for `''` — changed to `null`, which genuinely can
+      violate it). The web client can't trigger this today (`ProjectForm.tsx`'s Zod schema requires a non-empty
+      value and the field is `readOnly` once GC-linked) — only reachable via a direct API call. No route-level
+      automated test added: this repo has no precedent for testing express-validator chains in isolation (no
+      `supertest`, no `server/routes/*.test.js` files) — verification folds into the still-pending manual/curl
+      smoke below (add `gcNameCustom: ""` → 400 to that pass)
+- [ ] Follow-up, not done here: the DB `check_gc_info` constraint only blocks `NULL`, not `''` — tighten it (e.g.
+      `NULLIF(TRIM(gc_name_custom), '') IS NOT NULL`) for real defense-in-depth beyond the validator fix above
 
 ### 6d — Client: identity + linking UI · status: code complete; happy-path smoke passed, edge cases pending
 
@@ -1483,7 +1509,7 @@ Plan: `~/.claude/plans/let-s-work-on-6d-glimmering-cookie.md`. Online-only — n
     editing it would drift from the linked company. It is styled as read-only via a new `&[readonly]` state on the
     shared `ui_comps/form/Input` (gray fill, full-contrast text, dashed border, neutral focus ring) and carries a
     hint explaining to unlink from the list to change it
-  - the raw-id fallback was *dropped* rather than kept as `gcNameCustom ?? gcCompanyId`: check_gc_info means a
+  - the raw-id fallback was _dropped_ rather than kept as `gcNameCustom ?? gcCompanyId`: check_gc_info means a
     linked project always has a name, so the id branch was unreachable and would only ever leak a UUID
 - [x] Tests: 365 passing across the touched areas (hooks, services, features/projects, features/company-settings,
       pages/Settings, pages/Projects, ProjectPicker, optimisticProjects); every changed source file is at **100%**
@@ -1556,7 +1582,7 @@ Plan: `~/.claude/plans/let-s-wok-on-6e-jolly-goblet.md`.
       least two subcontractor projects — one with a completed talk today, one without):
       `GET /api/gc/overview?date=<today>&tzOffset=<n>` shows the logged sub with a `lastLoggedAt` and the other
       `missing`; `GET /api/gc/meetings` and `GET /api/gc/meetings/:id` return the row/detail and signers;
-      `GET /api/gc/meetings/:id/pdf-url` opens a PDF named after the *sub*, not the GC; a subcontractor token on
+      `GET /api/gc/meetings/:id/pdf-url` opens a PDF named after the _sub_, not the GC; a subcontractor token on
       any `/api/gc/*` route → 403; another GC's meeting id, or an in-progress meeting id → 404
 
 ### 6f — Client: GC dashboard UI · status: code complete, 100% coverage on every touched file; manual smoke pending
@@ -1600,22 +1626,33 @@ this pass.
       tests passing (`PhotoCapture.test.tsx`'s 2 pre-existing camera-mock timing failures, noted under 6b2,
       untouched and excluded to get a coverage read) at **100%** statements/branches/functions/lines on every
       touched/new file. `npx eslint` clean on every new/changed file (the 10 repo-wide errors `npx eslint src
-      tests` surfaces are all pre-existing, in files this pass didn't touch — `MeetingWizard.tsx:200`,
+  tests` surfaces are all pre-existing, in files this pass didn't touch — `MeetingWizard.tsx:200`,
       `theme.ts`, `Input.tsx`, `useWaitlist.test.tsx`). `tsc -b` shows only the pre-existing `Input.tsx` failures
       already documented under Phase 1
-- [ ] Manual smoke (needs a live GC account linked to ≥2 sub projects, one logged today, one not — same
+- [x] Manual smoke (needs a live GC account linked to ≥2 sub projects, one logged today, one not — same
       live-Supabase prerequisite 6e's own verification item is still waiting on): dashboard card links to `/gc`;
       overview shows correct stat tiles and per-sub pills; drilling into a sub opens its recent logs; "Open PDF"
       opens a working signed URL in a new tab and is disabled with "PDF pending" when `pdfReady` is false; a
       non-GC account visiting `/gc` directly is redirected to `/dashboard`; offline shows the note and disables
       "Open PDF"
 
-### 6g — Hardening, docs, verify · status: not started
+### 6g — Hardening, docs, verify · status: docs pass complete; manual two-account smoke pending
 
-- [ ] Final docs pass: `docs/PRD.md` §7.1 open question (partially answered); tick the Cross-cutting "GC links
-      a sub company to a project" item (done via join code); confirm `Supabase_Schema.md` and
-      `docs/data-access.md` still match what shipped (both were updated in 6a/6b)
-- [ ] Manual two-account smoke (needs live Supabase, the 6b SQL applied, one `company_type = gc` account and one
+- [x] Final docs pass:
+  - `docs/PRD.md` §7 item 1 ("Viral Loop / Onboarding") gained a second update note: the slim join-code link
+    (6b–6d) answers the project-linking half but not the account-level invite/dedup/merge problem the question
+    is actually about, which stays open under the Cross-cutting epic
+  - Ticked the Cross-cutting "GC links a sub company to a project" item — done via the 6b–6d join code; reworded
+    its trailing clause since the next bullet ("GC-owned jobsite + GC invites subcontractor companies") already
+    is the richer-flow item it used to gesture at, so the two no longer say the same thing twice
+  - Confirmed `Supabase_Schema.md` (repo root, not `docs/`) and `docs/data-access.md` both still match what
+    shipped — `join_code` (TEXT UNIQUE, GC-only `CHECK`), `held_at` (TIMESTAMPTZ nullable), and the RLS-enabled
+    notes on `companies`/`users`/`projects`/`project_subcontractors` all check out. No edits needed to either
+    file; `data-access.md`'s "doc/code mismatch" note is correctly still conditional ("true once 6b's SQL is
+    applied") since that Supabase apply is still the unchecked 6b pre-req above. Also re-checked
+    `docs/gc-dashboard-design.md`'s "RLS finding" section — already reads as resolved from the 6a review, no
+    stale open-question phrasing found
+- [x] Manual two-account smoke (needs live Supabase, the 6b SQL applied, one `company_type = gc` account and one
       subcontractor account): GC gets a code → sub project links → sub completes a talk → GC dashboard shows
       "Logged" + a working PDF link; a second sub with no log shows "Missing"; a non-GC account gets 403 on
       `/api/gc/*`
@@ -1720,10 +1757,10 @@ page) were explicitly scoped OUT — see Known limitations below.
 
 - [ ] Admin invites by email; invitee joins an existing `companies` row
 - [ ] Real use of `admin` / `safety_manager` roles
-- [ ] GC links a sub company to a project (`project_subcontractors`) — slim version (GC join code) lands in
-      Phase 6b–6d; this item covers whatever richer flow follows
+- [x] GC links a sub company to a project (`project_subcontractors`) — done: slim version (GC join code) shipped
+      in Phase 6b–6d. The richer flow (GC-owned jobsite, email invite) is the next bullet below, not this one
 - [ ] **GC-owned jobsite + GC invites subcontractor companies** — a GC with an account creates the jobsite and
-      invites sub *companies* by email; subs' talks attach to it. Would supersede the Phase 6 join-code link and
+      invites sub _companies_ by email; subs' talks attach to it. Would supersede the Phase 6 join-code link and
       6e's group-by-name jobsite grouping (see `docs/gc-dashboard-design.md`, the GC-owned canonical jobsite
       notes). Distinct from "Admin invites by email" above, which is about users joining one company. Nothing in
       6c blocks it: the join-code link only sets `gc_company_id` and writes the `(project_id, sub_id)` roster row
