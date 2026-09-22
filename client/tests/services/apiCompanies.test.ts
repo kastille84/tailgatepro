@@ -2,6 +2,8 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import {
   getCompanyLogoUrl,
+  getJoinCode,
+  getMyCompany,
   uploadCompanyLogo,
 } from "../../src/services/apiCompanies";
 import { DEFAULT_FETCH_TIMEOUT_MS } from "../../src/utils/fetchWithTimeout";
@@ -24,6 +26,52 @@ describe("apiCompanies", () => {
 
   afterEach(() => {
     vi.useRealTimers();
+  });
+
+  describe("getMyCompany", () => {
+    it("GETs /api/companies/me with the bearer token and returns the company", async () => {
+      const fetchMock = vi.fn().mockResolvedValue({
+        ok: true,
+        status: 200,
+        json: async () => ({ success: true, data: company }),
+      });
+      vi.stubGlobal("fetch", fetchMock);
+
+      await expect(getMyCompany("token-123")).resolves.toEqual(company);
+      expect(fetchMock).toHaveBeenCalledWith(
+        "/api/companies/me",
+        expect.objectContaining({
+          method: "GET",
+          headers: { Authorization: "Bearer token-123" },
+        }),
+      );
+    });
+
+    it("rejects with the backend error message on an error response", async () => {
+      vi.stubGlobal(
+        "fetch",
+        vi.fn().mockResolvedValue({
+          ok: false,
+          status: 500,
+          json: async () => ({ success: false, error: "Boom" }),
+        }),
+      );
+      await expect(getMyCompany("token-123")).rejects.toThrow("Boom");
+    });
+
+    it("rejects with the generic message when JSON parsing fails", async () => {
+      vi.stubGlobal(
+        "fetch",
+        vi.fn().mockResolvedValue({
+          ok: true,
+          status: 200,
+          json: async () => {
+            throw new Error("bad json");
+          },
+        }),
+      );
+      await expect(getMyCompany("token-123")).rejects.toThrow(GENERIC);
+    });
   });
 
   describe("getCompanyLogoUrl", () => {
@@ -86,6 +134,50 @@ describe("apiCompanies", () => {
         }),
       );
       await expect(getCompanyLogoUrl("token-123")).rejects.toThrow(GENERIC);
+    });
+  });
+
+  describe("getJoinCode", () => {
+    it("GETs /api/companies/join-code with the bearer token and returns the code", async () => {
+      const fetchMock = vi.fn().mockResolvedValue({
+        ok: true,
+        status: 200,
+        json: async () => ({ success: true, data: { joinCode: "K7M2Q9XB" } }),
+      });
+      vi.stubGlobal("fetch", fetchMock);
+
+      await expect(getJoinCode("token-123")).resolves.toBe("K7M2Q9XB");
+      expect(fetchMock).toHaveBeenCalledWith(
+        "/api/companies/join-code",
+        expect.objectContaining({
+          method: "GET",
+          headers: { Authorization: "Bearer token-123" },
+        }),
+      );
+    });
+
+    it("rejects with the backend error message on a 403 (not a GC)", async () => {
+      vi.stubGlobal(
+        "fetch",
+        vi.fn().mockResolvedValue({
+          ok: false,
+          status: 403,
+          json: async () => ({ success: false, error: "Forbidden" }),
+        }),
+      );
+      await expect(getJoinCode("token-123")).rejects.toThrow("Forbidden");
+    });
+
+    it("rejects with the generic message when the response has no body", async () => {
+      vi.stubGlobal(
+        "fetch",
+        vi.fn().mockResolvedValue({
+          ok: false,
+          status: 500,
+          json: async () => null,
+        }),
+      );
+      await expect(getJoinCode("token-123")).rejects.toThrow(GENERIC);
     });
   });
 

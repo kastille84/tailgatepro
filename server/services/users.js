@@ -72,7 +72,7 @@ const createProfile = async ({ id, name, companyName, companyType }) => {
 const getUserContext = async (id) => {
   const { data, error } = await supabase
     .from("users")
-    .select("id, name, role, company_id, companies(tier)")
+    .select("id, name, role, company_id, companies(tier, company_type)")
     .eq("id", id)
     .single();
 
@@ -91,6 +91,7 @@ const getUserContext = async (id) => {
     // an array. Defensive fallback for the (schema-allowed but
     // never-in-practice) case of a user with no company row yet.
     tier: data.companies?.tier ?? null,
+    companyType: data.companies?.company_type ?? null,
   };
 };
 

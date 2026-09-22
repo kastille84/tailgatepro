@@ -16,6 +16,7 @@ const meetingLog = {
   crewPhotoUrl: null,
   finalPdfUrl: null,
   completedAt: null,
+  heldAt: null,
   syncedAt: null,
   createdAt: "2026-09-15T00:00:00.000Z",
 };
@@ -208,6 +209,38 @@ describe("apiMeetingLogs", () => {
   });
 
   describe("completeMeeting", () => {
+    it("PATCHes a JSON body carrying heldAt (when the meeting was held) alongside the bearer token", async () => {
+      const fetchMock = vi.fn().mockResolvedValue({
+        ok: true,
+        status: 200,
+        json: async () => ({
+          success: true,
+          data: {
+            ...meetingLog,
+            completedAt: "2026-09-21T06:00:00.000Z",
+            heldAt: "2026-09-20T22:30:00.000Z",
+          },
+        }),
+      });
+      vi.stubGlobal("fetch", fetchMock);
+
+      await expect(
+        completeMeeting("token-123", "meeting-1", "2026-09-20T22:30:00.000Z"),
+      ).resolves.toMatchObject({ heldAt: "2026-09-20T22:30:00.000Z" });
+
+      expect(fetchMock).toHaveBeenCalledWith(
+        "/api/meetings/meeting-1/complete",
+        expect.objectContaining({
+          method: "PATCH",
+          headers: {
+            Authorization: "Bearer token-123",
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ heldAt: "2026-09-20T22:30:00.000Z" }),
+        }),
+      );
+    });
+
     it("PATCHes with only the bearer token (no body) and returns the completed meeting log", async () => {
       const fetchMock = vi.fn().mockResolvedValue({
         ok: true,

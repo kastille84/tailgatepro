@@ -113,12 +113,12 @@ describe("useCreateProject", () => {
     });
   });
 
-  it("defaults gcCompanyId/gcNameCustom/gcContactEmail to null on the optimistic entry when omitted", async () => {
+  it("defaults gcNameCustom/gcContactEmail to null on the optimistic entry when omitted, and never links a GC", async () => {
     vi.mocked(outbox.enqueueMutation).mockResolvedValue({} as never);
     queryClient.setQueryData(["projects", { includeArchived: false }], []);
 
     const { result } = renderHook(() => useCreateProject(), { wrapper });
-    await result.current.createProject({ name: "Site", gcCompanyId: "gc-1" });
+    await result.current.createProject({ name: "Site" });
 
     const cached = queryClient.getQueryData<
       {
@@ -128,7 +128,7 @@ describe("useCreateProject", () => {
       }[]
     >(["projects", { includeArchived: false }]);
     expect(cached?.[0]).toMatchObject({
-      gcCompanyId: "gc-1",
+      gcCompanyId: null,
       gcNameCustom: null,
       gcContactEmail: null,
     });

@@ -5,6 +5,9 @@ bucket/upload design, quiz-scoring rule, immutability rule, and the offline-queu
 before the meeting wizard, signature capture, or crew-photo capture can be built. Full plan and
 sequencing: `~/.claude/plans/check-if-there-s-anything-spicy-yao.md`.
 
+It also records the Phase 5 PDF-generation and GC email-delivery design decisions — see "Phase 5
+hook point" below.
+
 ## Why this doc exists
 
 `docs/offline-sync-design.md` explicitly deferred `meeting_logs`/`signatures` to Phase 4: "no
@@ -273,11 +276,18 @@ redundant re-fetch of `project`/`company` that `enqueue()` already has in scope.
 **PDF content scope.** The generated PDF covers: a project/meeting header (project name, talk title,
 date); the talk's structured content (talking points, hazards, discussion questions); the CPWR/NIOSH
 attribution block (`toolbox_talks.attribution`'s `copyright` + `notice`) per
-`docs/content-attribution.md`'s "Phase 5 PDF service must print the same credit" requirement; the
+`docs/content-attribution.md`'s "Phase 5 PDF service must print the same credit" requirement (implemented in `server/services/pdfGeneration.js`); the
 signer list (`worker_name` plus quiz pass/fail where the talk has a quiz); the crew photo (embedded
-if present, otherwise a "photo on file" note referencing the signed-URL endpoint); and the
-`completed_at` timestamp. Nothing beyond what's already captured by the meeting wizard — no new data
-collection is implied by the PDF itself.
+if present, otherwise a "photo on file" note referencing the signed-URL endpoint); and two
+timestamps: a **"Meeting held"** header line (`meeting_logs.held_at`, the client-reported time the
+meeting actually happened) and the footer's **"Generated"** time. Because generation runs
+synchronously inside `complete()`, "Generated" is also the server-receipt time (`completed_at`), so an
+offline meeting synced the next day shows both — the held time is the meeting's date, the generated
+time is the audit evidence of when the server received it. (Phase 6b2 replaced the earlier
+"Completed: `completed_at`" header line; already-generated PDFs keep the old wording, since there is no
+regeneration path.) The PDF's download filename and the GC email's date use `held_at` too. Nothing
+beyond what's already captured by the meeting wizard — no new data collection is implied by the PDF
+itself.
 
 ## Explicitly not resolved here
 

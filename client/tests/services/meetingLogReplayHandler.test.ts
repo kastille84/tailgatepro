@@ -136,7 +136,25 @@ describe("meetingLogReplayHandler (entity: meeting_completion)", () => {
     vi.clearAllMocks();
   });
 
-  it("dispatches a complete row to apiMeetingLogs.completeMeeting with the row's entityId", async () => {
+  it("dispatches a complete row to apiMeetingLogs.completeMeeting with the row's entityId and the payload's heldAt", async () => {
+    vi.mocked(apiMeetingLogs.completeMeeting).mockResolvedValue({} as never);
+
+    await createReplayer("token-123")({
+      ...baseRow,
+      entity: "meeting_completion",
+      op: "complete",
+      entityId: "meeting-1",
+      payload: { heldAt: "2026-09-20T22:30:00.000Z" },
+    });
+
+    expect(apiMeetingLogs.completeMeeting).toHaveBeenCalledWith(
+      "token-123",
+      "meeting-1",
+      "2026-09-20T22:30:00.000Z",
+    );
+  });
+
+  it("still replays a completion queued before heldAt existed (empty payload), passing no heldAt so the server falls back to receipt time", async () => {
     vi.mocked(apiMeetingLogs.completeMeeting).mockResolvedValue({} as never);
 
     await createReplayer("token-123")({
@@ -150,6 +168,7 @@ describe("meetingLogReplayHandler (entity: meeting_completion)", () => {
     expect(apiMeetingLogs.completeMeeting).toHaveBeenCalledWith(
       "token-123",
       "meeting-1",
+      undefined,
     );
   });
 

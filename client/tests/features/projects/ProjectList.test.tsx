@@ -79,4 +79,74 @@ describe("ProjectList", () => {
 
     expect(screen.getByText("GC: —")).toBeDefined();
   });
+
+  it("shows the GC's name and a linked badge for a project linked to a GC", () => {
+    renderList({
+      projects: [
+        { ...projects[0], gcCompanyId: "gc-1", gcNameCustom: "Big GC" },
+      ],
+    });
+
+    expect(screen.getByText("GC: Big GC")).toBeDefined();
+    expect(screen.getByText("GC linked")).toBeDefined();
+  });
+
+  it("shows no linked badge for a project that is not linked", () => {
+    renderList();
+    expect(screen.queryByText("GC linked")).toBeNull();
+  });
+
+  describe("GC link action", () => {
+    it("shows no link action when the page does not pass onLinkGc", () => {
+      renderList();
+
+      expect(screen.queryByRole("button", { name: /link to gc/i })).toBeNull();
+      expect(screen.queryByRole("button", { name: /unlink gc/i })).toBeNull();
+    });
+
+    it("offers 'Link to GC' for an unlinked project and reports it", () => {
+      const onLinkGc = vi.fn();
+      renderList({ onLinkGc });
+
+      fireEvent.click(
+        screen.getByRole("button", { name: /link to gc for downtown highrise/i }),
+      );
+
+      expect(onLinkGc).toHaveBeenCalledWith(projects[0]);
+    });
+
+    it("offers 'Unlink GC' instead for a project already linked to a GC", () => {
+      const onLinkGc = vi.fn();
+      const linked = { ...projects[0], gcCompanyId: "gc-1" };
+      renderList({ projects: [linked], onLinkGc });
+
+      expect(screen.queryByRole("button", { name: /^link to gc/i })).toBeNull();
+      fireEvent.click(
+        screen.getByRole("button", { name: /unlink gc for downtown highrise/i }),
+      );
+
+      expect(onLinkGc).toHaveBeenCalledWith(linked);
+    });
+
+    it("hides the link action for an archived project", () => {
+      renderList({
+        projects: [{ ...projects[0], archivedAt: "2026-09-09T00:00:00.000Z" }],
+        onLinkGc: vi.fn(),
+      });
+
+      expect(screen.queryByRole("button", { name: /link to gc/i })).toBeNull();
+      expect(screen.queryByRole("button", { name: /unlink gc/i })).toBeNull();
+    });
+  });
+
+  it("never falls back to showing the raw GC company id", () => {
+    renderList({
+      projects: [
+        { ...projects[0], gcCompanyId: "gc-uuid-123", gcNameCustom: null },
+      ],
+    });
+
+    expect(screen.getByText("GC: —")).toBeDefined();
+    expect(screen.queryByText(/gc-uuid-123/)).toBeNull();
+  });
 });

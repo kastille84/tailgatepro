@@ -12,6 +12,11 @@ vi.mock("../../../src/context/auth", () => ({
   useAuth: () => mockUseAuth(),
 }));
 
+const mockUseCurrentUser = vi.fn();
+vi.mock("../../../src/hooks/useCurrentUser", () => ({
+  useCurrentUser: () => mockUseCurrentUser(),
+}));
+
 // The install button has its own provider + tests; stub it here so Navbar
 // tests stay isolated from PWA-install context.
 vi.mock("../../../src/features/pwa-install", () => ({
@@ -34,6 +39,7 @@ describe("Navbar", () => {
       loading: false,
       logout: vi.fn(),
     });
+    mockUseCurrentUser.mockReturnValue({ isGc: false });
   });
 
   it("renders the brand and toggles the mobile menu state", () => {
@@ -106,6 +112,22 @@ describe("Navbar", () => {
     await waitFor(() => {
       expect(logout).toHaveBeenCalledTimes(1);
     });
+  });
+
+  it("hides the Toolbox Talks link for a GC company", () => {
+    mockUseAuth.mockReturnValue({
+      user: { id: "user-1" },
+      loading: false,
+      logout: vi.fn(),
+    });
+    mockUseCurrentUser.mockReturnValue({ isGc: true });
+
+    renderNavbar();
+
+    expect(screen.queryByRole("link", { name: /toolbox talks/i })).toBeNull();
+    expect(
+      screen.getByRole("link", { name: /dashboard/i }).getAttribute("href"),
+    ).toBe("/dashboard");
   });
 
   it("closes the collapsed menu when a nav link inside it is clicked", () => {

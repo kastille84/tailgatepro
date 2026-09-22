@@ -8,8 +8,15 @@ import { Dashboard } from "../../../src/pages/Dashboard/Dashboard";
 import theme from "../../../src/styles/theme";
 
 const mockUseAuth = vi.fn();
+const mockUseCurrentUser = vi.fn();
 vi.mock("../../../src/context/auth", () => ({
   useAuth: () => mockUseAuth(),
+}));
+vi.mock("../../../src/hooks/useCurrentUser", () => ({
+  useCurrentUser: () => mockUseCurrentUser(),
+}));
+vi.mock("../../../src/pages/GcDashboard", () => ({
+  GcDashboard: () => <div data-testid="gc-dashboard-page">GC Dashboard</div>,
 }));
 
 const renderDashboard = () =>
@@ -24,6 +31,7 @@ const renderDashboard = () =>
 describe("Dashboard page", () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    mockUseCurrentUser.mockReturnValue({ isGc: false, isLoading: false });
   });
 
   it("shows a loading status while auth is resolving", () => {
@@ -106,6 +114,34 @@ describe("Dashboard page", () => {
     renderDashboard();
 
     expect(screen.getByText(/gc compliance/i).closest("a")).toBeNull();
+  });
+
+  it("shows a loading status while the current-user profile is resolving", () => {
+    mockUseAuth.mockReturnValue({
+      user: { email: "gc@example.com" },
+      loading: false,
+    });
+    mockUseCurrentUser.mockReturnValue({ isGc: false, isLoading: true });
+
+    renderDashboard();
+
+    expect(screen.getByRole("status").textContent).toMatch(
+      /loading your dashboard/i,
+    );
+  });
+
+  it("renders the GC compliance dashboard in place of the hub for a GC company", () => {
+    mockUseAuth.mockReturnValue({
+      user: { email: "gc@example.com" },
+      loading: false,
+    });
+    mockUseCurrentUser.mockReturnValue({ isGc: true, isLoading: false });
+
+    renderDashboard();
+
+    expect(screen.getByTestId("gc-dashboard-page")).toBeDefined();
+    expect(screen.queryByRole("heading", { name: /^welcome back$/i })).toBeNull();
+    expect(screen.queryByRole("heading", { name: /^projects$/i })).toBeNull();
   });
 
   it("renders the shared footer branding", () => {

@@ -15,8 +15,9 @@ const router = express.Router();
 // the client sends an empty body on the deferred first-login path.
 router.post("/profile", requireAuth, requireProfileMetadata, createProfile);
 
-// GET /api/users/me — the caller's own { id, companyId, role, tier }. Used
-// client-side to gate tier-restricted features (e.g. multi-language talks).
+// GET /api/users/me — the caller's own { id, companyId, role, tier,
+// companyType }. Used client-side to gate tier-restricted features (e.g.
+// multi-language talks) and to tell GC accounts from subcontractor ones.
 router.get("/me", requireAuth, loadUserContext, getCurrentUser);
 
 module.exports = router;

@@ -10,7 +10,9 @@
     {{companyName}}    - the reporting subcontractor's name
     {{projectName}}    - the project the meeting was held on
     {{pdfUrl}}         - a signed, time-limited (30 day) download link
-    {{completedDate}}  - human-readable, e.g. "September 18, 2026 at 12:00 PM UTC"
+    {{completedDate}}  - when the meeting was held (meeting_logs.held_at), human-readable,
+                         e.g. "September 18, 2026 at 12:00 PM UTC". The variable name is kept
+                         from before held_at existed so the live Mailgun template needn't change.
 -->
 <!doctype html>
 <html lang="en" xmlns="http://www.w3.org/1999/xhtml">

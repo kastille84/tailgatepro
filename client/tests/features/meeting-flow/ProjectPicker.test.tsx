@@ -52,6 +52,17 @@ describe("ProjectPicker", () => {
     expect(screen.getByText("GC: —")).toBeDefined();
   });
 
+  it("never falls back to showing the raw GC company id", () => {
+    renderPicker({
+      projects: [
+        { ...projects[1], gcCompanyId: "gc-uuid-123", gcNameCustom: null },
+      ],
+    });
+
+    expect(screen.getByText("GC: —")).toBeDefined();
+    expect(screen.queryByText(/gc-uuid-123/)).toBeNull();
+  });
+
   it("calls onSelect with the project when its Select button is clicked", () => {
     const onSelect = vi.fn();
     renderPicker({ onSelect });

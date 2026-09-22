@@ -51,7 +51,10 @@ the `toolbox_talks.attribution` JSONB column:
 - **Phase 2c `TalkDetail`** must render `attribution.copyright` and
   `attribution.notice` on any screen that shows a talk's body.
 - **Phase 5 PDF service** must print the same credit on the generated
-  meeting-log PDF.
+  meeting-log PDF. ✅ Implemented in `server/services/pdfGeneration.js`, which
+  prints `attribution.copyright` + `attribution.notice` beneath the talk
+  content. How the finished PDF reaches the GC by email is documented in
+  `docs/meeting-flow-design.md` under "Phase 5 hook point".
 
 ## Rule for future harvests
 

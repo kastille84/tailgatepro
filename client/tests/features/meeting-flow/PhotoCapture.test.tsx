@@ -104,6 +104,7 @@ describe("PhotoCapture", () => {
       const file = makeFile();
       const input = document.querySelector('input[type="file"]') as HTMLInputElement;
       fireEvent.change(input, { target: { files: [file] } });
+      fireEvent.click(screen.getByRole("button", { name: /use photo/i }));
 
       expect(onCapture).toHaveBeenCalledWith(file);
       expect(screen.getByAltText(/captured crew photo/i)).toBeDefined();
@@ -167,6 +168,7 @@ describe("PhotoCapture", () => {
       expect(captureButton).toHaveProperty("disabled", false);
 
       fireEvent.click(captureButton);
+      fireEvent.click(screen.getByRole("button", { name: /use photo/i }));
 
       expect(onCapture).toHaveBeenCalledTimes(1);
       const file = onCapture.mock.calls[0][0] as File;

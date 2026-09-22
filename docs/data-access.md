@@ -50,6 +50,16 @@ for simple CRUD. It was not chosen because:
 - Never add a Supabase call to the client outside `context/auth/`.
 - Do not write RLS policies. If a future feature genuinely needs client-direct access (e.g. a
   Supabase Realtime subscription), that is a deliberate revisit of this decision, documented here.
+- **Cross-company reads (the GC dashboard, Phase 6)** are service-layer code, not RLS. A GC reads a
+  subcontractor's completed meeting logs only through `server/services/gcDashboard.js`, which authorizes
+  on a single column — `projects.gc_company_id = the caller's company` — and returns `404` (never `403`)
+  for anything not linked, so another company's data is indistinguishable from missing.
+  `project_subcontractors` is a roster, not an authorization source. `projects.gc_company_id` is written
+  only by the join-code link endpoints, never from a create/PATCH body. See `docs/gc-dashboard-design.md`.
+- **Doc/code mismatch, resolved by Phase 6b:** the first section above said every table has RLS enabled with
+  no policies, but `Supabase_SQL.sql` never ran `ENABLE ROW LEVEL SECURITY` on `companies`, `users`,
+  `projects` or `project_subcontractors`. 6b adds it (still zero policies), so that claim is true **once
+  6b's SQL is applied to the database** — see `docs/gc-dashboard-design.md` "RLS finding".
 - Storage buckets follow the same idea: `signatures` and `crew-photos` (both `public: false`,
   created via `scripts/setup-storage-buckets.js`) are never touched by the client directly — the
   server issues 5-minute signed URLs after confirming the caller's company owns the parent

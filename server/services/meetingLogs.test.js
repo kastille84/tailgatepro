@@ -17,7 +17,7 @@ const {
 } = require("./meetingLogs");
 
 const MEETING_LOG_COLUMNS =
-  "id, project_id, talk_id, foreman_id, company_id, crew_photo_url, final_pdf_url, completed_at, synced_at, created_at";
+  "id, project_id, talk_id, foreman_id, company_id, crew_photo_url, final_pdf_url, completed_at, held_at, synced_at, created_at";
 
 const dbRow = {
   id: "meeting-1",
@@ -28,6 +28,7 @@ const dbRow = {
   crew_photo_url: null,
   final_pdf_url: null,
   completed_at: null,
+  held_at: null,
   synced_at: null,
   created_at: "2026-09-14T00:00:00.000Z",
 };
@@ -41,6 +42,7 @@ const mappedMeetingLog = {
   crewPhotoUrl: null,
   finalPdfUrl: null,
   completedAt: null,
+  heldAt: null,
   syncedAt: null,
   createdAt: "2026-09-14T00:00:00.000Z",
 };
@@ -362,11 +364,19 @@ describe("meetingLogs service: complete", () => {
   let updateEqId;
   let updateFn;
 
-  const completedRow = { ...dbRow, completed_at: "2026-09-14T01:00:00.000Z" };
+  // held_at deliberately differs from completed_at (the meeting was held the
+  // evening before it synced), so a test can't pass by reading the wrong column.
+  const completedRow = {
+    ...dbRow,
+    completed_at: "2026-09-14T01:00:00.000Z",
+    held_at: "2026-09-13T22:30:00.000Z",
+  };
   const mappedCompleted = {
     ...mappedMeetingLog,
     completedAt: "2026-09-14T01:00:00.000Z",
+    heldAt: "2026-09-13T22:30:00.000Z",
   };
+  const receiptTime = "2026-09-21T12:00:00.000Z";
 
   beforeEach(() => {
     guardSingle = vi.fn().mockResolvedValue({
@@ -399,9 +409,17 @@ describe("meetingLogs service: complete", () => {
     });
 
     vi.spyOn(pdfGenerationQueue, "enqueue").mockReset().mockResolvedValue(undefined);
+
+    // Pin "server receipt" so the stamped timestamps can be asserted exactly.
+    vi.useFakeTimers({ toFake: ["Date"] });
+    vi.setSystemTime(new Date(receiptTime));
   });
 
-  it("should complete a meeting with >=1 signature, stamp completed_at, and enqueue PDF generation", async () => {
+  afterEach(() => {
+    vi.useRealTimers();
+  });
+
+  it("should complete a meeting with >=1 signature, stamp completed_at and held_at, and enqueue PDF generation", async () => {
     // Act
     const result = await complete({ id: "meeting-1", companyId: "company-1" });
 
@@ -409,7 +427,10 @@ describe("meetingLogs service: complete", () => {
     expect(guardEqId).toHaveBeenCalledWith("id", "meeting-1");
     expect(guardEqCompany).toHaveBeenCalledWith("company_id", "company-1");
     expect(sigEq).toHaveBeenCalledWith("meeting_id", "meeting-1");
-    expect(updateFn).toHaveBeenCalledWith({ completed_at: expect.any(String) });
+    expect(updateFn).toHaveBeenCalledWith({
+      completed_at: receiptTime,
+      held_at: receiptTime,
+    });
     expect(updateEqId).toHaveBeenCalledWith("id", "meeting-1");
     expect(updateEqCompany).toHaveBeenCalledWith("company_id", "company-1");
     expect(pdfGenerationQueue.enqueue).toHaveBeenCalledWith(
@@ -417,6 +438,71 @@ describe("meetingLogs service: complete", () => {
       "company-1",
     );
     expect(result).toEqual(mappedCompleted);
+  });
+
+  it("should record the client-reported held_at, separate from the server-receipt completed_at, when one is given", async () => {
+    // Arrange — an offline crew held the meeting the previous evening
+    const heldAt = "2026-09-20T22:30:00.000Z";
+
+    // Act
+    await complete({ id: "meeting-1", companyId: "company-1", heldAt });
+
+    // Assert
+    expect(updateFn).toHaveBeenCalledWith({
+      completed_at: receiptTime,
+      held_at: heldAt,
+    });
+  });
+
+  it("should still complete, falling back to receipt time, when the reported held_at is older than the backdate limit", async () => {
+    // Arrange — 10 days old. Rejecting would strand the completion in the
+    // client's retry-forever outbox, so it must succeed instead.
+    const tooOld = "2026-09-11T12:00:00.000Z";
+
+    // Act
+    const result = await complete({
+      id: "meeting-1",
+      companyId: "company-1",
+      heldAt: tooOld,
+    });
+
+    // Assert
+    expect(updateFn).toHaveBeenCalledWith({
+      completed_at: receiptTime,
+      held_at: receiptTime,
+    });
+    expect(pdfGenerationQueue.enqueue).toHaveBeenCalledWith("meeting-1", "company-1");
+    expect(result).toEqual(mappedCompleted);
+  });
+
+  it("should still complete, falling back to receipt time, when the reported held_at is in the future", async () => {
+    // Act
+    await complete({
+      id: "meeting-1",
+      companyId: "company-1",
+      heldAt: "2026-09-22T12:00:00.000Z",
+    });
+
+    // Assert
+    expect(updateFn).toHaveBeenCalledWith({
+      completed_at: receiptTime,
+      held_at: receiptTime,
+    });
+  });
+
+  it("should map heldAt to completedAt when the completed row's held_at was never populated", async () => {
+    // Arrange — a legacy completed row from before held_at existed
+    updateSingle.mockResolvedValue({
+      data: { ...completedRow, held_at: null },
+      error: null,
+    });
+
+    // Act
+    const result = await complete({ id: "meeting-1", companyId: "company-1" });
+
+    // Assert
+    expect(result.heldAt).toBe("2026-09-14T01:00:00.000Z");
+    expect(result.completedAt).toBe("2026-09-14T01:00:00.000Z");
   });
 
   it("should throw a 409 AppError when the meeting is already completed, without checking signatures", async () => {
@@ -759,6 +845,54 @@ describe("meetingLogs service: getPdfUrl", () => {
       "acme-roofing-downtown-highrise-undated-meeting1.pdf",
     );
     expect(url).toBe("https://signed.example/report.pdf");
+  });
+
+  it("should date the filename by when the meeting was held, not when the server received the completion", async () => {
+    // Arrange — held Sept 18, synced and completed Sept 19
+    single.mockResolvedValue({
+      data: {
+        ...dbRow,
+        final_pdf_url: "meeting-1/report.pdf",
+        completed_at: "2026-09-19T06:15:00.000Z",
+        held_at: "2026-09-18T15:30:00.000Z",
+      },
+      error: null,
+    });
+
+    // Act
+    await getPdfUrl("meeting-1", "company-1");
+
+    // Assert
+    expect(storageService.getSignedUrl).toHaveBeenCalledWith(
+      "meeting-pdfs",
+      "meeting-1/report.pdf",
+      300,
+      "acme-roofing-downtown-highrise-2026-09-18-meeting1.pdf",
+    );
+  });
+
+  it("should fall back to the completion date in the filename when held_at was never populated", async () => {
+    // Arrange — a legacy completed row
+    single.mockResolvedValue({
+      data: {
+        ...dbRow,
+        final_pdf_url: "meeting-1/report.pdf",
+        completed_at: "2026-09-19T06:15:00.000Z",
+        held_at: null,
+      },
+      error: null,
+    });
+
+    // Act
+    await getPdfUrl("meeting-1", "company-1");
+
+    // Assert
+    expect(storageService.getSignedUrl).toHaveBeenCalledWith(
+      "meeting-pdfs",
+      "meeting-1/report.pdf",
+      300,
+      "acme-roofing-downtown-highrise-2026-09-19-meeting1.pdf",
+    );
   });
 
   it("should throw a 404 AppError when no PDF has been generated yet, without looking up the project or company", async () => {

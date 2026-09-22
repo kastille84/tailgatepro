@@ -35,7 +35,7 @@ export const ProjectPicker = ({ projects, onSelect }: ProjectPickerProps) => {
           <StyledPickerCardMain>
             <StyledPickerName>{project.name}</StyledPickerName>
             <StyledPickerMeta>
-              GC: {project.gcNameCustom ?? project.gcCompanyId ?? "—"}
+              GC: {project.gcNameCustom ?? "—"}
             </StyledPickerMeta>
           </StyledPickerCardMain>
           <Button

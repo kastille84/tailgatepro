@@ -5,12 +5,16 @@ const {
   createProject,
   updateProject,
   deleteProject,
+  linkGc,
+  unlinkGc,
 } = require("./projects");
 
 const listForCompanySpy = vi.spyOn(projectsService, "listForCompany");
 const createSpy = vi.spyOn(projectsService, "create");
 const updateSpy = vi.spyOn(projectsService, "update");
 const removeSpy = vi.spyOn(projectsService, "remove");
+const linkGcSpy = vi.spyOn(projectsService, "linkGc");
+const unlinkGcSpy = vi.spyOn(projectsService, "unlinkGc");
 
 const project = {
   id: "project-1",
@@ -33,6 +37,8 @@ describe("projects controller", () => {
     createSpy.mockReset();
     updateSpy.mockReset();
     removeSpy.mockReset();
+    linkGcSpy.mockReset();
+    unlinkGcSpy.mockReset();
     req = {
       user: { id: "auth-user-1", companyId: "company-1", role: "foreman" },
       body: {},
@@ -109,7 +115,6 @@ describe("projects controller", () => {
         id: "project-1",
         ownerCompanyId: "company-1",
         name: "Downtown Highrise",
-        gcCompanyId: undefined,
         gcNameCustom: "Acme GC",
       });
       expect(res.status).toHaveBeenCalledWith(201);
@@ -185,7 +190,6 @@ describe("projects controller", () => {
         patch: {
           name: undefined,
           status: "completed",
-          gcCompanyId: undefined,
           gcNameCustom: undefined,
           archived: undefined,
         },
@@ -279,6 +283,77 @@ describe("projects controller", () => {
 
       // Act
       await deleteProject(req, res, next);
+
+      // Assert
+      expect(next).toHaveBeenCalledWith(error);
+      expect(res.status).not.toHaveBeenCalled();
+    });
+  });
+
+  describe("linkGc", () => {
+    it("should link the project for the caller's company with the submitted join code and respond 200", async () => {
+      // Arrange
+      req.params = { id: "project-1" };
+      req.body = { joinCode: "ABCD2345" };
+      const linked = { ...project, gcCompanyId: "gc-1" };
+      linkGcSpy.mockResolvedValue(linked);
+
+      // Act
+      await linkGc(req, res, next);
+
+      // Assert
+      expect(linkGcSpy).toHaveBeenCalledWith({
+        projectId: "project-1",
+        companyId: "company-1",
+        joinCode: "ABCD2345",
+      });
+      expect(res.status).toHaveBeenCalledWith(200);
+      expect(res.json).toHaveBeenCalledWith({ success: true, data: linked });
+      expect(next).not.toHaveBeenCalled();
+    });
+
+    it("should forward a service error to next()", async () => {
+      // Arrange
+      req.params = { id: "project-1" };
+      req.body = { joinCode: "NOPE2345" };
+      const error = new Error("Join code not found");
+      linkGcSpy.mockRejectedValue(error);
+
+      // Act
+      await linkGc(req, res, next);
+
+      // Assert
+      expect(next).toHaveBeenCalledWith(error);
+      expect(res.status).not.toHaveBeenCalled();
+    });
+  });
+
+  describe("unlinkGc", () => {
+    it("should unlink the project for the caller's company and respond 200", async () => {
+      // Arrange
+      req.params = { id: "project-1" };
+      unlinkGcSpy.mockResolvedValue(project);
+
+      // Act
+      await unlinkGc(req, res, next);
+
+      // Assert
+      expect(unlinkGcSpy).toHaveBeenCalledWith({
+        projectId: "project-1",
+        companyId: "company-1",
+      });
+      expect(res.status).toHaveBeenCalledWith(200);
+      expect(res.json).toHaveBeenCalledWith({ success: true, data: project });
+    });
+
+    it("should forward a service error to next()", async () => {
+      // Arrange
+      req.params = { id: "project-1" };
+      const error = new Error("Project not found");
+      unlinkGcSpy.mockRejectedValue(error);
+
+      // Act
+      await unlinkGc(req, res, next);
 
       // Assert
       expect(next).toHaveBeenCalledWith(error);

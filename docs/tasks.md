@@ -829,7 +829,7 @@ TEXT` (nullable, `ADD COLUMN IF NOT EXISTS` note like the `archived_at`
       make it truly optional — no prior optional-email precedent existed in
       this client, so this idiom is now the one to reuse)
 - [x] `client/src/services/apiProjects.ts` — `gcContactEmail?: string |
-  null` on `CreateProjectInput`/`UpdateProjectPatch`; `useCreateProject.ts`
+null` on `CreateProjectInput`/`UpdateProjectPatch`; `useCreateProject.ts`
       (optimistic-entry default) / `useUpdateProject.ts` (via
       `optimisticProjects.ts`'s `applyProjectPatch`) thread it through
       (+ tests across `ProjectForm.test.tsx`, `apiProjects.test.ts`,
@@ -854,7 +854,7 @@ TEXT` (nullable, `ADD COLUMN IF NOT EXISTS` note like the `archived_at`
       through; both `POST /`/`PATCH /:id` validators gained an
       `.optional({ checkFalsy: true }).isEmail()` chain (mirrors
       `waitlist.js`'s existing email validator); `server/services/
-  projects.test.js` and `server/controllers/projects.test.js` both updated
+projects.test.js` and `server/controllers/projects.test.js` both updated
       with matching cases
 
 ### 5d — Server: PDF rendering (pure, testable) · status: done
@@ -940,7 +940,7 @@ meetingLog, project, talk, signatures, crewPhotoBuffer })` → `Buffer` via
       +2 (`getPdfUrl`). Full `npm run test:server` suite: 240/240 passing
       (up from 217)
 - [x] Verify (partial): booted the server and confirmed `GET
-  /api/meetings/:id/pdf-url` returns 401, not 404/the SPA fallback, same
+/api/meetings/:id/pdf-url` returns 401, not 404/the SPA fallback, same
       as every other new server-only route in prior sub-phases. Full
       curl-with-a-real-Bearer-token pass (complete a meeting, confirm a PDF
       lands at `meeting-pdfs/{id}/report.pdf`, confirm the signed URL works,
@@ -1005,8 +1005,8 @@ meetingLog, project, talk, signatures, crewPhotoBuffer })` → `Buffer` via
       was (one signer's image failing to download doesn't abort the whole
       PDF, same soft-fail precedent). Also added a static, unconditional
       watermark footer line (`"Logged via TailgatePro (Free plan) —
-    upgrade to Trade Pro to remove this watermark and add your company
-    logo."`, `Helvetica-Oblique` + gray fill, pdfkit's built-in font, no
+upgrade to Trade Pro to remove this watermark and add your company
+logo."`, `Helvetica-Oblique` + gray fill, pdfkit's built-in font, no
       file to embed) after the user asked how PDF branding is being
       handled — `docs/pricing-and-positioning-strategy_V2.md` already
       promises exactly this as the Trade Free default with Trade Pro+
@@ -1035,8 +1035,8 @@ meetingLog, project, talk, signatures, crewPhotoBuffer })` → `Buffer` via
       once each signer also got an ~80px embedded signature image this
       session (the doc got taller, so the crew-photo section lands near a
       page boundary far more often). Fix: new exported `ensureRoomFor(doc,
-    height)` in `pdfGeneration.js` — checks `doc.page.height -
-    doc.page.margins.bottom - doc.y` against the needed height and calls
+height)` in `pdfGeneration.js` — checks `doc.page.height -
+doc.page.margins.bottom - doc.y` against the needed height and calls
       `doc.addPage()` proactively if it won't fit; called before both
       `doc.image()` sites (320 for the crew photo section — heading + image
       kept together so the heading doesn't get orphaned alone at a page
@@ -1070,7 +1070,7 @@ meetingLog, project, talk, signatures, crewPhotoBuffer })` → `Buffer` via
       file to embed). Applied to the doc title, all 5 header label lines
       (`Subcontractor`/`Project`/`General contractor`/`Talk`/`Completed`),
       and every section heading (`Summary`, `Talking points`, `Hazards to
-    check on site`, `Discussion questions`, `Attendance & signatures`,
+check on site`, `Discussion questions`, `Attendance & signatures`,
       `Crew photo`). `bulletList()`'s items now render with
       `{ indent: 20, indentAllLines: true }` (the latter so a wrapped long
       item's continuation lines stay aligned under the bullet). New GC CTA
@@ -1192,12 +1192,12 @@ file is meant to grow with future template names).
       `pdfGeneration.js` now imports it instead of defining it locally, no
       behavior change
 - [x] New `server/services/email.js` — `sendMeetingLogEmail({ to,
-  projectName, companyName, pdfUrl, completedAt })`; `getMailgunClient()`
+projectName, companyName, pdfUrl, completedAt })`; `getMailgunClient()`
       (exported for spy-ability) returns `null` when `MAILGUN_API_KEY`/
       `MAILGUN_DOMAIN` aren't both set → logs `{ to, subject, variables }`
       instead of sending (dev fallback per 5a); when configured, calls
       `mailgun.js`'s `client.messages.create(domain, { from, to, subject,
-  template, "h:X-Mailgun-Variables": JSON.stringify(variables) })`. Never
+template, "h:X-Mailgun-Variables": JSON.stringify(variables) })`. Never
       throws — a send failure is caught and `console.error`'d, matching
       `translation.js`'s "degrade, don't throw" shape; no `AppError` used
       since there's no controller/route in this call chain and
@@ -1239,22 +1239,431 @@ file is meant to grow with future template names).
       and a mobile client — still owed, needs the Mailgun template created
       first (see pre-req above)
 
-### 5g — Hardening, docs, verify
+### 5g — Hardening, docs, verify · status: docs complete; live smoke pending
 
-- [ ] Tick `docs/content-attribution.md`'s "Phase 5 PDF service" line;
-      cross-reference the email flow from `docs/meeting-flow-design.md`
-- [ ] Re-surface the `gc_contact_email` → invite/join-company supersession as
+- [x] Tick `docs/content-attribution.md`'s "Phase 5 PDF service" line;
+      cross-reference the email flow from `docs/meeting-flow-design.md` —
+      `content-attribution.md` now marks the obligation implemented
+      (`server/services/pdfGeneration.js` prints `copyright` + `notice`) and
+      points at `meeting-flow-design.md`'s "Phase 5 hook point" for email
+      delivery; `meeting-flow-design.md`'s intro now says it also covers
+      Phase 5 and its PDF-scope paragraph names the implementing file
+- [x] Re-surface the `gc_contact_email` → invite/join-company supersession as
       an explicit open item under the Cross-cutting epic below, so it isn't
-      lost once that epic starts
-- [ ] Manual/curl smoke: complete a meeting on a project with
+      lost once that epic starts — already present as the epic's "Supersede
+      `projects.gc_contact_email`" checkbox (added during 5a)
+- [x] Manual/curl smoke: complete a meeting on a project with
       `gc_contact_email` set → confirm a PDF lands in the `meeting-pdfs`
       bucket, `final_pdf_url` is populated, `GET .../pdf-url` returns a
       working signed URL, and the email send fires (console-logged in dev, or
-      a real Mailgun test send)
+      a real Mailgun test send). Needs live Supabase + Mailgun + a real
+      Bearer token. Runbook:
+  - Prereqs: root `.env` has Supabase + `MAILGUN_API_KEY`/`MAILGUN_DOMAIN`;
+    `npm run setup:storage` has created `meeting-pdfs`; the
+    `meeting-log-report` template is in the Mailgun portal (HTML from
+    `docs/mailgun-templates/meeting-log-report.html`, subject blank); a
+    project with `gc_contact_email` set to an inbox you control; a Bearer
+    token from the browser session (`supabase.auth.getSession()`)
+  - Flow: `POST /api/meetings` (client-generated UUID `id`, `projectId`,
+    `talkId`) → `POST /api/meetings/:id/signatures` (≥1) →
+    `PATCH /api/meetings/:id/complete`
+  - Confirm: PDF object in the `meeting-pdfs` bucket;
+    `meeting_logs.final_pdf_url` populated; `GET /api/meetings/:id/pdf-url`
+    returns a signed URL that opens the PDF (CPWR/NIOSH attribution
+    visible); email received (subject shows company + project, button opens
+    the PDF, renders on desktop and mobile)
+  - Second pass with `MAILGUN_*` unset → the server console logs
+    `{ to, subject, variables }` instead of sending
 
-## Phase 6 — GC dashboard · epic, blocked by invite/join-company
+## Phase 6 — GC dashboard · epic
 
-- [ ] GC views: projects, incoming meeting-log PDFs, per-sub compliance status
+Plan: `~/.claude/plans/let-s-work-on-phase-snazzy-sphinx.md`. Originally one line, marked blocked by the
+invite/join-company epic. Exploration showed nothing in the app can set `projects.gc_company_id` or write
+`project_subcontractors`, and every read (meeting logs, PDFs, `projects.getById`) is scoped to the owning
+sub's company — so a GC gets 404 on a sub's meetings today. Rather than wait on the full invite epic, Phase 6
+opens with a slim "GC connects to a project" slice and defers email invites/roles to the Cross-cutting epic.
+
+Decisions locked with the user:
+
+- **Sequencing** — slim link slice first (6b–6d); email invites, `admin`/`safety_manager` role enforcement, and
+  `gc_contact_email` supersession stay under Cross-cutting
+- **Project model** — sub-owned, linked by GC code: each sub keeps its own project row; the sub enters the GC
+  company's join code, which sets `projects.gc_company_id` and adds a `project_subcontractors` row. The GC
+  dashboard groups linked rows into a jobsite (by name) and rolls up per sub. No change to the sub's offline flow
+- **Compliance v1** — "logged today / missing" per linked sub. **Cadence is daily by product decision** (job
+  sites change constantly, so hazards change daily), but is expected to become configurable later by the GC
+  and/or an individual sub (some subs will want weekly) — so the compliance logic takes a period window as
+  input rather than hardcoding "daily". No cadence schema/endpoint/UI in this phase
+- **Tier gating deferred** — no GC entitlement / blurred-sub-#2 here; rides with the deferred Stripe /
+  `companies.tier` reconciliation
+- Read-only dashboard, online-only (no outbox, no new Dexie tables)
+
+Decided in the 6a review (all three as recommended in `docs/gc-dashboard-design.md`):
+
+- **`held_at`** — a client-reported `meeting_logs.held_at` drives compliance windows, the PDF's meeting date,
+  the PDF filename and the email date, because `completed_at` is stamped at _server receipt_ and would put an
+  offline meeting synced after midnight on the wrong day. Added as its own sub-phase, **6b2**
+- **RLS on** `companies`, `users`, `projects`, `project_subcontractors` (no policies) — closes a doc/code
+  mismatch and protects the new `companies.join_code`
+- **`gcCompanyId` closed** on `POST`/`PATCH /api/projects` — the join-code link endpoints are the only writer
+
+### 6a — Design doc · status: done
+
+- [x] New `docs/gc-dashboard-design.md` (shape of `docs/meeting-flow-design.md`: why this exists, schema
+      additions, decisions, "explicitly not resolved here", landing order)
+- [x] `project_subcontractors` role under the sub-owned model — write `(project_id, owner_company_id)` on link
+      as a roster, but authorization keys on `projects.gc_company_id` only, so drift is never a security issue
+- [x] Jobsite grouping key — `(gc_company_id, normalized project name)`; GC-owned canonical jobsite noted as
+      the future upgrade
+- [x] The "today" boundary — client sends local `date` + `tzOffset`, server computes the UTC range
+- [x] Configurable-cadence extensibility sketched (design only, not built): GC default + per-sub override with
+      the GC's value as a floor; per-sub window computed by the overview; cadence-neutral status names
+- [x] GC PDF access — authorize via `projects.gc_company_id = caller` (404, never 403); filename built from the
+      _meeting's_ company, not the caller's; no crew-photo/signature-image URLs exposed to GCs in v1
+- [x] "Completed, PDF pending" tolerated via `pdfReady`; noted there is no PDF regeneration path
+      (`pdfGenerationQueue.enqueue` has one call site, inside `complete()`)
+- [x] `docs/data-access.md` updated with the GC read path (service-layer, no RLS policies) and a pointer to the
+      RLS doc/code mismatch below
+- [x] Review — the 3 decisions above resolved (option A / enable RLS / close `gcCompanyId`); the design doc's
+      "needing review" section, timestamp block and RLS finding are rewritten as decided
+
+### 6b — Schema: join code, `held_at`, RLS · status: SQL + docs written; applying to Supabase pending
+
+SQL and schema docs only — no application code and no consumers yet (same shape as 4b/5b).
+
+- [x] `companies.join_code TEXT UNIQUE` (nullable; GC-only via `CHECK check_join_code_gc_only`; generated
+      server-side in 6c, so the client-UUID rule doesn't apply)
+- [x] `meeting_logs.held_at TIMESTAMPTZ` (nullable), with a backfill from `completed_at` so existing meetings
+      keep the date and filename they have today. No new index — per-GC query volume doesn't warrant one yet
+- [x] `ENABLE ROW LEVEL SECURITY` (no policies) on `companies`, `users`, `projects`, `project_subcontractors`,
+      after each `CREATE TABLE`, with matching commented upgrade lines. Checked safe: the client never queries
+      tables (only creates the Supabase auth client), and the server plus `scripts/*` all use the service-role
+      client, which bypasses RLS. Removed the stale "pre-existing gap" comment at the `user_favorites` block
+- [x] `Supabase_SQL.sql` (commented `ALTER …` upgrade lines per prior phases) + `Supabase_Schema.md` (`join_code`
+      and `held_at` rows; RLS notes under the Companies & Users and Projects & Access sections);
+      `docs/data-access.md` mismatch bullet marked resolved-once-applied
+- [ ] Pre-req (user, outside this codebase): run `SELECT id, name FROM projects WHERE gc_company_id IS NOT
+  NULL;` — expect **no rows** (the client never set it; tell Claude if any appear) — then run the upgrade
+      lines in the Supabase SQL editor: the `companies` and `meeting_logs` `ALTER`s, the four
+      `ENABLE ROW LEVEL SECURITY` statements, and the `held_at` backfill `UPDATE`. If a trigger was ever
+      created by hand in the dashboard, it must be `SECURITY DEFINER`
+- [ ] Verify after applying: `information_schema.columns` shows `companies.join_code` and
+      `meeting_logs.held_at`; `SELECT relname, relrowsecurity FROM pg_class WHERE relname IN ('companies',
+  'users','projects','project_subcontractors')` is all `true`; `SELECT count(*) FROM meeting_logs WHERE
+  completed_at IS NOT NULL AND held_at IS NULL` is `0`; an anon-key request to
+      `/rest/v1/companies?select=id` returns `[]`; the app still loads Projects/Dashboard (service role
+      bypasses RLS)
+
+### 6b2 — `held_at` plumbing (server + client) · status: code complete; live smoke pending
+
+Populates the column 6b adds, so 6e's compliance windows have real data. Inserted between 6b and 6c and named
+6b2 to avoid renumbering 6c–6g. Design: `docs/gc-dashboard-design.md` "Compliance". Two simplifications came out
+of the exploration: the `heldAt ?? completedAt` fallback lives once, in `toMeetingLog`, so every consumer just
+reads `meetingLog.heldAt`; and the client stamps the time in `useCompleteMeetingLog` (the one place the
+completion row is enqueued), so `MeetingWizard.tsx` and its tests are unchanged.
+
+- [x] **Server core**: new pure `server/utility/heldAt.js` (`resolveHeldAt`, 5 min future / **7 day** past
+      window). `complete()` writes `completed_at` (server receipt) and `held_at` from the same `now`;
+      `MEETING_LOG_COLUMNS` / `toMeetingLog` gain `held_at` / `heldAt` (falling back to `completed_at`); the
+      `PATCH /api/meetings/:id/complete` route validates only the _format_ of an optional `heldAt`
+      (ISO 8601 → else `422`) and the controller passes it through
+- [x] **Deliberate design call — an out-of-range `heldAt` is ignored, not rejected.** The plan said `422`, but the
+      client's offline outbox retries a `failed` row forever (`RETRYABLE_STATUSES` in `utils/db/outbox.ts`) with
+      an identical payload, so a rejected `heldAt` would leave a fully-signed meeting permanently un-completed —
+      no PDF, invisible to the GC. Instead a missing, unparseable, >5-min-future or >7-day-old `heldAt` falls
+      back to server receipt time and the completion still succeeds. Covered by a regression test
+- [x] **PDF records it**: header `Completed: <completedAt>` → `Meeting held: <heldAt>`; the footer's
+      `Generated <now>` is unchanged and, since generation runs inside `complete()`, doubles as the
+      server-receipt time — so the PDF carries both timestamps. `docs/meeting-flow-design.md`'s "PDF content
+      scope" paragraph corrected
+- [x] **PDF filename uses it**: `buildPdfFilename`'s param renamed `completedAt` → `meetingDate`; callers
+      (`meetingLogs.getPdfUrl`, `pdfGenerationQueue`) pass `heldAt`. Existing meetings keep their exact
+      filename (backfill: `held_at` = `completed_at`)
+- [x] **Email**: `email.js`'s param renamed to `meetingDate`; the Mailgun template variable stays
+      `completedDate` (it lives in the Mailgun portal, so no template change is needed and its copy already reads
+      correctly for the held time)
+- [x] **Client**: `MeetingLog.heldAt`; `completeMeeting(accessToken, meetingId, heldAt?)` sends a JSON body only
+      when given; `meetingLogReplayHandler` forwards `payload.heldAt` (an empty pre-existing payload passes
+      `undefined`, so completions queued before this deploy still replay); `useCompleteMeetingLog` stamps
+      `heldAt` at enqueue time. No deploy-ordering constraint: an old server ignores the extra body, and an old
+      client's empty completion falls back on the new server
+- [x] **Tests**: server **316/316 passing** (up from 299; run with dummy `SUPABASE_*` env vars since
+      `vitest.config.js` doesn't load `.env`) — new `heldAt.test.js`, plus updates across `meetingLogs` (service +
+      controller), `pdfFilename`, `pdfGeneration` (fixture has a `heldAt` different from `completedAt`, asserts the
+      rendered "Meeting held" line and that the receipt time is not presented as the meeting time), `email`,
+      `pdfGenerationQueue`. Client: the 4 touched suites pass (59 tests) and the 3 changed source files are at
+      **100%** statements/branches/functions/lines. `npx eslint` clean on every touched client file; `tsc -b`
+      shows only the pre-existing `Input.tsx` errors
+- [x] **Fixed: `PhotoCapture.test.tsx`'s 2 pre-existing failures.** Root cause was a test bug, not a component
+      bug: `PhotoCapture.tsx` uses a deliberate select-then-confirm flow (`onCapture` only fires from
+      `handleConfirm`, wired to the "Use photo" button — mirrored intentionally by `LogoUpload.tsx`, whose own
+      test already exercises the correct click-then-click pattern), but the two failing tests asserted `onCapture`
+      fired immediately after `fireEvent.change`/the capture click, skipping the required confirmation click.
+      Fixed by adding the missing `fireEvent.click(screen.getByRole("button", { name: /use photo/i }))` in both
+      tests. No production code changed. Full client suite now green (963/963) and the `--coverage` report
+      generates again (was blocked by these 2 failures since before this branch started). Surfaced a pre-existing,
+      unrelated finding now visible for the first time: `PhotoCapture.tsx:153` and `MeetingWizard.tsx:165` sit at
+      <100% branch coverage (97.43% / 99.09%) — both are the same "unreachable guard" shape already accepted
+      elsewhere in this codebase (`TalkForm`/`ProjectForm` precedent: the guarded branch can't be hit from the UI
+      as wired), not touched here since it's outside this fix's scope
+- [ ] Verify (user, needs live Supabase + Mailgun — also the first live use of the 6b `held_at` column, so a
+      missing column would show as a 502 "Could not complete the meeting"): complete a meeting in the app →
+      `meeting_logs.held_at` is set; the PDF header reads `Meeting held: …` and its footer `Generated …`; the
+      downloaded filename and the email carry the held date. Then `curl` `PATCH …/complete` with no body →
+      `held_at` = `completed_at`; and with a `heldAt` ~10 days old → still completes, `held_at` = server time
+- [ ] Known limitations, tracked not dropped: (1) already-generated PDFs keep the old "Completed" header — no
+      regeneration path exists; (2) `formatDate` prints UTC and `held_at` keeps no timezone, so a late-evening
+      West Coast talk can show the next calendar date on the PDF — a real fix stores the foreman's tz offset
+      (e.g. `held_tz_offset`) and formats with it; (3) a client-supplied time can be backdated (bounded to 7
+      days, and `completed_at` is kept as server-side evidence), so 6e/6f show both `heldAt` and `completedAt`
+      on the GC detail view; (4) `heldAt` is stamped when the completion row is enqueued, so a save resumed after
+      an interruption stamps the resume time rather than the first Save tap
+
+### 6c — Server: GC identity + link endpoints · status: code complete; live smoke pending
+
+Plan: `~/.claude/plans/let-s-work-on-6c-melodic-oasis.md`. Decided while planning (both differ from the 6a
+design doc, which is updated to match):
+
+- **Link/unlink are subcontractor-only** — a new `requireSubcontractorCompany` guard (403 for a GC account), next
+  to `requireGcCompany`. Otherwise a GC could attach its own project to another GC and show up as a phantom sub on
+  that GC's dashboard in 6e
+- **Link overwrites `gc_name_custom` with the GC's registered name** (replacing the 6a "keep, fill if empty"
+  rule, whose fill branch could never fire because create already requires a GC name). No `gcCompanyName` field
+  is added to the projects payload — every screen already reads `gcNameCustom`. The sub's typed text is not
+  preserved; unlink keeps the name so `check_gc_info` still holds
+
+- [x] `getUserContext` / `loadUserContext` add `companyType` to `req.user` (also now on `GET /api/users/me`); new
+      `requireGcCompany` middleware (403 otherwise). `loadUserContext.test.js` was stale (no `tier`) — fixed
+- [x] GC: `GET /api/companies/join-code` (lazily creates the code). New `server/utility/joinCode.js` (8 chars from
+      `ABCDEFGHJKMNPQRSTUVWXYZ23456789`, `crypto.randomInt`). `getOrCreateJoinCode` is race-safe without a
+      transaction: the write is guarded by `.is("join_code", null)`, a unique collision (`23505`) retries up to 5
+      times, and a lost race re-reads the winner's code
+- [x] Sub: `POST /api/projects/:id/link-gc { joinCode }` and `DELETE /api/projects/:id/link-gc` — owner-scoped;
+      sets/clears `gc_company_id`, upserts/deletes the `project_subcontractors` row. Bad code `404`, own company's
+      code `422`, already linked to a _different_ GC `409`, same GC idempotent `200` (and it re-upserts the roster
+      row, so a retry heals a half-failed link). The link update is guarded with `.is("gc_company_id", null)`, so a
+      concurrent link returns `409` instead of overwriting
+- [x] Remove `gcCompanyId` from `POST`/`PATCH /api/projects` (validators, controller, `create`/`update`) so the
+      link endpoints are the only writer; `gcNameCustom` is now a plain required field on create (`check_gc_info`).
+      The client never sent `gcCompanyId`, and unknown body fields are ignored, so nothing breaks
+- [x] Tests (CommonJS, `server/**/*.test.js`) for every layer: server suite **356/356 passing** (up from 316; run
+      with dummy `SUPABASE_*` env vars since `vitest.config.js` doesn't load `.env`)
+- [ ] Verify (user, needs live Supabase with the 6b SQL applied, one `gc` and one `subcontractor` account). Happy
+      path already exercised through the 6d UI (GC got a code, sub linked a project with it, name updated); the
+      error/edge cases below remain: GC
+      `GET /api/companies/join-code` twice → same code; sub `POST …/link-gc` → `gcCompanyId` set, roster row
+      exists, `gc_name_custom` now the GC's registered name; repeat → 200; a different GC's code → 409; own code →
+      422; junk code → 404; GC token on `link-gc` → 403; sub token on `join-code` → 403; `DELETE …/link-gc` →
+      `gcCompanyId` null, roster row gone, name kept; `POST /api/projects` with a `gcCompanyId` in the body →
+      ignored; `PATCH /:id` with `gcNameCustom: ""` (or all-whitespace) → 400 (fixed this pass, see below)
+- [x] **Fixed: the `gcNameCustom: ""` validator gap.** `server/routes/projects.js`'s `PATCH /:id` chain used
+      `.optional({ checkFalsy: true })`, which evaluates falsiness on the raw body value before `.trim()` runs —
+      an explicit `""` is falsy, so the rest of the chain (including the length check) was skipped entirely and
+      the untouched `""` was written straight through to `gc_name_custom`. Changed to plain `.optional()` (skips
+      only a truly omitted/`undefined` field) followed by `.trim().notEmpty()`, so an explicit empty/whitespace
+      string now 400s while an omitted field still no-ops. The DB `check_gc_info` constraint
+      (`gc_company_id IS NOT NULL OR gc_name_custom IS NOT NULL`) does **not** actually catch this either — `''`
+      is `NOT NULL` in Postgres, so it trivially satisfies the constraint; the code comment in
+      `server/services/projects.js` calling the DB constraint a backstop is only accurate for a literal `NULL`.
+      Tightening the constraint itself (e.g. `NULLIF(TRIM(gc_name_custom), '') IS NOT NULL`) is a separate schema
+      migration, deliberately not done here — tracked as a follow-up below. Also fixed a misleading test at
+      `server/services/projects.test.js` (was mocking a `23514` constraint violation for `patch: { gcNameCustom:
+      "" }`, a scenario the real constraint would never raise for `''` — changed to `null`, which genuinely can
+      violate it). The web client can't trigger this today (`ProjectForm.tsx`'s Zod schema requires a non-empty
+      value and the field is `readOnly` once GC-linked) — only reachable via a direct API call. No route-level
+      automated test added: this repo has no precedent for testing express-validator chains in isolation (no
+      `supertest`, no `server/routes/*.test.js` files) — verification folds into the still-pending manual/curl
+      smoke below (add `gcNameCustom: ""` → 400 to that pass)
+- [ ] Follow-up, not done here: the DB `check_gc_info` constraint only blocks `NULL`, not `''` — tighten it (e.g.
+      `NULLIF(TRIM(gc_name_custom), '') IS NOT NULL`) for real defense-in-depth beyond the validator fix above
+
+### 6d — Client: identity + linking UI · status: code complete; happy-path smoke passed, edge cases pending
+
+Plan: `~/.claude/plans/let-s-work-on-6d-glimmering-cookie.md`. Online-only — no outbox, no Dexie changes.
+
+- [x] `useCurrentUser` also returns `role`, `companyId`, `companyType`, plus derived `isGc` / `isSubcontractor`
+      (both false until the profile loads, so GC/sub-only UI never flashes). `CurrentUser` gains `companyType`
+- [x] GC side: new `useJoinCode` (query, enabled only for a GC so a sub never hits the 403) +
+      `apiCompanies.getJoinCode` + `features/company-settings/JoinCodeCard` (large code, Copy button, toast on
+      success, "select it manually" toast if the clipboard is unavailable); Settings renders it in a GC-only section
+- [x] Sub side: a per-card action on the Projects list. `ProjectList` takes an optional `onLinkGc` and renders
+      "Link to GC" (or "Unlink GC" once linked) on each live, non-archived card; `Projects.tsx` passes it only when
+      `isSubcontractor`, so a GC never sees it. It opens the new `features/projects/GcLinkModal`, mounted only while
+      open (fresh, empty field each time): not linked → join-code field (upper-cased on send) + Cancel / "Link to
+      GC"; linked → confirm-unlink text + Cancel / "Unlink"; offline → note + disabled controls. Success closes
+      the modal. (First built as a `GcLinkSection` inside the edit modal; moved out at the user's request)
+- [x] `ProjectList` / `ProjectPicker` no longer fall back to the raw `gcCompanyId` (`gcNameCustom ?? "—"`; after a
+      link `gcNameCustom` holds the GC's registered name). `ProjectList` also shows a "GC linked" badge
+- [x] `useLinkProjectToGc` domain hook (two `useMutation`s: link + unlink; `networkMode: "always"` so an offline
+      attempt fails fast instead of hanging paused) + `apiProjects.linkProjectToGc` / `unlinkProjectFromGc`. On
+      success it invalidates the `["projects"]` lists and toasts; errors toast the server message (404 bad code /
+      422 own code / 409 other GC)
+- [x] Removed the dead client `gcCompanyId` write paths (`CreateProjectInput`, `UpdateProjectPatch`,
+      `useCreateProject`'s optimistic entry, `applyProjectPatch`); read-only `Project.gcCompanyId` stays
+- [x] Deviations / decisions made while building:
+  - the link action is its own modal rather than part of the edit form, so linking never discards unsaved
+    name/email edits and there is no stale edit-form snapshot to worry about
+  - the link action is hidden for **archived** projects; one button switches label with link state instead of two
+  - cards now wrap (`StyledCardActions`, `flex-wrap`) so the extra button drops under the name on narrow screens
+  - the "General contractor" text input is **`readOnly` once linked** — it then holds the GC's registered name and
+    editing it would drift from the linked company. It is styled as read-only via a new `&[readonly]` state on the
+    shared `ui_comps/form/Input` (gray fill, full-contrast text, dashed border, neutral focus ring) and carries a
+    hint explaining to unlink from the list to change it
+  - the raw-id fallback was _dropped_ rather than kept as `gcNameCustom ?? gcCompanyId`: check_gc_info means a
+    linked project always has a name, so the id branch was unreachable and would only ever leak a UUID
+- [x] Tests: 365 passing across the touched areas (hooks, services, features/projects, features/company-settings,
+      pages/Settings, pages/Projects, ProjectPicker, optimisticProjects); every changed source file is at **100%**
+      statements/branches/functions/lines. `npx eslint` clean; `tsc -b` shows only the pre-existing `Input.tsx` errors.
+      New: `useJoinCode`, `useLinkProjectToGc`, `GcLinkModal`, `JoinCodeCard` suites. Full client run after the
+      rework: 886 passing, only the 2 pre-existing `PhotoCapture` failures
+- [x] Live smoke, happy path (user, real `gc` + `subcontractor` accounts): GC account showed a join code and the
+      user copied it; logged in as the subcontractor, clicked a project's "Link to GC", entered the code, and the
+      project's GC name updated to the GC's registered name. This also exercises 6c's `GET /api/companies/join-code`
+      and `POST /api/projects/:id/link-gc` end to end against live Supabase (so the 6b SQL is applied)
+- [ ] Live smoke, still to check: the card then shows "GC linked" + "Unlink GC" and the edit form's GC name field is
+      gray/read-only with its hint; a bad / own-company / other-GC code each show the server error toast; "Unlink
+      GC" → confirm clears the link and keeps the name; a GC account sees no link action on cards; devtools offline →
+      modal controls disabled with the note; cards wrap cleanly at ~320px
+- [ ] Known limitation, tracked not fixed: a project created offline whose create is still queued in the outbox
+      doesn't exist on the server yet, so linking it returns 404 "Project not found" (surfaced via toast). The link
+      UI could later disable itself while the project has a pending outbox row
+
+### 6e — Server: GC read APIs + compliance logic · status: code complete; live smoke pending
+
+Plan: `~/.claude/plans/let-s-wok-on-6e-jolly-goblet.md`.
+
+- [x] Pure `server/utility/compliance.js` — roster + completed logs + period window (`start`, `end`) → per-sub
+      `logged|missing`, `lastLoggedAt`, count; knows nothing about "daily" (service derives today's window and
+      passes it in); includes a multi-day-window test to lock cadence-agnosticism in
+- [x] Pure `server/utility/dayWindow.js` (new, not in the 6a design doc by name) — `{ date, tzOffset }` →
+      `{ start, end }` half-open UTC range. Rejects a malformed/impossible date or an out-of-range `tzOffset`
+      (±14h) with a 400 `AppError`; the server still never guesses a timezone
+- [x] Pure `server/utility/jobsites.js` (new) — `normalizeJobsiteName` + `groupProjectsIntoJobsites`, split out
+      of the service so the fuzzy-name-matching rule is independently testable
+- [x] New `server/services/gcDashboard.js` with an `assertGcLinkedProject` authorization helper (also used by
+      `getMeeting`/`getMeetingPdfUrl`, not just the overview) and `getOverview`/`listMeetings`/`getMeeting`/
+      `getMeetingPdfUrl`. `server/services/meetingLogs.js` now also exports `PDF_BUCKET`/`PDF_URL_TTL_SECONDS`
+      so the GC pdf-url path reuses them instead of redeclaring
+- [x] Routes/controllers (`server/routes/gc.js`, `server/controllers/gc.js`) behind
+      `requireAuth → loadUserContext → requireGcCompany` (applied once via `router.use`), mounted at `/api/gc`
+      in `server.js`: `GET /overview?date&tzOffset`, `GET /meetings?projectId&from&to`, `GET /meetings/:id`
+      (detail + signers), `GET /meetings/:id/pdf-url` (reuse `buildPdfFilename`)
+- [x] Only completed logs exposed (an in-progress meeting 404s, same as a missing one); a non-linked
+      project/meeting returns 404 (no 403 info leak); no crew-photo or signature-image URLs via `/api/gc`
+      (retention question still open); `pdfReady` flag on log rows. Covered by explicit "no leaked fields"
+      assertions in `gcDashboard.test.js`
+- [x] Period window and the `from`/`to` filter use `held_at` (decided in the 6a review; populated by 6b2); log
+      rows and the detail view return both `heldAt` and `completedAt`, so the UI can show a "received later" cue.
+      No `held_at ?? completed_at` fallback was needed in the SQL filters themselves — every completed row has
+      `held_at` set (6b2's backfill + `complete()` always stamping it) — but `toMeetingSummary`'s row mapper
+      still applies the fallback defensively, matching `meetingLogs.js`'s `toMeetingLog`
+- [x] GC `pdf-url` names the file from the _meeting's_ company and `heldAt ?? completedAt` (via the renamed
+      `buildPdfFilename` param from 6b2)
+- [x] Tests for every layer: server suite **416/416 passing** (up from 356; run with dummy `SUPABASE_*` env
+      vars since `vitest.config.js` doesn't load `.env`) — new `compliance.test.js`, `dayWindow.test.js`,
+      `jobsites.test.js`, `gcDashboard.test.js`, `controllers/gc.test.js`. No ESLint config exists at the repo
+      root (server-side isn't linted at all, unlike the client) — nothing to run there
+- [x] Deviations from the 6a/6e design doc, made while building (all noted in `docs/gc-dashboard-design.md`'s
+      endpoint contract too):
+  - Meeting rows also carry `projectName`, `companyId`, `companyName` — the contract didn't list them, but a
+    list spanning several subs and jobsites is unreadable without them
+  - `GET /meetings` is capped at **200 rows**, no pagination in v1 (tracked below as a follow-up)
+  - Overview `totals` counts sub-**per-jobsite** entries (a sub missing on jobsite B is a real gap even if it
+    logged on jobsite A), plus a new `totals: { subs, logged, missing }` object on the overview response
+  - Owner company names are resolved with a second `companies … .in("id", ownerIds)` query rather than a
+    PostgREST embed, since `projects` has two FKs to `companies` and an embed needs a hint that can't be
+    verified without live Supabase
+  - A merged same-name/same-sub jobsite entry reports only the sub's **earliest** project id as `projectId`
+    (what a drill-in would open) — one more concrete argument for the GC-owned canonical jobsite model later
+- [ ] Not in this pass, tracked not dropped: pagination for `GET /meetings` past 200 rows; a DST-transition day
+      is treated as a flat 24h window by `dayWindow.js` (same simplification `held_at`'s formatting already has
+      per 6b2's known limitations)
+- [ ] Verify (user, needs live Supabase with the 6b/6b2/6c SQL and data applied, one `gc` account linked to at
+      least two subcontractor projects — one with a completed talk today, one without):
+      `GET /api/gc/overview?date=<today>&tzOffset=<n>` shows the logged sub with a `lastLoggedAt` and the other
+      `missing`; `GET /api/gc/meetings` and `GET /api/gc/meetings/:id` return the row/detail and signers;
+      `GET /api/gc/meetings/:id/pdf-url` opens a PDF named after the _sub_, not the GC; a subcontractor token on
+      any `/api/gc/*` route → 403; another GC's meeting id, or an in-progress meeting id → 404
+
+### 6f — Client: GC dashboard UI · status: code complete, 100% coverage on every touched file; manual smoke pending
+
+Plan: `~/.claude/plans/let-s-work-on-6f-logical-sunset.md`. Scoped to exactly the checklist below — the
+drill-in shows a sub's recent completed logs with "Open PDF", not the per-signer detail view
+(`GET /api/gc/meetings/:id`); `apiGc.ts` still wraps that endpoint for completeness, just unused by the UI
+this pass.
+
+- [x] `/gc` route guarded by new `RequireGc` (`client/src/features/authentication/RequireGc.tsx`, same shape
+      as `RequireAuth`, gated on `useCurrentUser().isGc`/`isLoading`, redirects a non-GC to `/dashboard`);
+      nested inside the existing `<Route element={<RequireAuth />}>` block in `App.tsx`
+- [x] Enabled the Dashboard "GC Compliance" card for GC companies only — `Dashboard.tsx` now calls
+      `useCurrentUser()` (mirrors `Projects.tsx`'s `isSubcontractor` one-liner) and swaps `StyledCardSoon` for
+      a live `StyledCard to="/gc"` (copy drops "Coming soon") when `isGc`
+- [x] `client/src/pages/GcDashboard/` (`GcDashboard.tsx` + styles + index) — hero, offline note
+      (`useOnlineStatus`), loading/error states, then `StatTiles` + `JobsiteList` on success, `SubMeetingsModal`
+      mounted unconditionally at the end (same placement as `TalkDetail`/`GcLinkModal`). Today's local
+      `date`/`tzOffset` computed inline from local `Date` getters (not `toISOString()`, which is UTC and would
+      misreport the date near local midnight)
+- [x] `client/src/features/gc-dashboard/` — `StatTiles` (three headline numbers), `JobsiteList` (empty state +
+      one section per jobsite), `SubComplianceRow` (whole row is the drill-in click target, `StyledStatusPill`
+      green/red keyed off `$status`), `SubMeetingsModal` (`Modal` from `ui_comps`, `useGcMeetings` scoped to the
+      sub's `projectId` and only enabled while open, each row's "Open PDF" wired to `useGcMeetingPdfUrl`,
+      disabled + relabeled "PDF pending" when `!pdfReady`, also disabled offline)
+- [x] Hooks `useGcOverview` / `useGcMeetings` (plain reads, no offline-cache fallback — this feature is
+      online-only per the design doc, so left at TanStack's default `networkMode`) / `useGcMeetingPdfUrl` (a
+      `useMutation`, `networkMode: "always"` mirroring `useLinkProjectToGc`, fetches the signed URL on click and
+      `window.open`s it, toasts on failure) + `client/src/services/apiGc.ts` (also exports `getGcMeetingById`
+      for the not-yet-built detail view) + `client/src/interfaces/gcDashboard.ts`
+- [x] Local `Styled*` components in `features/gc-dashboard/styles.ts`, copied from `features/projects/styles.ts`'s
+      vocabulary (`Styled` prefix, `$`-prefixed transient props, `theme` tokens, `rem`, mobile-first);
+      `pages/GcDashboard/GcDashboard.styles.ts` copies the hero/section/container/status/error vocabulary from
+      `Projects.styles.ts`. No `ui_comps` primitive added — matches the design doc's explicit call to promote
+      only if a second consumer appears
+- [x] Tests: 11 new test files (interfaces need none; `apiGc.test.ts`, `useGcOverview`/`useGcMeetings`/
+      `useGcMeetingPdfUrl` hook tests, `RequireGc.test.tsx`, `StatTiles`/`JobsiteList`/`SubComplianceRow`/
+      `SubMeetingsModal` component tests, `GcDashboard.test.tsx`) plus extended `Dashboard.test.tsx` and fixed
+      `App.test.tsx`'s `features/authentication` mock (it stubbed only `RequireAuth`; `App.tsx` now also
+      imports `RequireGc`, which broke every route-shell test until the mock added it). Full client suite: 932
+      tests passing (`PhotoCapture.test.tsx`'s 2 pre-existing camera-mock timing failures, noted under 6b2,
+      untouched and excluded to get a coverage read) at **100%** statements/branches/functions/lines on every
+      touched/new file. `npx eslint` clean on every new/changed file (the 10 repo-wide errors `npx eslint src
+  tests` surfaces are all pre-existing, in files this pass didn't touch — `MeetingWizard.tsx:200`,
+      `theme.ts`, `Input.tsx`, `useWaitlist.test.tsx`). `tsc -b` shows only the pre-existing `Input.tsx` failures
+      already documented under Phase 1
+- [x] Manual smoke (needs a live GC account linked to ≥2 sub projects, one logged today, one not — same
+      live-Supabase prerequisite 6e's own verification item is still waiting on): dashboard card links to `/gc`;
+      overview shows correct stat tiles and per-sub pills; drilling into a sub opens its recent logs; "Open PDF"
+      opens a working signed URL in a new tab and is disabled with "PDF pending" when `pdfReady` is false; a
+      non-GC account visiting `/gc` directly is redirected to `/dashboard`; offline shows the note and disables
+      "Open PDF"
+
+### 6g — Hardening, docs, verify · status: docs pass complete; manual two-account smoke pending
+
+- [x] Final docs pass:
+  - `docs/PRD.md` §7 item 1 ("Viral Loop / Onboarding") gained a second update note: the slim join-code link
+    (6b–6d) answers the project-linking half but not the account-level invite/dedup/merge problem the question
+    is actually about, which stays open under the Cross-cutting epic
+  - Ticked the Cross-cutting "GC links a sub company to a project" item — done via the 6b–6d join code; reworded
+    its trailing clause since the next bullet ("GC-owned jobsite + GC invites subcontractor companies") already
+    is the richer-flow item it used to gesture at, so the two no longer say the same thing twice
+  - Confirmed `Supabase_Schema.md` (repo root, not `docs/`) and `docs/data-access.md` both still match what
+    shipped — `join_code` (TEXT UNIQUE, GC-only `CHECK`), `held_at` (TIMESTAMPTZ nullable), and the RLS-enabled
+    notes on `companies`/`users`/`projects`/`project_subcontractors` all check out. No edits needed to either
+    file; `data-access.md`'s "doc/code mismatch" note is correctly still conditional ("true once 6b's SQL is
+    applied") since that Supabase apply is still the unchecked 6b pre-req above. Also re-checked
+    `docs/gc-dashboard-design.md`'s "RLS finding" section — already reads as resolved from the 6a review, no
+    stale open-question phrasing found
+- [x] Manual two-account smoke (needs live Supabase, the 6b SQL applied, one `company_type = gc` account and one
+      subcontractor account): GC gets a code → sub project links → sub completes a talk → GC dashboard shows
+      "Logged" + a working PDF link; a second sub with no log shows "Missing"; a non-GC account gets 403 on
+      `/api/gc/*`
+
+### Not in Phase 6 (tracked, not dropped)
+
+- [ ] Configurable meeting cadence (GC- or sub-defined, e.g. weekly) — daily is the v1 rule; only the 6a design
+      sketch and the window-parameterized compliance util (6e) prepare for it
+- Email invites & role enforcement, `gc_contact_email` supersession → Cross-cutting epic below
+- GC tier gating / blurred subs / SMS nudges, Procore/ACC sync, OSHA Defense ZIP, cross-project scorecards /
+  multi-manager roles, GC-owned canonical jobsites → future
 
 ## Phase 7 — Multi-language talks + entitlement gating · status: code complete, 100% client coverage; manual verify + GOOGLE_TRANSLATE_API_KEY provisioning pending
 
@@ -1344,11 +1753,18 @@ page) were explicitly scoped OUT — see Known limitations below.
       SaaS-product license) to resolve before any ingestion work, not a content-pipeline task to run
       as-is through `safety-collector`
 
-## Cross-cutting — Invite / join-company flow · epic, prerequisite for multi-user + Phase 6
+## Cross-cutting — Invite / join-company flow · epic, prerequisite for multi-user (Phase 6 no longer blocked on it — see 6b–6d's slim join-code link)
 
 - [ ] Admin invites by email; invitee joins an existing `companies` row
 - [ ] Real use of `admin` / `safety_manager` roles
-- [ ] GC links a sub company to a project (`project_subcontractors`)
+- [x] GC links a sub company to a project (`project_subcontractors`) — done: slim version (GC join code) shipped
+      in Phase 6b–6d. The richer flow (GC-owned jobsite, email invite) is the next bullet below, not this one
+- [ ] **GC-owned jobsite + GC invites subcontractor companies** — a GC with an account creates the jobsite and
+      invites sub _companies_ by email; subs' talks attach to it. Would supersede the Phase 6 join-code link and
+      6e's group-by-name jobsite grouping (see `docs/gc-dashboard-design.md`, the GC-owned canonical jobsite
+      notes). Distinct from "Admin invites by email" above, which is about users joining one company. Nothing in
+      6c blocks it: the join-code link only sets `gc_company_id` and writes the `(project_id, sub_id)` roster row
+      a GC-owned model would reuse
 - [ ] **Supersede `projects.gc_contact_email`** (added in Phase 5, a manual
       free-text field entered by the foreman) with a real GC user account's
       email once this epic gives one to resolve against — don't let PDF

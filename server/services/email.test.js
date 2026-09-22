@@ -12,7 +12,7 @@ const params = {
   projectName: "Downtown Highrise",
   companyName: "Acme Roofing",
   pdfUrl: "https://signed.example/report.pdf",
-  completedAt: "2026-09-14T01:00:00.000Z",
+  meetingDate: "2026-09-14T01:00:00.000Z",
 };
 
 let consoleLogSpy;

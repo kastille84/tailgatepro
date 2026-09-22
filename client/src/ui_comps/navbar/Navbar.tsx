@@ -10,11 +10,13 @@ import {
 } from "./styles";
 import { Button } from "../button";
 import { useAuth } from "../../context/auth";
+import { useCurrentUser } from "../../hooks/useCurrentUser";
 import { InstallButton } from "../../features/pwa-install";
 
 export const Navbar: React.FC = () => {
   const [open, setOpen] = useState(false);
   const { user, loading, logout } = useAuth();
+  const { isGc } = useCurrentUser();
   const [isLoggingOut, setIsLoggingOut] = useState(false);
 
   const handleLogout = async () => {
@@ -58,7 +60,7 @@ export const Navbar: React.FC = () => {
           <>
             <NavAnchor to="/dashboard">Dashboard</NavAnchor>
             <NavAnchor to="/projects">Projects</NavAnchor>
-            <NavAnchor to="/talks">Toolbox Talks</NavAnchor>
+            {!isGc && <NavAnchor to="/talks">Toolbox Talks</NavAnchor>}
             <NavAnchor to="/settings">Settings</NavAnchor>
             <Button
               size="sm"

@@ -64,11 +64,19 @@ vi.mock("../src/pages/Dashboard", () => ({
   Dashboard: () => <div data-testid="dashboard-page">Dashboard page</div>,
 }));
 
+vi.mock("../src/pages/ContentLibrary", () => ({
+  ContentLibrary: () => <div data-testid="talks-page">Talks page</div>,
+}));
+
 vi.mock("../src/features/authentication", async () => {
   const { Outlet } = await vi.importActual<typeof import("react-router-dom")>(
     "react-router-dom",
   );
-  return { RequireAuth: () => <Outlet /> };
+  return {
+    RequireAuth: () => <Outlet />,
+    RequireGc: () => <Outlet />,
+    RequireSubcontractor: () => <Outlet />,
+  };
 });
 
 vi.mock("@tanstack/react-query-devtools", () => ({
@@ -141,5 +149,12 @@ describe("App", () => {
     render(<App />);
 
     expect(screen.getByTestId("dashboard-page")).toBeDefined();
+  });
+
+  it("renders the talks route shell behind the RequireAuth + RequireSubcontractor layout routes", () => {
+    window.history.pushState({}, "", "/talks");
+    render(<App />);
+
+    expect(screen.getByTestId("talks-page")).toBeDefined();
   });
 });

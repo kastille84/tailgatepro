@@ -39,7 +39,6 @@ describe("optimisticProjects", () => {
       const patched = applyProjectPatch(project(), {
         name: "New name",
         status: "completed",
-        gcCompanyId: "gc-1",
         gcNameCustom: "New GC",
         gcContactEmail: "new@gc.com",
       });
@@ -48,7 +47,6 @@ describe("optimisticProjects", () => {
         project({
           name: "New name",
           status: "completed",
-          gcCompanyId: "gc-1",
           gcNameCustom: "New GC",
           gcContactEmail: "new@gc.com",
         }),

@@ -64,7 +64,7 @@ const bulletList = (doc, headingText, items) => {
 /**
  * Renders a completed meeting log into a PDF buffer.
  * @param {object} params
- * @param {object} params.meetingLog - `toMeetingLog` shape (completedAt, crewPhotoUrl, ...).
+ * @param {object} params.meetingLog - `toMeetingLog` shape (heldAt, crewPhotoUrl, ...).
  * @param {object} params.project - `toProject` shape (name, gcNameCustom, ...).
  * @param {object|null} params.talk - `toTalk` shape (title, structured, attribution, quiz), or
  *   `null` if the meeting's talk was detached (meeting_logs.talk_id is ON DELETE SET NULL).
@@ -112,7 +112,11 @@ const renderMeetingLogPdf = ({
     labelLine(doc, "Project", project.name);
     labelLine(doc, "General contractor", project.gcNameCustom ?? "N/A");
     labelLine(doc, "Talk", talk?.title ?? "Untitled talk");
-    labelLine(doc, "Completed", formatDate(meetingLog.completedAt));
+    // The meeting's own time (client-reported, see utility/heldAt.js), not the
+    // server-receipt `completedAt`. The "Generated" footer below is server
+    // time (this runs synchronously inside complete()), so an offline meeting
+    // synced later shows both.
+    labelLine(doc, "Meeting held", formatDate(meetingLog.heldAt));
 
     // Talk content
     if (talk?.structured?.summary) {

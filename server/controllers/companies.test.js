@@ -1,10 +1,11 @@
 // Plain CommonJS — see requireAuth.test.js for why (nested require() sharing).
 const companiesService = require("../services/companies");
 const storageService = require("../services/storage");
-const { uploadLogo, getLogoUrl } = require("./companies");
+const { uploadLogo, getLogoUrl, getJoinCode, getMe } = require("./companies");
 
 const updateLogoSpy = vi.spyOn(companiesService, "updateLogo");
 const getByIdSpy = vi.spyOn(companiesService, "getById");
+const getOrCreateJoinCodeSpy = vi.spyOn(companiesService, "getOrCreateJoinCode");
 const uploadBlobSpy = vi.spyOn(storageService, "uploadBlob");
 const getSignedUrlSpy = vi.spyOn(storageService, "getSignedUrl");
 
@@ -24,6 +25,7 @@ describe("companies controller", () => {
   beforeEach(() => {
     updateLogoSpy.mockReset();
     getByIdSpy.mockReset();
+    getOrCreateJoinCodeSpy.mockReset();
     uploadBlobSpy.mockReset();
     getSignedUrlSpy.mockReset();
     req = {
@@ -167,6 +169,65 @@ describe("companies controller", () => {
 
       // Act
       await getLogoUrl(req, res, next);
+
+      // Assert
+      expect(next).toHaveBeenCalledWith(error);
+    });
+  });
+
+  describe("getJoinCode", () => {
+    it("returns the caller's own company join code", async () => {
+      // Arrange
+      getOrCreateJoinCodeSpy.mockResolvedValue("ABCD2345");
+
+      // Act
+      await getJoinCode(req, res, next);
+
+      // Assert
+      expect(getOrCreateJoinCodeSpy).toHaveBeenCalledWith("company-1");
+      expect(res.status).toHaveBeenCalledWith(200);
+      expect(res.json).toHaveBeenCalledWith({
+        success: true,
+        data: { joinCode: "ABCD2345" },
+      });
+      expect(next).not.toHaveBeenCalled();
+    });
+
+    it("forwards a companiesService.getOrCreateJoinCode failure to next", async () => {
+      // Arrange
+      const error = new Error("boom");
+      getOrCreateJoinCodeSpy.mockRejectedValue(error);
+
+      // Act
+      await getJoinCode(req, res, next);
+
+      // Assert
+      expect(next).toHaveBeenCalledWith(error);
+    });
+  });
+
+  describe("getMe", () => {
+    it("returns the caller's own company profile", async () => {
+      // Arrange
+      getByIdSpy.mockResolvedValue(company);
+
+      // Act
+      await getMe(req, res, next);
+
+      // Assert
+      expect(getByIdSpy).toHaveBeenCalledWith("company-1");
+      expect(res.status).toHaveBeenCalledWith(200);
+      expect(res.json).toHaveBeenCalledWith({ success: true, data: company });
+      expect(next).not.toHaveBeenCalled();
+    });
+
+    it("forwards a companiesService.getById failure to next", async () => {
+      // Arrange
+      const error = new Error("boom");
+      getByIdSpy.mockRejectedValue(error);
+
+      // Act
+      await getMe(req, res, next);
 
       // Assert
       expect(next).toHaveBeenCalledWith(error);

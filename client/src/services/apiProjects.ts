@@ -6,13 +6,11 @@ import type { Project, ProjectStatus } from "../interfaces/project";
  *  rather than in here, so the offline queue knows the id before the write
  *  ever reaches the network: it needs it to key the optimistic cache entry
  *  and to correlate a later edit with a create that hasn't synced yet. See
- *  `docs/offline-sync-design.md`. Exactly one of `gcCompanyId` / `gcNameCustom`
- *  must be set — the server enforces this, and the form only offers
- *  `gcNameCustom` for now. */
+ *  `docs/offline-sync-design.md`. `gcCompanyId` is not accepted here — a project
+ *  is linked to a registered GC only through `linkProjectToGc`. */
 export interface CreateProjectInput {
   id: string;
   name: string;
-  gcCompanyId?: string | null;
   gcNameCustom?: string | null;
   gcContactEmail?: string | null;
 }
@@ -23,7 +21,6 @@ export interface CreateProjectInput {
 export interface UpdateProjectPatch {
   name?: string;
   status?: ProjectStatus;
-  gcCompanyId?: string | null;
   gcNameCustom?: string | null;
   gcContactEmail?: string | null;
   archived?: boolean;
@@ -93,6 +90,51 @@ export const updateProject = async (
     method: "PATCH",
     headers: authHeaders(accessToken),
     body: JSON.stringify(patch),
+  });
+
+  const body = await res.json().catch(() => null);
+
+  if (!res.ok || !body?.success) {
+    throw new Error(body?.error ?? GENERIC_ERROR);
+  }
+
+  return body.data as Project;
+};
+
+/** POST /api/projects/:id/link-gc — links a project the caller's company owns
+ *  to a GC by that GC's join code. Subcontractor-only (a GC account gets a 403).
+ *  Online-only: it does not go through the offline outbox. A bad code (404), the
+ *  caller's own code (422) or a project already linked to a different GC (409)
+ *  surfaces as the thrown server message. */
+export const linkProjectToGc = async (
+  accessToken: string,
+  id: string,
+  joinCode: string,
+): Promise<Project> => {
+  const res = await fetchWithTimeout(`/api/projects/${id}/link-gc`, {
+    method: "POST",
+    headers: authHeaders(accessToken),
+    body: JSON.stringify({ joinCode }),
+  });
+
+  const body = await res.json().catch(() => null);
+
+  if (!res.ok || !body?.success) {
+    throw new Error(body?.error ?? GENERIC_ERROR);
+  }
+
+  return body.data as Project;
+};
+
+/** DELETE /api/projects/:id/link-gc — clears the GC link. The project keeps its
+ *  GC name (`gcNameCustom`); only `gcCompanyId` is cleared. */
+export const unlinkProjectFromGc = async (
+  accessToken: string,
+  id: string,
+): Promise<Project> => {
+  const res = await fetchWithTimeout(`/api/projects/${id}/link-gc`, {
+    method: "DELETE",
+    headers: authHeaders(accessToken),
   });
 
   const body = await res.json().catch(() => null);

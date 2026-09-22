@@ -18,12 +18,11 @@ exports.listProjects = async (req, res, next) => {
 exports.createProject = async (req, res, next) => {
   try {
     // The request body has already been validated by the validate middleware.
-    const { id, name, gcCompanyId, gcNameCustom, gcContactEmail } = req.body;
+    const { id, name, gcNameCustom, gcContactEmail } = req.body;
     const data = await projectsService.create({
       id,
       ownerCompanyId: req.user.companyId,
       name,
-      gcCompanyId,
       gcNameCustom,
       gcContactEmail,
     });
@@ -35,12 +34,38 @@ exports.createProject = async (req, res, next) => {
 
 exports.updateProject = async (req, res, next) => {
   try {
-    const { name, status, gcCompanyId, gcNameCustom, gcContactEmail, archived } =
-      req.body;
+    const { name, status, gcNameCustom, gcContactEmail, archived } = req.body;
     const data = await projectsService.update({
       id: req.params.id,
       companyId: req.user.companyId,
-      patch: { name, status, gcCompanyId, gcNameCustom, gcContactEmail, archived },
+      patch: { name, status, gcNameCustom, gcContactEmail, archived },
+    });
+    return res.status(200).json({ success: true, data });
+  } catch (error) {
+    return next(error);
+  }
+};
+
+// Subcontractor-only (requireSubcontractorCompany in the route): links the
+// project to the GC that owns the join code. Responds with the updated project.
+exports.linkGc = async (req, res, next) => {
+  try {
+    const data = await projectsService.linkGc({
+      projectId: req.params.id,
+      companyId: req.user.companyId,
+      joinCode: req.body.joinCode,
+    });
+    return res.status(200).json({ success: true, data });
+  } catch (error) {
+    return next(error);
+  }
+};
+
+exports.unlinkGc = async (req, res, next) => {
+  try {
+    const data = await projectsService.unlinkGc({
+      projectId: req.params.id,
+      companyId: req.user.companyId,
     });
     return res.status(200).json({ success: true, data });
   } catch (error) {

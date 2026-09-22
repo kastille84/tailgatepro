@@ -20,6 +20,7 @@ import {
   StyledHeroInner,
   StyledEyebrow,
   StyledHeadline,
+  StyledHeadlineEmail,
   StyledLede,
   StyledFieldGroup,
   StyledFieldLabel,
@@ -108,7 +109,8 @@ export const Signup = () => {
           <StyledHeroInner>
             <StyledEyebrow>Sign up</StyledEyebrow>
             <StyledHeadline id="signup-hero-heading">
-              Check your email: {getValues("email")}
+              Check your email
+              <StyledHeadlineEmail>{getValues("email")}</StyledHeadlineEmail>
             </StyledHeadline>
             <StyledSuccess role="status">
               <HiCheckCircle aria-hidden="true" />

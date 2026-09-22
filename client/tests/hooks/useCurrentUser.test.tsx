@@ -34,6 +34,7 @@ describe("useCurrentUser", () => {
       companyId: "company-1",
       role: "foreman",
       tier: "premium",
+      companyType: "subcontractor",
     });
 
     const { result } = renderHook(() => useCurrentUser(), { wrapper });
@@ -51,6 +52,7 @@ describe("useCurrentUser", () => {
       companyId: "company-1",
       role: "foreman",
       tier: "enterprise",
+      companyType: "subcontractor",
     });
 
     const { result } = renderHook(() => useCurrentUser(), { wrapper });
@@ -66,6 +68,7 @@ describe("useCurrentUser", () => {
       companyId: "company-1",
       role: "foreman",
       tier: "basic",
+      companyType: "subcontractor",
     });
 
     const { result } = renderHook(() => useCurrentUser(), { wrapper });
@@ -73,6 +76,40 @@ describe("useCurrentUser", () => {
     await waitFor(() => expect(result.current.tier).toBe("basic"));
     expect(result.current.hasTranslationAccess).toBe(false);
     expect(result.current.hasBrandingAccess).toBe(false);
+  });
+
+  it("exposes role, companyId and companyType, flagging a subcontractor company", async () => {
+    vi.mocked(apiUsers.getCurrentUser).mockResolvedValue({
+      id: "user-1",
+      companyId: "company-1",
+      role: "foreman",
+      tier: "basic",
+      companyType: "subcontractor",
+    });
+
+    const { result } = renderHook(() => useCurrentUser(), { wrapper });
+
+    await waitFor(() => expect(result.current.companyType).toBe("subcontractor"));
+    expect(result.current.role).toBe("foreman");
+    expect(result.current.companyId).toBe("company-1");
+    expect(result.current.isSubcontractor).toBe(true);
+    expect(result.current.isGc).toBe(false);
+  });
+
+  it("flags a GC company", async () => {
+    vi.mocked(apiUsers.getCurrentUser).mockResolvedValue({
+      id: "user-2",
+      companyId: "company-2",
+      role: "admin",
+      tier: "basic",
+      companyType: "gc",
+    });
+
+    const { result } = renderHook(() => useCurrentUser(), { wrapper });
+
+    await waitFor(() => expect(result.current.companyType).toBe("gc"));
+    expect(result.current.isGc).toBe(true);
+    expect(result.current.isSubcontractor).toBe(false);
   });
 
   it("defaults tier to null and hasTranslationAccess/hasBrandingAccess to false before the query resolves / without a session", () => {
@@ -84,5 +121,10 @@ describe("useCurrentUser", () => {
     expect(result.current.tier).toBeNull();
     expect(result.current.hasTranslationAccess).toBe(false);
     expect(result.current.hasBrandingAccess).toBe(false);
+    expect(result.current.role).toBeNull();
+    expect(result.current.companyId).toBeNull();
+    expect(result.current.companyType).toBeNull();
+    expect(result.current.isGc).toBe(false);
+    expect(result.current.isSubcontractor).toBe(false);
   });
 });

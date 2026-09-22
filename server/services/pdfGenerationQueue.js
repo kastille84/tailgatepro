@@ -143,7 +143,7 @@ const enqueue = async (meetingLogId, companyId) => {
       const filename = buildPdfFilename({
         companyName: company.name,
         projectName: project.name,
-        completedAt: meetingLog.completedAt,
+        meetingDate: meetingLog.heldAt,
         meetingLogId: meetingLog.id,
       });
 
@@ -159,7 +159,7 @@ const enqueue = async (meetingLogId, companyId) => {
         projectName: project.name,
         companyName: company.name,
         pdfUrl,
-        completedAt: meetingLog.completedAt,
+        meetingDate: meetingLog.heldAt,
       });
     }
   } catch (error) {

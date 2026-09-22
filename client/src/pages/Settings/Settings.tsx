@@ -3,9 +3,10 @@ import { Link } from "react-router-dom";
 import { useAuth } from "../../context/auth";
 import { useCompanyLogo } from "../../hooks/useCompanyLogo";
 import { useCurrentUser } from "../../hooks/useCurrentUser";
+import { useJoinCode } from "../../hooks/useJoinCode";
 import { useUploadCompanyLogo } from "../../hooks/useUploadCompanyLogo";
 import { Footer } from "../../ui_comps/footer";
-import { LogoUpload } from "../../features/company-settings";
+import { JoinCodeCard, LogoUpload } from "../../features/company-settings";
 import {
   StyledSection as StyledLogoSection,
   StyledSectionTitle,
@@ -32,7 +33,9 @@ import {
  *  though it sits behind `RequireAuth`, matching `Projects.tsx`. */
 export const Settings = () => {
   const { user, loading } = useAuth();
-  const { hasBrandingAccess } = useCurrentUser();
+  const { hasBrandingAccess, isGc } = useCurrentUser();
+  const { joinCode, isLoading: isJoinCodeLoading, isError: isJoinCodeError } =
+    useJoinCode();
   const { logoUrl } = useCompanyLogo();
   const { uploadLogo, isUploading } = useUploadCompanyLogo();
 
@@ -78,15 +81,33 @@ export const Settings = () => {
               />
             ) : (
               <StyledUpsell>
-                <StyledUpsellTitle>Custom branding is a Trade Pro feature</StyledUpsellTitle>
+                <StyledUpsellTitle>
+                  {isGc
+                    ? "Custom branding is a GC Site Pro feature"
+                    : "Custom branding is a Trade Pro feature"}
+                </StyledUpsellTitle>
                 <StyledUpsellBody>
                   Upload your company logo and remove the free-plan watermark
                   from every generated PDF report —{" "}
-                  <Link to="/pricing">upgrade to Trade Pro</Link> to unlock it.
+                  <Link to="/pricing">
+                    upgrade to {isGc ? "GC Site Pro" : "Trade Pro"}
+                  </Link>{" "}
+                  to unlock it.
                 </StyledUpsellBody>
               </StyledUpsell>
             )}
           </StyledLogoSection>
+
+          {isGc && (
+            <StyledLogoSection>
+              <StyledSectionTitle>Subcontractor join code</StyledSectionTitle>
+              <JoinCodeCard
+                joinCode={joinCode}
+                isLoading={isJoinCodeLoading}
+                isError={isJoinCodeError}
+              />
+            </StyledLogoSection>
+          )}
         </StyledContainer>
       </StyledSection>
 

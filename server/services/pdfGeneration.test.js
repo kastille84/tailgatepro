@@ -8,7 +8,10 @@ const meetingLog = {
   id: "meeting-1",
   projectId: "project-1",
   talkId: "talk-1",
-  completedAt: "2026-09-18T12:00:00.000Z",
+  // Held Sept 18; the completion reached the server (completedAt) the next
+  // morning. The two differ so tests can prove the header prints heldAt.
+  heldAt: "2026-09-18T12:00:00.000Z",
+  completedAt: "2026-09-19T06:15:00.000Z",
   crewPhotoUrl: "meeting-1/photo.jpg",
 };
 
@@ -173,7 +176,7 @@ describe("pdfGeneration: renderMeetingLogPdf", () => {
     expect(text).toContain("Unknown");
   });
 
-  it("prints the completed date in a human-readable form, not the raw ISO timestamp", async () => {
+  it("prints when the meeting was held in a human-readable form, not the raw ISO timestamp", async () => {
     const buffer = await renderMeetingLogPdf({
       meetingLog,
       project,
@@ -183,8 +186,26 @@ describe("pdfGeneration: renderMeetingLogPdf", () => {
     });
     const text = decodeRenderedText(buffer);
 
+    expect(text).toContain("Meeting held");
     expect(text).toContain("September 18, 2026 at 12:00 PM UTC");
     expect(text).not.toContain("2026-09-18T12:00:00.000Z");
+  });
+
+  it("prints the held time, not the later server-receipt time, and keeps the 'Generated' footer as the server-side stamp", async () => {
+    const buffer = await renderMeetingLogPdf({
+      meetingLog,
+      project,
+      talk: talkWithAttributionAndQuiz,
+      signatures,
+      company,
+    });
+    const text = decodeRenderedText(buffer);
+
+    // completedAt (Sept 19, 6:15 AM) is the audit stamp and must not be
+    // presented as when the meeting happened.
+    expect(text).not.toContain("September 19, 2026 at 6:15 AM UTC");
+    expect(text).not.toContain("Completed");
+    expect(text).toContain("Generated");
   });
 
   it("prints the CPWR/NIOSH attribution copyright and notice when the talk has one", async () => {

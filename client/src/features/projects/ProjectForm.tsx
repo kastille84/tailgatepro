@@ -3,6 +3,7 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 
+import { useAuth } from "../../context/auth";
 import { Button } from "../../ui_comps/button";
 import { ConfirmDialog } from "../../ui_comps/confirm-dialog";
 import { Form, FormField, TextInput } from "../../ui_comps/form";
@@ -12,6 +13,8 @@ import { useCreateProject } from "../../hooks/useCreateProject";
 import { useUpdateProject } from "../../hooks/useUpdateProject";
 import { useArchiveProject } from "../../hooks/useArchiveProject";
 import { useDeleteProject } from "../../hooks/useDeleteProject";
+import { useCurrentCompany } from "../../hooks/useCurrentCompany";
+import { useCurrentUser } from "../../hooks/useCurrentUser";
 import type { Project } from "../../interfaces/project";
 import {
   StyledActions,
@@ -19,9 +22,12 @@ import {
   StyledDangerZoneTitle,
 } from "./styles";
 
-// Mirrors the express-validator chains in server/routes/projects.js. Only the
-// free-text GC name is offered for now — linking a registered GC company waits
-// for the invite/join-company flow.
+// Mirrors the express-validator chains in server/routes/projects.js. The GC
+// name is free text; linking a registered GC company is a separate action
+// ("Link to GC" on the project list → GcLinkModal), which overwrites the name
+// with the GC's registered one. When the creator is themselves a GC, they
+// *are* the GC these fields describe, so the form derives and locks them
+// from the caller's own company/session instead (see isGc below).
 const projectSchema = z.object({
   name: z
     .string()
@@ -57,10 +63,18 @@ interface ProjectFormProps {
 export const ProjectForm = ({ isOpen, onClose, project }: ProjectFormProps) => {
   const isEdit = Boolean(project);
   const isArchived = Boolean(project?.archivedAt);
+  const isGcLinked = Boolean(project?.gcCompanyId);
   const { createProject, isCreating } = useCreateProject();
   const { updateProject, isUpdating } = useUpdateProject();
   const { archiveProject, isArchiving } = useArchiveProject();
   const { deleteProject, isDeleting } = useDeleteProject();
+
+  // A GC creating/editing their own project *is* the GC these fields
+  // describe, so derive and lock them instead of asking for a retyped copy.
+  const { isGc } = useCurrentUser();
+  const { user } = useAuth();
+  const { company, isLoading: isCompanyLoading } = useCurrentCompany();
+  const isGcFieldLocked = isGc || isGcLinked;
 
   const [isConfirmingDelete, setIsConfirmingDelete] = useState(false);
 
@@ -93,10 +107,15 @@ export const ProjectForm = ({ isOpen, onClose, project }: ProjectFormProps) => {
   } = useForm<ProjectValues>({
     resolver: zodResolver(projectSchema),
     mode: "onTouched",
-    defaultValues: {
+    // `values` (not `defaultValues`) so the GC-derived fields sync once the
+    // company/session data finishes loading, instead of being frozen blank
+    // at whatever they were on first mount.
+    values: {
       name: project?.name ?? "",
-      gcNameCustom: project?.gcNameCustom ?? "",
-      gcContactEmail: project?.gcContactEmail ?? "",
+      gcNameCustom: isGc ? (company?.name ?? "") : (project?.gcNameCustom ?? ""),
+      gcContactEmail: isGc
+        ? (user?.email ?? "")
+        : (project?.gcContactEmail ?? ""),
       status: project?.status ?? "active",
     },
   });
@@ -152,11 +171,24 @@ export const ProjectForm = ({ isOpen, onClose, project }: ProjectFormProps) => {
           id={gcId}
           label="General contractor"
           error={errors.gcNameCustom?.message}
+          hint={
+            isGc
+              ? "You're the general contractor on this project — set from your company profile."
+              : isGcLinked
+                ? "Linked to a general contractor — this is their registered name. Unlink the project from the list to change it."
+                : undefined
+          }
         >
           <TextInput
             id={gcId}
             type="text"
-            placeholder="Acme Construction"
+            placeholder={
+              isGc && isCompanyLoading ? "Loading…" : "Acme Construction"
+            }
+            // Once linked (or when the creator is themselves the GC), this
+            // holds the GC's registered name; editing it would drift from
+            // the source of truth. Unlink from the list to change it.
+            readOnly={isGcFieldLocked}
             hasError={!!errors.gcNameCustom}
             {...register("gcNameCustom")}
           />
@@ -164,13 +196,17 @@ export const ProjectForm = ({ isOpen, onClose, project }: ProjectFormProps) => {
 
         <FormField
           id={gcContactEmailId}
-          label="GC contact email (optional)"
+          label={isGc ? "GC contact email" : "GC contact email (optional)"}
           error={errors.gcContactEmail?.message}
+          hint={isGc ? "Set from your account email." : undefined}
         >
           <TextInput
             id={gcContactEmailId}
             type="email"
-            placeholder="gc@example.com"
+            placeholder={
+              isGc && isCompanyLoading ? "Loading…" : "gc@example.com"
+            }
+            readOnly={isGc}
             hasError={!!errors.gcContactEmail}
             {...register("gcContactEmail")}
           />
@@ -199,6 +235,7 @@ export const ProjectForm = ({ isOpen, onClose, project }: ProjectFormProps) => {
             variant="primary"
             size="md"
             loading={isCreating || isUpdating}
+            disabled={isGc && isCompanyLoading}
           >
             {isEdit ? "Save changes" : "Create project"}
           </Button>

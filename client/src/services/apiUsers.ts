@@ -1,4 +1,5 @@
 import { fetchWithTimeout } from "../utils/fetchWithTimeout";
+import type { CompanyType } from "../interfaces/company";
 
 export interface CurrentUser {
   id: string;
@@ -7,6 +8,10 @@ export interface CurrentUser {
   /** `companies.tier` — `null` only in the schema-allowed but
    *  never-in-practice case of a user with no company row yet. */
   tier: string | null;
+  /** `companies.company_type` — drives GC-only vs subcontractor-only UI
+   *  (join code in Settings vs. linking a project to a GC). `null` in the
+   *  same no-company-row case as `tier`. */
+  companyType: CompanyType | null;
 }
 
 /** GET /api/users/me — the caller's own resolved identity, including their
