@@ -14,13 +14,14 @@ const {
 } = require("./projects");
 
 const PROJECT_COLUMNS =
-  "id, owner_company_id, name, gc_company_id, gc_name_custom, gc_contact_email, status, archived_at, created_at";
+  "id, owner_company_id, name, gc_company_id, jobsite_id, gc_name_custom, gc_contact_email, status, archived_at, created_at";
 
 const dbRow = {
   id: "project-1",
   owner_company_id: "company-1",
   name: "Downtown Highrise",
   gc_company_id: null,
+  jobsite_id: null,
   gc_name_custom: "Acme GC",
   gc_contact_email: null,
   status: "active",
@@ -33,6 +34,7 @@ const mappedProject = {
   ownerCompanyId: "company-1",
   name: "Downtown Highrise",
   gcCompanyId: null,
+  jobsiteId: null,
   gcNameCustom: "Acme GC",
   gcContactEmail: null,
   status: "active",
@@ -837,5 +839,107 @@ describe("projects service: unlinkGc", () => {
       statusCode: 502,
       message: "Could not unlink the project",
     });
+  });
+});
+
+// Phase 8d admission gate: a project may only attach to a jobsite when an
+// accepted jobsite_subcontractors row exists for (jobsiteId, the caller's
+// company) — the accepted roster row is the only writer of jobsite_id /
+// gc_company_id besides link-gc.
+describe("projects service: create with a jobsiteId (admission gate)", () => {
+  let rosterSingle;
+  let rosterNot;
+  let rosterEqCompany;
+  let rosterEqJobsite;
+  let rosterSelect;
+  let insert;
+  let single;
+  let select;
+
+  const payload = {
+    id: "project-2",
+    ownerCompanyId: "company-1",
+    name: "Riverside Tower",
+    gcNameCustom: "typed by the sub",
+    jobsiteId: "jobsite-1",
+  };
+
+  beforeEach(() => {
+    rosterSingle = vi.fn().mockResolvedValue({
+      data: { jobsites: { gc_company_id: "gc-1", companies: { name: "Turner Construction" } } },
+      error: null,
+    });
+    rosterNot = vi.fn(() => ({ single: rosterSingle }));
+    rosterEqCompany = vi.fn(() => ({ not: rosterNot }));
+    rosterEqJobsite = vi.fn(() => ({ eq: rosterEqCompany }));
+    rosterSelect = vi.fn(() => ({ eq: rosterEqJobsite }));
+
+    single = vi.fn().mockResolvedValue({ data: dbRow, error: null });
+    select = vi.fn(() => ({ single }));
+    insert = vi.fn(() => ({ select }));
+
+    fromSpy.mockReset();
+    fromSpy.mockImplementation((table) => {
+      if (table === "jobsite_subcontractors") return { select: rosterSelect };
+      if (table === "projects") return { insert };
+      throw new Error(`Unexpected table: ${table}`);
+    });
+  });
+
+  it("should look up an accepted roster row for the caller's own company and copy jobsite_id, gc_company_id and the GC's registered name onto the project", async () => {
+    // Act
+    await create(payload);
+
+    // Assert
+    expect(rosterEqJobsite).toHaveBeenCalledWith("jobsite_id", "jobsite-1");
+    expect(rosterEqCompany).toHaveBeenCalledWith("sub_company_id", "company-1");
+    expect(rosterNot).toHaveBeenCalledWith("accepted_at", "is", null);
+    expect(insert).toHaveBeenCalledWith({
+      id: "project-2",
+      owner_company_id: "company-1",
+      name: "Riverside Tower",
+      gc_name_custom: "Turner Construction",
+      gc_contact_email: null,
+      jobsite_id: "jobsite-1",
+      gc_company_id: "gc-1",
+    });
+  });
+
+  it("should throw a 404 AppError and insert nothing when the company has no accepted roster row", async () => {
+    // Arrange
+    rosterSingle.mockResolvedValue({ data: null, error: { code: "PGRST116" } });
+
+    // Act & Assert
+    await expect(create(payload)).rejects.toMatchObject({
+      statusCode: 404,
+      message: "Jobsite not found",
+    });
+    expect(insert).not.toHaveBeenCalled();
+  });
+
+  it("should throw a 502 AppError when the roster lookup fails for any other reason", async () => {
+    // Arrange
+    rosterSingle.mockResolvedValue({ data: null, error: { code: "OTHER" } });
+
+    // Act & Assert
+    await expect(create(payload)).rejects.toMatchObject({
+      statusCode: 502,
+      message: "Could not verify the jobsite",
+    });
+    expect(insert).not.toHaveBeenCalled();
+  });
+
+  it("should fall back to a null GC name when the jobsite's company has no name embedded", async () => {
+    // Arrange
+    rosterSingle.mockResolvedValue({
+      data: { jobsites: { gc_company_id: "gc-1", companies: null } },
+      error: null,
+    });
+
+    // Act
+    await create(payload);
+
+    // Assert
+    expect(insert.mock.calls[0][0].gc_name_custom).toBeNull();
   });
 });

@@ -17,7 +17,7 @@ describe("loadUserContext", () => {
     next = vi.fn();
   });
 
-  it("should set req.user to { id, companyId, role, tier, companyType } and call next() with no error", async () => {
+  it("should set req.user to { id, name, companyId, role, tier, companyType } and call next() with no error", async () => {
     // Arrange
     getUserContextSpy.mockResolvedValue({
       id: "auth-user-1",
@@ -35,6 +35,7 @@ describe("loadUserContext", () => {
     expect(getUserContextSpy).toHaveBeenCalledWith("auth-user-1");
     expect(req.user).toEqual({
       id: "auth-user-1",
+      name: "Alex Builder",
       companyId: "company-1",
       role: "foreman",
       tier: "premium",

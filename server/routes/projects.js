@@ -46,7 +46,16 @@ router.post(
       .withMessage("Project name is required")
       .isLength({ max: 120 })
       .withMessage("Project name is too long"),
+    // Phase 8d: attaches the new project to a GC-owned jobsite the caller's
+    // company has been admitted to (accepted roster row — checked in the
+    // service). When present, the GC's name comes from the jobsite, so
+    // gcNameCustom is no longer required.
+    body("jobsiteId")
+      .optional()
+      .isUUID()
+      .withMessage("A valid jobsite id is required"),
     body("gcNameCustom")
+      .if(body("jobsiteId").not().exists())
       .trim()
       .notEmpty()
       .withMessage("Enter the general contractor for this project")

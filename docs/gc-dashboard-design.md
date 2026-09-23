@@ -118,6 +118,13 @@ table itself, the same single-column shape every other service check uses (the r
 transaction, so the link's two writes can drift; because nothing authorizes off the junction table, drift
 is a roster inconsistency, not a security problem. Cheap to drop if you'd rather not write it.
 
+**Superseded by Phase 8d.** `docs/jobsite-design.md` makes a roster load-bearing after all — not this
+table, but its re-keyed successor `jobsite_subcontractors`, which gates whether a sub may attach a
+project to a specific jobsite. This table's own rows become 8d-g's backfill *input*, and
+`project_subcontractors` itself is dropped in 8d-h once the backfill has read it. The "authorization
+keys on `projects.gc_company_id` only" rule survives unchanged — 8d's new check is additive, gating
+*admission*, not replacing the read-path check.
+
 ### GC authorization and data exposure
 
 - `getUserContext` (`server/services/users.js`) joins `companies(company_type)` alongside `tier`;
@@ -272,12 +279,15 @@ undone only by that sub unlinking; the GC has no remove-sub or regenerate-code c
 resolving by the invite epic at the latest.
 
 **Email invites, role enforcement, `gc_contact_email` supersession.** Tracked in `docs/tasks.md`'s Phase
-8 epic; two of its four items shipped since this was written. Roles are real as of Phase 8a (an
+8 epic; three of its four items are now designed or shipped. Roles are real as of Phase 8a (an
 `admin`/`safety_manager` gate exists and is enforced on project archive/restore/delete and custom-talk
-delete), and `gc_contact_email` was superseded for linked projects as of Phase 8b — but neither the GC
-dashboard nor the join-code endpoints picked up a role gate; any signed-in user in a GC company can still
-see the dashboard and its join code. Email invites (8c) and the GC-owned jobsite model (8d) remain
-unbuilt.
+delete), `gc_contact_email` was superseded for linked projects as of Phase 8b, and user-to-company email
+invites shipped in Phase 8c — but neither the GC dashboard nor the join-code endpoints ever picked up a
+role gate; any signed-in user in a GC company can still see the dashboard and its join code. Phase 8d's
+`docs/jobsite-design.md` designs company-to-company invites and the GC-owned jobsite model (fixing the
+role-gate gap for free on every new jobsite endpoint, and flagging — but not itself closing — the
+retrofit onto `GET /api/companies/join-code`); 8d's sub-steps (8d-b onward) are unbuilt as of this
+writing.
 
 **Configurable cadence, GC tier gating (blurred subs, 1-site cap), SMS nudges, Procore/ACC sync, OSHA
 Defense ZIP, cross-project scorecards.** Deferred; see `docs/tasks.md`.

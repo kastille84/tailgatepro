@@ -73,7 +73,7 @@ describe("requireAuth", () => {
     expect(error.message).toBe("Invalid or expired session");
   });
 
-  it("should attach req.userId and req.userMetadata and call next() with no error when the token is valid", async () => {
+  it("should attach req.userId, req.userMetadata and req.userEmail and call next() with no error when the token is valid", async () => {
     // Arrange
     req.headers.authorization = "Bearer good-token";
     const userMetadata = {
@@ -82,7 +82,9 @@ describe("requireAuth", () => {
       companyType: "subcontractor",
     };
     getUserSpy.mockResolvedValue({
-      data: { user: { id: "user-123", user_metadata: userMetadata } },
+      data: {
+        user: { id: "user-123", email: "alex@example.com", user_metadata: userMetadata },
+      },
       error: null,
     });
 
@@ -92,6 +94,7 @@ describe("requireAuth", () => {
     // Assert
     expect(req.userId).toBe("user-123");
     expect(req.userMetadata).toEqual(userMetadata);
+    expect(req.userEmail).toBe("alex@example.com");
     expect(next).toHaveBeenCalledWith();
   });
 
@@ -108,6 +111,22 @@ describe("requireAuth", () => {
 
     // Assert
     expect(req.userMetadata).toEqual({});
+    expect(next).toHaveBeenCalledWith();
+  });
+
+  it("should leave req.userEmail undefined when the auth user has no email on file", async () => {
+    // Arrange
+    req.headers.authorization = "Bearer good-token";
+    getUserSpy.mockResolvedValue({
+      data: { user: { id: "user-123" } },
+      error: null,
+    });
+
+    // Act
+    await requireAuth(req, res, next);
+
+    // Assert
+    expect(req.userEmail).toBeUndefined();
     expect(next).toHaveBeenCalledWith();
   });
 });

@@ -7,13 +7,14 @@ const companiesService = require("./companies");
 // mapper applied to each row before it leaves the service. Services never leak
 // DB column names to the controller layer.
 const PROJECT_COLUMNS =
-  "id, owner_company_id, name, gc_company_id, gc_name_custom, gc_contact_email, status, archived_at, created_at";
+  "id, owner_company_id, name, gc_company_id, jobsite_id, gc_name_custom, gc_contact_email, status, archived_at, created_at";
 
 const toProject = (row) => ({
   id: row.id,
   ownerCompanyId: row.owner_company_id,
   name: row.name,
   gcCompanyId: row.gc_company_id,
+  jobsiteId: row.jobsite_id,
   gcNameCustom: row.gc_name_custom,
   gcContactEmail: row.gc_contact_email,
   status: row.status,
@@ -45,27 +46,72 @@ const listForCompany = async (companyId, { includeArchived = false } = {}) => {
   return data.map(toProject);
 };
 
+// The admission gate (Phase 8d, docs/jobsite-design.md "Authorization"): a
+// subcontractor may attach a project to a jobsite only when an accepted
+// jobsite_subcontractors row exists for (jobsiteId, its own company). Without
+// this, any sub could POST { jobsiteId } and inject itself into any GC's
+// dashboard — the same spoofing hole 6c closed for gcCompanyId. `companyId` is
+// always the caller's verified company, never request input. A missing row is
+// a 404: another GC's jobsite is indistinguishable from one that doesn't
+// exist. Returns the jobsite's GC id + name so the caller can copy them onto
+// the project row (one denormalized write, so no later read consults the
+// roster).
+const resolveAdmission = async (jobsiteId, companyId) => {
+  const { data, error } = await supabase
+    .from("jobsite_subcontractors")
+    .select("jobsites(gc_company_id, companies(name))")
+    .eq("jobsite_id", jobsiteId)
+    .eq("sub_company_id", companyId)
+    .not("accepted_at", "is", null)
+    .single();
+
+  if (error) {
+    if (error.code === "PGRST116") {
+      throw new AppError("Jobsite not found", 404, { cause: error });
+    }
+    throw new AppError("Could not verify the jobsite", 502, { cause: error });
+  }
+
+  return {
+    gcCompanyId: data.jobsites.gc_company_id,
+    gcName: data.jobsites.companies?.name ?? null,
+  };
+};
+
 // Inserts a project with the client-supplied `id` (the offline-sync convention:
 // PKs are generated client-side so offline records don't collide on sync). The
 // DB `check_gc_info` constraint guarantees at least one of gc_company_id /
-// gc_name_custom is present. gc_company_id is deliberately not accepted here —
-// linkGc (below) is the only writer of it, so a project can't claim a GC
-// company without a join code.
+// gc_name_custom is present. gc_company_id is deliberately not accepted from
+// the caller — it is only ever written server-side: by linkGc (below) via a
+// join code, or here from an accepted jobsite roster row (`jobsiteId`, checked
+// by resolveAdmission), so a project can't claim a GC company on its own say-so.
 const create = async ({
   id,
   ownerCompanyId,
   name,
   gcNameCustom,
   gcContactEmail,
+  jobsiteId,
 }) => {
+  let admission = null;
+  if (jobsiteId) {
+    admission = await resolveAdmission(jobsiteId, ownerCompanyId);
+  }
+
   const { data, error } = await supabase
     .from("projects")
     .insert({
       id,
       owner_company_id: ownerCompanyId,
       name,
-      gc_name_custom: gcNameCustom ?? null,
+      // With a jobsite, the GC's registered name replaces whatever the sub
+      // typed — same overwrite linkGc does, so every screen shows the real name.
+      gc_name_custom: admission ? admission.gcName : (gcNameCustom ?? null),
       gc_contact_email: gcContactEmail ?? null,
+      ...(admission && {
+        jobsite_id: jobsiteId,
+        gc_company_id: admission.gcCompanyId,
+      }),
     })
     .select(PROJECT_COLUMNS)
     .single();

@@ -1,20 +1,32 @@
-// #TODO - TODO(join-company-flow): every self-serve signup currently creates a brand
-// new `companies` row, even if another user already registered the same
-// company name — there's no lookup/merge/invite step. Building a real "join
-// an existing company" flow is an open PRD item (see docs/PRD.md §7, open
-// question #1, Viral Loop / Onboarding) and will need to replace the
-// always-create-a-new-company behavior below.
+// Phase 8c closed the "join an existing company" gap this TODO used to
+// describe: an invited signup (inviteToken present) joins the existing
+// company at the invited role via createProfileFromInvite below, instead of
+// always creating a new one.
 const { v4: uuidv4 } = require("uuid");
 const { supabase } = require("../utility/supabaseClient");
 const { AppError } = require("../utility/AppError");
+const companyInvitesService = require("./companyInvites");
+const jobsitesService = require("./jobsites");
 
 // Creates the `companies` row and the `users` row for a newly self-signed-up
 // auth user. `role` is 'admin' — the user creating a brand-new company is its
-// first administrator (Phase 8a). A future invited user (Phase 8c) will join
-// an existing company instead, at whatever role the inviting admin picks.
-// `tier` is fixed to 'basic' — self-serve signups don't choose a billing tier
-// yet.
-const createProfile = async ({ id, name, companyName, companyType }) => {
+// first administrator (Phase 8a). An invited signup (inviteToken present)
+// takes the createProfileFromInvite branch instead, joining an existing
+// company at whatever role the inviting admin picked. `tier` is fixed to
+// 'basic' — self-serve signups don't choose a billing tier yet.
+const createProfile = async ({
+  id,
+  email,
+  name,
+  companyName,
+  companyType,
+  inviteToken,
+  jobsiteInviteToken,
+}) => {
+  if (inviteToken) {
+    return createProfileFromInvite({ id, email, name, inviteToken });
+  }
+
   const companyId = uuidv4();
 
   const { error: companyError } = await supabase.from("companies").insert({
@@ -55,6 +67,69 @@ const createProfile = async ({ id, name, companyName, companyType }) => {
     throw new AppError("Could not finish setting up your account", 502, {
       cause: error,
     });
+  }
+
+  // Phase 8d Case B: a jobsite-invited signup founds its own company (above),
+  // then accepts the invite as the last step — only once the users row
+  // actually landed, mirroring createProfileFromInvite. Best-effort, never
+  // throws past profile creation: a failed accept leaves a working account and
+  // a still-valid token, recoverable via the authenticated accept endpoint on
+  // next login. `email` is the token-verified email, checked against the
+  // invited address inside acceptInvite.
+  if (jobsiteInviteToken) {
+    try {
+      await jobsitesService.acceptInvite({
+        token: jobsiteInviteToken,
+        email,
+        companyId,
+      });
+    } catch (acceptError) {
+      console.error("users: failed to accept a jobsite invite", acceptError);
+    }
+  }
+
+  return {
+    id: data.id,
+    name: data.name,
+    role: data.role,
+    companyId: data.company_id,
+  };
+};
+
+// An invited user joins the existing company at the invited role instead of
+// creating a new one — no `companies` insert, so none of createProfile's
+// compensating-delete logic applies here. `email` must be the token-verified
+// email of the account accepting the invite (never req.body/req.userMetadata)
+// — getInviteForEmail is where the email-match security check actually runs.
+const createProfileFromInvite = async ({ id, email, name, inviteToken }) => {
+  const invite = await companyInvitesService.getInviteForEmail(inviteToken, email);
+
+  const { data, error } = await supabase
+    .from("users")
+    .insert({ id, company_id: invite.companyId, role: invite.role, name })
+    .select("id, name, role, company_id")
+    .single();
+
+  if (error) {
+    // 23505 = unique_violation on users.id (pkey) — profile already exists.
+    if (error.code === "23505") {
+      throw new AppError("Profile already exists for this account", 409, {
+        cause: error,
+      });
+    }
+    throw new AppError("Could not finish setting up your account", 502, {
+      cause: error,
+    });
+  }
+
+  // Consume the invite only now that the user row landed — best-effort,
+  // never throws. A failed delete just leaves the token valid for a retry;
+  // a retried accept would 409 on users.id above (never re-insert), so
+  // nothing is unsafe about leaving a consumed invite briefly in place.
+  try {
+    await companyInvitesService.deleteInvite(invite.id);
+  } catch (cleanupError) {
+    console.error("users: failed to delete a consumed invite", cleanupError);
   }
 
   return {

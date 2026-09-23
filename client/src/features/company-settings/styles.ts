@@ -138,6 +138,31 @@ export const StyledUpsellTitle = styled.p`
   color: ${({ theme }) => theme.colors.navy[700]};
 `;
 
+/** Explainer / offline copy inside the "Invite a teammate" form — same role
+ *  as features/projects' StyledLinkNote. */
+export const StyledInviteNote = styled.p`
+  margin: 0;
+  font-size: 1.4rem;
+  font-weight: 500;
+  line-height: 1.6;
+  color: ${({ theme }) => theme.colors.navy[500]};
+`;
+
+export const StyledInviteFields = styled.div`
+  display: flex;
+  flex-direction: column;
+  gap: 1.6rem;
+
+  @media (min-width: ${({ theme }) => theme.breakpoints.sm}) {
+    flex-direction: row;
+    align-items: flex-start;
+
+    > * {
+      flex: 1;
+    }
+  }
+`;
+
 export const StyledUpsellBody = styled.p`
   margin: 0;
   font-size: 1.4rem;

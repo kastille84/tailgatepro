@@ -6,4 +6,12 @@
 // and any service-layer role gate can't drift apart.
 module.exports = {
   MANAGER_ROLES: ["admin", "safety_manager"],
+  // Human-readable labels for the three user_role values — used in the
+  // Phase 8c invite email so a role reads as "Safety Manager", not
+  // "safety_manager".
+  ROLE_LABELS: {
+    admin: "Admin",
+    safety_manager: "Safety Manager",
+    foreman: "Foreman",
+  },
 };

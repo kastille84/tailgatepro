@@ -18,13 +18,14 @@ exports.listProjects = async (req, res, next) => {
 exports.createProject = async (req, res, next) => {
   try {
     // The request body has already been validated by the validate middleware.
-    const { id, name, gcNameCustom, gcContactEmail } = req.body;
+    const { id, name, gcNameCustom, gcContactEmail, jobsiteId } = req.body;
     const data = await projectsService.create({
       id,
       ownerCompanyId: req.user.companyId,
       name,
       gcNameCustom,
       gcContactEmail,
+      jobsiteId,
     });
     return res.status(201).json({ success: true, data });
   } catch (error) {

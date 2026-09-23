@@ -252,3 +252,105 @@ ALTER TABLE waitlist ENABLE ROW LEVEL SECURITY;
 -- If the table already exists from an earlier run, add the new columns instead:
 -- ALTER TABLE waitlist ADD COLUMN IF NOT EXISTS audience TEXT;
 -- ALTER TABLE waitlist ADD COLUMN IF NOT EXISTS plan_interest TEXT;
+
+-- 10. Company Invites (Phase 8c) — an admin/safety_manager invites a teammate
+-- by email to join their own company at a chosen role. `id` is server-
+-- generated (uuidv4()), NOT client-generated — the same exception to the
+-- offline-sync "id is always client-generated" rule that companies.join_code
+-- already carries; this row is never written from an offline client. `token`
+-- is a server-generated, URL-safe secret (crypto.randomBytes(32).toString
+-- ("hex")) — a distinct mechanism from companies.join_code (GC-only,
+-- company-level, human-typed, no expiry). UNIQUE(company_id, email) is what
+-- makes "re-invite the same email" a clean upsert instead of duplicate rows.
+CREATE TABLE company_invites (
+  id UUID PRIMARY KEY,
+  company_id UUID NOT NULL REFERENCES companies(id) ON DELETE CASCADE,
+  email TEXT NOT NULL,
+  role user_role NOT NULL,
+  token TEXT UNIQUE NOT NULL,
+  expires_at TIMESTAMPTZ NOT NULL,
+  created_at TIMESTAMPTZ DEFAULT NOW(),
+  CONSTRAINT company_invites_company_email_unique UNIQUE (company_id, email)
+);
+
+-- Server-only table: enable RLS with NO policies so the public anon key is
+-- denied all access. The server's service-role key bypasses RLS and still works.
+ALTER TABLE company_invites ENABLE ROW LEVEL SECURITY;
+
+-- If the table already exists from an earlier run, add the constraint/RLS instead:
+-- ALTER TABLE company_invites ADD CONSTRAINT company_invites_company_email_unique UNIQUE (company_id, email);
+-- ALTER TABLE company_invites ENABLE ROW LEVEL SECURITY;
+
+-- 11. Jobsites (Phase 8d) — the GC-owned canonical job site a subcontractor's
+-- project can attach to, via an accepted email invite (see table 12 below) or
+-- the existing join-code link (rewritten in 8d-h to find-or-create one of
+-- these instead of just setting projects.gc_company_id). See
+-- docs/jobsite-design.md. `id` is server-generated (uuidv4()), the same
+-- offline-sync exception companies.join_code and company_invites.id already
+-- carry — creating a jobsite is always an online, authenticated GC action,
+-- never an offline client write.
+CREATE TABLE jobsites (
+  id UUID PRIMARY KEY,
+  gc_company_id UUID NOT NULL REFERENCES companies(id) ON DELETE CASCADE,
+  name TEXT NOT NULL,
+  status project_status NOT NULL DEFAULT 'active',
+  archived_at TIMESTAMPTZ,
+  created_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+-- Server-only table: enable RLS with NO policies so the public anon key is
+-- denied all access. The server's service-role key bypasses RLS and still works.
+ALTER TABLE jobsites ENABLE ROW LEVEL SECURITY;
+
+CREATE INDEX idx_jobsites_gc_company ON jobsites (gc_company_id);
+
+-- If the table already exists from an earlier run:
+-- ALTER TABLE jobsites ENABLE ROW LEVEL SECURITY;
+-- CREATE INDEX IF NOT EXISTS idx_jobsites_gc_company ON jobsites (gc_company_id);
+
+-- 12. Jobsite Subcontractors (Phase 8d) — folds the GC's invite-by-email into
+-- the jobsite roster instead of a separate invites table, so "invited, not
+-- yet accepted" and "accepted member" read from one query (see
+-- docs/jobsite-design.md "Company-to-company invite"). A row with
+-- sub_company_id IS NULL and a live token is a pending invite; sub_company_id
+-- set + accepted_at set is a member (token/expires_at nulled on accept, row
+-- kept as the membership record). `id`/`token` follow the same
+-- server-generated, offline-sync-exempt pattern as company_invites.
+CREATE TABLE jobsite_subcontractors (
+  id UUID PRIMARY KEY,
+  jobsite_id UUID NOT NULL REFERENCES jobsites(id) ON DELETE CASCADE,
+  sub_company_id UUID REFERENCES companies(id) ON DELETE CASCADE,
+  invited_email TEXT NOT NULL,
+  token TEXT UNIQUE,
+  expires_at TIMESTAMPTZ,
+  accepted_at TIMESTAMPTZ,
+  created_at TIMESTAMPTZ DEFAULT NOW(),
+  CONSTRAINT jobsite_subs_email_unique UNIQUE (jobsite_id, invited_email)
+);
+
+-- A company holds at most one membership per jobsite once accepted; a partial
+-- index (rather than a plain UNIQUE) so any number of still-pending rows
+-- (sub_company_id IS NULL, distinct invited_email each) are unaffected.
+CREATE UNIQUE INDEX jobsite_subs_company_unique
+  ON jobsite_subcontractors (jobsite_id, sub_company_id)
+  WHERE sub_company_id IS NOT NULL;
+
+-- Server-only table: enable RLS with NO policies so the public anon key is
+-- denied all access. The server's service-role key bypasses RLS and still works.
+ALTER TABLE jobsite_subcontractors ENABLE ROW LEVEL SECURITY;
+
+-- If the table already exists from an earlier run:
+-- ALTER TABLE jobsite_subcontractors ADD CONSTRAINT jobsite_subs_email_unique UNIQUE (jobsite_id, invited_email);
+-- CREATE UNIQUE INDEX IF NOT EXISTS jobsite_subs_company_unique ON jobsite_subcontractors (jobsite_id, sub_company_id) WHERE sub_company_id IS NOT NULL;
+-- ALTER TABLE jobsite_subcontractors ENABLE ROW LEVEL SECURITY;
+
+-- 13. Projects: attach to a jobsite (Phase 8d) — nullable, so every existing
+-- sub-owned project (and any new one with no GC, or only a free-text GC) is
+-- unaffected. Set by an accepted jobsite invite or a rewritten join-code link
+-- (8d-h); projects.gc_company_id stays the authorization column (denormalized
+-- from jobsites.gc_company_id at the moment jobsite_id is set) — see
+-- docs/jobsite-design.md "Why projects.gc_company_id is retained". Declared
+-- here (after table 11) rather than in table 3's CREATE TABLE above because
+-- it references jobsites, which doesn't exist yet at that point in this file.
+ALTER TABLE projects ADD COLUMN IF NOT EXISTS jobsite_id UUID REFERENCES jobsites(id) ON DELETE SET NULL;
+CREATE INDEX IF NOT EXISTS idx_projects_jobsite ON projects (jobsite_id);

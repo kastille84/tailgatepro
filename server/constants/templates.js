@@ -6,5 +6,7 @@
 module.exports = {
   MAILGUN_TEMPLATES: {
     MEETING_LOG_REPORT: "meeting-log-report",
+    COMPANY_INVITE: "company-invite",
+    JOBSITE_INVITE: "jobsite-invite",
   },
 };

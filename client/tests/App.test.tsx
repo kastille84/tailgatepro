@@ -60,6 +60,12 @@ vi.mock("../src/pages/ResetPassword", () => ({
   ),
 }));
 
+vi.mock("../src/pages/AcceptInvite", () => ({
+  AcceptInvite: () => (
+    <div data-testid="accept-invite-page">Accept invite page</div>
+  ),
+}));
+
 vi.mock("../src/pages/Dashboard", () => ({
   Dashboard: () => <div data-testid="dashboard-page">Dashboard page</div>,
 }));
@@ -142,6 +148,13 @@ describe("App", () => {
     render(<App />);
 
     expect(screen.getByTestId("reset-password-page")).toBeDefined();
+  });
+
+  it("renders the accept-invite route shell without requiring a session", () => {
+    window.history.pushState({}, "", "/invite/some-token");
+    render(<App />);
+
+    expect(screen.getByTestId("accept-invite-page")).toBeDefined();
   });
 
   it("renders the dashboard route shell behind the RequireAuth layout route", () => {

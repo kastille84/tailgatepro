@@ -1467,7 +1467,7 @@ design doc, which is updated to match):
       Tightening the constraint itself (e.g. `NULLIF(TRIM(gc_name_custom), '') IS NOT NULL`) is a separate schema
       migration, deliberately not done here — tracked as a follow-up below. Also fixed a misleading test at
       `server/services/projects.test.js` (was mocking a `23514` constraint violation for `patch: { gcNameCustom:
-    "" }`, a scenario the real constraint would never raise for `''` — changed to `null`, which genuinely can
+"" }`, a scenario the real constraint would never raise for `''` — changed to `null`, which genuinely can
       violate it). The web client can't trigger this today (`ProjectForm.tsx`'s Zod schema requires a non-empty
       value and the field is `readOnly` once GC-linked) — only reachable via a direct API call. No route-level
       automated test added: this repo has no precedent for testing express-validator chains in isolation (no
@@ -1834,41 +1834,272 @@ GC company/account, so this doesn't need the invite flow (8c) or GC-owned jobsit
       a `gc_contact_email` set → email still goes to that manual address; unlinked with neither set →
       no email sent, same as before this change
 
-### 8c — Admin invites by email; invitee joins existing company · status: not started
+### 8c — Admin invites by email; invitee joins existing company · status: code complete; Supabase apply + live smoke pending
 
-- [ ] Invite table/token design (e.g. a `company_invites` row — id, company_id, email, role, token,
-      expires_at) + a token generator in `server/utility/` (pattern: `joinCode.js`, but a distinct
-      per-invite/per-email mechanism, not the GC-only `companies.join_code` column)
-- [ ] `POST /api/companies/invite` (admin/safety_manager only, via 8a's `requireRole`) — creates the
-      invite row, sends via the existing `email.js`/Mailgun pattern (new template alongside
-      `meeting-log-report.html`)
-- [ ] Invite-acceptance path: `createProfile` gains a lookup branch — an invited signup joins the
-      existing `companies` row at the invited role, instead of always creating a new one
-- [ ] Client: accept-invite route + an admin-side "invite teammate" UI (company settings, alongside
-      `JoinCodeCard.tsx`'s pattern)
-- [ ] Tests: server invite service/controller, acceptance branch in `users.test.js`, client invite form
+Plan: `~/.claude/plans/let-s-work-on-8c-wondrous-volcano.md`. Scope decisions: an inviting admin/
+safety_manager may invite any of the three roles (admin/safety_manager/foreman), defaulting the
+picker to foreman; no pending-invites list/resend/revoke UI this pass — re-inviting the same email
+just replaces the old invite (new token/expiry).
 
-### 8d — GC-owned jobsite + GC invites subcontractor companies · status: not started
+- [x] `company_invites` table (`Supabase_SQL.sql` + `Supabase_Schema.md`): `id` (server-generated,
+      not client/offline — same exception `companies.join_code` already carries), `company_id`,
+      `email`, `role`, `token UNIQUE`, `expires_at`, `UNIQUE(company_id, email)` (the whole
+      "re-invite regenerates the token" mechanism — createInvite always upserts on that pair), RLS
+      enabled with no policies. `server/utility/inviteToken.js` — `generateInviteToken()`
+      (`crypto.randomBytes(32).toString("hex")`, a distinct mechanism from `joinCode.js`'s
+      human-typed/non-expiring company code) + `getInviteExpiry()` (7-day TTL, a plan default not
+      spelled out in the original bullet)
+- [x] `server/services/companyInvites.js` (new — own file rather than folding into
+      `services/companies.js`, mirroring `favorites.js`'s split from `talks.js`, flagged as a
+      deviation in the plan) — `createInvite`, `previewInvite`/`getInviteForEmail` (shared
+      active-invite lookup: 404 collapses "not found" and "expired" into one message, same
+      minimal-disclosure reasoning as `companies.getByJoinCode`), `deleteInvite`. The email-match
+      security check (a leaked token can't be claimed by a different email) lives in
+      `getInviteForEmail`, called only with the token-verified `req.userEmail` (new field, added to
+      `requireAuth.js`), never `req.body`/`req.userMetadata`
+- [x] `POST /api/companies/invite` (`requireRole(...MANAGER_ROLES)`) + `GET
+  /api/companies/invite/:token` (public preview, no `requireAuth` — the token is the credential)
+      in `server/routes/companies.js`; `server/controllers/companyInvites.js`. The token is never
+      echoed back in the POST response — only `{email, role}` — it only ever leaves the server via
+      the invite email (`server/services/email.js`'s new `sendCompanyInviteEmail`, mirroring
+      `sendMeetingLogEmail`'s soft-fail shape; new `docs/mailgun-templates/company-invite.html`
+      template; `MAILGUN_TEMPLATES.COMPANY_INVITE` + `ROLE_LABELS` added to `server/constants/`).
+      `loadUserContext.js` widened to carry `req.user.name` (the inviter's display name for the
+      email body)
+- [x] Invite-acceptance: `createProfile` (`server/services/users.js`) gains a lookup branch — same
+      function/endpoint per the task bullet's own wording, not a new one. `requireProfileMetadata.js`
+      branches on `user_metadata.inviteToken`: an invited signup only needs `name` (company/role come
+      from the invite row), skipping the `companyName`/`companyType` requirement. The invite row is
+      deleted only after the `users` insert actually succeeds (best-effort, never throws — a failed
+      cleanup just leaves the token valid for a retry)
+- [x] Client: `interfaces/companyInvite.ts`; `apiCompanies.ts` gained `getInvitePreview`/
+      `inviteTeammate`; `hooks/useInvitePreview.ts` / `useInviteTeammate.ts` (mirrors
+      `useLinkProjectToGc`'s `networkMode: "always"` — an invite send needs a live round-trip, no
+      offline queueing). `features/company-settings/InviteTeammateForm.tsx` — placed alongside
+      `JoinCodeCard.tsx` per the task bullet, but structured like `GcLinkModal` (owns its own RHF
+      form + mutation) since it's a submit-and-email action, not a display-only card; wired into
+      `Settings.tsx` gated on `role === "admin" || "safety_manager"`. `pages/AcceptInvite/` (new,
+      public route `/invite/:token` outside `RequireAuth`, self-guarding like `ResetPassword` —
+      previews the invite, then a signup-shaped form with a read-only email) — `signUpWithEmail`
+      (`auth-provider.ts`/`auth-context.ts`) widened to accept `SignupProfile | InviteAcceptProfile`,
+      spreading whichever shape it's given into `user_metadata`; `Login.tsx`/the confirm-email flow
+      needed **zero changes**, since `createProfile`'s branching is entirely server-side
+- [x] Tests: `inviteToken.test.js`, `companyInvites.test.js` (service + controller), invite-branch
+      cases in `users.test.js`/`requireProfileMetadata.test.js`/`requireAuth.test.js`/
+      `loadUserContext.test.js`/`email.test.js`/`users` controller test — 474 server tests passing
+      (up from 442). Client: `apiCompanies.test.ts`, `useInvitePreview.test.tsx`,
+      `useInviteTeammate.test.tsx`, `InviteTeammateForm.test.tsx`, `AcceptInvite.test.tsx`, plus
+      `Settings.test.tsx`/`App.test.tsx` updates — 996 client tests passing, 100% coverage on every
+      touched file (two pre-existing, unrelated branch gaps in `MeetingWizard.tsx`/`PhotoCapture.tsx`
+      untouched); `npx eslint` clean; `tsc -b` shows no new errors (only the pre-existing `Input.tsx`
+      failures noted under Phase 1)
+- [x] Pre-req: apply the `company_invites` SQL to Supabase before hitting the endpoints
+- [x] Verify (live Supabase + Mailgun): sent an invite as an admin, accepted via `/invite/:token`,
+      confirmed via the emailed link, landed authenticated (see the `AuthProvider` fix below), and the
+      `users` row landed with the invited company's `company_id`/`role` — confirmed the _existing_
+      company, not a new one.
+- [x] Bug found while verifying the styling of Supabase's own Confirm-signup/Reset-password emails
+      (unrelated to Mailgun): they're Supabase's generic unstyled default, sent by Supabase's own
+      mailer — `server/services/email.js`'s Mailgun integration has no hook into a Supabase Auth
+      event, so these can't be added to `MAILGUN_TEMPLATES`. Branded HTML for both now lives in
+      `docs/supabase-email-templates/` (`confirm-signup.html`, `reset-password.html`, using Supabase's
+      own Go-template variables, not Mailgun's handlebars) — see `docs/auth.md`'s new "Branded email
+      templates" note. External configuration, still pending: paste each into Supabase Dashboard →
+      Authentication → Email Templates for both the dev and prod projects.
+- [x] Bug found + fixed during the manual accept-invite smoke: reproduced twice (not just a stale
+      cross-app `localStorage` artifact) — clicking the confirmation email link landed straight on
+      `/dashboard`, profile-less, instead of `/login`. Root cause is **pre-existing and not specific
+      to this phase**: Supabase auto-establishes a session on that click when it's opened in the same
+      browser that ran `signUp()`, before the user ever manually submits `Login.tsx`'s form — the
+      _only_ other place `createProfile()` was called for the deferred (confirm-email) signup path.
+      `Login.tsx`'s `if (user) return <Navigate to="/dashboard"/>` guard then fires first, skipping
+      profile creation entirely; ordinary `Signup.tsx` shares the identical exposure. Fix:
+      `client/src/context/auth/auth-provider.ts`'s `AuthProvider` now calls `createProfile()` itself as a background
+      safety net from both the initial `getSession()` check and every `onAuthStateChange` event,
+      whenever a session is freshly seen for a not-yet-ensured user id (deduped via a ref so a token
+      refresh doesn't re-POST; failures swallowed silently — it's not a user-initiated action).
+      Relies on `apiUsers.createProfile`'s existing 409→`null` idempotency, so it's safe alongside the
+      three existing explicit call sites (`Signup.tsx`, `Login.tsx`, `AcceptInvite.tsx`), which are
+      unchanged. `docs/auth.md` §3 updated to describe the corrected design. New
+      `client/tests/context/auth/auth-provider.test.tsx` (first test for this previously-untested, coverage-excluded file) —
+      7 cases covering the auto-login case, dedupe, per-user-id re-firing, signed-out no-op, and
+      swallowed-rejection. Full client suite: 1003 tests passing, coverage unchanged (100% on every
+      touched file; `context/*` stays coverage-excluded). Still needs the same live-Supabase manual
+      confirmation-email click-through as the rest of this phase's Verify step to be fully closed out.
 
-Largest piece — supersedes the Phase 6 join-code link and 6e's group-by-name jobsite grouping
+### 8d — GC-owned jobsite + GC invites subcontractor companies · status: sequenced; 8d-a/8d-b/8d-c/8d-d code complete, 8d-e onward not started
+
+Plan: `~/.claude/plans/let-s-work-on-8d-cuddly-crab.md` (design backing doc:
+`~/.claude/plans/let-s-work-on-8d-cuddly-crab-agent-aab737ac2ca15e0ab.md`). Largest piece —
+supersedes the Phase 6 join-code link and 6e's group-by-name jobsite grouping
 (`server/utility/jobsites.js`). See `docs/gc-dashboard-design.md`'s "GC-owned canonical jobsite" notes
 (line 41) and "Explicitly not resolved here" (line 265) for the deferred-alternative rationale. Distinct
 from 8c's "admin invites by email," which is about users joining one company, not companies joining a
 jobsite. Nothing in 6c blocks it: the join-code link only sets `gc_company_id` and writes the
 `(project_id, sub_id)` roster row a GC-owned model would reuse.
 
-- [ ] Relax `projects.owner_company_id` (or introduce a distinct jobsite entity) so a GC can create a
-      jobsite directly, not just link an existing sub-owned project
-- [ ] GC-side jobsite create flow + sub-company invite-by-email (reuses 8c's invite-token/email infra,
-      scoped company-to-company instead of user-to-company)
-- [ ] Rework the sub's project picker + offline cache/outbox — currently assumes the sub always owns and
-      creates its own project rows
-- [ ] Make `project_subcontractors` load-bearing for authorization (today explicitly "a roster, never an
-      authorization source" per `docs/gc-dashboard-design.md` line 108)
-- [ ] Migration/backfill plan for jobsites already linked via the Phase 6 join code — don't strand
-      existing GC/sub links
-- [ ] Retire or dual-run `server/utility/jobsites.js`'s fuzzy name-grouping once real jobsite rows exist
-- [ ] Tests across server (schema/service/controller) and client (project picker, offline outbox)
+Locked decisions (from the plan's AskUserQuestion pass): (1) GC-owned jobsites are **additive and
+permanent** — a sub can keep running projects with no GC, or with just free-text `gc_name_custom`/
+`gc_contact_email`, forever; this is not a migration off the sub-owned model. (2) The join code
+**stays**, rewritten to find-or-create a real jobsite instead of just setting `gc_company_id` on a
+fuzzy-grouped row — it remains the zero-friction, no-email linking path. (3) A GC **can invite an
+unregistered sub by email** — the GC never pre-creates a `companies` row (would squat a name/tier it
+doesn't own); the invitee names their own company on signup, forced to `company_type =
+'subcontractor'`.
+
+Recommended data model (full reasoning in the plan): a new `jobsites` table
+(`gc_company_id NOT NULL`, `name`, `status`, `archived_at`) plus a nullable `projects.jobsite_id`.
+`projects` is **not replaced** — a sub's row becomes "this sub's participation in that jobsite,"
+keeping its own `status`/`archived_at`/`meeting_logs`/outbox identity. `projects.gc_company_id` is
+**retained** as a denormalized authorization column written at attach time, so Phase 4/5, 8b's
+`resolveGcContactEmail`, GC-read authorization, and the offline outbox all need zero changes.
+`owner_company_id` is never relaxed. The new load-bearing check: a sub may only attach a project to a
+jobsite via an **accepted** `jobsite_subcontractors` row — folding the invite and the roster into one
+table (not a widened `company_invites`, not a separate `jobsite_invites`).
+
+Sequenced into 8d-a…8d-h (same granularity as 4a–4h/6a–6g: docs → schema alone → server bottom-up →
+client → migration → retirement last, the only irreversible step). Each sub-step gets its own status
+line, Tests bullet, and `Verify (user, needs …)` bullet once implemented, per this file's convention.
+
+#### 8d-a — Design doc · status: code complete (docs only)
+
+- [x] `docs/jobsite-design.md`: records the data model (`jobsites` + `jobsite_subcontractors` +
+      `projects.jobsite_id`, `projects` kept as the sub's own row, `gc_company_id` retained
+      denormalized), the four auth checks (GC read, sub write, GC jobsite write, sub
+      admission-to-jobsite — the new load-bearing one), the folded roster/invite table, both accept
+      cases (an already-registered sub vs. an unregistered one), the join-code dual-run rewrite
+      (`link-gc` finds-or-creates a jobsite), the GC dashboard's dual-run window, the migration
+      approach, and a decision on every open question (sub removal/historical access, jobsite rename
+      vs. `projects.name`, multiple project rows per sub per jobsite, GC-only `jobsites` for v1, tier
+      gating out of scope, auto-create-vs-adopt on accept) — all decided per the plan's
+      recommendations, no question left open
+- [x] `docs/gc-dashboard-design.md`'s "roster, never an authorization source" section now notes it's
+      superseded by 8d's re-keyed `jobsite_subcontractors`; its "Explicitly not resolved here" section
+      now points at `docs/jobsite-design.md` for the invite/GC-owned-jobsite items instead of listing
+      them as unbuilt with no pointer
+
+#### 8d-b — Schema only · status: code complete; Supabase apply pending
+
+- [x] `jobsites` table (`gc_company_id NOT NULL`, `name`, `status`, `archived_at`) +
+      `jobsite_subcontractors` table (folded roster + invite: `jobsite_id`, nullable
+      `sub_company_id`, `invited_email`, `token`, `expires_at`, `accepted_at`,
+      `UNIQUE(jobsite_id, invited_email)` + a partial `UNIQUE(jobsite_id, sub_company_id) WHERE
+    sub_company_id IS NOT NULL`) in `Supabase_SQL.sql` (sections 11–12) + `Supabase_Schema.md`
+      (new "7. Jobsites" section). Both RLS-enabled, no policies
+- [x] Nullable `projects.jobsite_id UUID REFERENCES jobsites(id) ON DELETE SET NULL` — added via a
+      real (not just commented) `ALTER TABLE ... ADD COLUMN IF NOT EXISTS` in `Supabase_SQL.sql`
+      section 13, placed _after_ the `jobsites` table since it FK-references a table that doesn't
+      exist yet at table 3's original `CREATE TABLE projects`. Documented in `Supabase_Schema.md`'s
+      `projects` row list
+- [x] Nothing reads any of this yet — ships and reverts trivially. `project_subcontractors` stays
+      untouched (dropped only in 8d-h)
+- [x] Verify (user, needs live Supabase): apply the SQL to dev; confirm via
+      `information_schema.columns`/`information_schema.tables` that `jobsites`,
+      `jobsite_subcontractors`, and `projects.jobsite_id` all exist with RLS on; confirm
+      `project_subcontractors` is still present and untouched
+
+#### 8d-c — Server: GC-side jobsite CRUD · status: code complete; Supabase apply already done in 8d-b, curl smoke with a real Bearer token pending
+
+- [x] `server/services/jobsites.js` (`create`/`listForGc`/`update`, server-generates `id` via `uuidv4()`
+      same as `companyInvites.createInvite`) / `server/controllers/jobsites.js` /
+      `server/routes/jobsites.js` — `GET /api/jobsites` (`requireGcCompany`), `POST /api/jobsites` +
+      `PATCH /api/jobsites/:id` (`requireGcCompany` + `requireRole(...MANAGER_ROLES)`, the whole route
+      manager-gated — no mixed gated/ungated fields the way `projects.update` has, so no `role` param
+      flows into the service). No invites yet, no `projects.jobsite_id` writes yet. Mounted
+      `/api/jobsites` in `server.js`
+- [x] Renamed the existing `server/utility/jobsites.js` (fuzzy name-grouping) to
+      `server/utility/jobsiteGrouping.js` (+ its test file) to clear the naming collision with the new
+      service; updated its one consumer, `server/services/gcDashboard.js`
+- [x] Tests: `server/services/jobsites.test.js` (12) + `server/controllers/jobsites.test.js` (6), full
+      server suite 492 tests passing (up from 428), `jobsiteGrouping.test.js` green under its new name
+- [x] Verify (partial): booted the server and confirmed all 3 new routes return `401` (not
+      `404`/the SPA fallback) unauthenticated — same partial-verify precedent 4c/4d used
+- [ ] Verify (user, needs a real Bearer token): create → list → patch (name/status) → archive → restore
+      a jobsite via curl with a GC admin/safety_manager token; confirm a foreman token 403s on
+      create/patch; confirm a subcontractor account 403s (`requireGcCompany`); confirm another GC's
+      jobsite 404s on PATCH
+
+#### 8d-d — Server: invites, both accept cases, and the admission gate · status: code complete; live smoke (real Bearer tokens + Mailgun) pending
+
+- [x] `POST /api/jobsites/:id/invite` (reuses `server/utility/inviteToken.js`, a new
+      `sendJobsiteInviteEmail` mirroring 8c's Mailgun soft-fail shape) + public
+      `GET /api/jobsites/invite/:token` preview. `createInvite` reads the `(jobsite_id, invited_email)`
+      row first: already accepted → `409`; pending → token regenerated with the update guarded
+      `.is("accepted_at", null)`; none → insert. Response is `{ email }` only — the token never leaves
+      the server except in the email. New `MAILGUN_TEMPLATES.JOBSITE_INVITE` +
+      `docs/mailgun-templates/jobsite-invite.html` (**paste into the Mailgun portal as a template
+      named `jobsite-invite`** before a real send)
+- [x] `POST /api/jobsites/invite/:token/accept` — Case A (already-registered sub): `requireAuth`,
+      `loadUserContext`, `requireSubcontractorCompany`, `requireRole(...MANAGER_ROLES)`; email-match
+      check off `req.userEmail` (never the body), roster row stamped accepted **first**, then the sub's
+      `projects` row created through `projectsService.create` (so the admission gate below is what
+      admits it). If the project insert fails the roster stamp is rolled back best-effort (token
+      restored) so the invite stays retryable — the token is nulled on accept, so a plain retry could
+      not find it otherwise
+- [x] Case B (unregistered sub): third branch in `requireProfileMetadata.js`/`createProfile`
+      alongside 8c's existing `inviteToken` branch — invitee signs up with
+      `user_metadata.jobsiteInviteToken` + their own `companyName`, forced
+      `companyType: "subcontractor"`; both token keys present → `422`. `createProfile` founds the
+      company + admin user as usual, then accepts the invite last, best-effort and logged (a failed
+      accept leaves a working account and a still-valid token, recoverable via Case A)
+- [x] `POST /api/projects` gains the admission gate: a sub may only set `jobsiteId` when an accepted
+      `jobsite_subcontractors` row exists for `(jobsiteId, callerCompanyId)` (else `404`) — closes the
+      same spoofing hole 6c closed for `gcCompanyId`. `jobsite_id` + `gc_company_id` are written
+      server-side from that row; `gcNameCustom` is overwritten with the GC's registered name and is no
+      longer required on the route when `jobsiteId` is present. `projects.jobsite_id` now flows through
+      `PROJECT_COLUMNS`/`toProject` (`jobsiteId`)
+- [x] Added beyond the original bullets (confirmed with the user): `DELETE
+      /api/jobsites/:id/subcontractors/:subId` (GC-side removal / cancel a pending invite; detaches the
+      sub's projects *before* deleting the roster row so a partial failure never leaves GC access with
+      no membership behind it), and `GET /api/jobsites` now embeds each jobsite's roster
+      (`subcontractors: [{ id, email, status: "pending"|"accepted", companyName }]`, never the token)
+- [x] Tests: server suite 549 passing (up from 492) — new/extended specs for `jobsites` service +
+      controller, `projects` service (admission gate), `users` service + controller, 
+      `requireProfileMetadata`, and `email`
+- [x] Verify (partial): booted the server and confirmed the authed routes return `401` unauthenticated
+      (not the SPA fallback), a malformed preview token returns a validation error, and a well-formed
+      but unknown token returns the collapsed `404`
+- [ ] Verify (user, needs real Bearer tokens + Mailgun template): as a GC admin, invite an existing
+      sub's admin email → confirm the email arrives and `GET /api/jobsites` shows the invite as
+      `pending` (no token in the payload); accept as that sub (Case A) → confirm a `projects` row with
+      `jobsite_id`/`gc_company_id` appears, the roster row shows `accepted`, and the same token now
+      `404`s; accept with a different account's token → `403`; invite an unregistered email and sign
+      up with `jobsiteInviteToken` metadata (Case B) → confirm the new company is `subcontractor`
+      even if metadata says `gc`; `POST /api/projects` with a `jobsiteId` the caller was never
+      admitted to → `404`; remove the sub via `DELETE …/subcontractors/:subId` → confirm the
+      project's `jobsite_id`/`gc_company_id` are nulled
+
+#### 8d-e — Client: GC-side jobsite UI · status: not started
+
+- [ ] `client/src/features/jobsites/` — create/list/patch a jobsite, invite a sub, see pending vs.
+      accepted, remove a sub. Online-only, no outbox, no new Dexie table (mirrors the GC dashboard's
+      existing posture)
+- [ ] Remove `ProjectForm.tsx`'s dead `isGc` branch (flag: it's unreachable for create — the "New
+      project" button is hidden behind `isSubcontractor &&` in `Projects.tsx` — and broken for edit,
+      since `PATCH /api/projects/:id` is owner-scoped and a GC clicking `ProjectList.tsx`'s
+      unconditional Edit button on a GC-visible project hits a live 404 today) now that a GC has a
+      real create surface of its own
+
+#### 8d-f — Client: sub-side accept + project picker/cache passthrough · status: not started
+
+- [ ] `pages/AcceptJobsiteInvite/` (public route, mirrors `pages/AcceptInvite/`)
+- [ ] `jobsite_id` passthrough on `Project`/`ProjectPicker`/the outbox's optimistic-cache helpers —
+      smaller than it sounds: the hybrid data model keeps the outbox itself untouched, this is one
+      new nullable field, not a rework
+
+#### 8d-g — Migration/backfill of Phase 6 join-code links · status: not started
+
+- [ ] One-shot idempotent `scripts/backfill-jobsites.js`, grouping existing linked projects by the
+      same `normalizeJobsiteName` key the dashboard already uses, so `GET /api/gc/overview` is
+      byte-identical before/after. Run after 8d-c/d/e/f, once the new model is proven against new
+      data. `gc_company_id` (the column that grants access) is untouched by the migration, so no
+      existing link can be stranded
+
+#### 8d-h — Retire fuzzy grouping, drop `project_subcontractors` · status: not started
+
+- [ ] `gcDashboard.getOverview` reads real `jobsites` rows; `link-gc` rewritten (not retired) to
+      find-or-create a jobsite; `project_subcontractors` dropped; docs updated; all 8d bullets in
+      this file checked off. The only irreversible step in this sequence — done last
 
 - [x] GC links a sub company to a project (`project_subcontractors`) — done: slim version (GC join code)
       shipped in Phase 6b–6d, superseded by 8d above

@@ -1,7 +1,7 @@
 // Plain CommonJS — no `import` (see vitest.config.js / CLAUDE.md). A pure
 // function, so no mocking is needed.
 
-const { normalizeJobsiteName, groupProjectsIntoJobsites } = require("./jobsites");
+const { normalizeJobsiteName, groupProjectsIntoJobsites } = require("./jobsiteGrouping");
 
 describe("normalizeJobsiteName", () => {
   it("should trim, collapse whitespace and lowercase", () => {

@@ -21,6 +21,14 @@ export interface SignupProfile {
   companyType: CompanyType;
 }
 
+/** Carried as `user_metadata` at signup for an invited user joining an
+ *  existing company (Phase 8c) — company/role come from the invite row
+ *  itself, resolved server-side by `inviteToken`, not from anything here. */
+export interface InviteAcceptProfile {
+  name: string;
+  inviteToken: string;
+}
+
 export interface AuthContextType extends AuthState {
   loginWithGoogle: () => Promise<void>;
   /** Returns the session directly (like `signUpWithEmail`) so a first-login
@@ -37,7 +45,7 @@ export interface AuthContextType extends AuthState {
   signUpWithEmail: (
     email: string,
     password: string,
-    profile: SignupProfile,
+    profile: SignupProfile | InviteAcceptProfile,
   ) => Promise<{ session: Session | null }>;
   sendPasswordReset: (email: string) => Promise<void>;
   updatePassword: (newPassword: string) => Promise<void>;
