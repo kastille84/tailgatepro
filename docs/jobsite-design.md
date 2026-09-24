@@ -432,8 +432,9 @@ crew-photo retention, PDF regeneration, multi-timezone GCs.** Unchanged by 8d; s
    `isSubcontractor &&`, so a GC can never reach create mode; and `PATCH /api/projects/:id` is
    owner-scoped, so a GC opening Edit on a project it only has `gc_company_id` on hits a live 404 —
    yet `ProjectList.tsx` renders an unconditional Edit button for every project a GC sees today.
-   8d-e removes the `isGc` branch (`ProjectForm.tsx` lines ~73–78, 113–121, 174–212) once a GC has a
-   real create surface (`JobsiteForm`), and gates `ProjectList`'s Edit button on ownership.
+   8d-e removed the `isGc` branch from `ProjectForm.tsx` once a GC had a real create surface
+   (`JobsiteForm`). Rather than gating `ProjectList`'s Edit button on ownership, `pages/Projects`
+   now renders `JobsiteManager` instead of the project list for a GC, so the button is unreachable.
 2. **Naming collision.** A new `server/services/jobsites.js` would sit beside the existing
    `server/utility/jobsites.js`. 8d-c's first commit renames the utility to
    `server/utility/jobsiteGrouping.js` (its one consumer is `server/services/gcDashboard.js`, plus

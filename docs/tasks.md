@@ -1927,7 +1927,7 @@ just replaces the old invite (new token/expiry).
       touched file; `context/*` stays coverage-excluded). Still needs the same live-Supabase manual
       confirmation-email click-through as the rest of this phase's Verify step to be fully closed out.
 
-### 8d — GC-owned jobsite + GC invites subcontractor companies · status: sequenced; 8d-a/8d-b/8d-c/8d-d code complete, 8d-e onward not started
+### 8d — GC-owned jobsite + GC invites subcontractor companies · status: sequenced; 8d-a/8d-b/8d-c/8d-d/8d-e code complete, 8d-f onward not started
 
 Plan: `~/.claude/plans/let-s-work-on-8d-cuddly-crab.md` (design backing doc:
 `~/.claude/plans/let-s-work-on-8d-cuddly-crab-agent-aab737ac2ca15e0ab.md`). Largest piece —
@@ -2069,16 +2069,29 @@ line, Tests bullet, and `Verify (user, needs …)` bullet once implemented, per 
       admitted to → `404`; remove the sub via `DELETE …/subcontractors/:subId` → confirm the
       project's `jobsite_id`/`gc_company_id` are nulled
 
-#### 8d-e — Client: GC-side jobsite UI · status: not started
+#### 8d-e — Client: GC-side jobsite UI · status: code complete; live smoke (GC account) pending
 
-- [ ] `client/src/features/jobsites/` — create/list/patch a jobsite, invite a sub, see pending vs.
-      accepted, remove a sub. Online-only, no outbox, no new Dexie table (mirrors the GC dashboard's
-      existing posture)
-- [ ] Remove `ProjectForm.tsx`'s dead `isGc` branch (flag: it's unreachable for create — the "New
-      project" button is hidden behind `isSubcontractor &&` in `Projects.tsx` — and broken for edit,
-      since `PATCH /api/projects/:id` is owner-scoped and a GC clicking `ProjectList.tsx`'s
-      unconditional Edit button on a GC-visible project hits a live 404 today) now that a GC has a
-      real create surface of its own
+- [x] `client/src/features/jobsites/` — `JobsiteManager` (list, Show archived, New job site),
+      `JobsiteList`, `JobsiteForm` (create / rename / status / archive-restore), `JobsiteRosterModal`
+      (pending vs. accepted, remove sub / cancel invite via `ConfirmDialog`) and
+      `InviteSubcontractorForm`. Online-only, no outbox, no Dexie. Backed by `services/apiJobsites.ts`,
+      `interfaces/jobsite.ts` and domain hooks `useJobsites` / `useCreateJobsite` / `useUpdateJobsite` /
+      `useInviteSubcontractor` / `useRemoveSubcontractor` (`networkMode: "always"`, invalidate
+      `["jobsites"]`). Placement: no new route — `pages/Projects/Projects.tsx` renders
+      `JobsiteManager` for a GC (hero copy + Navbar label become "Job sites"); subs are unchanged.
+      Create/edit/invite/remove controls are hidden for a GC foreman (server still enforces)
+- [x] Removed `ProjectForm.tsx`'s dead `isGc` branch (and its `useAuth`/`useCurrentCompany`/
+      `useCurrentUser` imports). `ProjectList`'s Edit button needed no change: a GC no longer reaches
+      it, since the page branches before rendering the project list
+- [x] Tests: new specs for `apiJobsites`, `useJobsites`, the four mutation hooks, and all five
+      `features/jobsites` components; `Projects` page GC branch added; `ProjectForm` GC cases removed.
+      Full client suite 135 files passing. Note: `PhotoCapture.tsx` / `MeetingWizard.tsx` already sit
+      just under 100% branch coverage on the base branch (not from this change)
+- [ ] Verify (user, needs a GC admin account + Mailgun template): at `/projects` create a job site,
+      rename it, archive/restore it, invite an email (roster shows Pending, no token in the network
+      payload), cancel the invite, remove an accepted sub; sign in as a GC foreman and confirm the
+      view is read-only; confirm a subcontractor still sees the unchanged Projects page; go offline
+      and confirm create/invite/remove are disabled with the offline note
 
 #### 8d-f — Client: sub-side accept + project picker/cache passthrough · status: not started
 

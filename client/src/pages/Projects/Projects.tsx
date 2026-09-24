@@ -7,6 +7,7 @@ import { Button } from "../../ui_comps/button";
 import { Checkbox } from "../../ui_comps/checkbox";
 import { Footer } from "../../ui_comps/footer";
 import { Spinner } from "../../ui_comps/spinner";
+import { JobsiteManager } from "../../features/jobsites";
 import {
   GcLinkModal,
   ProjectForm,
@@ -34,10 +35,9 @@ import {
 export const Projects = () => {
   const { user, loading } = useAuth();
   // Creating and linking a project to a GC are both subcontractor-only (the
-  // server 403s a GC on either) — the project model is sub-owned, and a
-  // GC-created project could never be linked to itself, leaving an orphan row
-  // that duplicates a sub's site of the same name.
-  const { isSubcontractor } = useCurrentUser();
+  // server 403s a GC on either) — the project model is sub-owned. A GC manages
+  // its own job sites instead (JobsiteManager, Phase 8d-e).
+  const { isSubcontractor, isGc } = useCurrentUser();
 
   const [showArchived, setShowArchived] = useState(false);
   const { projects, isLoading, isError } = useProjects(showArchived);
@@ -85,44 +85,51 @@ export const Projects = () => {
     <StyledPage>
       <StyledHero aria-labelledby="projects-hero-heading">
         <StyledHeroInner>
-          <StyledEyebrow>Projects</StyledEyebrow>
+          <StyledEyebrow>{isGc ? "Job sites" : "Projects"}</StyledEyebrow>
           <StyledHeadline id="projects-hero-heading">
             Your job sites
           </StyledHeadline>
           <StyledLede>
-            Every project you run safety talks on. Add a site, then log talks
-            against it.
+            {isGc
+              ? "Create your job sites and invite the subcontractors working on them."
+              : "Every project you run safety talks on. Add a site, then log talks against it."}
           </StyledLede>
         </StyledHeroInner>
       </StyledHero>
 
       <StyledSection>
         <StyledContainer>
-          <StyledToolbar>
-            <Checkbox
-              label="Show archived"
-              checked={showArchived}
-              onChange={(event) => setShowArchived(event.target.checked)}
-            />
-            {isSubcontractor && (
-              <Button variant="primary" size="md" onClick={openCreate}>
-                New project
-              </Button>
-            )}
-          </StyledToolbar>
+          {isGc ? (
+            <JobsiteManager />
+          ) : (
+            <>
+            <StyledToolbar>
+              <Checkbox
+                label="Show archived"
+                checked={showArchived}
+                onChange={(event) => setShowArchived(event.target.checked)}
+              />
+              {isSubcontractor && (
+                <Button variant="primary" size="md" onClick={openCreate}>
+                  New project
+                </Button>
+              )}
+            </StyledToolbar>
 
-          {isLoading && <Spinner center message="Loading projects…" />}
-          {isError && (
-            <StyledError role="alert">
-              Could not load your projects. Refresh to try again.
-            </StyledError>
-          )}
-          {!isLoading && !isError && (
-            <ProjectList
-              projects={projects}
-              onEdit={openEdit}
-              onLinkGc={isSubcontractor ? setLinkingProject : undefined}
-            />
+            {isLoading && <Spinner center message="Loading projects…" />}
+            {isError && (
+              <StyledError role="alert">
+                Could not load your projects. Refresh to try again.
+              </StyledError>
+            )}
+            {!isLoading && !isError && (
+              <ProjectList
+                projects={projects}
+                onEdit={openEdit}
+                onLinkGc={isSubcontractor ? setLinkingProject : undefined}
+              />
+            )}
+            </>
           )}
         </StyledContainer>
       </StyledSection>
