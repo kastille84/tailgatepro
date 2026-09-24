@@ -1,6 +1,9 @@
 const { supabase } = require("../utility/supabaseClient");
 const { AppError } = require("../utility/AppError");
+const { v4: uuidv4 } = require("uuid");
 const { MANAGER_ROLES } = require("../constants/roles");
+const { normalizeJobsiteName } = require("../utility/jobsiteGrouping");
+const { placeholderEmail } = require("../utility/jobsiteMembers");
 const companiesService = require("./companies");
 
 // The columns every projects query selects, and the snake_case -> camelCase
@@ -280,7 +283,7 @@ const update = async ({ id, companyId, role, patch }) => {
 // `meeting_logs`. Once safety talks are logged against a site, deleting the
 // project row would cascade them (and their `signatures`) away, destroying the
 // OSHA records the product exists to keep; the caller must archive instead.
-// `project_subcontractors` rows cascade away harmlessly, and Storage blob
+// Jobsite roster rows are left for the GC to manage, and Storage blob
 // cleanup (crew photos / PDFs) is a Phase 4 concern once buckets exist.
 // Gated on `role` (Phase 8a): only an admin/safety_manager, not just any
 // member of the owning company.
@@ -331,21 +334,90 @@ const remove = async ({ id, companyId, role }) => {
   return { id: data.id };
 };
 
+// The GC's live jobsite whose normalized name matches `name` (oldest wins if a
+// GC somehow has two), or a freshly created one. The join-code path's stand-in
+// for an invite: same end state — a real jobsite the project attaches to.
+// Archived jobsites are never reused.
+const findOrCreateJobsite = async (gcCompanyId, name) => {
+  const { data, error } = await supabase
+    .from("jobsites")
+    .select("id, name")
+    .eq("gc_company_id", gcCompanyId)
+    .is("archived_at", null)
+    .order("created_at", { ascending: true });
+
+  if (error) {
+    throw new AppError("Could not link the project", 502, { cause: error });
+  }
+
+  const key = normalizeJobsiteName(name);
+  const existing = data.find((row) => normalizeJobsiteName(row.name) === key);
+  if (existing) return existing.id;
+
+  const id = uuidv4();
+  const { error: insertError } = await supabase
+    .from("jobsites")
+    .insert({ id, gc_company_id: gcCompanyId, name });
+
+  if (insertError) {
+    throw new AppError("Could not link the project", 502, {
+      cause: insertError,
+    });
+  }
+  return id;
+};
+
+// Ensures an accepted roster row for (jobsiteId, companyId). Read-then-insert
+// because the uniqueness is a partial index PostgREST can't upsert against; a
+// 23505 from a concurrent request means the row now exists, which is the goal.
+const ensureMembership = async (jobsiteId, companyId) => {
+  const { data, error } = await supabase
+    .from("jobsite_subcontractors")
+    .select("id")
+    .eq("jobsite_id", jobsiteId)
+    .eq("sub_company_id", companyId)
+    .limit(1);
+
+  if (error) {
+    throw new AppError("Could not link the project", 502, { cause: error });
+  }
+  if (data.length > 0) return;
+
+  const { error: insertError } = await supabase
+    .from("jobsite_subcontractors")
+    .insert({
+      id: uuidv4(),
+      jobsite_id: jobsiteId,
+      sub_company_id: companyId,
+      invited_email: placeholderEmail(companyId),
+      accepted_at: new Date().toISOString(),
+    });
+
+  if (insertError && insertError.code !== "23505") {
+    throw new AppError("Could not link the project", 502, {
+      cause: insertError,
+    });
+  }
+};
+
 // Links a project the caller's (subcontractor) company owns to a GC via the GC's
-// join code — the only path that sets projects.gc_company_id. Order matters:
-// the project is fetched owner-scoped first (another company's project 404s,
-// same as everywhere), then the code is resolved.
+// join code. Order matters: the project is fetched owner-scoped first (another
+// company's project 404s, same as everywhere), then the code is resolved.
+//
+// Finds-or-creates the GC's jobsite for the project's name and attaches the
+// project to it (jobsite_id) with an accepted roster row, so a join-code link
+// ends in the same state as an accepted invite (docs/jobsite-design.md).
+// gc_company_id stays the denormalized authorization column, written alongside.
 //
 // gc_name_custom is overwritten with the GC's registered company name so every
 // screen that shows it (project list, picker, PDF) shows the real name, not
 // whatever the sub typed at create time. It's left in place on unlink, which
 // keeps check_gc_info satisfied.
 //
-// Linking to the GC the project already has is idempotent and still re-upserts
-// the roster row, so a retry heals a link whose roster write failed. The roster
-// (project_subcontractors) is informational only — authorization keys on
-// projects.gc_company_id, so a drift between the two writes is never a
-// security issue (supabase-js has no cross-table transaction).
+// Linking to the GC the project already has is idempotent and re-ensures the
+// jobsite membership, so a retry heals a link whose roster write failed
+// (supabase-js has no cross-table transaction). The roster is written before
+// the project so a partial failure never leaves access with no membership.
 const linkGc = async ({ projectId, companyId, joinCode }) => {
   const project = await getById(projectId, companyId);
   const gc = await companiesService.getByJoinCode(joinCode);
@@ -360,57 +432,59 @@ const linkGc = async ({ projectId, companyId, joinCode }) => {
     );
   }
 
-  let linked = project;
-  if (project.gcCompanyId !== gc.id) {
-    // `.is("gc_company_id", null)` makes the read-then-write above race-safe: if
-    // a concurrent request linked it in between, nothing matches.
-    const { data, error } = await supabase
-      .from("projects")
-      .update({ gc_company_id: gc.id, gc_name_custom: gc.name })
-      .eq("id", projectId)
-      .eq("owner_company_id", companyId)
-      .is("gc_company_id", null)
-      .select(PROJECT_COLUMNS)
-      .single();
+  const jobsiteId =
+    project.jobsiteId ?? (await findOrCreateJobsite(gc.id, project.name));
+  await ensureMembership(jobsiteId, companyId);
 
-    if (error) {
-      // PGRST116 = no row matched: the project was linked by another request
-      // after we read it.
-      if (error.code === "PGRST116") {
-        throw new AppError(
-          "This project was just changed. Reload and try again.",
-          409,
-          { cause: error },
-        );
-      }
-      throw new AppError("Could not link the project", 502, { cause: error });
+  if (project.gcCompanyId === gc.id && project.jobsiteId) return project;
+
+  // Race-safe: the update only matches while gc_company_id still holds the
+  // value read above (null, or this GC for a legacy link with no jobsite), so a
+  // concurrent relink in between matches nothing.
+  const guarded = supabase
+    .from("projects")
+    .update({
+      gc_company_id: gc.id,
+      gc_name_custom: gc.name,
+      jobsite_id: jobsiteId,
+    })
+    .eq("id", projectId)
+    .eq("owner_company_id", companyId);
+  const { data, error } = await (
+    project.gcCompanyId
+      ? guarded.eq("gc_company_id", gc.id)
+      : guarded.is("gc_company_id", null)
+  )
+    .select(PROJECT_COLUMNS)
+    .single();
+
+  if (error) {
+    // PGRST116 = no row matched: the project was linked by another request
+    // after we read it.
+    if (error.code === "PGRST116") {
+      throw new AppError(
+        "This project was just changed. Reload and try again.",
+        409,
+        { cause: error },
+      );
     }
-    linked = toProject(data);
+    throw new AppError("Could not link the project", 502, { cause: error });
   }
 
-  const { error: rosterError } = await supabase
-    .from("project_subcontractors")
-    .upsert(
-      { project_id: projectId, sub_id: companyId },
-      { onConflict: "project_id,sub_id", ignoreDuplicates: true },
-    );
-
-  if (rosterError) {
-    throw new AppError("Could not link the project", 502, {
-      cause: rosterError,
-    });
-  }
-
-  return linked;
+  return toProject(data);
 };
 
-// Clears the GC link on a project the caller's company owns and drops its
-// roster row. gc_name_custom is kept (it now holds the GC's name), so
-// check_gc_info still holds. Unlinking a project that isn't linked is a no-op.
+// Clears the GC link on a project the caller's company owns: nulls
+// gc_company_id and jobsite_id (the same detach a GC's "remove subcontractor"
+// does) and drops the sub's roster row, unless another of the sub's projects
+// still sits on that jobsite. gc_name_custom is kept (it now holds the GC's
+// name), so check_gc_info still holds. Unlinking an unlinked project is a no-op.
 const unlinkGc = async ({ projectId, companyId }) => {
+  const before = await getById(projectId, companyId);
+
   const { data, error } = await supabase
     .from("projects")
-    .update({ gc_company_id: null })
+    .update({ gc_company_id: null, jobsite_id: null })
     .eq("id", projectId)
     .eq("owner_company_id", companyId)
     .select(PROJECT_COLUMNS)
@@ -432,16 +506,33 @@ const unlinkGc = async ({ projectId, companyId }) => {
     throw new AppError("Could not unlink the project", 502, { cause: error });
   }
 
-  const { error: rosterError } = await supabase
-    .from("project_subcontractors")
-    .delete()
-    .eq("project_id", projectId)
-    .eq("sub_id", companyId);
+  if (!before.jobsiteId) return toProject(data);
 
-  if (rosterError) {
+  const { data: remaining, error: remainingError } = await supabase
+    .from("projects")
+    .select("id")
+    .eq("jobsite_id", before.jobsiteId)
+    .eq("owner_company_id", companyId)
+    .limit(1);
+
+  if (remainingError) {
     throw new AppError("Could not unlink the project", 502, {
-      cause: rosterError,
+      cause: remainingError,
     });
+  }
+
+  if (remaining.length === 0) {
+    const { error: rosterError } = await supabase
+      .from("jobsite_subcontractors")
+      .delete()
+      .eq("jobsite_id", before.jobsiteId)
+      .eq("sub_company_id", companyId);
+
+    if (rosterError) {
+      throw new AppError("Could not unlink the project", 502, {
+        cause: rosterError,
+      });
+    }
   }
 
   return toProject(data);

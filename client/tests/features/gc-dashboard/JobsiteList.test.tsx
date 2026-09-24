@@ -2,6 +2,7 @@ import React from "react";
 import { describe, it, expect, vi } from "vitest";
 import { render, screen, fireEvent } from "@testing-library/react";
 import { ThemeProvider } from "styled-components";
+import { MemoryRouter } from "react-router-dom";
 
 import { JobsiteList } from "../../../src/features/gc-dashboard";
 import theme from "../../../src/styles/theme";
@@ -9,6 +10,7 @@ import type { GcJobsite } from "../../../src/interfaces/gcDashboard";
 
 const jobsites: GcJobsite[] = [
   {
+    id: "jobsite-1",
     name: "Downtown Tower",
     subs: [
       {
@@ -35,15 +37,30 @@ const renderList = (
   props: Partial<React.ComponentProps<typeof JobsiteList>> = {},
 ) =>
   render(
-    <ThemeProvider theme={theme}>
-      <JobsiteList jobsites={jobsites} onSelectSub={vi.fn()} {...props} />
-    </ThemeProvider>,
+    <MemoryRouter>
+      <ThemeProvider theme={theme}>
+        <JobsiteList jobsites={jobsites} onSelectSub={vi.fn()} {...props} />
+      </ThemeProvider>
+    </MemoryRouter>,
   );
 
 describe("JobsiteList", () => {
   it("renders an empty state when there are no linked jobsites", () => {
     renderList({ jobsites: [] });
     expect(screen.getByText(/no linked job sites yet/i)).toBeDefined();
+    expect(
+      screen.getByRole("link", { name: /create a job site/i }).getAttribute("href"),
+    ).toBe("/projects");
+  });
+
+  it("explains a jobsite with no subs and links to /projects to invite some", () => {
+    renderList({ jobsites: [{ id: "jobsite-2", name: "Empty Site", subs: [] }] });
+
+    expect(screen.getByText("Empty Site")).toBeDefined();
+    expect(screen.getByText(/no subcontractors on this job site yet/i)).toBeDefined();
+    expect(
+      screen.getByRole("link", { name: /invite subcontractors/i }).getAttribute("href"),
+    ).toBe("/projects");
   });
 
   it("renders a section per jobsite with each sub's row", () => {

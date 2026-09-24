@@ -14,12 +14,9 @@ const crypto = require("crypto");
 
 const { normalizeJobsiteName } = require("../../server/utility/jobsiteGrouping");
 
-// `invited_email` is NOT NULL and UNIQUE per jobsite, but a backfilled member
-// was never emailed. Used when the sub has no admin email (pre-8a legacy data)
-// or the admin's email is already taken on that jobsite. `.invalid` is a
-// reserved TLD, so nothing can ever be delivered to it.
-const placeholderEmail = (subCompanyId) =>
-  `backfill+${subCompanyId}@backfill.invalid`;
+// Used when the sub has no admin email (pre-8a legacy data) or the admin's
+// email is already taken on that jobsite.
+const { placeholderEmail } = require("../../server/utility/jobsiteMembers");
 
 // projects: rows with { id, owner_company_id, gc_company_id, name, created_at },
 //   any order (re-sorted oldest-first here); rows that already have a

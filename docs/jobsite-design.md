@@ -68,8 +68,8 @@ CREATE UNIQUE INDEX jobsite_subs_company_unique
 ALTER TABLE projects ADD COLUMN IF NOT EXISTS jobsite_id UUID REFERENCES jobsites(id) ON DELETE SET NULL;
 ```
 
-`project_subcontractors` is untouched by this — it is dropped only in 8d-h, after 8d-g's backfill
-has read it.
+`project_subcontractors` was untouched by this step and dropped in 8d-h, after 8d-g's backfill
+had read it.
 
 **Why `projects` survives as the sub's own row, rather than a GC-owned row replacing it.** A sub's
 `projects` row becomes "this sub's participation in that jobsite": it still carries the sub's own
@@ -287,19 +287,21 @@ the GC by join code exactly as today, then *finds-or-creates* a `jobsites` row f
 `(gc_company_id, normalizeJobsiteName(name))` — reusing `server/utility/jobsites.js`'s own exported
 `normalizeJobsiteName` (renamed `jobsiteGrouping.js`, see Flags) — and sets `jobsite_id` plus an
 accepted roster row alongside `gc_company_id`, the same moment it already sets `gc_company_id`
-today. `DELETE .../link-gc` mirrors this: nulls `gc_company_id` **and** `jobsite_id`, removes the
-roster row. After 8d-h, every linked project has a real jobsite — there is exactly one runtime
+today. `DELETE .../link-gc` mirrors this: nulls `gc_company_id` **and** `jobsite_id`, and removes the
+roster row unless the sub still has another project on that jobsite. This applies to invite-attached
+projects too (decided in 8d-h: a sub may leave a GC-invited jobsite; the GC can re-invite). After 8d-h, every linked project has a real jobsite — there is exactly one runtime
 shape, whether the sub arrived via join code or via an accepted invite.
 
 ### GC dashboard changes
 
-`gcDashboard.getOverview` reads real `jobsites` rows instead of `groupProjectsIntoJobsites`, plus
-the roster — so an invited-but-never-logged sub finally shows as `missing`, the case the dashboard
-exists to catch. `GcJobsite` gains a real `id`; `JobsiteList.tsx` keys on it instead of the
-synthetic `name`. **Dual-run window:** a project with `jobsite_id IS NULL` but `gc_company_id` set
-(a link made between the 8d-g backfill and 8d-h, or a skipped backfill) still needs to appear for
-one release — kept behind an explicit "legacy, un-backfilled rows only" branch, deleted in a
-follow-up once every GC's data has been backfilled.
+`gcDashboard.getOverview` (8d-h) reads real, active, non-archived `jobsites` rows and their
+**accepted** roster instead of grouping projects by name — so an accepted-but-never-logged sub shows
+as `missing`, the case the dashboard exists to catch (a still-pending invite has no company yet and is
+not listed). `GcJobsite` gains a real `id`; `JobsiteList.tsx` keys on it. A sub's `projectId` (the
+drill-in target) is its earliest active project in that jobsite, or `null` when it has none, in which
+case the drill-in makes no request. **No dual-run branch:** a linked project with `jobsite_id IS NULL`
+no longer appears, so `node scripts/backfill-jobsites.js --apply` must be run before 8d-h is
+deployed. A jobsite with no accepted subs (e.g. the only sub unlinked) stays on the dashboard with a "no subcontractors yet" message and a link to `/projects` to invite some; the GC archives it there to remove it.
 
 ### Migration: no existing link can be stranded
 
@@ -359,7 +361,7 @@ zero-friction alternative to being invited.
 1. A sub, already signed up with their own project ("Riverside job"), enters Turner Construction's
    permanent join code (shown on Turner's dashboard/settings, not tied to any one sub or email).
 2. `POST /api/projects/:id/link-gc` resolves the code to Turner, as it does today.
-3. New in 8d-h: it also finds-or-creates a `jobsites` row for
+3. Since 8d-h, it also finds-or-creates a `jobsites` row for
    `(gc_company_id, normalizeJobsiteName("Riverside job"))` — reusing whichever jobsite row already
    exists for Turner's Riverside site (e.g. the one Example 1's Acme is already on, if the
    normalized names match) — and attaches the sub's project via `jobsite_id`, inserting an accepted
@@ -393,13 +395,12 @@ resolves differently than Phase 6 already did.
 **Jobsite rename vs. a sub's project name.** *(Revised after 8d-e/8d-f review.)* The jobsite name is the
 GC's, and a project attached to it (`jobsite_id` and `gc_company_id` both set) takes that name at accept (or
 join-code link). The sub owns the row but **cannot rename it**: `projects.update` rejects a changed `name` on an
-attached project (403) and `ProjectForm` shows it read-only. Reason: until 8d-h the GC dashboard still groups by
-normalized project name, so a rename would silently drop the sub out of the GC's job site, and the name feeds
-`buildPdfFilename`. The same guard covers a GC-linked project's GC name (the GC's registered name) and manual
+attached project (403) and `ProjectForm` shows it read-only. Reason: the name feeds `buildPdfFilename` and
+the join-code find-or-create matches on it (the dashboard itself now reads real `jobsites` rows, 8d-h). The same guard covers a GC-linked project's GC name (the GC's registered name) and manual
 `gc_contact_email` (moot — PDF delivery resolves the GC admin's email first, Phase 8b, so the form shows it locked
 and empty rather than prefilled, never disclosing the admin's address). A GC rename still does not rewrite an
-attached project's `projects.name` retroactively — a known drift to resolve when 8d-h moves the dashboard to real
-`jobsites` rows. Unlinking (which nulls `gc_company_id`) frees these fields again.
+attached project's `projects.name` retroactively — a known, accepted drift: the dashboard shows the jobsite's
+own name, while the sub's project keeps the name it took at attach time. Unlinking (which nulls `gc_company_id`) frees these fields again.
 
 **Multiple project rows per sub per jobsite.** The roster's `UNIQUE (jobsite_id, sub_company_id)`
 enforces one *membership* per sub per jobsite, but nothing stops a sub from holding several

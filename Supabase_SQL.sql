@@ -85,18 +85,13 @@ ALTER TABLE projects ENABLE ROW LEVEL SECURITY;
 -- ALTER TABLE projects ADD COLUMN IF NOT EXISTS gc_contact_email TEXT;
 -- ALTER TABLE projects ENABLE ROW LEVEL SECURITY;
 
--- 4. Project Subcontractors (Many-to-Many)
-CREATE TABLE project_subcontractors (
-  project_id UUID REFERENCES projects(id) ON DELETE CASCADE,
-  sub_id UUID REFERENCES companies(id) ON DELETE CASCADE,
-  PRIMARY KEY (project_id, sub_id)
-);
-
--- Server-only table: enable RLS with NO policies so the public anon key is
--- denied all access. The server's service-role key bypasses RLS and still works.
--- If the table already exists from an earlier run:
--- ALTER TABLE project_subcontractors ENABLE ROW LEVEL SECURITY;
-ALTER TABLE project_subcontractors ENABLE ROW LEVEL SECURITY;
+-- 4. (Retired) project_subcontractors
+-- The Phase 6 junction table was superseded by jobsite_subcontractors (below)
+-- and dropped in Phase 8d-h. Fresh databases never create it. For an existing
+-- database, run this ONCE, only after `node scripts/backfill-jobsites.js --apply`
+-- has been run and GET /api/gc/overview was checked against the jobsites data
+-- (IRREVERSIBLE):
+-- DROP TABLE IF EXISTS project_subcontractors;
 
 -- 5. Toolbox Talks (Content Library)
 CREATE TABLE toolbox_talks (

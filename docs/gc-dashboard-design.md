@@ -42,7 +42,7 @@ Three items went beyond what the Phase 6 plan first approved; all three were res
 
 Each sub keeps owning its own project row (`owner_company_id` = the sub). To connect to a GC, the sub
 enters the GC company's **join code**, which sets `projects.gc_company_id` and adds a
-`project_subcontractors` row. The GC dashboard groups linked rows into a jobsite and rolls up per sub. The
+`project_subcontractors` row. (Superseded by Phase 8d-h: the link now also find-or-creates a real `jobsites` row and writes a `jobsite_subcontractors` roster row.) The GC dashboard originally grouped linked rows into a jobsite by name and rolled up per sub; it now reads real jobsites. The
 sub's project picker, offline cache and outbox are unchanged.
 
 The alternative — a GC-owned canonical jobsite that subs join — matches `project_subcontractors`' intent
@@ -97,10 +97,12 @@ would later show up as a phantom "sub" on that GC's dashboard):
   an unlink. *Superseded the original "keep the sub's text, fill only if empty" rule:* create already
   requires a GC name, so that fill branch could never fire and a sub who typed "Turner" would keep seeing
   "Turner" after linking to "Turner Construction Inc." The sub's originally typed text is not preserved.
-- Upserts `(project_id, sub_id)` (the owning sub's company) into `project_subcontractors`.
+- *(Phase 8d-h)* Finds-or-creates the GC's jobsite for the project's normalized name, ensures an accepted
+  `jobsite_subcontractors` row, and sets `jobsite_id` alongside `gc_company_id`. (Originally this upserted a
+  `project_subcontractors` row; that table is dropped.)
 
-`DELETE /api/projects/:id/link-gc` sets `gc_company_id` to `NULL` and deletes the `project_subcontractors`
-row. `gc_name_custom` is retained, which satisfies `check_gc_info`.
+`DELETE /api/projects/:id/link-gc` sets `gc_company_id` and `jobsite_id` to `NULL` and removes the sub's
+`jobsite_subcontractors` row when no other project of theirs remains on that jobsite. `gc_name_custom` is retained, which satisfies `check_gc_info`.
 
 `gc_contact_email` itself is untouched by linking. Its role in PDF delivery changed in Phase 8b, though:
 once a project is linked, the PDF is emailed to the linked GC company's admin (a real account, resolved
@@ -200,7 +202,7 @@ product whose selling point is an accurate audit trail. So:
 
 ### Jobsite grouping
 
-A GC's linked rows are grouped by **`(gc_company_id, normalized project name)`** — trimmed,
+*(Superseded by Phase 8d-h — the overview now reads real `jobsites` rows and their accepted roster; the name key survives only for the join-code find-or-create. The original design follows.)* A GC's linked rows were grouped by **`(gc_company_id, normalized project name)`** — trimmed,
 whitespace-collapsed, lowercased. The display name is the earliest row's original spelling. If one sub has
 two rows under the same key, they merge (`logged` if either logged). This is deliberately fuzzy:
 "Riverside Tower" and "Riverside Twr" become two jobsites, and the GC can't merge them in v1. That

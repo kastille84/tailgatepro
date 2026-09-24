@@ -9,7 +9,7 @@ All application reads and writes go through the Express API. The browser never t
 PostgreSQL directly for domain data.
 
 - **Row Level Security stays enabled with no policies on every table.** `waitlist` already does
-  this; `companies`, `users`, `projects`, `project_subcontractors`, `toolbox_talks`,
+  this; `companies`, `users`, `projects`, `jobsites`, `jobsite_subcontractors`, `toolbox_talks`,
   `meeting_logs`, and `signatures` follow the same rule. With RLS on and no policy, the public
   `anon` key (the key the client bundles for Supabase Auth) is denied all table access.
 - **The server uses the service-role key** via the single client in
@@ -35,7 +35,7 @@ for simple CRUD. It was not chosen because:
    with the service-role client and the `AppError` / `{ success, data }` conventions. Keeping one
    model avoids a split-brain data layer.
 3. **Authorization rules here are relational, not row-local.** "A GC may read a subcontractor's
-   meeting logs for a shared project" spans `project_subcontractors`, `projects`, and
+   meeting logs for a shared project" spans `jobsite_subcontractors`, `projects`, and
    `meeting_logs`. That is more readable as service-layer code than as recursive RLS policies,
    especially before the invite/join-company flow exists.
 
@@ -54,8 +54,8 @@ for simple CRUD. It was not chosen because:
   subcontractor's completed meeting logs only through `server/services/gcDashboard.js`, which authorizes
   on a single column — `projects.gc_company_id = the caller's company` — and returns `404` (never `403`)
   for anything not linked, so another company's data is indistinguishable from missing.
-  `project_subcontractors` is a roster, not an authorization source. `projects.gc_company_id` is written
-  only by the join-code link endpoints, never from a create/PATCH body. See `docs/gc-dashboard-design.md`.
+  The jobsite roster (`jobsite_subcontractors`) gates *admission* only. `projects.gc_company_id` is written
+  only by the join-code link endpoints and the accepted-jobsite admission check, never from a create/PATCH body. See `docs/gc-dashboard-design.md`.
 - **Doc/code mismatch, resolved by Phase 6b:** the first section above said every table has RLS enabled with
   no policies, but `Supabase_SQL.sql` never ran `ENABLE ROW LEVEL SECURITY` on `companies`, `users`,
   `projects` or `project_subcontractors`. 6b adds it (still zero policies), so that claim is true **once

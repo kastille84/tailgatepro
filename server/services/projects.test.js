@@ -677,117 +677,222 @@ describe("projects service: remove", () => {
   });
 });
 
-describe("projects service: linkGc", () => {
-  // getById chain: select().eq("id").eq("owner_company_id").single()
-  let getSingle;
-  let getEqOwner;
-  let getEqId;
-  let getSelect;
-  // link update chain: update().eq("id").eq("owner_company_id").is("gc_company_id", null).select().single()
-  let updSingle;
-  let updSelect;
-  let updIs;
-  let updEqOwner;
-  let updEqId;
-  let updateFn;
-  // roster upsert
-  let upsert;
+// A recording, thenable query chain per `from()` call. Each call resolves to the
+// next queued result for `<table>.<first operation>` (default: no rows, no
+// error), so tests state outcomes without depending on chain order.
+const mockDb = (results = {}) => {
+  const calls = [];
+  const queues = new Map(
+    Object.entries(results).map(([key, value]) => [
+      key,
+      Array.isArray(value) ? [...value] : [value],
+    ]),
+  );
 
+  const resolveFor = (record) => {
+    const key = `${record.table}.${record.ops[0]?.[0]}`;
+    const queue = queues.get(key);
+    if (!queue) return { data: [], error: null };
+    return queue.length > 1 ? queue.shift() : queue[0];
+  };
+
+  fromSpy.mockReset();
+  fromSpy.mockImplementation((table) => {
+    const record = { table, ops: [] };
+    calls.push(record);
+    const builder = new Proxy(
+      {},
+      {
+        get: (_, method) => {
+          if (method === "then") {
+            return (resolve, reject) =>
+              Promise.resolve(resolveFor(record)).then(resolve, reject);
+          }
+          return (...args) => {
+            record.ops.push([method, args]);
+            return builder;
+          };
+        },
+      },
+    );
+    return builder;
+  });
+
+  const find = (table, op) =>
+    calls.filter((c) => c.table === table && c.ops[0]?.[0] === op);
+  const argsOf = (record, method) =>
+    record.ops.find(([name]) => name === method)?.[1];
+
+  return { calls, find, argsOf };
+};
+
+describe("projects service: linkGc", () => {
   const gc = { id: "gc-1", name: "Turner Construction Inc." };
   const linkedRow = {
     ...dbRow,
     gc_company_id: "gc-1",
     gc_name_custom: "Turner Construction Inc.",
+    jobsite_id: "jobsite-1",
   };
   const args = {
     projectId: "project-1",
     companyId: "company-1",
     joinCode: "ABCD2345",
   };
+  const ok = (data) => ({ data, error: null });
+  const fail = (code) => ({ data: null, error: { code } });
 
   beforeEach(() => {
-    getSingle = vi.fn().mockResolvedValue({ data: dbRow, error: null });
-    getEqOwner = vi.fn(() => ({ single: getSingle }));
-    getEqId = vi.fn(() => ({ eq: getEqOwner }));
-    getSelect = vi.fn(() => ({ eq: getEqId }));
-
-    updSingle = vi.fn().mockResolvedValue({ data: linkedRow, error: null });
-    updSelect = vi.fn(() => ({ single: updSingle }));
-    updIs = vi.fn(() => ({ select: updSelect }));
-    updEqOwner = vi.fn(() => ({ is: updIs }));
-    updEqId = vi.fn(() => ({ eq: updEqOwner }));
-    updateFn = vi.fn(() => ({ eq: updEqId }));
-
-    upsert = vi.fn().mockResolvedValue({ error: null });
-
     getByJoinCodeSpy.mockReset();
     getByJoinCodeSpy.mockResolvedValue(gc);
-
-    fromSpy.mockReset();
-    fromSpy.mockImplementation((table) => {
-      if (table === "projects") return { select: getSelect, update: updateFn };
-      if (table === "project_subcontractors") return { upsert };
-      throw new Error(`Unexpected table: ${table}`);
-    });
   });
 
-  it("should link the project, overwrite gc_name_custom with the GC's registered name, upsert the roster row and return the mapped project", async () => {
+  it("should create the GC's jobsite when none matches, add an accepted roster row, and link the project to it", async () => {
+    // Arrange
+    const db = mockDb({
+      "projects.select": ok(dbRow),
+      "jobsites.select": ok([]),
+      "projects.update": ok(linkedRow),
+    });
+
     // Act
     const result = await linkGc(args);
 
     // Assert
     expect(getByJoinCodeSpy).toHaveBeenCalledWith("ABCD2345");
-    expect(updateFn).toHaveBeenCalledWith({
+    const [jobsiteInsert] = db.find("jobsites", "insert");
+    const newJobsite = db.argsOf(jobsiteInsert, "insert")[0];
+    expect(newJobsite).toMatchObject({
+      gc_company_id: "gc-1",
+      name: "Downtown Highrise",
+    });
+
+    const [rosterInsert] = db.find("jobsite_subcontractors", "insert");
+    expect(db.argsOf(rosterInsert, "insert")[0]).toMatchObject({
+      jobsite_id: newJobsite.id,
+      sub_company_id: "company-1",
+      invited_email: "backfill+company-1@backfill.invalid",
+    });
+    expect(db.argsOf(rosterInsert, "insert")[0].accepted_at).toEqual(
+      expect.any(String),
+    );
+
+    const [update] = db.find("projects", "update");
+    expect(db.argsOf(update, "update")[0]).toEqual({
       gc_company_id: "gc-1",
       gc_name_custom: "Turner Construction Inc.",
+      jobsite_id: newJobsite.id,
     });
-    expect(updEqId).toHaveBeenCalledWith("id", "project-1");
-    expect(updEqOwner).toHaveBeenCalledWith("owner_company_id", "company-1");
-    expect(updIs).toHaveBeenCalledWith("gc_company_id", null);
-    expect(updSelect).toHaveBeenCalledWith(PROJECT_COLUMNS);
-    expect(upsert).toHaveBeenCalledWith(
-      { project_id: "project-1", sub_id: "company-1" },
-      { onConflict: "project_id,sub_id", ignoreDuplicates: true },
-    );
+    expect(db.argsOf(update, "is")).toEqual(["gc_company_id", null]);
+    expect(db.argsOf(update, "select")).toEqual([PROJECT_COLUMNS]);
     expect(result).toEqual({
       ...mappedProject,
       gcCompanyId: "gc-1",
       gcNameCustom: "Turner Construction Inc.",
+      jobsiteId: "jobsite-1",
     });
   });
 
-  it("should overwrite a GC name the sub had typed with the registered name", async () => {
-    // Arrange — dbRow already carries the sub-typed name "Acme GC"
+  it("should reuse the GC's oldest live jobsite whose normalized name matches", async () => {
+    // Arrange
+    const db = mockDb({
+      "projects.select": ok(dbRow),
+      "jobsites.select": ok([
+        { id: "jobsite-other", name: "Elsewhere" },
+        { id: "jobsite-a", name: "  downtown   HIGHRISE " },
+        { id: "jobsite-b", name: "Downtown Highrise" },
+      ]),
+      "projects.update": ok(linkedRow),
+    });
+
     // Act
     await linkGc(args);
 
     // Assert
-    expect(updateFn.mock.calls[0][0].gc_name_custom).toBe(
-      "Turner Construction Inc.",
-    );
-    expect(updateFn.mock.calls[0][0].gc_name_custom).not.toBe(
-      dbRow.gc_name_custom,
-    );
+    expect(db.find("jobsites", "insert")).toHaveLength(0);
+    const [select] = db.find("jobsites", "select");
+    expect(db.argsOf(select, "eq")).toEqual(["gc_company_id", "gc-1"]);
+    expect(db.argsOf(select, "is")).toEqual(["archived_at", null]);
+    const [rosterInsert] = db.find("jobsite_subcontractors", "insert");
+    expect(db.argsOf(rosterInsert, "insert")[0].jobsite_id).toBe("jobsite-a");
+    const [update] = db.find("projects", "update");
+    expect(db.argsOf(update, "update")[0].jobsite_id).toBe("jobsite-a");
   });
 
-  it("should be idempotent when already linked to the same GC: skip the project update but still upsert the roster row", async () => {
+  it("should not add a second roster row when the sub is already a member", async () => {
     // Arrange
-    getSingle.mockResolvedValue({ data: linkedRow, error: null });
+    const db = mockDb({
+      "projects.select": ok(dbRow),
+      "jobsites.select": ok([{ id: "jobsite-1", name: "Downtown Highrise" }]),
+      "jobsite_subcontractors.select": ok([{ id: "member-1" }]),
+      "projects.update": ok(linkedRow),
+    });
+
+    // Act
+    await linkGc(args);
+
+    // Assert
+    expect(db.find("jobsite_subcontractors", "insert")).toHaveLength(0);
+  });
+
+  it("should treat a duplicate-membership race (23505) on the roster insert as success", async () => {
+    // Arrange
+    mockDb({
+      "projects.select": ok(dbRow),
+      "jobsites.select": ok([{ id: "jobsite-1", name: "Downtown Highrise" }]),
+      "jobsite_subcontractors.insert": fail("23505"),
+      "projects.update": ok(linkedRow),
+    });
+
+    // Act & Assert
+    await expect(linkGc(args)).resolves.toMatchObject({ gcCompanyId: "gc-1" });
+  });
+
+  it("should be idempotent when already linked to the same GC's jobsite: re-ensure membership but skip the project update", async () => {
+    // Arrange
+    const db = mockDb({
+      "projects.select": ok(linkedRow),
+      "jobsite_subcontractors.select": ok([{ id: "member-1" }]),
+    });
 
     // Act
     const result = await linkGc(args);
 
     // Assert
-    expect(updateFn).not.toHaveBeenCalled();
-    expect(upsert).toHaveBeenCalledTimes(1);
-    expect(result.gcCompanyId).toBe("gc-1");
+    expect(db.find("jobsites", "select")).toHaveLength(0);
+    expect(db.find("projects", "update")).toHaveLength(0);
+    expect(result.jobsiteId).toBe("jobsite-1");
+  });
+
+  it("should heal a legacy link (this GC, no jobsite) by attaching a jobsite, guarded on the existing GC", async () => {
+    // Arrange
+    const db = mockDb({
+      "projects.select": ok({
+        ...dbRow,
+        gc_company_id: "gc-1",
+        jobsite_id: null,
+      }),
+      "jobsites.select": ok([{ id: "jobsite-1", name: "Downtown Highrise" }]),
+      "projects.update": ok(linkedRow),
+    });
+
+    // Act
+    await linkGc(args);
+
+    // Assert
+    const [update] = db.find("projects", "update");
+    expect(db.argsOf(update, "update")[0].jobsite_id).toBe("jobsite-1");
+    expect(update.ops.filter(([name]) => name === "eq")).toContainEqual([
+      "eq",
+      ["gc_company_id", "gc-1"],
+    ]);
+    expect(db.argsOf(update, "is")).toBeUndefined();
   });
 
   it("should throw a 409 AppError when the project is linked to a different GC, writing nothing", async () => {
     // Arrange
-    getSingle.mockResolvedValue({
-      data: { ...dbRow, gc_company_id: "gc-other" },
-      error: null,
+    const db = mockDb({
+      "projects.select": ok({ ...dbRow, gc_company_id: "gc-other" }),
     });
 
     // Act & Assert
@@ -796,12 +901,14 @@ describe("projects service: linkGc", () => {
       message:
         "This project is already linked to a different general contractor. Unlink it first.",
     });
-    expect(updateFn).not.toHaveBeenCalled();
-    expect(upsert).not.toHaveBeenCalled();
+    expect(db.find("projects", "update")).toHaveLength(0);
+    expect(db.find("jobsites", "insert")).toHaveLength(0);
+    expect(db.find("jobsite_subcontractors", "insert")).toHaveLength(0);
   });
 
   it("should throw a 422 AppError when the join code belongs to the caller's own company", async () => {
     // Arrange
+    const db = mockDb({ "projects.select": ok(dbRow) });
     getByJoinCodeSpy.mockResolvedValue({ id: "company-1", name: "Own Co" });
 
     // Act & Assert
@@ -809,12 +916,12 @@ describe("projects service: linkGc", () => {
       statusCode: 422,
       message: "That is your own company's join code",
     });
-    expect(updateFn).not.toHaveBeenCalled();
+    expect(db.find("projects", "update")).toHaveLength(0);
   });
 
   it("should throw a 404 AppError, without resolving the code, when the project isn't owned by the caller's company", async () => {
     // Arrange
-    getSingle.mockResolvedValue({ data: null, error: { code: "PGRST116" } });
+    mockDb({ "projects.select": fail("PGRST116") });
 
     // Act & Assert
     await expect(linkGc(args)).rejects.toMatchObject({
@@ -822,11 +929,11 @@ describe("projects service: linkGc", () => {
       message: "Project not found",
     });
     expect(getByJoinCodeSpy).not.toHaveBeenCalled();
-    expect(updateFn).not.toHaveBeenCalled();
   });
 
   it("should propagate the 404 from an unknown join code without writing", async () => {
     // Arrange
+    const db = mockDb({ "projects.select": ok(dbRow) });
     const notFound = Object.assign(new Error("Join code not found"), {
       statusCode: 404,
     });
@@ -834,37 +941,93 @@ describe("projects service: linkGc", () => {
 
     // Act & Assert
     await expect(linkGc(args)).rejects.toBe(notFound);
-    expect(updateFn).not.toHaveBeenCalled();
-    expect(upsert).not.toHaveBeenCalled();
+    expect(db.find("projects", "update")).toHaveLength(0);
+    expect(db.find("jobsite_subcontractors", "insert")).toHaveLength(0);
   });
 
-  it("should throw a 409 AppError when no row matches the guarded update (linked concurrently)", async () => {
+  it("should throw a 502 AppError when loading the GC's jobsites fails", async () => {
     // Arrange
-    updSingle.mockResolvedValue({ data: null, error: { code: "PGRST116" } });
-
-    // Act & Assert
-    await expect(linkGc(args)).rejects.toMatchObject({
-      statusCode: 409,
-      message: "This project was just changed. Reload and try again.",
+    mockDb({
+      "projects.select": ok(dbRow),
+      "jobsites.select": fail("OTHER"),
     });
-    expect(upsert).not.toHaveBeenCalled();
-  });
-
-  it("should throw a 502 AppError on any other update failure", async () => {
-    // Arrange
-    updSingle.mockResolvedValue({ data: null, error: { code: "OTHER" } });
 
     // Act & Assert
     await expect(linkGc(args)).rejects.toMatchObject({
       statusCode: 502,
       message: "Could not link the project",
     });
-    expect(upsert).not.toHaveBeenCalled();
   });
 
-  it("should throw a 502 AppError when the roster upsert fails", async () => {
+  it("should throw a 502 AppError when creating the jobsite fails", async () => {
     // Arrange
-    upsert.mockResolvedValue({ error: { code: "OTHER" } });
+    const db = mockDb({
+      "projects.select": ok(dbRow),
+      "jobsites.select": ok([]),
+      "jobsites.insert": fail("OTHER"),
+    });
+
+    // Act & Assert
+    await expect(linkGc(args)).rejects.toMatchObject({
+      statusCode: 502,
+      message: "Could not link the project",
+    });
+    expect(db.find("projects", "update")).toHaveLength(0);
+  });
+
+  it("should throw a 502 AppError when the membership lookup fails", async () => {
+    // Arrange
+    mockDb({
+      "projects.select": ok(dbRow),
+      "jobsites.select": ok([{ id: "jobsite-1", name: "Downtown Highrise" }]),
+      "jobsite_subcontractors.select": fail("OTHER"),
+    });
+
+    // Act & Assert
+    await expect(linkGc(args)).rejects.toMatchObject({
+      statusCode: 502,
+      message: "Could not link the project",
+    });
+  });
+
+  it("should throw a 502 AppError, without linking the project, when the roster insert fails", async () => {
+    // Arrange
+    const db = mockDb({
+      "projects.select": ok(dbRow),
+      "jobsites.select": ok([{ id: "jobsite-1", name: "Downtown Highrise" }]),
+      "jobsite_subcontractors.insert": fail("OTHER"),
+    });
+
+    // Act & Assert
+    await expect(linkGc(args)).rejects.toMatchObject({
+      statusCode: 502,
+      message: "Could not link the project",
+    });
+    expect(db.find("projects", "update")).toHaveLength(0);
+  });
+
+  it("should throw a 409 AppError when no row matches the guarded update (linked concurrently)", async () => {
+    // Arrange
+    mockDb({
+      "projects.select": ok(dbRow),
+      "jobsites.select": ok([{ id: "jobsite-1", name: "Downtown Highrise" }]),
+      "projects.update": fail("PGRST116"),
+    });
+
+    // Act & Assert
+    await expect(linkGc(args)).rejects.toMatchObject({
+      statusCode: 409,
+      message: "This project was just changed. Reload and try again.",
+    });
+  });
+
+  it("should throw a 502 AppError on any other update failure", async () => {
+    // Arrange
+    mockDb({
+      "projects.select": ok(dbRow),
+      "jobsites.select": ok([{ id: "jobsite-1", name: "Downtown Highrise" }]),
+      "projects.update": fail("OTHER"),
+    });
 
     // Act & Assert
     await expect(linkGc(args)).rejects.toMatchObject({
@@ -875,111 +1038,162 @@ describe("projects service: linkGc", () => {
 });
 
 describe("projects service: unlinkGc", () => {
-  let single;
-  let select;
-  let eqOwner;
-  let eqId;
-  let updateFn;
-  let rosterEqSub;
-  let rosterEqProject;
-  let deleteFn;
-
   const linkedRow = {
     ...dbRow,
     gc_company_id: "gc-1",
     gc_name_custom: "Turner Construction Inc.",
+    jobsite_id: "jobsite-1",
   };
+  const unlinkedRow = { ...linkedRow, gc_company_id: null, jobsite_id: null };
+  const args = { projectId: "project-1", companyId: "company-1" };
+  const ok = (data) => ({ data, error: null });
+  const fail = (code) => ({ data: null, error: { code } });
 
-  beforeEach(() => {
-    single = vi.fn().mockResolvedValue({
-      data: { ...linkedRow, gc_company_id: null },
-      error: null,
+  it("should detach gc_company_id and jobsite_id (keeping the GC name), delete the roster row when no other project remains, and return the mapped project", async () => {
+    // Arrange
+    const db = mockDb({
+      "projects.select": [ok(linkedRow), ok([])],
+      "projects.update": ok(unlinkedRow),
     });
-    select = vi.fn(() => ({ single }));
-    eqOwner = vi.fn(() => ({ select }));
-    eqId = vi.fn(() => ({ eq: eqOwner }));
-    updateFn = vi.fn(() => ({ eq: eqId }));
 
-    rosterEqSub = vi.fn().mockResolvedValue({ error: null });
-    rosterEqProject = vi.fn(() => ({ eq: rosterEqSub }));
-    deleteFn = vi.fn(() => ({ eq: rosterEqProject }));
-
-    fromSpy.mockReset();
-    fromSpy.mockImplementation((table) => {
-      if (table === "projects") return { update: updateFn };
-      if (table === "project_subcontractors") return { delete: deleteFn };
-      throw new Error(`Unexpected table: ${table}`);
-    });
-  });
-
-  it("should clear gc_company_id (keeping the GC name), delete the roster row and return the mapped project", async () => {
     // Act
-    const result = await unlinkGc({
-      projectId: "project-1",
-      companyId: "company-1",
-    });
+    const result = await unlinkGc(args);
 
     // Assert
-    expect(updateFn).toHaveBeenCalledWith({ gc_company_id: null });
-    expect(eqId).toHaveBeenCalledWith("id", "project-1");
-    expect(eqOwner).toHaveBeenCalledWith("owner_company_id", "company-1");
-    expect(select).toHaveBeenCalledWith(PROJECT_COLUMNS);
-    expect(rosterEqProject).toHaveBeenCalledWith("project_id", "project-1");
-    expect(rosterEqSub).toHaveBeenCalledWith("sub_id", "company-1");
+    const [update] = db.find("projects", "update");
+    expect(db.argsOf(update, "update")[0]).toEqual({
+      gc_company_id: null,
+      jobsite_id: null,
+    });
+    expect(update.ops.filter(([name]) => name === "eq")).toEqual([
+      ["eq", ["id", "project-1"]],
+      ["eq", ["owner_company_id", "company-1"]],
+    ]);
+    expect(db.argsOf(update, "select")).toEqual([PROJECT_COLUMNS]);
+
+    const [roster] = db.find("jobsite_subcontractors", "delete");
+    expect(roster.ops.filter(([name]) => name === "eq")).toEqual([
+      ["eq", ["jobsite_id", "jobsite-1"]],
+      ["eq", ["sub_company_id", "company-1"]],
+    ]);
     expect(result).toEqual({
       ...mappedProject,
       gcCompanyId: null,
+      jobsiteId: null,
       gcNameCustom: "Turner Construction Inc.",
     });
   });
 
-  it("should throw a 404 AppError, without touching the roster, when the project isn't owned by the caller's company", async () => {
+  it("should keep the roster row while another of the sub's projects is still on the jobsite", async () => {
     // Arrange
-    single.mockResolvedValue({ data: null, error: { code: "PGRST116" } });
+    const db = mockDb({
+      "projects.select": [ok(linkedRow), ok([{ id: "project-2" }])],
+      "projects.update": ok(unlinkedRow),
+    });
+
+    // Act
+    await unlinkGc(args);
+
+    // Assert
+    expect(db.find("jobsite_subcontractors", "delete")).toHaveLength(0);
+  });
+
+  it("should skip the roster entirely for a project with no jobsite", async () => {
+    // Arrange
+    const db = mockDb({
+      "projects.select": ok({ ...linkedRow, jobsite_id: null }),
+      "projects.update": ok(unlinkedRow),
+    });
+
+    // Act
+    await unlinkGc(args);
+
+    // Assert
+    expect(db.calls.filter((c) => c.table === "jobsite_subcontractors")).toEqual(
+      [],
+    );
+  });
+
+  it("should throw a 404 AppError, without updating, when the project isn't owned by the caller's company", async () => {
+    // Arrange
+    const db = mockDb({ "projects.select": fail("PGRST116") });
 
     // Act & Assert
-    await expect(
-      unlinkGc({ projectId: "project-1", companyId: "company-1" }),
-    ).rejects.toMatchObject({ statusCode: 404, message: "Project not found" });
-    expect(deleteFn).not.toHaveBeenCalled();
+    await expect(unlinkGc(args)).rejects.toMatchObject({
+      statusCode: 404,
+      message: "Project not found",
+    });
+    expect(db.find("projects", "update")).toHaveLength(0);
+  });
+
+  it("should throw a 404 AppError when the update matches no row", async () => {
+    // Arrange
+    mockDb({
+      "projects.select": ok(linkedRow),
+      "projects.update": fail("PGRST116"),
+    });
+
+    // Act & Assert
+    await expect(unlinkGc(args)).rejects.toMatchObject({
+      statusCode: 404,
+      message: "Project not found",
+    });
   });
 
   it("should throw a 422 AppError when check_gc_info leaves no GC name to fall back on", async () => {
     // Arrange
-    single.mockResolvedValue({ data: null, error: { code: "23514" } });
+    const db = mockDb({
+      "projects.select": ok(linkedRow),
+      "projects.update": fail("23514"),
+    });
 
     // Act & Assert
-    await expect(
-      unlinkGc({ projectId: "project-1", companyId: "company-1" }),
-    ).rejects.toMatchObject({
+    await expect(unlinkGc(args)).rejects.toMatchObject({
       statusCode: 422,
       message: "Add a general contractor name before unlinking",
     });
-    expect(deleteFn).not.toHaveBeenCalled();
+    expect(db.find("jobsite_subcontractors", "delete")).toHaveLength(0);
   });
 
   it("should throw a 502 AppError on any other update failure", async () => {
     // Arrange
-    single.mockResolvedValue({ data: null, error: { code: "OTHER" } });
+    const db = mockDb({
+      "projects.select": ok(linkedRow),
+      "projects.update": fail("OTHER"),
+    });
 
     // Act & Assert
-    await expect(
-      unlinkGc({ projectId: "project-1", companyId: "company-1" }),
-    ).rejects.toMatchObject({
+    await expect(unlinkGc(args)).rejects.toMatchObject({
       statusCode: 502,
       message: "Could not unlink the project",
     });
-    expect(deleteFn).not.toHaveBeenCalled();
+    expect(db.find("jobsite_subcontractors", "delete")).toHaveLength(0);
+  });
+
+  it("should throw a 502 AppError when checking for remaining projects fails", async () => {
+    // Arrange
+    mockDb({
+      "projects.select": [ok(linkedRow), fail("OTHER")],
+      "projects.update": ok(unlinkedRow),
+    });
+
+    // Act & Assert
+    await expect(unlinkGc(args)).rejects.toMatchObject({
+      statusCode: 502,
+      message: "Could not unlink the project",
+    });
   });
 
   it("should throw a 502 AppError when the roster delete fails", async () => {
     // Arrange
-    rosterEqSub.mockResolvedValue({ error: { code: "OTHER" } });
+    mockDb({
+      "projects.select": [ok(linkedRow), ok([])],
+      "projects.update": ok(unlinkedRow),
+      "jobsite_subcontractors.delete": fail("OTHER"),
+    });
 
     // Act & Assert
-    await expect(
-      unlinkGc({ projectId: "project-1", companyId: "company-1" }),
-    ).rejects.toMatchObject({
+    await expect(unlinkGc(args)).rejects.toMatchObject({
       statusCode: 502,
       message: "Could not unlink the project",
     });

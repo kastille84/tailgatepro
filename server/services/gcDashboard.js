@@ -13,7 +13,6 @@ const { supabase } = require("../utility/supabaseClient");
 const { AppError } = require("../utility/AppError");
 const { dayWindow } = require("../utility/dayWindow");
 const { computeCompliance } = require("../utility/compliance");
-const { groupProjectsIntoJobsites } = require("../utility/jobsiteGrouping");
 const { buildPdfFilename } = require("../utility/pdfFilename");
 const companiesService = require("./companies");
 const storageService = require("./storage");
@@ -23,19 +22,21 @@ const { PDF_BUCKET, PDF_URL_TTL_SECONDS } = require("./meetingLogs");
 // bounded, readable response instead of an unbounded one.
 const MEETINGS_LIST_LIMIT = 200;
 
-const PROJECT_COLUMNS = "id, owner_company_id, name, status, archived_at, created_at";
+const PROJECT_COLUMNS =
+  "id, owner_company_id, jobsite_id, name, status, archived_at, created_at";
 
 const toProject = (row) => ({
   id: row.id,
   ownerCompanyId: row.owner_company_id,
+  jobsiteId: row.jobsite_id,
   name: row.name,
   status: row.status,
   archivedAt: row.archived_at,
   createdAt: row.created_at,
 });
 
-// Every project currently linked to this GC, oldest first (jobsites.js relies
-// on that order to pick each group's display name).
+// Every project currently linked to this GC, oldest first (getOverview relies
+// on that order to pick a sub's earliest project per jobsite).
 const listLinkedProjects = async (gcCompanyId) => {
   const { data, error } = await supabase
     .from("projects")
@@ -115,67 +116,95 @@ const listCompletedLogsInWindow = async (projectIds, window) => {
   return data;
 };
 
-// GET /api/gc/overview — jobsites grouped from the GC's active, non-archived
-// linked projects, each with a per-sub compliance status for the given day.
+// The GC's live jobsites (active, not archived) with their accepted roster
+// embedded. A pending invite has no sub_company_id yet and is not a roster
+// member — it can't be "missing" a log until it's accepted.
+const listActiveJobsites = async (gcCompanyId) => {
+  const { data, error } = await supabase
+    .from("jobsites")
+    .select("id, name, jobsite_subcontractors(sub_company_id, accepted_at)")
+    .eq("gc_company_id", gcCompanyId)
+    .eq("status", "active")
+    .is("archived_at", null);
+
+  if (error) {
+    throw new AppError("Could not load jobsites", 502, { cause: error });
+  }
+
+  return data.map((row) => ({
+    id: row.id,
+    name: row.name,
+    subIds: (row.jobsite_subcontractors ?? [])
+      .filter((sub) => sub.sub_company_id && sub.accepted_at)
+      .map((sub) => sub.sub_company_id),
+  }));
+};
+
+// GET /api/gc/overview — the GC's real jobsites, each with a per-sub
+// compliance status for the given day. The roster is the accepted members, so
+// an accepted sub that never logged shows `missing`.
 const getOverview = async (gcCompanyId, { date, tzOffset }) => {
   const window = dayWindow({ date, tzOffset });
 
-  const allProjects = await listLinkedProjects(gcCompanyId);
-  const rosterProjects = allProjects.filter(
-    (project) => project.status === "active" && !project.archivedAt,
+  const [jobsiteRows, allProjects] = await Promise.all([
+    listActiveJobsites(gcCompanyId),
+    listLinkedProjects(gcCompanyId),
+  ]);
+  const projects = allProjects.filter(
+    (project) =>
+      project.jobsiteId && project.status === "active" && !project.archivedAt,
   );
 
-  const jobsiteGroups = groupProjectsIntoJobsites(rosterProjects);
-  const projectIds = rosterProjects.map((project) => project.id);
+  const projectIds = projects.map((project) => project.id);
+  const subIds = jobsiteRows.flatMap((jobsite) => jobsite.subIds);
   const [logs, companyNamesById] = await Promise.all([
     listCompletedLogsInWindow(projectIds, window),
-    getCompanyNamesByIds(rosterProjects.map((project) => project.ownerCompanyId)),
+    getCompanyNamesByIds(subIds),
   ]);
 
-  const logsByProjectId = new Map();
+  const projectById = new Map(projects.map((project) => [project.id, project]));
+  const logsByJobsite = new Map();
   for (const log of logs) {
-    const list = logsByProjectId.get(log.project_id) ?? [];
-    list.push(log);
-    logsByProjectId.set(log.project_id, list);
+    const project = projectById.get(log.project_id);
+    const list = logsByJobsite.get(project.jobsiteId) ?? [];
+    list.push({ subId: project.ownerCompanyId, heldAt: log.held_at });
+    logsByJobsite.set(project.jobsiteId, list);
   }
 
-  const jobsites = jobsiteGroups.map((group) => {
-    // Distinct owners in this jobsite, in first-appearance (oldest-project)
-    // order, each paired with their earliest project id in the group — the
-    // id a drill-in uses when two of the sub's projects merged into one
-    // jobsite (docs/gc-dashboard-design.md "Jobsite grouping").
-    const projectIdByOwner = new Map();
-    for (const project of group.projects) {
-      if (!projectIdByOwner.has(project.ownerCompanyId)) {
-        projectIdByOwner.set(project.ownerCompanyId, project.id);
+  const jobsites = jobsiteRows
+    .map((jobsite) => {
+      // projects is oldest-first, so the first match is the sub's earliest
+      // project in this jobsite — what a drill-in opens.
+      const projectIdBySub = new Map();
+      for (const project of projects) {
+        if (
+          project.jobsiteId === jobsite.id &&
+          !projectIdBySub.has(project.ownerCompanyId)
+        ) {
+          projectIdBySub.set(project.ownerCompanyId, project.id);
+        }
       }
-    }
 
-    const roster = [...projectIdByOwner.keys()].map((subId) => ({ subId }));
-    const groupProjectIds = group.projects.map((project) => project.id);
-    const groupLogs = groupProjectIds.flatMap(
-      (projectId) =>
-        (logsByProjectId.get(projectId) ?? []).map((log) => ({
-          subId: group.projects.find((project) => project.id === projectId)
-            .ownerCompanyId,
-          heldAt: log.held_at,
+      const compliance = computeCompliance({
+        roster: jobsite.subIds.map((subId) => ({ subId })),
+        logs: logsByJobsite.get(jobsite.id) ?? [],
+        window,
+      });
+
+      return {
+        id: jobsite.id,
+        name: jobsite.name,
+        subs: compliance.map((entry) => ({
+          companyId: entry.subId,
+          companyName: companyNamesById.get(entry.subId) ?? null,
+          projectId: projectIdBySub.get(entry.subId) ?? null,
+          status: entry.status,
+          lastLoggedAt: entry.lastLoggedAt,
+          count: entry.count,
         })),
-    );
-
-    const compliance = computeCompliance({ roster, logs: groupLogs, window });
-
-    return {
-      name: group.name,
-      subs: compliance.map((entry) => ({
-        companyId: entry.subId,
-        companyName: companyNamesById.get(entry.subId) ?? null,
-        projectId: projectIdByOwner.get(entry.subId),
-        status: entry.status,
-        lastLoggedAt: entry.lastLoggedAt,
-        count: entry.count,
-      })),
-    };
-  });
+      };
+    })
+    .sort((a, b) => a.name.localeCompare(b.name));
 
   const allSubs = jobsites.flatMap((jobsite) => jobsite.subs);
   const totals = {

@@ -38,13 +38,9 @@
 | `created_at` | Timestamptz | Default `now()` | |
 | **CHECK** `check_gc_info` | | `gc_company_id IS NOT NULL OR gc_name_custom IS NOT NULL` | At least one GC identifier must be present |
 
-| Table: `project_subcontractors` | Type | Constraints | Description |
-| :--- | :--- | :--- | :--- |
-| `project_id` | UUID | FK -> `projects.id` (ON DELETE CASCADE) | |
-| `sub_id` | UUID | FK -> `companies.id` (ON DELETE CASCADE) | Subcontractor assigned to site |
-| **PK** | | **Composite** | `(project_id, sub_id)` |
+> The Phase 6 `project_subcontractors` junction table was dropped in Phase 8d-h; its role is played by `jobsite_subcontractors` (below).
 
-> RLS: enabled with no policies (server-brokered, deny-all) on `projects` and `project_subcontractors` — see `docs/data-access.md`.
+> RLS: enabled with no policies (server-brokered, deny-all) on `projects` — see `docs/data-access.md`.
 
 ### 3. Content Library
 
@@ -175,6 +171,6 @@ Folds the GC-to-sub invite and the jobsite roster into one table — a row is "p
 both states instead of a union across an invites table and a roster table. Distinct from
 `company_invites` (Phase 8c), which is a *person* joining an *existing* company at a *role* —
 this table is a *company* joining another company's *jobsite*, with no role at all. Supersedes
-`project_subcontractors` (table 2 above), which is dropped once 8d-g's backfill has read it.
+the Phase 6 `project_subcontractors` table, dropped in 8d-h.
 
 > RLS: enabled with no policies (server-brokered, deny-all) — see `docs/data-access.md`.

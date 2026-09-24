@@ -1927,7 +1927,7 @@ just replaces the old invite (new token/expiry).
       touched file; `context/*` stays coverage-excluded). Still needs the same live-Supabase manual
       confirmation-email click-through as the rest of this phase's Verify step to be fully closed out.
 
-### 8d — GC-owned jobsite + GC invites subcontractor companies · status: sequenced; 8d-a…8d-f code complete, 8d-g script written (live run pending), 8d-h not started
+### 8d — GC-owned jobsite + GC invites subcontractor companies · status: sequenced; 8d-a…8d-f code complete, 8d-g script written (live run pending), 8d-h code complete (live backfill + DROP pending)
 
 Plan: `~/.claude/plans/let-s-work-on-8d-cuddly-crab.md` (design backing doc:
 `~/.claude/plans/let-s-work-on-8d-cuddly-crab-agent-aab737ac2ca15e0ab.md`). Largest piece —
@@ -1984,7 +1984,7 @@ line, Tests bullet, and `Verify (user, needs …)` bullet once implemented, per 
       `jobsite_subcontractors` table (folded roster + invite: `jobsite_id`, nullable
       `sub_company_id`, `invited_email`, `token`, `expires_at`, `accepted_at`,
       `UNIQUE(jobsite_id, invited_email)` + a partial `UNIQUE(jobsite_id, sub_company_id) WHERE
-  sub_company_id IS NOT NULL`) in `Supabase_SQL.sql` (sections 11–12) + `Supabase_Schema.md`
+sub_company_id IS NOT NULL`) in `Supabase_SQL.sql` (sections 11–12) + `Supabase_Schema.md`
       (new "7. Jobsites" section). Both RLS-enabled, no policies
 - [x] Nullable `projects.jobsite_id UUID REFERENCES jobsites(id) ON DELETE SET NULL` — added via a
       real (not just commented) `ALTER TABLE ... ADD COLUMN IF NOT EXISTS` in `Supabase_SQL.sql`
@@ -2049,7 +2049,7 @@ line, Tests bullet, and `Verify (user, needs …)` bullet once implemented, per 
       longer required on the route when `jobsiteId` is present. `projects.jobsite_id` now flows through
       `PROJECT_COLUMNS`/`toProject` (`jobsiteId`)
 - [x] Added beyond the original bullets (confirmed with the user): `DELETE
-    /api/jobsites/:id/subcontractors/:subId` (GC-side removal / cancel a pending invite; detaches the
+  /api/jobsites/:id/subcontractors/:subId` (GC-side removal / cancel a pending invite; detaches the
       sub's projects _before_ deleting the roster row so a partial failure never leaves GC access with
       no membership behind it), and `GET /api/jobsites` now embeds each jobsite's roster
       (`subcontractors: [{ id, email, status: "pending"|"accepted", companyName }]`, never the token)
@@ -2112,9 +2112,9 @@ line, Tests bullet, and `Verify (user, needs …)` bullet once implemented, per 
       unaffected). `ProjectForm` shows the name (jobsite projects) and GC name/email (GC-linked) read-only with
       hints, hides any stored manual email, and omits locked fields from the edit patch so offline replays never
       send a rejected value. `Project` gains optional `jobsiteId`. Server suite 558 passing (with dummy Supabase
-      env vars), client 137 files passing. **Follow-up, not fixed:** a sub can still click "Unlink GC" on a
+      env vars), client 137 files passing. **Follow-up (resolved in 8d-h: allowed, full detach):** a sub can still click "Unlink GC" on a
       jobsite-attached project — `unlinkGc` nulls only `gc_company_id`, leaving `jobsite_id` and the accepted
-      roster row; decide in 8d-h whether a sub may unlink a GC-invited site at all
+      roster row
 - [x] Verify (user): (a) fresh email, signed out → open the link → "Create a company account" → sign up → new subcontractor company with
       the jobsite as a project; (b) existing sub admin, signed out → "Sign in to accept" (email prefilled) → lands back on the
       invite → Accept → project at `/projects`, GC roster shows Accepted; (c) wrong account / GC account /
@@ -2132,16 +2132,33 @@ line, Tests bullet, and `Verify (user, needs …)` bullet once implemented, per 
       (dry-run by default, `--apply` to write; reuses an existing same-name GC jobsite; member `invited_email` =
       sub admin's email, else a `backfill+<companyId>@backfill.invalid` placeholder; writes jobsites → members →
       projects so a partial failure re-plans cleanly)
-- [ ] Verify (user, needs live Supabase; run once 8d-c/d/e/f are proven against new data): diff
+- [x] Verify (user, needs live Supabase; run once 8d-c/d/e/f are proven against new data): diff
       `GET /api/gc/overview` for a GC before/after `node scripts/backfill-jobsites.js --apply` (after a
       dry run) — must be byte-identical; re-run reports 0 changes. `gc_company_id` (the column that
       grants access) is untouched, so no existing link can be stranded
 
-#### 8d-h — Retire fuzzy grouping, drop `project_subcontractors` · status: not started
+#### 8d-h — Retire fuzzy grouping, drop `project_subcontractors` · status: code + docs complete; live backfill, smoke and the DROP pending (user)
 
-- [ ] `gcDashboard.getOverview` reads real `jobsites` rows; `link-gc` rewritten (not retired) to
-      find-or-create a jobsite; `project_subcontractors` dropped; docs updated; all 8d bullets in
-      this file checked off. The only irreversible step in this sequence — done last
+Plan: `~/.claude/plans/let-s-work-on-8d-h-cosmic-moore.md`. Decisions: a sub **may unlink** an invite-attached
+project (full detach, GC can re-invite); **no legacy branch** in the overview — un-backfilled links vanish
+from the dashboard, so run the 8d-g backfill first.
+
+- [x] `gcDashboard.getOverview` reads real `jobsites` (active, non-archived) + their accepted roster; a sub's
+      `projectId` is its earliest active project there or `null` (drill-in then makes no request); `GcJobsite`
+      gains `id`; `groupProjectsIntoJobsites` deleted (`normalizeJobsiteName` kept for link-gc/backfill)
+- [x] `linkGc` rewritten (not retired): find-or-create the GC's jobsite by normalized name, ensure an accepted
+      `jobsite_subcontractors` row (placeholder email from new `server/utility/jobsiteMembers.js`, shared with
+      the backfill), set `jobsite_id` + `gc_company_id`; heals a legacy link with no jobsite. `unlinkGc` nulls
+      `gc_company_id` + `jobsite_id` and drops the roster row unless the sub has another project on that jobsite
+- [x] Docs (`jobsite-design`, `gc-dashboard-design`, `data-access`, `Supabase_Schema.md`) and
+      `Supabase_SQL.sql` updated; `project_subcontractors` no longer created for fresh databases. Server suite
+      582 passing (dummy Supabase env vars), touched client suites passing
+- [x] A jobsite left with no subs (sub unlinked) stays on the GC dashboard with a "no subcontractors" message and an "Invite subcontractors" link to `/projects`; archiving it removes it
+- [ ] Verify + irreversible step (user, needs live Supabase, in this order): (1) `node scripts/backfill-jobsites.js`
+      dry run then `--apply`; (2) with this code deployed, `GET /api/gc/overview` matches the pre-change
+      output apart from the new `id`s; (3) join-code link a fresh sub → jobsite + accepted roster row appear on
+      the GC's `/projects` and dashboard; unlink → gone (roster row kept only if the sub has another project
+      there); (4) only then run `DROP TABLE IF EXISTS project_subcontractors;`
 
 - [x] GC links a sub company to a project (`project_subcontractors`) — done: slim version (GC join code)
       shipped in Phase 6b–6d, superseded by 8d above

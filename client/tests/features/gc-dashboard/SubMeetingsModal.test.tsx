@@ -85,6 +85,14 @@ describe("SubMeetingsModal", () => {
     );
   });
 
+  it("makes no request for a sub with no project to drill into", () => {
+    renderModal({ sub: { ...sub, projectId: null } });
+    expect(mockUseGcMeetings).toHaveBeenCalledWith(
+      { projectId: undefined },
+      false,
+    );
+  });
+
   it("shows a loading spinner while meetings are loading", () => {
     mockUseGcMeetings.mockReturnValue({
       meetings: [],

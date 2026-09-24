@@ -10,7 +10,8 @@ const {
   getMeetingPdfUrl,
 } = require("./gcDashboard");
 
-const PROJECT_COLUMNS = "id, owner_company_id, name, status, archived_at, created_at";
+const PROJECT_COLUMNS =
+  "id, owner_company_id, jobsite_id, name, status, archived_at, created_at";
 
 const fromSpy = vi.spyOn(supabase, "from");
 
@@ -84,16 +85,33 @@ describe("gcDashboard service: assertGcLinkedProject", () => {
 });
 
 describe("gcDashboard service: getOverview", () => {
-  let projectsOrder;
+  let jobsitesResult;
+  let projectsResult;
+  let logsResult;
+  let companiesResult;
+  let jobsitesEqs;
   let projectsEq;
-  let projectsSelect;
-  let logsQuery;
-  let companiesIn;
-  let companiesSelect;
+
+  // A self-returning query chain that resolves to `result` when awaited, so
+  // the mocks don't depend on the order of .eq/.is/.order/.in calls.
+  const chain = (getResult, onEq) => {
+    const builder = {};
+    ["select", "is", "in", "not", "gte", "lt", "order"].forEach((method) => {
+      builder[method] = vi.fn(() => builder);
+    });
+    builder.eq = vi.fn((...eqArgs) => {
+      if (onEq) onEq(...eqArgs);
+      return builder;
+    });
+    builder.then = (resolve, reject) =>
+      Promise.resolve(getResult()).then(resolve, reject);
+    return builder;
+  };
 
   const project = (overrides) => ({
     id: "project-1",
     owner_company_id: "sub-1",
+    jobsite_id: "jobsite-1",
     name: "Riverside Tower",
     status: "active",
     archived_at: null,
@@ -101,47 +119,57 @@ describe("gcDashboard service: getOverview", () => {
     ...overrides,
   });
 
+  const jobsite = (overrides) => ({
+    id: "jobsite-1",
+    name: "Riverside Tower",
+    jobsite_subcontractors: [
+      { sub_company_id: "sub-1", accepted_at: "2026-09-01T00:00:00.000Z" },
+    ],
+    ...overrides,
+  });
+
+  const overviewArgs = { date: "2026-09-21", tzOffset: 0 };
+
   beforeEach(() => {
-    projectsOrder = vi.fn().mockResolvedValue({ data: [project()], error: null });
-    projectsEq = vi.fn(() => ({ order: projectsOrder }));
-    projectsSelect = vi.fn(() => ({ eq: projectsEq }));
-
-    // meeting_logs: select().in().not().gte().lt() — a self-returning chain
-    // whose last link resolves the query.
-    logsQuery = { data: [], error: null };
-    const logsBuilder = {};
-    ["select", "in", "not", "gte"].forEach((method) => {
-      logsBuilder[method] = vi.fn(() => logsBuilder);
-    });
-    logsBuilder.lt = vi.fn().mockImplementation(() => Promise.resolve(logsQuery));
-
-    companiesIn = vi.fn().mockResolvedValue({
+    jobsitesResult = { data: [jobsite()], error: null };
+    projectsResult = { data: [project()], error: null };
+    logsResult = { data: [], error: null };
+    companiesResult = {
       data: [{ id: "sub-1", name: "Acme Roofing" }],
       error: null,
-    });
-    companiesSelect = vi.fn(() => ({ in: companiesIn }));
+    };
+    jobsitesEqs = [];
+    projectsEq = [];
 
     fromSpy.mockReset();
     fromSpy.mockImplementation((table) => {
-      if (table === "projects") return { select: projectsSelect };
-      if (table === "meeting_logs") return { select: logsBuilder.select };
-      if (table === "companies") return { select: companiesSelect };
+      if (table === "jobsites")
+        return chain(() => jobsitesResult, (...a) => jobsitesEqs.push(a));
+      if (table === "projects")
+        return chain(() => projectsResult, (...a) => projectsEq.push(a));
+      if (table === "meeting_logs") return chain(() => logsResult);
+      if (table === "companies") return chain(() => companiesResult);
       throw new Error(`Unexpected table: ${table}`);
     });
   });
 
-  it("should mark a linked sub with a completed log in the window as logged", async () => {
+  it("should mark an accepted sub with a completed log in the window as logged", async () => {
     // Arrange
-    logsQuery.data = [{ project_id: "project-1", held_at: "2026-09-21T14:00:00.000Z" }];
+    logsResult.data = [
+      { project_id: "project-1", held_at: "2026-09-21T14:00:00.000Z" },
+    ];
 
     // Act
-    const result = await getOverview("gc-1", { date: "2026-09-21", tzOffset: 0 });
+    const result = await getOverview("gc-1", overviewArgs);
 
     // Assert
-    expect(projectsEq).toHaveBeenCalledWith("gc_company_id", "gc-1");
+    expect(jobsitesEqs).toContainEqual(["gc_company_id", "gc-1"]);
+    expect(jobsitesEqs).toContainEqual(["status", "active"]);
+    expect(projectsEq).toContainEqual(["gc_company_id", "gc-1"]);
     expect(result).toEqual({
       jobsites: [
         {
+          id: "jobsite-1",
           name: "Riverside Tower",
           subs: [
             {
@@ -159,62 +187,91 @@ describe("gcDashboard service: getOverview", () => {
     });
   });
 
-  it("should mark a linked sub with no completed log in the window as missing", async () => {
+  it("should mark an accepted sub with no completed log in the window as missing", async () => {
     // Act
-    const result = await getOverview("gc-1", { date: "2026-09-21", tzOffset: 0 });
+    const result = await getOverview("gc-1", overviewArgs);
 
     // Assert
-    expect(result.jobsites[0].subs[0]).toMatchObject({ status: "missing", count: 0 });
+    expect(result.jobsites[0].subs[0]).toMatchObject({
+      status: "missing",
+      count: 0,
+    });
     expect(result.totals).toEqual({ subs: 1, logged: 0, missing: 1 });
   });
 
-  it("should exclude an inactive project from the roster", async () => {
+  it("should show an accepted sub with no project as missing with a null projectId", async () => {
     // Arrange
-    projectsOrder.mockResolvedValue({
-      data: [project({ status: "completed" })],
-      error: null,
-    });
+    projectsResult.data = [];
 
     // Act
-    const result = await getOverview("gc-1", { date: "2026-09-21", tzOffset: 0 });
+    const result = await getOverview("gc-1", overviewArgs);
 
     // Assert
-    expect(result.jobsites).toEqual([]);
+    expect(result.jobsites[0].subs[0]).toMatchObject({
+      companyId: "sub-1",
+      projectId: null,
+      status: "missing",
+    });
+  });
+
+  it("should not list a pending invite (no sub company yet) on the roster", async () => {
+    // Arrange
+    jobsitesResult.data = [
+      jobsite({
+        jobsite_subcontractors: [{ sub_company_id: null, accepted_at: null }],
+      }),
+    ];
+
+    // Act
+    const result = await getOverview("gc-1", overviewArgs);
+
+    // Assert
+    expect(result.jobsites).toEqual([
+      { id: "jobsite-1", name: "Riverside Tower", subs: [] },
+    ]);
     expect(result.totals).toEqual({ subs: 0, logged: 0, missing: 0 });
   });
 
-  it("should exclude an archived project from the roster", async () => {
+  it("should treat a jobsite without embedded roster rows as having no subs", async () => {
     // Arrange
-    projectsOrder.mockResolvedValue({
-      data: [project({ archived_at: "2026-09-10T00:00:00.000Z" })],
-      error: null,
-    });
+    jobsitesResult.data = [jobsite({ jobsite_subcontractors: undefined })];
 
     // Act
-    const result = await getOverview("gc-1", { date: "2026-09-21", tzOffset: 0 });
+    const result = await getOverview("gc-1", overviewArgs);
 
     // Assert
-    expect(result.jobsites).toEqual([]);
+    expect(result.jobsites[0].subs).toEqual([]);
   });
 
-  it("should merge two of the same sub's projects under one jobsite name", async () => {
-    // Arrange — same owner, same normalized name, two project rows.
-    projectsOrder.mockResolvedValue({
-      data: [
-        project({ id: "project-1", created_at: "2026-09-01T00:00:00.000Z" }),
-        project({ id: "project-2", name: "riverside tower", created_at: "2026-09-05T00:00:00.000Z" }),
-      ],
-      error: null,
-    });
-    // A log against the second (later) project row only.
-    logsQuery.data = [{ project_id: "project-2", held_at: "2026-09-21T14:00:00.000Z" }];
+  it("should ignore inactive and archived projects and projects with no jobsite", async () => {
+    // Arrange
+    projectsResult.data = [
+      project({ id: "p-done", status: "completed" }),
+      project({ id: "p-archived", archived_at: "2026-09-10T00:00:00.000Z" }),
+      project({ id: "p-legacy", jobsite_id: null }),
+    ];
 
     // Act
-    const result = await getOverview("gc-1", { date: "2026-09-21", tzOffset: 0 });
+    const result = await getOverview("gc-1", overviewArgs);
 
-    // Assert — one jobsite, one sub entry, logged via the merged project, and
-    // the drill-in id is the sub's earliest project row.
-    expect(result.jobsites).toHaveLength(1);
+    // Assert — the roster still shows the sub, but with no drill-in project.
+    expect(result.jobsites[0].subs[0].projectId).toBeNull();
+  });
+
+  it("should merge a sub's several projects in one jobsite, drilling into the earliest", async () => {
+    // Arrange
+    projectsResult.data = [
+      project({ id: "project-1", created_at: "2026-09-01T00:00:00.000Z" }),
+      project({ id: "project-2", created_at: "2026-09-05T00:00:00.000Z" }),
+    ];
+    logsResult.data = [
+      { project_id: "project-2", held_at: "2026-09-21T14:00:00.000Z" },
+    ];
+
+    // Act
+    const result = await getOverview("gc-1", overviewArgs);
+
+    // Assert
     expect(result.jobsites[0].subs).toEqual([
       {
         companyId: "sub-1",
@@ -227,25 +284,69 @@ describe("gcDashboard service: getOverview", () => {
     ]);
   });
 
-  it("should return empty jobsites and zero totals for a GC with no linked projects", async () => {
+  it("should sort jobsites by name", async () => {
     // Arrange
-    projectsOrder.mockResolvedValue({ data: [], error: null });
+    jobsitesResult.data = [
+      jobsite({ id: "jobsite-z", name: "Zenith Site" }),
+      jobsite({ id: "jobsite-a", name: "Alpha Site" }),
+    ];
+    projectsResult.data = [];
 
     // Act
-    const result = await getOverview("gc-1", { date: "2026-09-21", tzOffset: 0 });
+    const result = await getOverview("gc-1", overviewArgs);
 
     // Assert
-    expect(result).toEqual({ jobsites: [], totals: { subs: 0, logged: 0, missing: 0 } });
+    expect(result.jobsites.map((j) => j.id)).toEqual([
+      "jobsite-a",
+      "jobsite-z",
+    ]);
+  });
+
+  it("should fall back to a null company name when the sub's company row is missing", async () => {
+    // Arrange
+    companiesResult.data = [];
+
+    // Act
+    const result = await getOverview("gc-1", overviewArgs);
+
+    // Assert
+    expect(result.jobsites[0].subs[0].companyName).toBeNull();
+  });
+
+  it("should return empty jobsites and zero totals for a GC with no jobsites", async () => {
+    // Arrange
+    jobsitesResult.data = [];
+    projectsResult.data = [];
+
+    // Act
+    const result = await getOverview("gc-1", overviewArgs);
+
+    // Assert
+    expect(result).toEqual({
+      jobsites: [],
+      totals: { subs: 0, logged: 0, missing: 0 },
+    });
+  });
+
+  it("should throw a 502 when the jobsites query fails", async () => {
+    // Arrange
+    jobsitesResult = { data: null, error: new Error("db down") };
+
+    // Act & Assert
+    await expect(getOverview("gc-1", overviewArgs)).rejects.toMatchObject({
+      statusCode: 502,
+      message: "Could not load jobsites",
+    });
   });
 
   it("should throw a 502 when the projects query fails", async () => {
     // Arrange
-    projectsOrder.mockResolvedValue({ data: null, error: new Error("db down") });
+    projectsResult = { data: null, error: new Error("db down") };
 
     // Act & Assert
-    await expect(
-      getOverview("gc-1", { date: "2026-09-21", tzOffset: 0 }),
-    ).rejects.toMatchObject({ statusCode: 502 });
+    await expect(getOverview("gc-1", overviewArgs)).rejects.toMatchObject({
+      statusCode: 502,
+    });
   });
 });
 
