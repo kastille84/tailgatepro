@@ -167,7 +167,71 @@ const getById = async (id, companyId) => {
 // project but only a manager should be able to archive/restore/delete one.
 // Gated here rather than as route middleware: this same PATCH handles plain
 // field edits too, which stay open to any company member.
+// A project linked to a GC is partly managed by that GC: the name of a
+// jobsite-attached project is the GC's job site name (the GC dashboard still
+// groups by it until Phase 8d-h, and it feeds the PDF filename), the GC name is
+// the GC's registered name, and PDF delivery goes to the GC company's admin
+// (pdfGenerationQueue.resolveGcContactEmail) so a manual GC email is moot.
+// The sub owns the row, so nothing else stops it editing those — enforced here
+// rather than trusting the form. Unchanged values pass through (a client may
+// resend the whole form); an unlinked project is unrestricted. Only reads the
+// row when the patch touches one of these fields.
+const assertGcManagedFieldsUntouched = async ({ id, companyId, patch }) => {
+  if (
+    patch.name === undefined &&
+    patch.gcNameCustom === undefined &&
+    patch.gcContactEmail === undefined
+  ) {
+    return;
+  }
+
+  const { data, error } = await supabase
+    .from("projects")
+    .select("name, gc_company_id, jobsite_id, gc_name_custom")
+    .eq("id", id)
+    .eq("owner_company_id", companyId)
+    .single();
+
+  if (error) {
+    // PGRST116 = the id doesn't exist or isn't owned by this company.
+    if (error.code === "PGRST116") {
+      throw new AppError("Project not found", 404, { cause: error });
+    }
+    throw new AppError("Could not update the project", 502, { cause: error });
+  }
+
+  if (!data.gc_company_id) return;
+
+  if (
+    data.jobsite_id &&
+    patch.name !== undefined &&
+    patch.name !== data.name
+  ) {
+    throw new AppError(
+      "This project's name is set by the general contractor's job site",
+      403,
+    );
+  }
+  if (
+    patch.gcNameCustom !== undefined &&
+    patch.gcNameCustom !== data.gc_name_custom
+  ) {
+    throw new AppError(
+      "The general contractor's name is set by the linked company",
+      403,
+    );
+  }
+  if (patch.gcContactEmail) {
+    throw new AppError(
+      "Reports for a linked project go to the general contractor's account, so a contact email can't be set",
+      403,
+    );
+  }
+};
+
 const update = async ({ id, companyId, role, patch }) => {
+  await assertGcManagedFieldsUntouched({ id, companyId, patch });
+
   const nextPatch = {};
   if (patch.name !== undefined) nextPatch.name = patch.name;
   if (patch.status !== undefined) nextPatch.status = patch.status;

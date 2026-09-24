@@ -60,6 +60,10 @@ export const ProjectForm = ({ isOpen, onClose, project }: ProjectFormProps) => {
   const isEdit = Boolean(project);
   const isArchived = Boolean(project?.archivedAt);
   const isGcLinked = Boolean(project?.gcCompanyId);
+  // The name of a project attached to a GC's job site is the GC's (server-
+  // enforced too — projects.update): renaming would also drop it out of the
+  // GC's name-grouped dashboard and change its PDF filenames.
+  const isJobsiteManaged = isGcLinked && Boolean(project?.jobsiteId);
   const { createProject, isCreating } = useCreateProject();
   const { updateProject, isUpdating } = useUpdateProject();
   const { archiveProject, isArchiving } = useArchiveProject();
@@ -99,7 +103,9 @@ export const ProjectForm = ({ isOpen, onClose, project }: ProjectFormProps) => {
     defaultValues: {
       name: project?.name ?? "",
       gcNameCustom: project?.gcNameCustom ?? "",
-      gcContactEmail: project?.gcContactEmail ?? "",
+      // A linked project's reports go to the GC's account, so any stored
+      // manual email is moot and not shown.
+      gcContactEmail: isGcLinked ? "" : (project?.gcContactEmail ?? ""),
       status: project?.status ?? "active",
     },
   });
@@ -109,10 +115,14 @@ export const ProjectForm = ({ isOpen, onClose, project }: ProjectFormProps) => {
       if (project) {
         await updateProject({
           id: project.id,
+          // Fields the GC owns are left out of the patch entirely, so a queued
+          // offline edit never replays a value the server would reject.
           patch: {
-            name: values.name,
-            gcNameCustom: values.gcNameCustom,
-            gcContactEmail: values.gcContactEmail || null,
+            ...(!isJobsiteManaged && { name: values.name }),
+            ...(!isGcLinked && {
+              gcNameCustom: values.gcNameCustom,
+              gcContactEmail: values.gcContactEmail || null,
+            }),
             status: values.status,
           },
         });
@@ -141,11 +151,21 @@ export const ProjectForm = ({ isOpen, onClose, project }: ProjectFormProps) => {
       title={isEdit ? "Edit project" : "New project"}
     >
       <Form onSubmit={handleSubmit(onSubmit)} noValidate>
-        <FormField id={nameId} label="Project name" error={errors.name?.message}>
+        <FormField
+          id={nameId}
+          label="Project name"
+          error={errors.name?.message}
+          hint={
+            isJobsiteManaged
+              ? `Set by ${project?.gcNameCustom ?? "the general contractor"}'s job site — it can't be renamed here.`
+              : undefined
+          }
+        >
           <TextInput
             id={nameId}
             type="text"
             placeholder="Downtown Highrise"
+            readOnly={isJobsiteManaged}
             hasError={!!errors.name}
             {...register("name")}
           />
@@ -178,11 +198,17 @@ export const ProjectForm = ({ isOpen, onClose, project }: ProjectFormProps) => {
           id={gcContactEmailId}
           label="GC contact email (optional)"
           error={errors.gcContactEmail?.message}
+          hint={
+            isGcLinked
+              ? "Safety-talk reports go to the general contractor's account automatically."
+              : undefined
+          }
         >
           <TextInput
             id={gcContactEmailId}
             type="email"
-            placeholder="gc@example.com"
+            placeholder={isGcLinked ? "" : "gc@example.com"}
+            readOnly={isGcLinked}
             hasError={!!errors.gcContactEmail}
             {...register("gcContactEmail")}
           />

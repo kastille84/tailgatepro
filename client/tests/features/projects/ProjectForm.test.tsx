@@ -216,6 +216,87 @@ describe("ProjectForm", () => {
     expect(screen.queryByText(/unlink the project from the list/i)).toBeNull();
   });
 
+  describe("a project linked to a GC", () => {
+    const joinCodeProject: Project = {
+      ...editProject,
+      gcCompanyId: "gc-1",
+      gcNameCustom: "Big GC",
+      gcContactEmail: "old@gc.com",
+    };
+    const jobsiteProject: Project = { ...joinCodeProject, jobsiteId: "js-1" };
+
+    it("locks the GC email, hides any stored manual one, and explains why", () => {
+      renderForm({ project: joinCodeProject });
+
+      const email = screen.getByLabelText(/gc contact email/i) as HTMLInputElement;
+      expect(email.readOnly).toBe(true);
+      expect(email.value).toBe("");
+      expect(
+        screen.getByText(/reports go to the general contractor's account/i),
+      ).toBeDefined();
+    });
+
+    it("leaves the name editable when there is no jobsite (join-code link)", () => {
+      renderForm({ project: joinCodeProject });
+
+      expect(
+        (screen.getByLabelText(/project name/i) as HTMLInputElement).readOnly,
+      ).toBe(false);
+      expect(screen.queryByText(/can't be renamed here/i)).toBeNull();
+    });
+
+    it("locks the name and explains it when attached to a jobsite", () => {
+      renderForm({ project: jobsiteProject });
+
+      const name = screen.getByLabelText(/project name/i) as HTMLInputElement;
+      expect(name.readOnly).toBe(true);
+      expect(name.value).toBe("Old Name");
+      expect(
+        screen.getByText(/set by big gc's job site — it can't be renamed here/i),
+      ).toBeDefined();
+    });
+
+    it("falls back to generic wording when the GC name is missing", () => {
+      renderForm({ project: { ...jobsiteProject, gcNameCustom: null } });
+
+      expect(
+        screen.getByText(/set by the general contractor's job site/i),
+      ).toBeDefined();
+    });
+
+    it("omits the name and GC fields from the patch for a jobsite project", async () => {
+      renderForm({ project: jobsiteProject });
+
+      fireEvent.change(screen.getByLabelText(/status/i), {
+        target: { value: "completed" },
+      });
+      fireEvent.click(screen.getByRole("button", { name: /save changes/i }));
+
+      await waitFor(() =>
+        expect(mockUpdate).toHaveBeenCalledWith({
+          id: "p1",
+          patch: { status: "completed" },
+        }),
+      );
+    });
+
+    it("still sends the name for a join-code-linked project, but not the GC fields", async () => {
+      renderForm({ project: joinCodeProject });
+
+      fireEvent.change(screen.getByLabelText(/project name/i), {
+        target: { value: "New Name" },
+      });
+      fireEvent.click(screen.getByRole("button", { name: /save changes/i }));
+
+      await waitFor(() =>
+        expect(mockUpdate).toHaveBeenCalledWith({
+          id: "p1",
+          patch: { name: "New Name", status: "active" },
+        }),
+      );
+    });
+  });
+
   it("has no danger zone in create mode", () => {
     renderForm();
     expect(

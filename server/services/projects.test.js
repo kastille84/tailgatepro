@@ -259,6 +259,8 @@ describe("projects service: update", () => {
   let eqOwner;
   let eqId;
   let updateFn;
+  let readSingle;
+  let readSelect;
 
   beforeEach(() => {
     single = vi.fn().mockResolvedValue({
@@ -270,10 +272,152 @@ describe("projects service: update", () => {
     eqId = vi.fn(() => ({ eq: eqOwner }));
     updateFn = vi.fn(() => ({ eq: eqId }));
 
+    // The GC-managed-fields pre-read (select().eq().eq().single()) — an
+    // unlinked project by default, so it never blocks.
+    readSingle = vi.fn().mockResolvedValue({ data: dbRow, error: null });
+    readSelect = vi.fn(() => ({
+      eq: () => ({ eq: () => ({ single: readSingle }) }),
+    }));
+
     fromSpy.mockReset();
     fromSpy.mockImplementation((table) => {
-      if (table === "projects") return { update: updateFn };
+      if (table === "projects") return { update: updateFn, select: readSelect };
       throw new Error(`Unexpected table: ${table}`);
+    });
+  });
+
+  describe("GC-managed fields on a linked project", () => {
+    const jobsiteRow = {
+      ...dbRow,
+      gc_company_id: "gc-1",
+      jobsite_id: "jobsite-1",
+      gc_name_custom: "Turner Construction",
+    };
+    const joinCodeRow = { ...jobsiteRow, jobsite_id: null };
+
+    it("should not read the row when the patch touches none of the managed fields", async () => {
+      await update({
+        id: "project-1",
+        companyId: "company-1",
+        patch: { status: "completed" },
+      });
+
+      expect(readSelect).not.toHaveBeenCalled();
+    });
+
+    it("should reject renaming a project attached to a jobsite", async () => {
+      readSingle.mockResolvedValue({ data: jobsiteRow, error: null });
+
+      await expect(
+        update({
+          id: "project-1",
+          companyId: "company-1",
+          patch: { name: "Something else" },
+        }),
+      ).rejects.toMatchObject({
+        statusCode: 403,
+        message: "This project's name is set by the general contractor's job site",
+      });
+      expect(updateFn).not.toHaveBeenCalled();
+    });
+
+    it("should allow resending the unchanged name, GC name, and an empty email", async () => {
+      readSingle.mockResolvedValue({ data: jobsiteRow, error: null });
+
+      await update({
+        id: "project-1",
+        companyId: "company-1",
+        patch: {
+          name: jobsiteRow.name,
+          gcNameCustom: "Turner Construction",
+          gcContactEmail: null,
+          status: "completed",
+        },
+      });
+
+      expect(updateFn).toHaveBeenCalled();
+    });
+
+    it("should still allow renaming a join-code-linked project that has no jobsite", async () => {
+      readSingle.mockResolvedValue({ data: joinCodeRow, error: null });
+
+      await update({
+        id: "project-1",
+        companyId: "company-1",
+        patch: { name: "Renamed" },
+      });
+
+      expect(updateFn).toHaveBeenCalledWith({ name: "Renamed" });
+    });
+
+    it("should reject changing the GC name on any GC-linked project", async () => {
+      readSingle.mockResolvedValue({ data: joinCodeRow, error: null });
+
+      await expect(
+        update({
+          id: "project-1",
+          companyId: "company-1",
+          patch: { gcNameCustom: "Other GC" },
+        }),
+      ).rejects.toMatchObject({ statusCode: 403 });
+      expect(updateFn).not.toHaveBeenCalled();
+    });
+
+    it("should reject setting a contact email on any GC-linked project", async () => {
+      readSingle.mockResolvedValue({ data: joinCodeRow, error: null });
+
+      await expect(
+        update({
+          id: "project-1",
+          companyId: "company-1",
+          patch: { gcContactEmail: "someone@gc.com" },
+        }),
+      ).rejects.toMatchObject({ statusCode: 403 });
+      expect(updateFn).not.toHaveBeenCalled();
+    });
+
+    it("should leave an unlinked project fully editable", async () => {
+      await update({
+        id: "project-1",
+        companyId: "company-1",
+        patch: {
+          name: "Renamed",
+          gcNameCustom: "New GC",
+          gcContactEmail: "new@gc.com",
+        },
+      });
+
+      expect(updateFn).toHaveBeenCalledWith({
+        name: "Renamed",
+        gc_name_custom: "New GC",
+        gc_contact_email: "new@gc.com",
+      });
+    });
+
+    it("should throw a 404 when the pre-read finds no row for this company", async () => {
+      readSingle.mockResolvedValue({
+        data: null,
+        error: { code: "PGRST116", message: "no rows" },
+      });
+
+      await expect(
+        update({ id: "project-1", companyId: "company-1", patch: { name: "x" } }),
+      ).rejects.toMatchObject({ statusCode: 404, message: "Project not found" });
+      expect(updateFn).not.toHaveBeenCalled();
+    });
+
+    it("should throw a 502 when the pre-read fails for any other reason", async () => {
+      readSingle.mockResolvedValue({
+        data: null,
+        error: { code: "OTHER", message: "unexpected" },
+      });
+
+      await expect(
+        update({ id: "project-1", companyId: "company-1", patch: { name: "x" } }),
+      ).rejects.toMatchObject({
+        statusCode: 502,
+        message: "Could not update the project",
+      });
     });
   });
 

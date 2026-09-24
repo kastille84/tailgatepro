@@ -13,6 +13,7 @@ import {
   type AuthState,
   type SignupProfile,
   type InviteAcceptProfile,
+  type JobsiteInviteAcceptProfile,
 } from "./auth-context";
 
 const supabase: SupabaseClient = createClient(
@@ -83,7 +84,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const signUpWithEmail = async (
     email: string,
     password: string,
-    profile: SignupProfile | InviteAcceptProfile,
+    profile: SignupProfile | InviteAcceptProfile | JobsiteInviteAcceptProfile,
   ) => {
     const { data, error } = await supabase.auth.signUp({
       email,

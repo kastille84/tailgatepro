@@ -2,9 +2,11 @@ import { fetchWithTimeout } from "../utils/fetchWithTimeout";
 import type {
   InviteSubcontractorResult,
   Jobsite,
+  JobsiteInvitePreview,
   JobsitePatch,
   JobsiteSummary,
 } from "../interfaces/jobsite";
+import type { Project } from "../interfaces/project";
 
 const GENERIC_ERROR = "Something went wrong. Please try again.";
 
@@ -89,4 +91,34 @@ export const removeSubcontractor = async (
     },
   );
   await unwrap<unknown>(res);
+};
+
+/**
+ * GET /api/jobsites/invite/:token — public, unauthenticated preview shown
+ * before the invitee has an account. Throws with the server's message on an
+ * invalid/expired/unknown token.
+ */
+export const getJobsiteInvitePreview = async (
+  token: string,
+): Promise<JobsiteInvitePreview> => {
+  const res = await fetchWithTimeout(`/api/jobsites/invite/${token}`, {
+    method: "GET",
+  });
+  return unwrap<JobsiteInvitePreview>(res);
+};
+
+/**
+ * POST /api/jobsites/invite/:token/accept — an already-registered
+ * subcontractor admin/safety_manager accepts on behalf of their company. The
+ * server creates the sub's project for the jobsite and returns it.
+ */
+export const acceptJobsiteInvite = async (
+  accessToken: string,
+  token: string,
+): Promise<Project> => {
+  const res = await fetchWithTimeout(`/api/jobsites/invite/${token}/accept`, {
+    method: "POST",
+    headers: { Authorization: `Bearer ${accessToken}` },
+  });
+  return unwrap<Project>(res);
 };

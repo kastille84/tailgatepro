@@ -1,7 +1,9 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import {
+  acceptJobsiteInvite,
   createJobsite,
+  getJobsiteInvitePreview,
   inviteSubcontractor,
   listJobsites,
   removeSubcontractor,
@@ -161,6 +163,56 @@ describe("apiJobsites", () => {
       );
       await expect(removeSubcontractor("t", "j1", "s1")).rejects.toThrow(
         "Not found",
+      );
+    });
+  });
+
+  describe("getJobsiteInvitePreview", () => {
+    it("GETs the public preview without an Authorization header", async () => {
+      const fetchMock = vi
+        .fn()
+        .mockResolvedValue(okResponse({ email: "a@b.com" }));
+      vi.stubGlobal("fetch", fetchMock);
+
+      await expect(getJobsiteInvitePreview("tok")).resolves.toEqual({
+        email: "a@b.com",
+      });
+      expect(fetchMock).toHaveBeenCalledWith(
+        "/api/jobsites/invite/tok",
+        expect.objectContaining({ method: "GET" }),
+      );
+      expect(fetchMock.mock.calls[0][1].headers).toBeUndefined();
+    });
+
+    it("rejects with the server message for an invalid token", async () => {
+      vi.stubGlobal(
+        "fetch",
+        vi.fn().mockResolvedValue({
+          ok: false,
+          status: 404,
+          json: async () => ({ success: false, error: "invalid or expired" }),
+        }),
+      );
+      await expect(getJobsiteInvitePreview("tok")).rejects.toThrow(
+        "invalid or expired",
+      );
+    });
+  });
+
+  describe("acceptJobsiteInvite", () => {
+    it("POSTs to the accept endpoint with the bearer token and returns the project", async () => {
+      const fetchMock = vi.fn().mockResolvedValue(okResponse({ id: "p1" }));
+      vi.stubGlobal("fetch", fetchMock);
+
+      await expect(acceptJobsiteInvite("token-123", "tok")).resolves.toEqual({
+        id: "p1",
+      });
+      expect(fetchMock).toHaveBeenCalledWith(
+        "/api/jobsites/invite/tok/accept",
+        expect.objectContaining({
+          method: "POST",
+          headers: { Authorization: "Bearer token-123" },
+        }),
       );
     });
   });

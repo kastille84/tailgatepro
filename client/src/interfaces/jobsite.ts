@@ -37,3 +37,11 @@ export interface JobsitePatch {
 export interface InviteSubcontractorResult {
   email: string;
 }
+
+/** GET /api/jobsites/invite/:token's public preview — shown on the accept page
+ *  before the invitee has any session. */
+export interface JobsiteInvitePreview {
+  gcCompanyName: string | null;
+  jobsiteName: string | null;
+  email: string;
+}

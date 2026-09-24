@@ -45,6 +45,21 @@ const renderLogin = () =>
     </ThemeProvider>,
   );
 
+const renderLoginFrom = (from: unknown) =>
+  render(
+    <ThemeProvider theme={theme}>
+      <MemoryRouter
+        initialEntries={[{ pathname: "/login", state: { from } }]}
+      >
+        <Routes>
+          <Route path="/login" element={<Login />} />
+          <Route path="/jobsite-invite/abc" element={<div data-testid="invite-page" />} />
+          <Route path="/dashboard" element={<div data-testid="dashboard-page" />} />
+        </Routes>
+      </MemoryRouter>
+    </ThemeProvider>,
+  );
+
 const fillCredentials = () => {
   fireEvent.change(screen.getByLabelText(/^email$/i), {
     target: { value: "alex@example.com" },
@@ -215,6 +230,74 @@ describe("Login page", () => {
 
     await waitFor(() => {
       expect(toast.error).toHaveBeenCalledWith("Could not log in.");
+    });
+  });
+
+  describe("prefilling the email", () => {
+    const renderWithEmail = (email: unknown) =>
+      render(
+        <ThemeProvider theme={theme}>
+          <MemoryRouter
+            initialEntries={[{ pathname: "/login", state: { email } }]}
+          >
+            <Routes>
+              <Route path="/login" element={<Login />} />
+            </Routes>
+          </MemoryRouter>
+        </ThemeProvider>,
+      );
+
+    it("prefills the email from state.email", () => {
+      renderWithEmail("jane@acme.com");
+      expect((screen.getByLabelText(/^email$/i) as HTMLInputElement).value).toBe(
+        "jane@acme.com",
+      );
+    });
+
+    it("ignores a non-string state.email", () => {
+      renderWithEmail(42);
+      expect((screen.getByLabelText(/^email$/i) as HTMLInputElement).value).toBe("");
+    });
+  });
+
+  describe("returning to the page that sent the user here", () => {
+    it("navigates to state.from after a successful login", async () => {
+      renderLoginFrom("/jobsite-invite/abc");
+
+      fillCredentials();
+      fireEvent.click(screen.getByRole("button", { name: /^sign in$/i }));
+
+      await waitFor(() =>
+        expect(mockNavigate).toHaveBeenCalledWith("/jobsite-invite/abc"),
+      );
+    });
+
+    it("redirects an already-signed-in user to state.from", () => {
+      mockUseAuth.mockReturnValue({
+        user: { id: "user-1" },
+        loading: false,
+        loginWithGoogle,
+        loginWithEmail,
+      });
+
+      renderLoginFrom("/jobsite-invite/abc");
+
+      expect(screen.getByTestId("invite-page")).toBeDefined();
+    });
+
+    it.each([
+      ["an absolute URL", "https://evil.example/x"],
+      ["a protocol-relative URL", "//evil.example/x"],
+      ["a non-string value", 42],
+    ])("ignores %s and falls back to /dashboard", async (_label, from) => {
+      renderLoginFrom(from);
+
+      fillCredentials();
+      fireEvent.click(screen.getByRole("button", { name: /^sign in$/i }));
+
+      await waitFor(() =>
+        expect(mockNavigate).toHaveBeenCalledWith("/dashboard"),
+      );
     });
   });
 });

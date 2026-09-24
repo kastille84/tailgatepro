@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Navigate, useNavigate } from "react-router-dom";
+import { Navigate, useLocation, useNavigate } from "react-router-dom";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -35,10 +35,29 @@ const loginSchema = z.object({
 
 type LoginValues = z.infer<typeof loginSchema>;
 
+/** An address to prefill (e.g. the one an invite was sent to), passed by the
+ *  page that sent the user here via `state.email`. */
+const getPrefillEmail = (state: unknown) => {
+  const email = (state as { email?: unknown } | null)?.email;
+  return typeof email === "string" ? email : "";
+};
+
+/** Where to land after signing in: a page that sent the user here (e.g. an
+ *  invite link) via `state.from`, else the dashboard. Only same-origin paths
+ *  are honored so this can't be turned into an open redirect. */
+const getPostLoginPath = (state: unknown) => {
+  const from = (state as { from?: unknown } | null)?.from;
+  return typeof from === "string" && from.startsWith("/") && !from.startsWith("//")
+    ? from
+    : "/dashboard";
+};
+
 export const Login = () => {
   const { user, loading, loginWithGoogle, loginWithEmail } = useAuth();
   const { createProfile, isCreating } = useCreateProfile();
   const navigate = useNavigate();
+  const { state: locationState } = useLocation();
+  const postLoginPath = getPostLoginPath(locationState);
   const [isConnecting, setIsConnecting] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -49,6 +68,7 @@ export const Login = () => {
   } = useForm<LoginValues>({
     resolver: zodResolver(loginSchema),
     mode: "onTouched",
+    defaultValues: { email: getPrefillEmail(locationState), password: "" },
   });
 
   const handleGoogleLogin = async () => {
@@ -78,7 +98,7 @@ export const Login = () => {
         }
       }
 
-      navigate("/dashboard");
+      navigate(postLoginPath);
     } catch (error) {
       toast.error(error instanceof Error ? error.message : "Could not log in.");
     } finally {
@@ -97,7 +117,7 @@ export const Login = () => {
   }
 
   if (user) {
-    return <Navigate to="/dashboard" replace />;
+    return <Navigate to={postLoginPath} replace />;
   }
 
   const emailId = "login-email";

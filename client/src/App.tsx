@@ -38,6 +38,7 @@ import { Signup } from "./pages/Signup";
 import { ForgotPassword } from "./pages/ForgotPassword";
 import { ResetPassword } from "./pages/ResetPassword";
 import { AcceptInvite } from "./pages/AcceptInvite";
+import { AcceptJobsiteInvite } from "./pages/AcceptJobsiteInvite";
 import { Dashboard } from "./pages/Dashboard";
 import { Projects } from "./pages/Projects";
 import { ContentLibrary } from "./pages/ContentLibrary";
@@ -89,6 +90,10 @@ function App() {
                     <Route
                       path="/invite/:token"
                       element={<AcceptInvite />}
+                    ></Route>
+                    <Route
+                      path="/jobsite-invite/:token"
+                      element={<AcceptJobsiteInvite />}
                     ></Route>
                     <Route element={<RequireAuth />}>
                       <Route

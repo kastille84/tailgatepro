@@ -29,6 +29,15 @@ export interface InviteAcceptProfile {
   inviteToken: string;
 }
 
+/** Carried as `user_metadata` at signup for an unregistered subcontractor
+ *  accepting a GC's jobsite invite (Phase 8d Case B). The invitee names their
+ *  own company; `companyType` is forced to "subcontractor" server-side. */
+export interface JobsiteInviteAcceptProfile {
+  name: string;
+  companyName: string;
+  jobsiteInviteToken: string;
+}
+
 export interface AuthContextType extends AuthState {
   loginWithGoogle: () => Promise<void>;
   /** Returns the session directly (like `signUpWithEmail`) so a first-login
@@ -45,7 +54,7 @@ export interface AuthContextType extends AuthState {
   signUpWithEmail: (
     email: string,
     password: string,
-    profile: SignupProfile | InviteAcceptProfile,
+    profile: SignupProfile | InviteAcceptProfile | JobsiteInviteAcceptProfile,
   ) => Promise<{ session: Session | null }>;
   sendPasswordReset: (email: string) => Promise<void>;
   updatePassword: (newPassword: string) => Promise<void>;

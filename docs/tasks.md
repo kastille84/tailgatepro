@@ -1858,7 +1858,7 @@ just replaces the old invite (new token/expiry).
       `getInviteForEmail`, called only with the token-verified `req.userEmail` (new field, added to
       `requireAuth.js`), never `req.body`/`req.userMetadata`
 - [x] `POST /api/companies/invite` (`requireRole(...MANAGER_ROLES)`) + `GET
-  /api/companies/invite/:token` (public preview, no `requireAuth` — the token is the credential)
+/api/companies/invite/:token` (public preview, no `requireAuth` — the token is the credential)
       in `server/routes/companies.js`; `server/controllers/companyInvites.js`. The token is never
       echoed back in the POST response — only `{email, role}` — it only ever leaves the server via
       the invite email (`server/services/email.js`'s new `sendCompanyInviteEmail`, mirroring
@@ -1927,7 +1927,7 @@ just replaces the old invite (new token/expiry).
       touched file; `context/*` stays coverage-excluded). Still needs the same live-Supabase manual
       confirmation-email click-through as the rest of this phase's Verify step to be fully closed out.
 
-### 8d — GC-owned jobsite + GC invites subcontractor companies · status: sequenced; 8d-a/8d-b/8d-c/8d-d/8d-e code complete, 8d-f onward not started
+### 8d — GC-owned jobsite + GC invites subcontractor companies · status: sequenced; 8d-a…8d-f code complete, 8d-g script written (live run pending), 8d-h not started
 
 Plan: `~/.claude/plans/let-s-work-on-8d-cuddly-crab.md` (design backing doc:
 `~/.claude/plans/let-s-work-on-8d-cuddly-crab-agent-aab737ac2ca15e0ab.md`). Largest piece —
@@ -1984,7 +1984,7 @@ line, Tests bullet, and `Verify (user, needs …)` bullet once implemented, per 
       `jobsite_subcontractors` table (folded roster + invite: `jobsite_id`, nullable
       `sub_company_id`, `invited_email`, `token`, `expires_at`, `accepted_at`,
       `UNIQUE(jobsite_id, invited_email)` + a partial `UNIQUE(jobsite_id, sub_company_id) WHERE
-    sub_company_id IS NOT NULL`) in `Supabase_SQL.sql` (sections 11–12) + `Supabase_Schema.md`
+  sub_company_id IS NOT NULL`) in `Supabase_SQL.sql` (sections 11–12) + `Supabase_Schema.md`
       (new "7. Jobsites" section). Both RLS-enabled, no policies
 - [x] Nullable `projects.jobsite_id UUID REFERENCES jobsites(id) ON DELETE SET NULL` — added via a
       real (not just commented) `ALTER TABLE ... ADD COLUMN IF NOT EXISTS` in `Supabase_SQL.sql`
@@ -2049,12 +2049,12 @@ line, Tests bullet, and `Verify (user, needs …)` bullet once implemented, per 
       longer required on the route when `jobsiteId` is present. `projects.jobsite_id` now flows through
       `PROJECT_COLUMNS`/`toProject` (`jobsiteId`)
 - [x] Added beyond the original bullets (confirmed with the user): `DELETE
-      /api/jobsites/:id/subcontractors/:subId` (GC-side removal / cancel a pending invite; detaches the
-      sub's projects *before* deleting the roster row so a partial failure never leaves GC access with
+    /api/jobsites/:id/subcontractors/:subId` (GC-side removal / cancel a pending invite; detaches the
+      sub's projects _before_ deleting the roster row so a partial failure never leaves GC access with
       no membership behind it), and `GET /api/jobsites` now embeds each jobsite's roster
       (`subcontractors: [{ id, email, status: "pending"|"accepted", companyName }]`, never the token)
 - [x] Tests: server suite 549 passing (up from 492) — new/extended specs for `jobsites` service +
-      controller, `projects` service (admission gate), `users` service + controller, 
+      controller, `projects` service (admission gate), `users` service + controller,
       `requireProfileMetadata`, and `email`
 - [x] Verify (partial): booted the server and confirmed the authed routes return `401` unauthenticated
       (not the SPA fallback), a malformed preview token returns a validation error, and a well-formed
@@ -2093,20 +2093,49 @@ line, Tests bullet, and `Verify (user, needs …)` bullet once implemented, per 
       view is read-only; confirm a subcontractor still sees the unchanged Projects page; go offline
       and confirm create/invite/remove are disabled with the offline note
 
-#### 8d-f — Client: sub-side accept + project picker/cache passthrough · status: not started
+#### 8d-f — Client: sub-side accept + project picker/cache passthrough · status: code complete
 
-- [ ] `pages/AcceptJobsiteInvite/` (public route, mirrors `pages/AcceptInvite/`)
-- [ ] `jobsite_id` passthrough on `Project`/`ProjectPicker`/the outbox's optimistic-cache helpers —
+- [x] `pages/AcceptJobsiteInvite/` at public route `/jobsite-invite/:token` (mirrors `pages/AcceptInvite/`;
+      fixes the blank page the invite email link used to land on). Signed out: leads with "Sign in to accept"
+      (existing accounts need no details — everything derives from the profile once signed in; `Login`
+      honors a same-origin `state.from` and prefills `state.email`), with the new-company signup form
+      (company name, name, password → `jobsiteInviteToken` in `user_metadata`, Case B) behind a "Create a
+      company account" button. The page can't tell whether the invited email already has an account without
+      disclosing that publicly, so it offers both. Signed in: one-click accept (Case A),
+      or an explanation for a wrong-email / GC / foreman account. New: `useJobsiteInvitePreview`,
+      `useAcceptJobsiteInvite`, `getJobsiteInvitePreview`/`acceptJobsiteInvite` in `apiJobsites.ts`,
+      `JobsiteInviteAcceptProfile` auth type. Tests added; client suite 137 files passing
+- [x] GC-managed fields locked on a linked project (found in review: a sub could rename/edit the jobsite project it
+      accepted). `projects.update` now pre-reads the row when the patch touches `name`/`gcNameCustom`/`gcContactEmail`
+      and 403s a changed name on a jobsite-attached project, a changed GC name on any GC-linked project, and a
+      non-empty contact email on any GC-linked project (unchanged values pass through; unlinked projects
+      unaffected). `ProjectForm` shows the name (jobsite projects) and GC name/email (GC-linked) read-only with
+      hints, hides any stored manual email, and omits locked fields from the edit patch so offline replays never
+      send a rejected value. `Project` gains optional `jobsiteId`. Server suite 558 passing (with dummy Supabase
+      env vars), client 137 files passing. **Follow-up, not fixed:** a sub can still click "Unlink GC" on a
+      jobsite-attached project — `unlinkGc` nulls only `gc_company_id`, leaving `jobsite_id` and the accepted
+      roster row; decide in 8d-h whether a sub may unlink a GC-invited site at all
+- [x] Verify (user): (a) fresh email, signed out → open the link → "Create a company account" → sign up → new subcontractor company with
+      the jobsite as a project; (b) existing sub admin, signed out → "Sign in to accept" (email prefilled) → lands back on the
+      invite → Accept → project at `/projects`, GC roster shows Accepted; (c) wrong account / GC account /
+      foreman → explanatory message, no accept button; reusing the link after accept → invalid-link state
+- [x] `jobsite_id` passthrough on `Project`/`ProjectPicker`/the outbox's optimistic-cache helpers —
       smaller than it sounds: the hybrid data model keeps the outbox itself untouched, this is one
-      new nullable field, not a rework
+      new nullable field, not a rework. Audit found the field already flows end to end (server `toProject`,
+      whole-object spreads in `optimisticProjects.ts`, whole-object Dexie `projectsCache`, `ProjectPicker`
+      passes the `Project` through); only change was `jobsiteId: null` on `useCreateProject`'s optimistic
+      project, plus regression tests for the round-trip
 
-#### 8d-g — Migration/backfill of Phase 6 join-code links · status: not started
+#### 8d-g — Migration/backfill of Phase 6 join-code links · status: script + planner tests done; live dry-run/apply pending
 
-- [ ] One-shot idempotent `scripts/backfill-jobsites.js`, grouping existing linked projects by the
-      same `normalizeJobsiteName` key the dashboard already uses, so `GET /api/gc/overview` is
-      byte-identical before/after. Run after 8d-c/d/e/f, once the new model is proven against new
-      data. `gc_company_id` (the column that grants access) is untouched by the migration, so no
-      existing link can be stranded
+- [x] Code: pure planner `scripts/lib/backfillPlan.js` (13 Vitest cases) + I/O shell `scripts/backfill-jobsites.js`
+      (dry-run by default, `--apply` to write; reuses an existing same-name GC jobsite; member `invited_email` =
+      sub admin's email, else a `backfill+<companyId>@backfill.invalid` placeholder; writes jobsites → members →
+      projects so a partial failure re-plans cleanly)
+- [ ] Verify (user, needs live Supabase; run once 8d-c/d/e/f are proven against new data): diff
+      `GET /api/gc/overview` for a GC before/after `node scripts/backfill-jobsites.js --apply` (after a
+      dry run) — must be byte-identical; re-run reports 0 changes. `gc_company_id` (the column that
+      grants access) is untouched, so no existing link can be stranded
 
 #### 8d-h — Retire fuzzy grouping, drop `project_subcontractors` · status: not started
 

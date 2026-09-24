@@ -390,11 +390,16 @@ which also revokes the GC's dashboard access to that project's *history* (copies
 GC losing its own compliance history on removal is a real product question, just not one 8d
 resolves differently than Phase 6 already did.
 
-**Jobsite rename vs. a sub's project name.** The jobsite name is the GC's; a sub's `projects.name`
-is seeded from it once at accept (or at join-code link) and then drifts independently — a GC rename
-does not retroactively rewrite a sub's `projects.name`, which feeds `buildPdfFilename` for already-
-generated and future PDFs alike. Two names existing is a minor UX wrinkle worth a "matches the site
-you're on?" hint later, not solved here.
+**Jobsite rename vs. a sub's project name.** *(Revised after 8d-e/8d-f review.)* The jobsite name is the
+GC's, and a project attached to it (`jobsite_id` and `gc_company_id` both set) takes that name at accept (or
+join-code link). The sub owns the row but **cannot rename it**: `projects.update` rejects a changed `name` on an
+attached project (403) and `ProjectForm` shows it read-only. Reason: until 8d-h the GC dashboard still groups by
+normalized project name, so a rename would silently drop the sub out of the GC's job site, and the name feeds
+`buildPdfFilename`. The same guard covers a GC-linked project's GC name (the GC's registered name) and manual
+`gc_contact_email` (moot — PDF delivery resolves the GC admin's email first, Phase 8b, so the form shows it locked
+and empty rather than prefilled, never disclosing the admin's address). A GC rename still does not rewrite an
+attached project's `projects.name` retroactively — a known drift to resolve when 8d-h moves the dashboard to real
+`jobsites` rows. Unlinking (which nulls `gc_company_id`) frees these fields again.
 
 **Multiple project rows per sub per jobsite.** The roster's `UNIQUE (jobsite_id, sub_company_id)`
 enforces one *membership* per sub per jobsite, but nothing stops a sub from holding several

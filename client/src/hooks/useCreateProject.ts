@@ -64,6 +64,8 @@ export const useCreateProject = () => {
         name: payload.name,
         // Only `linkProjectToGc` can set this, so a new project is never linked.
         gcCompanyId: null,
+        // Jobsite attachment only happens via a GC invite, never on create.
+        jobsiteId: null,
         gcNameCustom: payload.gcNameCustom ?? null,
         gcContactEmail: payload.gcContactEmail ?? null,
         status: "active",

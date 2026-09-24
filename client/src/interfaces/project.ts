@@ -9,6 +9,11 @@ export interface Project {
   name: string;
   /** The GC as a registered company, once one is linked. */
   gcCompanyId: string | null;
+  /** The GC-owned jobsite this project is the sub's participation in (Phase 8d),
+   *  or `null`/absent for a sub-created project. Optional because rows cached
+   *  before it existed lack it. While set (with `gcCompanyId`), the GC owns the
+   *  project's name. */
+  jobsiteId?: string | null;
   /** Free-text GC name, used before a GC company is linked (the invite/join flow). */
   gcNameCustom: string | null;
   /** Manual GC contact email for Phase 5 PDF delivery — a stopgap until the
