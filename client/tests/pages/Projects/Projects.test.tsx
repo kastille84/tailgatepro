@@ -77,6 +77,10 @@ vi.mock("../../../src/features/projects", () => ({
     ) : null,
 }));
 
+vi.mock("../../../src/features/jobsites", () => ({
+  JobsiteManager: () => <div data-testid="jobsite-manager" />,
+}));
+
 const renderPage = () =>
   render(
     <ThemeProvider theme={theme}>
@@ -94,6 +98,22 @@ describe("Projects page", () => {
       isLoading: false,
       isError: false,
     });
+  });
+
+  it("shows a GC the job-site manager instead of the project list and controls", () => {
+    mockUseCurrentUser.mockReturnValue({ isSubcontractor: false, isGc: true });
+    renderPage();
+
+    expect(screen.getByTestId("jobsite-manager")).toBeDefined();
+    expect(screen.queryByTestId("project-list")).toBeNull();
+    expect(
+      screen.queryByRole("button", { name: /new project/i }),
+    ).toBeNull();
+  });
+
+  it("does not show the job-site manager to a subcontractor", () => {
+    renderPage();
+    expect(screen.queryByTestId("jobsite-manager")).toBeNull();
   });
 
   it("shows a loading status while auth resolves", () => {

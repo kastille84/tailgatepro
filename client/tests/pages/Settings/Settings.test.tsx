@@ -51,6 +51,7 @@ vi.mock("../../../src/features/company-settings", () => ({
       {String(isError)}
     </div>
   ),
+  InviteTeammateForm: () => <div data-testid="invite-teammate-form" />,
 }));
 
 const renderPage = () =>
@@ -178,6 +179,25 @@ describe("Settings page", () => {
 
     expect(screen.queryByText(/subcontractor join code/i)).toBeNull();
     expect(screen.queryByTestId("join-code-card")).toBeNull();
+  });
+
+  it.each(["admin", "safety_manager"])(
+    "shows the invite-a-teammate section for a %s",
+    (role) => {
+      mockUseCurrentUser.mockReturnValue({ hasBrandingAccess: false, role });
+      renderPage();
+
+      expect(screen.getByText(/invite a teammate/i)).toBeDefined();
+      expect(screen.getByTestId("invite-teammate-form")).toBeDefined();
+    },
+  );
+
+  it("hides the invite-a-teammate section for a foreman", () => {
+    mockUseCurrentUser.mockReturnValue({ hasBrandingAccess: false, role: "foreman" });
+    renderPage();
+
+    expect(screen.queryByText(/invite a teammate/i)).toBeNull();
+    expect(screen.queryByTestId("invite-teammate-form")).toBeNull();
   });
 
   it("passes the current logo URL through to LogoUpload", () => {

@@ -1,0 +1,180 @@
+<!--
+  Supabase Auth email template: "Confirm signup". Paste the <!doctype html>
+  document below into Supabase Dashboard -> Authentication -> Email Templates
+  -> Confirm signup, for BOTH the dev and prod projects (server/utility/
+  envUtils.js's SUPABASE_URL / SUPABASE_URL_PROD) -- each is configured
+  independently.
+
+  This is sent by Supabase's own mailer, not server/services/email.js's
+  Mailgun integration -- Supabase generates and validates the confirmation
+  token itself, so this can't be routed through our own send code. It uses
+  Supabase's Go-template variables (a dot-prefixed {{ .Name }} syntax), not
+  Mailgun's {{name}} handlebars -- don't confuse this file with
+  docs/mailgun-templates/*.html.
+
+  Variables available (see Supabase's docs for the full list):
+    {{ .ConfirmationURL }} - the ready-to-use confirm link (already carries
+                             the redirect Supabase's Site URL / this
+                             template's redirect config points at -- see
+                             docs/auth.md, "should redirect to /login")
+    {{ .Email }}           - the address being confirmed
+-->
+<!doctype html>
+<html lang="en" xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="color-scheme" content="light" />
+    <meta name="supported-color-schemes" content="light" />
+    <title>Confirm your email</title>
+  </head>
+  <body
+    style="
+      margin: 0;
+      padding: 0;
+      background-color: #f4f5f7;
+      -webkit-text-size-adjust: 100%;
+      -ms-text-size-adjust: 100%;
+    "
+  >
+    <div style="display: none; max-height: 0; overflow: hidden; mso-hide: all">
+      Confirm your email to finish setting up your TailgatePro account.
+    </div>
+
+    <table
+      role="presentation"
+      width="100%"
+      cellpadding="0"
+      cellspacing="0"
+      border="0"
+      style="background-color: #f4f5f7"
+    >
+      <tr>
+        <td align="center" style="padding: 32px 16px">
+          <table
+            role="presentation"
+            width="600"
+            cellpadding="0"
+            cellspacing="0"
+            border="0"
+            style="
+              width: 100%;
+              max-width: 600px;
+              background-color: #ffffff;
+              border-radius: 8px;
+              overflow: hidden;
+            "
+          >
+            <tr>
+              <td style="background-color: #1a2a3a; padding: 24px 32px">
+                <span
+                  style="
+                    font-family: Arial, Helvetica, sans-serif;
+                    font-size: 20px;
+                    font-weight: bold;
+                    color: #ffffff;
+                  "
+                  >Tailgate<span style="color: #ff5f15">Pro</span></span
+                >
+              </td>
+            </tr>
+
+            <tr>
+              <td
+                style="
+                  padding: 32px;
+                  font-family: Arial, Helvetica, sans-serif;
+                  color: #1a2a3a;
+                "
+              >
+                <h1
+                  style="
+                    margin: 0 0 16px;
+                    font-size: 20px;
+                    line-height: 28px;
+                    color: #1a2a3a;
+                  "
+                >
+                  Confirm your email
+                </h1>
+                <p
+                  style="
+                    margin: 0 0 24px;
+                    font-size: 15px;
+                    line-height: 22px;
+                    color: #1a2a3a;
+                  "
+                >
+                  Confirm <strong>{{ .Email }}</strong> to finish setting up
+                  your TailgatePro account.
+                </p>
+
+                <table
+                  role="presentation"
+                  cellpadding="0"
+                  cellspacing="0"
+                  border="0"
+                >
+                  <tr>
+                    <td style="border-radius: 6px; background-color: #ff5f15">
+                      <a
+                        href="{{ .ConfirmationURL }}"
+                        target="_blank"
+                        style="
+                          display: inline-block;
+                          padding: 14px 28px;
+                          font-family: Arial, Helvetica, sans-serif;
+                          font-size: 15px;
+                          font-weight: bold;
+                          color: #ffffff;
+                          text-decoration: none;
+                          border-radius: 6px;
+                        "
+                        >Confirm email</a
+                      >
+                    </td>
+                  </tr>
+                </table>
+
+                <p
+                  style="
+                    margin: 24px 0 0;
+                    font-size: 13px;
+                    line-height: 20px;
+                    color: #738699;
+                  "
+                >
+                  If the button doesn't work, copy and paste this link into your
+                  browser:<br />
+                  <a
+                    href="{{ .ConfirmationURL }}"
+                    style="color: #ff5f15; word-break: break-all"
+                    >{{ .ConfirmationURL }}</a
+                  >
+                </p>
+              </td>
+            </tr>
+
+            <tr>
+              <td style="padding: 20px 32px; background-color: #f4f5f7">
+                <p
+                  style="
+                    margin: 0;
+                    font-size: 12px;
+                    line-height: 18px;
+                    color: #9fa5ac;
+                    font-family: Arial, Helvetica, sans-serif;
+                  "
+                >
+                  If you didn't create a TailgatePro account, you can safely
+                  ignore this email.
+                </p>
+              </td>
+            </tr>
+          </table>
+        </td>
+      </tr>
+    </table>
+  </body>
+</html>

@@ -73,4 +73,18 @@ describe("ProjectPicker", () => {
 
     expect(onSelect).toHaveBeenCalledWith(projects[0]);
   });
+
+  it("passes jobsiteId through to onSelect untouched", () => {
+    const onSelect = vi.fn();
+    const linked = { ...projects[0], jobsiteId: "jobsite-1" };
+    renderPicker({ projects: [linked], onSelect });
+
+    fireEvent.click(
+      screen.getByRole("button", { name: /select downtown highrise/i }),
+    );
+
+    expect(onSelect).toHaveBeenCalledWith(
+      expect.objectContaining({ jobsiteId: "jobsite-1" }),
+    );
+  });
 });

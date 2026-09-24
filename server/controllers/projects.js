@@ -18,13 +18,14 @@ exports.listProjects = async (req, res, next) => {
 exports.createProject = async (req, res, next) => {
   try {
     // The request body has already been validated by the validate middleware.
-    const { id, name, gcNameCustom, gcContactEmail } = req.body;
+    const { id, name, gcNameCustom, gcContactEmail, jobsiteId } = req.body;
     const data = await projectsService.create({
       id,
       ownerCompanyId: req.user.companyId,
       name,
       gcNameCustom,
       gcContactEmail,
+      jobsiteId,
     });
     return res.status(201).json({ success: true, data });
   } catch (error) {
@@ -38,6 +39,7 @@ exports.updateProject = async (req, res, next) => {
     const data = await projectsService.update({
       id: req.params.id,
       companyId: req.user.companyId,
+      role: req.user.role,
       patch: { name, status, gcNameCustom, gcContactEmail, archived },
     });
     return res.status(200).json({ success: true, data });
@@ -73,13 +75,12 @@ exports.unlinkGc = async (req, res, next) => {
   }
 };
 
-// TODO(roles): once `admin` / `safety_manager` are real, restrict delete (and
-// archive/restore) to those roles rather than any member of the owning company.
 exports.deleteProject = async (req, res, next) => {
   try {
     const data = await projectsService.remove({
       id: req.params.id,
       companyId: req.user.companyId,
+      role: req.user.role,
     });
     return res.status(200).json({ success: true, data });
   } catch (error) {

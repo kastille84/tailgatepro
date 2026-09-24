@@ -7,6 +7,8 @@ const { validate } = require("../middlewares/validate");
 const {
   requireSubcontractorCompany,
 } = require("../middlewares/requireSubcontractorCompany");
+const { requireRole } = require("../middlewares/requireRole");
+const { MANAGER_ROLES } = require("../constants/roles");
 const {
   listProjects,
   createProject,
@@ -44,7 +46,16 @@ router.post(
       .withMessage("Project name is required")
       .isLength({ max: 120 })
       .withMessage("Project name is too long"),
+    // Phase 8d: attaches the new project to a GC-owned jobsite the caller's
+    // company has been admitted to (accepted roster row — checked in the
+    // service). When present, the GC's name comes from the jobsite, so
+    // gcNameCustom is no longer required.
+    body("jobsiteId")
+      .optional()
+      .isUUID()
+      .withMessage("A valid jobsite id is required"),
     body("gcNameCustom")
+      .if(body("jobsiteId").not().exists())
       .trim()
       .notEmpty()
       .withMessage("Enter the general contractor for this project")
@@ -62,7 +73,10 @@ router.post(
 );
 
 // PATCH /api/projects/:id — patch name / status / GC fields on a project the
-// caller's company owns. `archived: true|false` archives / restores it.
+// caller's company owns. `archived: true|false` archives / restores it, and is
+// the only field on this route gated by role (any company member can edit the
+// others); enforced in the service layer since it can't be wired as router
+// middleware on a route that mixes gated and ungated fields.
 router.patch(
   "/:id",
   requireAuth,
@@ -139,10 +153,14 @@ router.delete(
 
 // DELETE /api/projects/:id — hard-delete a project the caller's company owns.
 // Rejected with 409 once the project has logged safety talks (archive instead).
+// Manager-only (admin/safety_manager) — the service layer re-checks this too,
+// since it's also the authority for PATCH's `archived` alias on a route that
+// can't be role-gated wholesale (see server/services/projects.js).
 router.delete(
   "/:id",
   requireAuth,
   loadUserContext,
+  requireRole(...MANAGER_ROLES),
   [param("id").isUUID().withMessage("A valid project id is required")],
   validate,
   deleteProject,

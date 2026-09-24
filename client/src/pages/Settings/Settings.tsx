@@ -6,7 +6,11 @@ import { useCurrentUser } from "../../hooks/useCurrentUser";
 import { useJoinCode } from "../../hooks/useJoinCode";
 import { useUploadCompanyLogo } from "../../hooks/useUploadCompanyLogo";
 import { Footer } from "../../ui_comps/footer";
-import { JoinCodeCard, LogoUpload } from "../../features/company-settings";
+import {
+  InviteTeammateForm,
+  JoinCodeCard,
+  LogoUpload,
+} from "../../features/company-settings";
 import {
   StyledSection as StyledLogoSection,
   StyledSectionTitle,
@@ -33,7 +37,8 @@ import {
  *  though it sits behind `RequireAuth`, matching `Projects.tsx`. */
 export const Settings = () => {
   const { user, loading } = useAuth();
-  const { hasBrandingAccess, isGc } = useCurrentUser();
+  const { role, hasBrandingAccess, isGc } = useCurrentUser();
+  const canInvite = role === "admin" || role === "safety_manager";
   const { joinCode, isLoading: isJoinCodeLoading, isError: isJoinCodeError } =
     useJoinCode();
   const { logoUrl } = useCompanyLogo();
@@ -106,6 +111,13 @@ export const Settings = () => {
                 isLoading={isJoinCodeLoading}
                 isError={isJoinCodeError}
               />
+            </StyledLogoSection>
+          )}
+
+          {canInvite && (
+            <StyledLogoSection>
+              <StyledSectionTitle>Invite a teammate</StyledSectionTitle>
+              <InviteTeammateForm />
             </StyledLogoSection>
           )}
         </StyledContainer>

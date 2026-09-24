@@ -3,7 +3,6 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 
-import { useAuth } from "../../context/auth";
 import { Button } from "../../ui_comps/button";
 import { ConfirmDialog } from "../../ui_comps/confirm-dialog";
 import { Form, FormField, TextInput } from "../../ui_comps/form";
@@ -13,8 +12,6 @@ import { useCreateProject } from "../../hooks/useCreateProject";
 import { useUpdateProject } from "../../hooks/useUpdateProject";
 import { useArchiveProject } from "../../hooks/useArchiveProject";
 import { useDeleteProject } from "../../hooks/useDeleteProject";
-import { useCurrentCompany } from "../../hooks/useCurrentCompany";
-import { useCurrentUser } from "../../hooks/useCurrentUser";
 import type { Project } from "../../interfaces/project";
 import {
   StyledActions,
@@ -25,9 +22,8 @@ import {
 // Mirrors the express-validator chains in server/routes/projects.js. The GC
 // name is free text; linking a registered GC company is a separate action
 // ("Link to GC" on the project list → GcLinkModal), which overwrites the name
-// with the GC's registered one. When the creator is themselves a GC, they
-// *are* the GC these fields describe, so the form derives and locks them
-// from the caller's own company/session instead (see isGc below).
+// with the GC's registered one. Only subcontractors reach this form — a GC
+// manages jobsites through features/jobsites instead.
 const projectSchema = z.object({
   name: z
     .string()
@@ -64,17 +60,14 @@ export const ProjectForm = ({ isOpen, onClose, project }: ProjectFormProps) => {
   const isEdit = Boolean(project);
   const isArchived = Boolean(project?.archivedAt);
   const isGcLinked = Boolean(project?.gcCompanyId);
+  // The name of a project attached to a GC's job site is the GC's (server-
+  // enforced too — projects.update): renaming would also drop it out of the
+  // GC's name-grouped dashboard and change its PDF filenames.
+  const isJobsiteManaged = isGcLinked && Boolean(project?.jobsiteId);
   const { createProject, isCreating } = useCreateProject();
   const { updateProject, isUpdating } = useUpdateProject();
   const { archiveProject, isArchiving } = useArchiveProject();
   const { deleteProject, isDeleting } = useDeleteProject();
-
-  // A GC creating/editing their own project *is* the GC these fields
-  // describe, so derive and lock them instead of asking for a retyped copy.
-  const { isGc } = useCurrentUser();
-  const { user } = useAuth();
-  const { company, isLoading: isCompanyLoading } = useCurrentCompany();
-  const isGcFieldLocked = isGc || isGcLinked;
 
   const [isConfirmingDelete, setIsConfirmingDelete] = useState(false);
 
@@ -107,15 +100,12 @@ export const ProjectForm = ({ isOpen, onClose, project }: ProjectFormProps) => {
   } = useForm<ProjectValues>({
     resolver: zodResolver(projectSchema),
     mode: "onTouched",
-    // `values` (not `defaultValues`) so the GC-derived fields sync once the
-    // company/session data finishes loading, instead of being frozen blank
-    // at whatever they were on first mount.
-    values: {
+    defaultValues: {
       name: project?.name ?? "",
-      gcNameCustom: isGc ? (company?.name ?? "") : (project?.gcNameCustom ?? ""),
-      gcContactEmail: isGc
-        ? (user?.email ?? "")
-        : (project?.gcContactEmail ?? ""),
+      gcNameCustom: project?.gcNameCustom ?? "",
+      // A linked project's reports go to the GC's account, so any stored
+      // manual email is moot and not shown.
+      gcContactEmail: isGcLinked ? "" : (project?.gcContactEmail ?? ""),
       status: project?.status ?? "active",
     },
   });
@@ -125,10 +115,14 @@ export const ProjectForm = ({ isOpen, onClose, project }: ProjectFormProps) => {
       if (project) {
         await updateProject({
           id: project.id,
+          // Fields the GC owns are left out of the patch entirely, so a queued
+          // offline edit never replays a value the server would reject.
           patch: {
-            name: values.name,
-            gcNameCustom: values.gcNameCustom,
-            gcContactEmail: values.gcContactEmail || null,
+            ...(!isJobsiteManaged && { name: values.name }),
+            ...(!isGcLinked && {
+              gcNameCustom: values.gcNameCustom,
+              gcContactEmail: values.gcContactEmail || null,
+            }),
             status: values.status,
           },
         });
@@ -157,11 +151,21 @@ export const ProjectForm = ({ isOpen, onClose, project }: ProjectFormProps) => {
       title={isEdit ? "Edit project" : "New project"}
     >
       <Form onSubmit={handleSubmit(onSubmit)} noValidate>
-        <FormField id={nameId} label="Project name" error={errors.name?.message}>
+        <FormField
+          id={nameId}
+          label="Project name"
+          error={errors.name?.message}
+          hint={
+            isJobsiteManaged
+              ? `Set by ${project?.gcNameCustom ?? "the general contractor"}'s job site — it can't be renamed here.`
+              : undefined
+          }
+        >
           <TextInput
             id={nameId}
             type="text"
             placeholder="Downtown Highrise"
+            readOnly={isJobsiteManaged}
             hasError={!!errors.name}
             {...register("name")}
           />
@@ -172,23 +176,19 @@ export const ProjectForm = ({ isOpen, onClose, project }: ProjectFormProps) => {
           label="General contractor"
           error={errors.gcNameCustom?.message}
           hint={
-            isGc
-              ? "You're the general contractor on this project — set from your company profile."
-              : isGcLinked
-                ? "Linked to a general contractor — this is their registered name. Unlink the project from the list to change it."
-                : undefined
+            isGcLinked
+              ? "Linked to a general contractor — this is their registered name. Unlink the project from the list to change it."
+              : undefined
           }
         >
           <TextInput
             id={gcId}
             type="text"
-            placeholder={
-              isGc && isCompanyLoading ? "Loading…" : "Acme Construction"
-            }
-            // Once linked (or when the creator is themselves the GC), this
-            // holds the GC's registered name; editing it would drift from
-            // the source of truth. Unlink from the list to change it.
-            readOnly={isGcFieldLocked}
+            placeholder="Acme Construction"
+            // Once linked, this holds the GC's registered name; editing it
+            // would drift from the source of truth. Unlink from the list to
+            // change it.
+            readOnly={isGcLinked}
             hasError={!!errors.gcNameCustom}
             {...register("gcNameCustom")}
           />
@@ -196,17 +196,19 @@ export const ProjectForm = ({ isOpen, onClose, project }: ProjectFormProps) => {
 
         <FormField
           id={gcContactEmailId}
-          label={isGc ? "GC contact email" : "GC contact email (optional)"}
+          label="GC contact email (optional)"
           error={errors.gcContactEmail?.message}
-          hint={isGc ? "Set from your account email." : undefined}
+          hint={
+            isGcLinked
+              ? "Safety-talk reports go to the general contractor's account automatically."
+              : undefined
+          }
         >
           <TextInput
             id={gcContactEmailId}
             type="email"
-            placeholder={
-              isGc && isCompanyLoading ? "Loading…" : "gc@example.com"
-            }
-            readOnly={isGc}
+            placeholder={isGcLinked ? "" : "gc@example.com"}
+            readOnly={isGcLinked}
             hasError={!!errors.gcContactEmail}
             {...register("gcContactEmail")}
           />
@@ -235,7 +237,6 @@ export const ProjectForm = ({ isOpen, onClose, project }: ProjectFormProps) => {
             variant="primary"
             size="md"
             loading={isCreating || isUpdating}
-            disabled={isGc && isCompanyLoading}
           >
             {isEdit ? "Save changes" : "Create project"}
           </Button>

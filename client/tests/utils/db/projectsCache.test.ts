@@ -49,6 +49,13 @@ describe("cacheProjects", () => {
     );
   });
 
+  it("round-trips jobsiteId", async () => {
+    await cacheProjects([project({ jobsiteId: "jobsite-1" })]);
+    expect((await tailgateDb.projectsCache.get("project-1"))?.jobsiteId).toBe(
+      "jobsite-1",
+    );
+  });
+
   it("is a no-op for an empty list", async () => {
     await cacheProjects([project()]);
     await cacheProjects([]);

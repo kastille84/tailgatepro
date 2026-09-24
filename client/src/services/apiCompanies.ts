@@ -1,5 +1,10 @@
 import { fetchWithTimeout } from "../utils/fetchWithTimeout";
 import type { Company } from "../interfaces/company";
+import type {
+  InvitePreview,
+  InviteTeammateInput,
+  InviteTeammateResult,
+} from "../interfaces/companyInvite";
 
 const GENERIC_ERROR = "Something went wrong. Please try again.";
 
@@ -96,4 +101,50 @@ export const uploadCompanyLogo = async (
   }
 
   return body.data as Company;
+};
+
+/**
+ * GET /api/companies/invite/:token — public, unauthenticated preview shown
+ * before the invitee has any account (Phase 8c). Throws with the server's
+ * message on an invalid/expired/unknown token.
+ */
+export const getInvitePreview = async (token: string): Promise<InvitePreview> => {
+  const res = await fetchWithTimeout(`/api/companies/invite/${token}`, {
+    method: "GET",
+  });
+
+  const body = await res.json().catch(() => null);
+
+  if (!res.ok || !body?.success) {
+    throw new Error(body?.error ?? GENERIC_ERROR);
+  }
+
+  return body.data as InvitePreview;
+};
+
+/**
+ * POST /api/companies/invite — admin/safety_manager only (server-enforced).
+ * Sends an invite email to the given address and returns only `{email,
+ * role}` — the invite token is never echoed back to the browser.
+ */
+export const inviteTeammate = async (
+  accessToken: string,
+  input: InviteTeammateInput,
+): Promise<InviteTeammateResult> => {
+  const res = await fetchWithTimeout("/api/companies/invite", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${accessToken}`,
+    },
+    body: JSON.stringify(input),
+  });
+
+  const body = await res.json().catch(() => null);
+
+  if (!res.ok || !body?.success) {
+    throw new Error(body?.error ?? GENERIC_ERROR);
+  }
+
+  return body.data as InviteTeammateResult;
 };

@@ -2,8 +2,10 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import {
   getCompanyLogoUrl,
+  getInvitePreview,
   getJoinCode,
   getMyCompany,
+  inviteTeammate,
   uploadCompanyLogo,
 } from "../../src/services/apiCompanies";
 import { DEFAULT_FETCH_TIMEOUT_MS } from "../../src/utils/fetchWithTimeout";
@@ -277,6 +279,118 @@ describe("apiCompanies", () => {
       await assertion;
 
       vi.useRealTimers();
+    });
+  });
+
+  describe("getInvitePreview", () => {
+    const preview = {
+      companyName: "Rivera Electric",
+      email: "newhire@example.com",
+      role: "foreman",
+    };
+
+    it("GETs /api/companies/invite/:token with no auth header and returns the preview", async () => {
+      const fetchMock = vi.fn().mockResolvedValue({
+        ok: true,
+        status: 200,
+        json: async () => ({ success: true, data: preview }),
+      });
+      vi.stubGlobal("fetch", fetchMock);
+
+      await expect(getInvitePreview("a".repeat(64))).resolves.toEqual(preview);
+      const [url, options] = fetchMock.mock.calls[0];
+      expect(url).toBe(`/api/companies/invite/${"a".repeat(64)}`);
+      expect(options.method).toBe("GET");
+      expect(options.headers).toBeUndefined();
+    });
+
+    it("rejects with the backend error message on an invalid/expired token", async () => {
+      vi.stubGlobal(
+        "fetch",
+        vi.fn().mockResolvedValue({
+          ok: false,
+          status: 404,
+          json: async () => ({
+            success: false,
+            error: "This invite link is invalid or has expired",
+          }),
+        }),
+      );
+      await expect(getInvitePreview("bad-token")).rejects.toThrow(
+        "This invite link is invalid or has expired",
+      );
+    });
+
+    it("rejects with the generic message when the response has no body", async () => {
+      vi.stubGlobal(
+        "fetch",
+        vi.fn().mockResolvedValue({
+          ok: false,
+          status: 500,
+          json: async () => null,
+        }),
+      );
+      await expect(getInvitePreview("a".repeat(64))).rejects.toThrow(GENERIC);
+    });
+  });
+
+  describe("inviteTeammate", () => {
+    const result = { email: "newhire@example.com", role: "foreman" };
+
+    it("POSTs /api/companies/invite with the bearer token and JSON body, returning { email, role }", async () => {
+      const fetchMock = vi.fn().mockResolvedValue({
+        ok: true,
+        status: 201,
+        json: async () => ({ success: true, data: result }),
+      });
+      vi.stubGlobal("fetch", fetchMock);
+
+      await expect(
+        inviteTeammate("token-123", { email: "newhire@example.com", role: "foreman" }),
+      ).resolves.toEqual(result);
+
+      const [url, options] = fetchMock.mock.calls[0];
+      expect(url).toBe("/api/companies/invite");
+      expect(options.method).toBe("POST");
+      expect(options.headers).toEqual({
+        "Content-Type": "application/json",
+        Authorization: "Bearer token-123",
+      });
+      expect(JSON.parse(options.body)).toEqual({
+        email: "newhire@example.com",
+        role: "foreman",
+      });
+    });
+
+    it("rejects with the backend error message on a 403 (not a manager)", async () => {
+      vi.stubGlobal(
+        "fetch",
+        vi.fn().mockResolvedValue({
+          ok: false,
+          status: 403,
+          json: async () => ({
+            success: false,
+            error: "You don't have permission to do this",
+          }),
+        }),
+      );
+      await expect(
+        inviteTeammate("token-123", { email: "newhire@example.com", role: "admin" }),
+      ).rejects.toThrow("You don't have permission to do this");
+    });
+
+    it("rejects with the generic message when the response has no body", async () => {
+      vi.stubGlobal(
+        "fetch",
+        vi.fn().mockResolvedValue({
+          ok: false,
+          status: 500,
+          json: async () => null,
+        }),
+      );
+      await expect(
+        inviteTeammate("token-123", { email: "newhire@example.com", role: "foreman" }),
+      ).rejects.toThrow(GENERIC);
     });
   });
 });

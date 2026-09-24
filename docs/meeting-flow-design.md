@@ -249,7 +249,11 @@ that would produce a real GC user account isn't built yet (see `docs/tasks.md`'s
 Rather than block PDF delivery on that epic, Phase 5 adds a nullable `projects.gc_contact_email TEXT`
 that the foreman fills in manually alongside `gc_name_custom`. This is explicitly a stopgap: the
 Cross-cutting epic's checklist carries a standing item to supersede it with a real GC account's email
-once invite/join-company ships, so this doesn't quietly become permanent.
+once invite/join-company ships, so this doesn't quietly become permanent. (Phase 8b partly resolved
+this sooner than expected, without needing the full invite/join-company flow: once a project is linked
+to a registered GC company — `gc_company_id`, from the Phase 6 join-code link — the Auth Admin API can
+resolve that company's admin's email directly from `auth.users`, no new email column required. This
+field now only backstops an unlinked project or a linked company with no admin yet.)
 
 **Dev-vs-Mailgun transport, gated on env presence.** `server/utility/envUtils.js` already exposes
 `MAILGUN_API_KEY`/`MAILGUN_DOMAIN` identically in both environment branches (no dedicated

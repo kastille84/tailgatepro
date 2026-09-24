@@ -17,6 +17,7 @@ vi.mock("../../src/context/auth", () => ({
 const overview: GcOverview = {
   jobsites: [
     {
+      id: "jobsite-1",
       name: "Downtown Tower",
       subs: [
         {

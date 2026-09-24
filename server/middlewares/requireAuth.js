@@ -26,6 +26,11 @@ const requireAuth = async (req, res, next) => {
   // row id still comes from req.userId, and privileged fields like `role` are
   // server-defaulted — never trust anything in here for access control.
   req.userMetadata = data.user.user_metadata ?? {};
+  // The token-verified email — unlike user_metadata, this comes from
+  // Supabase Auth's own record for the token, not anything the client set.
+  // Used only by Phase 8c's invite-acceptance email-match check
+  // (companyInvites.getInviteForEmail), never for anything else.
+  req.userEmail = data.user.email;
   return next();
 };
 

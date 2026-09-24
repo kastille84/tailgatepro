@@ -62,7 +62,7 @@ vi.mock("../../../src/features/gc-dashboard", () => ({
 }));
 
 const overview = {
-  jobsites: [{ name: "Downtown Tower", subs: [] }],
+  jobsites: [{ id: "jobsite-1", name: "Downtown Tower", subs: [] }],
   totals: { subs: 2, logged: 1, missing: 1 },
 };
 

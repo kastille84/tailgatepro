@@ -2,7 +2,12 @@
 const envUtils = require("../utility/envUtils");
 const { MAILGUN_TEMPLATES } = require("../constants/templates");
 const emailService = require("./email");
-const { sendMeetingLogEmail, getMailgunClient } = emailService;
+const {
+  sendMeetingLogEmail,
+  sendCompanyInviteEmail,
+  sendJobsiteInviteEmail,
+  getMailgunClient,
+} = emailService;
 
 const keysSpy = vi.spyOn(envUtils, "keysBasedOnEnv");
 const clientSpy = vi.spyOn(emailService, "getMailgunClient");
@@ -112,6 +117,150 @@ describe("email service: sendMeetingLogEmail", () => {
     });
 
     await expect(sendMeetingLogEmail(params)).resolves.toBeUndefined();
+
+    expect(consoleErrorSpy).toHaveBeenCalled();
+  });
+});
+
+describe("email service: sendCompanyInviteEmail", () => {
+  const inviteParams = {
+    to: "newhire@example.com",
+    companyName: "Rivera Electric",
+    inviterName: "Alex Builder",
+    role: "Foreman",
+    acceptUrl: "https://localhost:5173/invite/abc123",
+  };
+
+  it("logs the composed email instead of sending when Mailgun isn't configured", async () => {
+    clientSpy.mockReturnValue(null);
+
+    await sendCompanyInviteEmail(inviteParams);
+
+    expect(consoleLogSpy).toHaveBeenCalledWith(
+      expect.stringContaining("not configured"),
+      expect.objectContaining({
+        to: inviteParams.to,
+        subject: expect.stringContaining(inviteParams.inviterName),
+        variables: expect.objectContaining({
+          companyName: inviteParams.companyName,
+          inviterName: inviteParams.inviterName,
+          role: inviteParams.role,
+          acceptUrl: inviteParams.acceptUrl,
+        }),
+      }),
+    );
+    expect(consoleErrorSpy).not.toHaveBeenCalled();
+  });
+
+  it("sends via the configured Mailgun template with a dynamic subject and stringified variables", async () => {
+    const create = vi.fn().mockResolvedValue({ id: "<msg-1>", message: "Queued" });
+    clientSpy.mockReturnValue({
+      client: { messages: { create } },
+      domain: "mg.example.com",
+    });
+
+    await sendCompanyInviteEmail(inviteParams);
+
+    expect(create).toHaveBeenCalledTimes(1);
+    const [domain, data] = create.mock.calls[0];
+    expect(domain).toBe("mg.example.com");
+    expect(data.to).toEqual([inviteParams.to]);
+    expect(data.from).toContain("mg.example.com");
+    expect(data["h:Reply-To"]).toBe("support@mg.example.com");
+    expect(data.template).toBe(MAILGUN_TEMPLATES.COMPANY_INVITE);
+    expect(data.subject).toContain(inviteParams.inviterName);
+    expect(data.subject).toContain(inviteParams.companyName);
+
+    const variables = JSON.parse(data["h:X-Mailgun-Variables"]);
+    expect(variables).toEqual({
+      companyName: inviteParams.companyName,
+      inviterName: inviteParams.inviterName,
+      role: inviteParams.role,
+      acceptUrl: inviteParams.acceptUrl,
+    });
+    expect(consoleErrorSpy).not.toHaveBeenCalled();
+  });
+
+  it("catches and logs a Mailgun send failure instead of throwing", async () => {
+    const create = vi.fn().mockRejectedValue(new Error("Mailgun 500"));
+    clientSpy.mockReturnValue({
+      client: { messages: { create } },
+      domain: "mg.example.com",
+    });
+
+    await expect(sendCompanyInviteEmail(inviteParams)).resolves.toBeUndefined();
+
+    expect(consoleErrorSpy).toHaveBeenCalled();
+  });
+});
+
+describe("email service: sendJobsiteInviteEmail", () => {
+  const inviteParams = {
+    to: "jane@acme.com",
+    gcCompanyName: "Turner Construction",
+    jobsiteName: "Riverside Tower",
+    inviterName: "Alex Builder",
+    acceptUrl: "https://localhost:5173/jobsite-invite/abc123",
+  };
+
+  it("logs the composed email instead of sending when Mailgun isn't configured", async () => {
+    clientSpy.mockReturnValue(null);
+
+    await sendJobsiteInviteEmail(inviteParams);
+
+    expect(consoleLogSpy).toHaveBeenCalledWith(
+      expect.stringContaining("not configured"),
+      expect.objectContaining({
+        to: inviteParams.to,
+        subject: expect.stringContaining(inviteParams.jobsiteName),
+        variables: expect.objectContaining({
+          gcCompanyName: inviteParams.gcCompanyName,
+          jobsiteName: inviteParams.jobsiteName,
+          inviterName: inviteParams.inviterName,
+          acceptUrl: inviteParams.acceptUrl,
+        }),
+      }),
+    );
+    expect(consoleErrorSpy).not.toHaveBeenCalled();
+  });
+
+  it("sends via the jobsite-invite Mailgun template with a dynamic subject and stringified variables", async () => {
+    const create = vi.fn().mockResolvedValue({ id: "<msg-1>", message: "Queued" });
+    clientSpy.mockReturnValue({
+      client: { messages: { create } },
+      domain: "mg.example.com",
+    });
+
+    await sendJobsiteInviteEmail(inviteParams);
+
+    expect(create).toHaveBeenCalledTimes(1);
+    const [domain, data] = create.mock.calls[0];
+    expect(domain).toBe("mg.example.com");
+    expect(data.to).toEqual([inviteParams.to]);
+    expect(data.from).toContain("mg.example.com");
+    expect(data["h:Reply-To"]).toBe("support@mg.example.com");
+    expect(data.template).toBe(MAILGUN_TEMPLATES.JOBSITE_INVITE);
+    expect(data.subject).toContain(inviteParams.gcCompanyName);
+    expect(data.subject).toContain(inviteParams.jobsiteName);
+
+    const variables = JSON.parse(data["h:X-Mailgun-Variables"]);
+    expect(variables).toEqual({
+      gcCompanyName: inviteParams.gcCompanyName,
+      jobsiteName: inviteParams.jobsiteName,
+      inviterName: inviteParams.inviterName,
+      acceptUrl: inviteParams.acceptUrl,
+    });
+    expect(consoleErrorSpy).not.toHaveBeenCalled();
+  });
+
+  it("catches and logs a Mailgun send failure instead of throwing", async () => {
+    const create = vi.fn().mockRejectedValue(new Error("Mailgun 500"));
+    clientSpy.mockReturnValue({
+      client: { messages: { create } },
+      domain: "mg.example.com",
+    });
+
+    await expect(sendJobsiteInviteEmail(inviteParams)).resolves.toBeUndefined();
 
     expect(consoleErrorSpy).toHaveBeenCalled();
   });

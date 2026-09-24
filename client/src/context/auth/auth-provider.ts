@@ -1,12 +1,19 @@
 // src/context/auth/auth-provider.tsx
-import React, { useState, useEffect, type ReactNode } from "react";
-import { createClient, SupabaseClient } from "@supabase/supabase-js";
+import React, { useState, useEffect, useRef, type ReactNode } from "react";
+import {
+  createClient,
+  SupabaseClient,
+  type Session,
+} from "@supabase/supabase-js";
 import { keysBasedOnEnv } from "../../utils/EnvUtils";
+import { createProfile } from "../../services/apiUsers";
 
 import {
   AuthContext,
   type AuthState,
   type SignupProfile,
+  type InviteAcceptProfile,
+  type JobsiteInviteAcceptProfile,
 } from "./auth-context";
 
 const supabase: SupabaseClient = createClient(
@@ -21,10 +28,30 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     loading: true,
   });
 
+  // Safety net for Supabase auto-establishing a session when the confirm-
+  // email link is opened in the same browser that signed up -- before the
+  // user ever reaches Login.tsx's submit handler, the only other place
+  // createProfile() is called for the deferred (confirm-email) signup path.
+  // Idempotent (apiUsers.createProfile already swallows a 409 "already
+  // exists" into null) and deduped per user id so a token refresh doesn't
+  // re-POST. Failures (e.g. a Google sign-in with no companyName/companyType
+  // yet -- a separate, pre-existing gap) are swallowed silently: this is a
+  // background safety net, not a user-facing action, so it must never toast
+  // or throw.
+  const ensuredProfileUserIdRef = useRef<string | null>(null);
+  const ensureProfile = (session: Session | null) => {
+    if (!session || ensuredProfileUserIdRef.current === session.user.id) {
+      return;
+    }
+    ensuredProfileUserIdRef.current = session.user.id;
+    createProfile({ accessToken: session.access_token }).catch(() => {});
+  };
+
   useEffect(() => {
     // Immediate handshake check
     supabase.auth.getSession().then(({ data: { session } }) => {
       setState({ user: session?.user ?? null, session: session ?? null, loading: false });
+      ensureProfile(session);
     });
 
     // Event binding
@@ -32,6 +59,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       data: { subscription },
     } = supabase.auth.onAuthStateChange((_event, session) => {
       setState({ user: session?.user ?? null, session: session ?? null, loading: false });
+      ensureProfile(session);
     });
 
     return () => subscription.unsubscribe();
@@ -56,21 +84,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const signUpWithEmail = async (
     email: string,
     password: string,
-    profile: SignupProfile,
+    profile: SignupProfile | InviteAcceptProfile | JobsiteInviteAcceptProfile,
   ) => {
     const { data, error } = await supabase.auth.signUp({
       email,
       password,
       // Stored on the auth user as `user_metadata`; the server reads these
       // back (token-verified) to create the profile on first login when
-      // "Confirm email" means no session is returned here.
-      options: {
-        data: {
-          name: profile.name,
-          companyName: profile.companyName,
-          companyType: profile.companyType,
-        },
-      },
+      // "Confirm email" means no session is returned here. Spread generically
+      // so either shape (a brand-new-company signup or an invited-teammate
+      // signup carrying `inviteToken`) passes through unchanged.
+      options: { data: { ...profile } },
     });
     if (error) throw error;
     return { session: data.session };

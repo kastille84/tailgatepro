@@ -1,14 +1,19 @@
 const express = require("express");
+const { body, param } = require("express-validator");
 
 const { requireAuth } = require("../middlewares/requireAuth");
 const { loadUserContext } = require("../middlewares/loadUserContext");
 const { requireGcCompany } = require("../middlewares/requireGcCompany");
+const { requireRole } = require("../middlewares/requireRole");
+const { validate } = require("../middlewares/validate");
+const { MANAGER_ROLES } = require("../constants/roles");
 const {
   uploadLogo,
   getLogoUrl,
   getJoinCode,
   getMe,
 } = require("../controllers/companies");
+const { inviteTeammate, previewInvite } = require("../controllers/companyInvites");
 
 const router = express.Router();
 
@@ -43,6 +48,46 @@ router.get(
   loadUserContext,
   requireGcCompany,
   getJoinCode,
+);
+
+// POST /api/companies/invite — an admin/safety_manager invites a teammate by
+// email at a chosen role (Phase 8c). Manager-only, same single-purpose gate
+// shape as DELETE /api/projects/:id.
+router.post(
+  "/invite",
+  requireAuth,
+  loadUserContext,
+  requireRole(...MANAGER_ROLES),
+  [
+    body("email")
+      .trim()
+      .notEmpty()
+      .withMessage("Email is required")
+      .isEmail()
+      .withMessage("Enter a valid email address")
+      .normalizeEmail({ gmail_remove_dots: false }),
+    body("role")
+      .isIn(["admin", "safety_manager", "foreman"])
+      .withMessage("Invalid role"),
+  ],
+  validate,
+  inviteTeammate,
+);
+
+// GET /api/companies/invite/:token — public preview for the accept-invite
+// page, before the invitee has any account. No requireAuth: the token itself
+// is the only credential, same trust model as a Supabase password-reset link.
+router.get(
+  "/invite/:token",
+  [
+    param("token")
+      .isHexadecimal()
+      .withMessage("Invalid invite link")
+      .isLength({ min: 64, max: 64 })
+      .withMessage("Invalid invite link"),
+  ],
+  validate,
+  previewInvite,
 );
 
 module.exports = router;

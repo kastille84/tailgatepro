@@ -59,7 +59,7 @@ export const Navbar: React.FC = () => {
         {!loading && user && (
           <>
             <NavAnchor to="/dashboard">Dashboard</NavAnchor>
-            <NavAnchor to="/projects">Projects</NavAnchor>
+            <NavAnchor to="/projects">{isGc ? "Job Sites" : "Projects"}</NavAnchor>
             {!isGc && <NavAnchor to="/talks">Toolbox Talks</NavAnchor>}
             <NavAnchor to="/settings">Settings</NavAnchor>
             <Button

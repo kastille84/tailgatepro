@@ -4,17 +4,18 @@
 export interface GcSubCompliance {
   companyId: string;
   companyName: string | null;
-  /** The sub's earliest linked project id in this jobsite group — what a
-   *  drill-in opens. */
-  projectId: string;
+  /** The sub's earliest active project id in this jobsite — what a drill-in
+   *  opens. `null` when an accepted sub has no active project there yet. */
+  projectId: string | null;
   status: "logged" | "missing";
   lastLoggedAt: string | null;
   count: number;
 }
 
-/** A group of the GC's linked projects sharing a normalized name. Mirrors
- *  `getOverview`'s jobsite grouping (server/utility/jobsites.js). */
+/** One of the GC's real jobsites (the `jobsites` table) with its accepted
+ *  subs. Mirrors a `getOverview` jobsite entry. */
 export interface GcJobsite {
+  id: string;
   name: string;
   subs: GcSubCompliance[];
 }

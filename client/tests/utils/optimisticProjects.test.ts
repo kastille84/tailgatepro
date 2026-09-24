@@ -69,6 +69,13 @@ describe("optimisticProjects", () => {
     it("leaves every field untouched when the patch is empty", () => {
       expect(applyProjectPatch(project(), {})).toEqual(project());
     });
+
+    it("preserves jobsiteId when patching other fields", () => {
+      const patched = applyProjectPatch(project({ jobsiteId: "jobsite-1" }), {
+        gcNameCustom: "New GC",
+      });
+      expect(patched.jobsiteId).toBe("jobsite-1");
+    });
   });
 
   describe("upsertCachedProject", () => {
@@ -95,6 +102,16 @@ describe("optimisticProjects", () => {
       expect(queryClient.getQueryData(["projects", { includeArchived: true }])).toEqual([
         project({ name: "new name" }),
         other,
+      ]);
+    });
+
+    it("keeps jobsiteId on the cached project", () => {
+      seed(false, []);
+
+      upsertCachedProject(queryClient, project({ jobsiteId: "jobsite-1" }));
+
+      expect(queryClient.getQueryData(["projects", { includeArchived: false }])).toEqual([
+        project({ jobsiteId: "jobsite-1" }),
       ]);
     });
 

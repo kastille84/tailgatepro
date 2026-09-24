@@ -123,12 +123,14 @@ describe("useCreateProject", () => {
     const cached = queryClient.getQueryData<
       {
         gcCompanyId: string | null;
+        jobsiteId: string | null;
         gcNameCustom: string | null;
         gcContactEmail: string | null;
       }[]
     >(["projects", { includeArchived: false }]);
     expect(cached?.[0]).toMatchObject({
       gcCompanyId: null,
+      jobsiteId: null,
       gcNameCustom: null,
       gcContactEmail: null,
     });

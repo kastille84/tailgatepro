@@ -1,4 +1,5 @@
 import styled from "styled-components";
+import { Link } from "react-router-dom";
 
 export const StyledStatRow = styled.div`
   display: grid;
@@ -175,4 +176,22 @@ export const StyledError = styled.p`
   font-size: 1.5rem;
   font-weight: 600;
   color: ${({ theme }) => theme.colors.red[600]};
+`;
+
+export const StyledJobsiteEmpty = styled.p`
+  margin: 0;
+  font-size: 1.5rem;
+  font-weight: 500;
+  line-height: 1.6;
+  color: ${({ theme }) => theme.colors.navy[400]};
+`;
+
+export const StyledJobsiteLink = styled(Link)`
+  display: inline-flex;
+  align-items: center;
+  min-height: 4.8rem;
+  font-size: 1.6rem;
+  font-weight: 700;
+  color: ${({ theme }) => theme.colors.orange[600]};
+  text-decoration: underline;
 `;

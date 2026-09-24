@@ -31,8 +31,10 @@ interface SubMeetingsModalProps {
 export const SubMeetingsModal = ({ sub, onClose }: SubMeetingsModalProps) => {
   const { isOnline } = useOnlineStatus();
   const { meetings, isLoading, isError } = useGcMeetings(
-    { projectId: sub?.projectId },
-    Boolean(sub),
+    { projectId: sub?.projectId ?? undefined },
+    // No project to drill into means no request — an empty projectId filter
+    // would otherwise list every one of the GC's meetings.
+    Boolean(sub?.projectId),
   );
   const { openPdf, isPending } = useGcMeetingPdfUrl();
 

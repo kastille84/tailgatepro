@@ -10,7 +10,7 @@ import {
 const GENERIC = "Something went wrong. Please try again.";
 
 const overview = {
-  jobsites: [{ name: "Downtown Tower", subs: [] }],
+  jobsites: [{ id: "jobsite-1", name: "Downtown Tower", subs: [] }],
   totals: { subs: 0, logged: 0, missing: 0 },
 };
 

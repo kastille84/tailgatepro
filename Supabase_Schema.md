@@ -31,19 +31,16 @@
 | `name` | Text | Not Null | E.g., "Downtown Highrise" |
 | `gc_company_id` | UUID | Nullable, FK -> `companies.id` (ON DELETE SET NULL) | The GC as a registered company, once one is linked |
 | `gc_name_custom` | Text | Nullable | Free-text GC name, used before a GC company is linked |
-| `gc_contact_email` | Text | Nullable | Manual contact email for PDF delivery (Phase 5); stopgap until the invite/join-company flow provides a real GC account (see `docs/tasks.md` Cross-cutting epic) |
+| `gc_contact_email` | Text | Nullable | Manual contact email for PDF delivery (Phase 5). Since Phase 8b, only a fallback: PDF delivery prefers the linked `gc_company_id`'s admin (a real account) when one resolves, and only reads this field when unlinked or the linked company has no admin yet (see `docs/tasks.md` Phase 8 epic) |
+| `jobsite_id` | UUID | Nullable, FK -> `jobsites.id` (ON DELETE SET NULL) | Phase 8d: set once this sub's row is attached to a GC-owned jobsite (via an accepted invite or a join-code link), else `NULL`. `gc_company_id` stays the authorization column regardless — see `docs/jobsite-design.md` |
 | `status` | Enum | Default `active` | `active`, `completed` |
 | `archived_at` | Timestamptz | Nullable | `NULL` = live; a timestamp = archived (hidden from the default list, still restorable). Orthogonal to `status`. |
 | `created_at` | Timestamptz | Default `now()` | |
 | **CHECK** `check_gc_info` | | `gc_company_id IS NOT NULL OR gc_name_custom IS NOT NULL` | At least one GC identifier must be present |
 
-| Table: `project_subcontractors` | Type | Constraints | Description |
-| :--- | :--- | :--- | :--- |
-| `project_id` | UUID | FK -> `projects.id` (ON DELETE CASCADE) | |
-| `sub_id` | UUID | FK -> `companies.id` (ON DELETE CASCADE) | Subcontractor assigned to site |
-| **PK** | | **Composite** | `(project_id, sub_id)` |
+> The Phase 6 `project_subcontractors` junction table was dropped in Phase 8d-h; its role is played by `jobsite_subcontractors` (below).
 
-> RLS: enabled with no policies (server-brokered, deny-all) on `projects` and `project_subcontractors` — see `docs/data-access.md`.
+> RLS: enabled with no policies (server-brokered, deny-all) on `projects` — see `docs/data-access.md`.
 
 ### 3. Content Library
 
@@ -124,3 +121,56 @@ caller's company owns the parent meeting's project (see `docs/data-access.md`).
 | `audience` | Text | Nullable | `sub` or `gc` when the signup came via the pricing page |
 | `plan_interest` | Text | Nullable | Plan id the visitor clicked through from, e.g. `trade-pro` |
 | `created_at` | Timestamptz | Default `now()` | Signup time |
+
+### 6. Team Invites
+
+| Table: `company_invites` | Type | Constraints | Description |
+| :--- | :--- | :--- | :--- |
+| `id` | UUID | Primary Key | Server-generated UUID (not an offline record) |
+| `company_id` | UUID | Not Null, FK -> `companies.id` (ON DELETE CASCADE) | The company being joined |
+| `email` | Text | Not Null | The invitee's email address |
+| `role` | Enum | Not Null | `admin`, `safety_manager`, `foreman` — the role the inviting admin picked |
+| `token` | Text | Unique, Not Null | `crypto.randomBytes(32).toString('hex')` — a distinct mechanism from `companies.join_code` (per-invite, per-email, expiring; not company-level/human-typed) |
+| `expires_at` | Timestamptz | Not Null | 7 days from creation (`server/utility/inviteToken.js`) |
+| `created_at` | Timestamptz | Default `now()` | |
+| **UNIQUE** `company_invites_company_email_unique` | | `(company_id, email)` | Re-inviting the same email upserts this row (new token/role/expiry) instead of creating a duplicate |
+
+> RLS: enabled with no policies (server-brokered, deny-all) — see `docs/data-access.md`.
+
+### 7. Jobsites (Phase 8d)
+
+Full design: `docs/jobsite-design.md`. `projects` is unchanged in kind — a sub's project row is
+still its own row, now optionally pointed at one of these via `jobsite_id` (see table 2 above).
+
+| Table: `jobsites` | Type | Constraints | Description |
+| :--- | :--- | :--- | :--- |
+| `id` | UUID | Primary Key | Server-generated UUID (not an offline record — creating a jobsite is an online, authenticated GC action) |
+| `gc_company_id` | UUID | Not Null, FK -> `companies.id` (ON DELETE CASCADE) | The GC that owns this jobsite. GC-only for v1 (enforced at the service layer, no CHECK — `jobsites` has no `company_type` of its own) |
+| `name` | Text | Not Null | E.g., "Riverside Tower" |
+| `status` | Enum | Default `active` | `active`, `completed` — reuses `project_status` |
+| `archived_at` | Timestamptz | Nullable | `NULL` = live; a timestamp = archived |
+| `created_at` | Timestamptz | Default `now()` | |
+
+> RLS: enabled with no policies (server-brokered, deny-all) — see `docs/data-access.md`.
+
+| Table: `jobsite_subcontractors` | Type | Constraints | Description |
+| :--- | :--- | :--- | :--- |
+| `id` | UUID | Primary Key | Server-generated UUID (not an offline record) |
+| `jobsite_id` | UUID | Not Null, FK -> `jobsites.id` (ON DELETE CASCADE) | The jobsite being invited to / joined |
+| `sub_company_id` | UUID | Nullable, FK -> `companies.id` (ON DELETE CASCADE) | `NULL` until accepted — the invite carries only an email until then |
+| `invited_email` | Text | Not Null | The address the GC invited |
+| `token` | Text | Unique (Nullable) | Server-generated 64-hex secret (`server/utility/inviteToken.js`, shared with `company_invites`); `NULL` once accepted |
+| `expires_at` | Timestamptz | Nullable | 7-day TTL; `NULL` once accepted |
+| `accepted_at` | Timestamptz | Nullable | `NULL` = still pending; set = this is now a live membership row |
+| `created_at` | Timestamptz | Default `now()` | |
+| **UNIQUE** `jobsite_subs_email_unique` | | `(jobsite_id, invited_email)` | Re-inviting the same email upserts this row while still pending; re-inviting an already-accepted sub is a `409` instead (service-layer rule — the accept guard means this constraint alone can't distinguish the two) |
+| **UNIQUE (partial)** `jobsite_subs_company_unique` | | `(jobsite_id, sub_company_id) WHERE sub_company_id IS NOT NULL` | One membership per company per jobsite once accepted |
+
+Folds the GC-to-sub invite and the jobsite roster into one table — a row is "pending" (no
+`sub_company_id`/`accepted_at`) or "a member" (both set), so the GC dashboard reads one query for
+both states instead of a union across an invites table and a roster table. Distinct from
+`company_invites` (Phase 8c), which is a *person* joining an *existing* company at a *role* —
+this table is a *company* joining another company's *jobsite*, with no role at all. Supersedes
+the Phase 6 `project_subcontractors` table, dropped in 8d-h.
+
+> RLS: enabled with no policies (server-brokered, deny-all) — see `docs/data-access.md`.

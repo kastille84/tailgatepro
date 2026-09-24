@@ -4,6 +4,8 @@ const { body, param } = require("express-validator");
 const { requireAuth } = require("../middlewares/requireAuth");
 const { loadUserContext } = require("../middlewares/loadUserContext");
 const { validate } = require("../middlewares/validate");
+const { requireRole } = require("../middlewares/requireRole");
+const { MANAGER_ROLES } = require("../constants/roles");
 const {
   listTalks,
   getTalk,
@@ -160,10 +162,13 @@ router.patch(
 
 // DELETE /api/talks/:id — hard-delete a custom talk the caller's company owns.
 // Rejected with 409 once the talk has been used in a logged safety talk.
+// Manager-only (admin/safety_manager) — a single-purpose route, unlike
+// projects' PATCH /:id, so this is enough on its own (see requireRole.js).
 router.delete(
   "/:id",
   requireAuth,
   loadUserContext,
+  requireRole(...MANAGER_ROLES),
   [param("id").isUUID().withMessage("A valid talk id is required")],
   validate,
   deleteTalk,

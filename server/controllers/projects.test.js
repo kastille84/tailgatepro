@@ -187,6 +187,7 @@ describe("projects controller", () => {
       expect(updateSpy).toHaveBeenCalledWith({
         id: "project-1",
         companyId: "company-1",
+        role: "foreman",
         patch: {
           name: undefined,
           status: "completed",
@@ -267,6 +268,7 @@ describe("projects controller", () => {
       expect(removeSpy).toHaveBeenCalledWith({
         id: "project-1",
         companyId: "company-1",
+        role: "foreman",
       });
       expect(res.status).toHaveBeenCalledWith(200);
       expect(res.json).toHaveBeenCalledWith({

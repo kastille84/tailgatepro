@@ -92,4 +92,98 @@ const sendMeetingLogEmail = async ({
   }
 };
 
-module.exports = { sendMeetingLogEmail, getMailgunClient };
+/**
+ * Emails a Phase 8c company invite via the company-invite Mailgun template.
+ * Same soft-fail shape as sendMeetingLogEmail: never throws, since a failed
+ * invite email is a side effect of POST /api/companies/invite, not something
+ * that should unwind the request that created the invite row.
+ *
+ * @param {{ to: string, companyName: string, inviterName: string, role: string,
+ *   acceptUrl: string }} params
+ */
+const sendCompanyInviteEmail = async ({ to, companyName, inviterName, role, acceptUrl }) => {
+  const subject = `${inviterName} invited you to join ${companyName} on TailgatePro`;
+
+  const mg = module.exports.getMailgunClient();
+  const variables = { companyName, inviterName, role, acceptUrl };
+
+  if (!mg) {
+    console.log(
+      "[email] Mailgun not configured -- logging instead of sending.",
+      {
+        to,
+        subject,
+        variables,
+      },
+    );
+    return;
+  }
+
+  try {
+    await mg.client.messages.create(mg.domain, {
+      from: `TailgatePro <support@${mg.domain}>`,
+      "h:Reply-To": `support@${mg.domain}`,
+      to: [to],
+      subject,
+      template: MAILGUN_TEMPLATES.COMPANY_INVITE,
+      "h:X-Mailgun-Variables": JSON.stringify(variables),
+    });
+  } catch (err) {
+    console.error(`email: failed to send company invite to ${to}`, err);
+  }
+};
+
+/**
+ * Emails a Phase 8d jobsite invite (a GC inviting a subcontractor company to a
+ * job site) via the jobsite-invite Mailgun template. Same soft-fail shape as
+ * sendCompanyInviteEmail: never throws, since a failed email is a side effect
+ * of POST /api/jobsites/:id/invite, not something that should unwind the
+ * roster row that was just created.
+ *
+ * @param {{ to: string, gcCompanyName: string, jobsiteName: string,
+ *   inviterName: string, acceptUrl: string }} params
+ */
+const sendJobsiteInviteEmail = async ({
+  to,
+  gcCompanyName,
+  jobsiteName,
+  inviterName,
+  acceptUrl,
+}) => {
+  const subject = `${gcCompanyName} invited you to ${jobsiteName} on TailgatePro`;
+
+  const mg = module.exports.getMailgunClient();
+  const variables = { gcCompanyName, jobsiteName, inviterName, acceptUrl };
+
+  if (!mg) {
+    console.log(
+      "[email] Mailgun not configured -- logging instead of sending.",
+      {
+        to,
+        subject,
+        variables,
+      },
+    );
+    return;
+  }
+
+  try {
+    await mg.client.messages.create(mg.domain, {
+      from: `TailgatePro <support@${mg.domain}>`,
+      "h:Reply-To": `support@${mg.domain}`,
+      to: [to],
+      subject,
+      template: MAILGUN_TEMPLATES.JOBSITE_INVITE,
+      "h:X-Mailgun-Variables": JSON.stringify(variables),
+    });
+  } catch (err) {
+    console.error(`email: failed to send jobsite invite to ${to}`, err);
+  }
+};
+
+module.exports = {
+  sendMeetingLogEmail,
+  sendCompanyInviteEmail,
+  sendJobsiteInviteEmail,
+  getMailgunClient,
+};
