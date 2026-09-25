@@ -1,0 +1,53 @@
+{
+  "n": "152",
+  "title": "Young and New Workers",
+  "primary_trade": "General Construction",
+  "trade_tags": [
+    "General Construction"
+  ],
+  "osha_standards": [
+    "29 CFR 1926.21"
+  ],
+  "source_url": "https://www.cdc.gov/niosh/young-workers/about/index.html",
+  "source_agency": "NIOSH",
+  "source_checked": [
+    "https://www.cdc.gov/niosh/young-workers/about/index.html",
+    "https://www.osha.gov/young-workers",
+    "https://www.osha.gov/laws-regs/regulations/standardnumber/1926/1926.21"
+  ],
+  "basis": "NIOSH's Young Worker Safety and Health page and OSHA's Young Workers page, with 29 CFR 1926.21(b)(2)",
+  "summary": "Young and new workers get hurt more because they have little experience and often too little training. Employers must train them on hazards, and everyone has the right to a safe workplace.",
+  "talking_points": [
+    "In 2022, about 19.4 million workers were under age 25, which is 12.2 percent of the workforce. NIOSH says young workers have high rates of job-related injuries.",
+    "NIOSH ties young worker injuries to little or no prior work experience and to inadequate safety training.",
+    "Good practice: give training in a language and way the worker understands, and check that they understood it.",
+    "Employers must instruct each employee in the recognition and avoidance of unsafe conditions (29 CFR 1926.21(b)(2)).",
+    "Good practice: make sure new workers know where the OSHA poster is displayed, what to do if they are hurt, and who to tell.",
+    "OSHA says: you have rights on the job, and your employer has the responsibility to provide a safe workplace. OSHA can be reached at 1-800-321-6742.",
+    "Good practice: new workers should use the safety equipment and training they are given, follow safety procedures and report unsafe conditions to a supervisor.",
+    "Good practice: if you are unsure how to do a task safely, stop and ask before you start."
+  ],
+  "site_hazards_to_check": [
+    "New or young workers on the job with no hazard training",
+    "Young workers doing tasks or using equipment they were not trained for",
+    "No one assigned to supervise and answer questions",
+    "Training given in a language or style the worker does not follow",
+    "Workers who do not know where to report a hazard or an injury",
+    "Workers who do not know what to do if they are hurt"
+  ],
+  "discussion_questions": [
+    "What would you want to know on your first day that nobody told you?",
+    "Who can a new worker ask for help without feeling foolish?",
+    "What do you do if you are asked to do a task you were not trained to do?"
+  ],
+  "audit": {
+    "status": "approved",
+    "audited_at": "2026-09-25T20:37:57.253Z",
+    "osha_accuracy_verified": true,
+    "flags": [
+      "Verified: NIOSH page (2022, 19.4 million under 25, 12.2 percent; high injury rates; little/no prior experience and lack of safety training), OSHA young-workers page (rights sentence, 1-800-321-6742), 1926.21(b)(2) verbatim.",
+      "Removed unsupported claims not found on any cited page: employers must train 'in language they understand', must 'make sure equipment is legal and safe', display posters, tell workers what to do if hurt (converted to Good practice), and the 'replace a job, not a limb or back' line (replaced with Good practice).",
+      "osha_standards 1926.21 retained (used in point 4)."
+    ]
+  }
+}

@@ -1,0 +1,196 @@
+{
+  "114": {
+    "status": "no-source",
+    "note": "ledger reconstructed after a tooling error; no agency source found (hvac search was shallow)"
+  },
+  "129": {
+    "status": "matched",
+    "raw_file": "osha-legionnaires-disease-questions-and-answers.md",
+    "source_url": "https://www.osha.gov/sites/default/files/faq.pdf",
+    "agency": "OSHA",
+    "note": "second-pass source (verbatim); Verbatim OSHA Q&A: symptoms, how spread (mist inhalation), risk factors, growth temperatures, prevention, Pontiac fever, what to do if a coworker is diagnosed. Lacks respirator guidance and plumbing/HVAC crew tasks (those are on the already-claimed osha-legionellosis-control-prevention page and osha.gov/legionnaires-disease/hazards, whose Hazard Recognition page could supplement if allowed)."
+  },
+  "173": {
+    "status": "no-source",
+    "note": "same source as 022/271, which the auditor judged unfit (EPA 608 is recovery compliance; NIOSH page is general cold stress)"
+  },
+  "174": {
+    "status": "no-source",
+    "note": "same source as 022/271, which the auditor judged unfit (EPA 608 is recovery compliance; NIOSH page is general cold stress)"
+  },
+  "238": {
+    "status": "no-source",
+    "note": "ledger reconstructed after a tooling error; no agency source found (hvac search was shallow)"
+  },
+  "259": {
+    "status": "no-source",
+    "note": "ledger reconstructed after a tooling error; no agency source found (hvac search was shallow)"
+  },
+  "260": {
+    "status": "no-source",
+    "note": "ledger reconstructed after a tooling error; no agency source found (hvac search was shallow)"
+  },
+  "263": {
+    "status": "no-source",
+    "note": "ledger reconstructed after a tooling error; no agency source found (hvac search was shallow)"
+  },
+  "264": {
+    "status": "no-source",
+    "note": "ledger reconstructed after a tooling error; no agency source found (hvac search was shallow)"
+  },
+  "265": {
+    "status": "no-source",
+    "note": "ledger reconstructed after a tooling error; no agency source found (hvac search was shallow)"
+  },
+  "266": {
+    "status": "no-source",
+    "note": "ledger reconstructed after a tooling error; no agency source found (hvac search was shallow)"
+  },
+  "267": {
+    "status": "no-source",
+    "note": "ledger reconstructed after a tooling error; no agency source found (hvac search was shallow)"
+  },
+  "268": {
+    "status": "no-source",
+    "note": "ledger reconstructed after a tooling error; no agency source found (hvac search was shallow)"
+  },
+  "269": {
+    "status": "no-source",
+    "note": "ledger reconstructed after a tooling error; no agency source found (hvac search was shallow)"
+  },
+  "270": {
+    "status": "no-source",
+    "note": "ledger reconstructed after a tooling error; no agency source found (hvac search was shallow)"
+  },
+  "271": {
+    "status": "no-source",
+    "note": "auditor: NIOSH source is general cold stress, no cold-room entrapment content; reverted to Word-library content"
+  },
+  "272": {
+    "status": "no-source",
+    "note": "same source as 022/271, which the auditor judged unfit (EPA 608 is recovery compliance; NIOSH page is general cold stress)"
+  },
+  "273": {
+    "status": "no-source",
+    "note": "ledger reconstructed after a tooling error; no agency source found (hvac search was shallow)"
+  },
+  "278": {
+    "status": "no-source",
+    "note": "ledger reconstructed after a tooling error; no agency source found (hvac search was shallow)"
+  },
+  "279": {
+    "status": "no-source",
+    "note": "ledger reconstructed after a tooling error; no agency source found (hvac search was shallow)"
+  },
+  "280": {
+    "status": "no-source",
+    "note": "ledger reconstructed after a tooling error; no agency source found (hvac search was shallow)"
+  },
+  "281": {
+    "status": "no-source",
+    "note": "ledger reconstructed after a tooling error; no agency source found (hvac search was shallow)"
+  },
+  "282": {
+    "status": "no-source",
+    "note": "ledger reconstructed after a tooling error; no agency source found (hvac search was shallow)"
+  },
+  "283": {
+    "status": "no-source",
+    "note": "ledger reconstructed after a tooling error; no agency source found (hvac search was shallow)"
+  },
+  "284": {
+    "status": "no-source",
+    "note": "ledger reconstructed after a tooling error; no agency source found (hvac search was shallow)"
+  },
+  "285": {
+    "status": "no-source",
+    "note": "ledger reconstructed after a tooling error; no agency source found (hvac search was shallow)"
+  },
+  "286": {
+    "status": "no-source",
+    "note": "ledger reconstructed after a tooling error; no agency source found (hvac search was shallow)"
+  },
+  "287": {
+    "status": "no-source",
+    "note": "ledger reconstructed after a tooling error; no agency source found (hvac search was shallow)"
+  },
+  "289": {
+    "status": "no-source",
+    "note": "ledger reconstructed after a tooling error; no agency source found (hvac search was shallow)"
+  },
+  "290": {
+    "status": "no-source",
+    "note": "ledger reconstructed after a tooling error; no agency source found (hvac search was shallow)"
+  },
+  "293": {
+    "status": "no-source",
+    "note": "ledger reconstructed after a tooling error; no agency source found (hvac search was shallow)"
+  },
+  "294": {
+    "status": "no-source",
+    "note": "ledger reconstructed after a tooling error; no agency source found (hvac search was shallow)"
+  },
+  "021": {
+    "status": "no-source",
+    "note": "ledger reconstructed after a tooling error; no agency source found (hvac search was shallow)"
+  },
+  "022": {
+    "status": "no-source",
+    "note": "auditor: EPA Section 608 recovery rule is compliance, not worker safety; reverted to Word-library content"
+  },
+  "023": {
+    "status": "no-source",
+    "note": "same source as 022/271, which the auditor judged unfit (EPA 608 is recovery compliance; NIOSH page is general cold stress)"
+  },
+  "024": {
+    "status": "no-source",
+    "note": "ledger reconstructed after a tooling error; no agency source found (hvac search was shallow)"
+  },
+  "025": {
+    "status": "matched",
+    "raw_file": "osha-ammonia-refrigeration-hazards.md",
+    "source_url": "https://www.osha.gov/ammonia-refrigeration/hazards",
+    "agency": "OSHA",
+    "note": "ledger reconstructed after a tooling error; "
+  },
+  "026": {
+    "status": "no-source",
+    "note": "ledger reconstructed after a tooling error; no agency source found (hvac search was shallow)"
+  },
+  "027": {
+    "status": "no-source",
+    "note": "ledger reconstructed after a tooling error; no agency source found (hvac search was shallow)"
+  },
+  "029": {
+    "status": "no-source",
+    "note": "ledger reconstructed after a tooling error; no agency source found (hvac search was shallow)"
+  },
+  "030": {
+    "status": "no-source",
+    "note": "ledger reconstructed after a tooling error; no agency source found (hvac search was shallow)"
+  },
+  "031": {
+    "status": "no-source",
+    "note": "ledger reconstructed after a tooling error; no agency source found (hvac search was shallow)"
+  },
+  "032": {
+    "status": "no-source",
+    "note": "ledger reconstructed after a tooling error; no agency source found (hvac search was shallow)"
+  },
+  "033": {
+    "status": "no-source",
+    "note": "ledger reconstructed after a tooling error; no agency source found (hvac search was shallow)"
+  },
+  "034": {
+    "status": "no-source",
+    "note": "ledger reconstructed after a tooling error; no agency source found (hvac search was shallow)"
+  },
+  "035": {
+    "status": "no-source",
+    "note": "ledger reconstructed after a tooling error; no agency source found (hvac search was shallow)"
+  },
+  "038": {
+    "status": "no-source",
+    "note": "ledger reconstructed after a tooling error; no agency source found (hvac search was shallow)"
+  }
+}

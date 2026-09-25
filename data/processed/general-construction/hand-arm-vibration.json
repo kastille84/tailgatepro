@@ -1,0 +1,56 @@
+{
+  "id": "hand-arm-vibration",
+  "title": "Hand-Arm Vibration",
+  "primary_trade": "General Construction",
+  "trade_tags": [
+    "General Construction",
+    "Carpentry"
+  ],
+  "osha_standards": [
+    "OSH Act Section 5(a)(1) General Duty Clause"
+  ],
+  "estimated_minutes": 5,
+  "summary": "Vibration from power tools, machinery, and heavy equipment can damage the blood supply and nerves in your fingers and toes. Use low-vibration tools, take breaks, and report symptoms like tingling or white fingertips.",
+  "talking_points": [
+    "Vibration from power tools, machinery, vehicles, and heavy equipment affects the blood supply to the fingers and toes. It can be serious and disabling.",
+    "Warning signs include tingling in the hand and fingertips that turn white and lose feeling. In one story, a carpenter with these signs was diagnosed with Raynaud's syndrome from vibrating tools. It can lead to tissue damage and may require surgery.",
+    "Wear gloves or anti-vibration wraps to improve grip and lessen the shock of vibrating tools.",
+    "Take regular breaks when you use tools that cause vibration.",
+    "Ask your employer to buy tools, bits, sawblades, and grinding wheels designed for reduced vibration, and power tools with handles isolated from the vibrating part.",
+    "Keep tools maintained. Ask your employer to have them serviced regularly.",
+    "Heavy equipment operators can ask for seat padding and dampening materials on the engine and cab floor.",
+    "Use cutting or power head dampening devices where they are available."
+  ],
+  "site_hazards_to_check": [
+    "Jackhammers, grinders, chipping tools, and saws with worn parts or no anti-vibration features",
+    "Workers using vibrating tools for long stretches with no breaks",
+    "Tools with dull bits, blades, or wheels that are not maintained",
+    "Heavy equipment with worn seat padding or no dampening on the cab floor",
+    "Workers reporting tingling, numbness, or white fingertips"
+  ],
+  "discussion_questions": [
+    "Which tools on this job vibrate the most, and how are we limiting time on them?",
+    "What symptoms should make you tell your supervisor or see a doctor?",
+    "What low-vibration tools, handles, or wraps could we ask for?"
+  ],
+  "attribution": {
+    "source": "CPWR",
+    "publisher": "CPWR — The Center for Construction Research and Training",
+    "copyright": "© 2017 CPWR — The Center for Construction Research and Training. All rights reserved.",
+    "license": "free-use-with-attribution",
+    "source_url": "https://www.cpwr.com/wp-content/uploads/TT-Vibration_Hand_Arm.pdf",
+    "source_ref": "TBT-124",
+    "notice": "Adapted from a CPWR/NIOSH Toolbox Talk, produced under NIOSH cooperative agreement OH 009762. Reproduced with attribution for jobsite safety training; not an endorsement by CPWR or NIOSH."
+  },
+  "audit": {
+    "status": "approved",
+    "audited_at": "2026-09-25T18:12:26Z",
+    "osha_accuracy_verified": true,
+    "flags": [
+      "Verified against CPWR Vibration: Hand and Arm toolbox talk: blood supply/serious and disabling, Kevin's Raynaud's story (white fingertips, tissue damage, surgery), gloves or anti-vibration wraps, regular breaks, reduced-vibration tools/bits/blades/wheels, isolated handles, maintenance, seat padding and cab/engine dampening, power head dampening. Nothing invented; 8 points; no UK wording.",
+      "Citation OSH Act Section 5(a)(1) is the only standard the source prints; it is a statute rather than a 1926 section. No specific OSHA 1926 standard governs hand-arm vibration, so this is acceptable. Talk does not cite an exposure limit (none exists in OSHA), correctly.",
+      "Attribution: printed copyright is 2017 (matches the talk); source rights line says 'Verify reuse terms'. CPWR free-use-with-attribution template used, copyright line and no-endorsement notice retained, feature is bundled not resold: docs/content-attribution.md conditions met.",
+      "Non-blocking: gloves/wraps advice is from the source; anti-vibration gloves' effectiveness is debated and site hazards 'dull bits' item is a reasonable extrapolation."
+    ]
+  }
+}

@@ -1,12 +1,16 @@
 # Content Library — source attribution & licensing
 
-The toolbox-talk library (`toolbox_talks`) is bootstrapped from public safety
-materials. Two sources are in use today:
+The toolbox-talk library (`toolbox_talks`) is built from public safety materials plus one
+owner-supplied Word library. As of 2026-09-25 (seeded to both non-prod and prod), 112 talks:
 
-| Source | Rights | Count (seed set) |
+| Source | Rights | Count |
 | --- | --- | --- |
-| **NIOSH** (National Institute for Occupational Safety and Health) | U.S. Government work — public domain | 26 |
-| **CPWR** (The Center for Construction Research and Training) | © 2017 CPWR, "all rights reserved"; free to use, **with conditions** | 8 |
+| **OSHA** | U.S. Government work — public domain | 38 |
+| **NIOSH** (National Institute for Occupational Safety and Health) | U.S. Government work — public domain | 29 |
+| **CPWR** (The Center for Construction Research and Training) | © CPWR, "all rights reserved"; free to use, **with conditions** | 19 |
+| **EPA** | U.S. Government work — public domain | 3 |
+| **TailgatePro** (original talks written from OSHA / NIOSH / EPA pages) | `original-work` — see below | 20 |
+| **TailgatePro Library** (owner-supplied Word document) | `owner-provided-unverified` — see below | 3 |
 
 ## Why CPWR talks need special handling
 
@@ -55,6 +59,41 @@ the `toolbox_talks.attribution` JSONB column:
   prints `attribution.copyright` + `attribution.notice` beneath the talk
   content. How the finished PDF reaches the GC by email is documented in
   `docs/meeting-flow-design.md` under "Phase 5 hook point".
+
+## Talks rebuilt from agency sources (Word-library replacements)
+
+Where the Word library's talk was boilerplate, the talk was rebuilt from a real agency source found on an allowed
+domain only (`osha.gov`, `cdc.gov/niosh`, `epa.gov`, `cpwr.com`, state `.gov`). These talks carry the agency's own
+`attribution` (OSHA and EPA: `license: "public-domain"`, U.S. Government work; NIOSH as above; CPWR as above) plus
+`source_ref: "TBT-NNN"` linking back to the Word-library number. Commercial toolbox-talk sites are never used. Some CPWR
+PDFs are marked "All rights reserved" / "verify reuse terms"; the free-use-with-attribution conditions above still
+apply, and the auditor flags them individually.
+
+**Not usable: OSHA Susan Harwood grantee materials.** OSHA hosts training materials written by grant recipients
+(`osha.gov/harwoodgrants`, `obis.osha.gov/dte/grant_materials`). They are the grantee's copyright, not U.S. Government
+works, and OSHA's page permits reuse "solely for non-commercial, instructional, personal, or scholarly purposes" with
+"no fee", and prohibits "any modification" without the owner's written permission. A paid product that adapts the text
+cannot meet that, so none of these are used (three were found and removed: sheet-metal gas cylinders, drill press
+trainer script, slips/trips/falls handout).
+
+## Original TailgatePro talks (written from OSHA / NIOSH / EPA sources)
+
+Where no agency talk existed for a Word-library topic, TailgatePro wrote an original talk from the governing
+regulation or agency guidance page (source files in `data/authored/`, built by `scripts/build-authored-talks.js`).
+Their `attribution` is `source: "TailgatePro"`, `license: "original-work"`, `source_url` = the primary page read,
+`source_ref: "TBT-NNN"`, and a `notice` naming the source and ending "Not an endorsement by OSHA / NIOSH / EPA."
+Regulation and agency text is a U.S. Government work in the public domain; the wording is TailgatePro's own, so
+these carry no third-party copyright. Each was checked claim-by-claim against the pages it cites before approval;
+unverified general advice is prefixed "Good practice:".
+
+## Owner-provided talks (Word library)
+
+Talks imported from `data/300_Toolbox_Talks_Library.docx` (see
+`docs/toolbox-library-import-report.md`) are not CPWR/NIOSH content and carry no agency copyright. Their
+`attribution` is `source: "TailgatePro Library"`, `license: "owner-provided-unverified"`, `source_url: null`,
+`source_ref: "TBT-NNN"`, with a `notice` that makes no CPWR/NIOSH claim. The source document names no author or
+license, so **confirm rights before publishing** (tracked in `docs/tasks.md` Phase 10). The "notice ends with *not
+an endorsement by CPWR or NIOSH*" rule above applies to CPWR/NIOSH talks only.
 
 ## Rule for future harvests
 

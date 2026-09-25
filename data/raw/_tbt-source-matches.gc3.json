@@ -1,0 +1,195 @@
+{
+  "160": {
+    "status": "no-source",
+    "note": "Customer/public relations conduct; no OSHA/NIOSH/EPA/CPWR talk material"
+  },
+  "161": {
+    "status": "no-source",
+    "note": "Public protection on customer sites; no dedicated agency content within allowed domains"
+  },
+  "162": {
+    "status": "no-source",
+    "note": "Site security/customer premises; not agency-covered"
+  },
+  "163": {
+    "status": "no-source",
+    "note": "Site access control (security); not agency-covered"
+  },
+  "164": {
+    "status": "no-source",
+    "note": "Vulnerable persons/children on site; not agency-covered"
+  },
+  "165": {
+    "status": "no-source",
+    "note": "Unauthorized access/security; not agency-covered"
+  },
+  "166": {
+    "status": "matched",
+    "raw_file": "osha-work-zone-traffic-safety.md",
+    "source_url": "https://www.osha.gov/sites/default/files/publications/work_zone_traffic_safety.pdf",
+    "agency": "OSHA",
+    "note": ""
+  },
+  "167": {
+    "status": "matched",
+    "raw_file": "cpwr-work-zone-safety-working-around-vehicles.md",
+    "source_url": "https://www.cpwr.com/wp-content/uploads/TT-Work_Zone_Safety_Working_Around_Vehicles.pdf",
+    "agency": "CPWR",
+    "note": ""
+  },
+  "168": {
+    "status": "no-source",
+    "note": "structurer rejected the source as unfit: source is a navigation page with no usable content"
+  },
+  "170": {
+    "status": "no-source",
+    "note": "Waste segregation is UK-style housekeeping/environmental; no suitable agency talk source found"
+  },
+  "172": {
+    "status": "no-source",
+    "note": "first source rejected by auditor; second search found nothing suitable on allowed domains: Only HAZWOPER administrative/standard material (OSHA fact sheet FS hazardous waste, 1910.120/1926.65, topic page link lists). Closest real content is NIOSH/OSHA/USCG/EPA Guidance Manual 85-115 (drum/container handling chapter) but it is a several-hundred-page site-manager document, not worker-level for a construction crew; not saved."
+  },
+  "177": {
+    "status": "matched",
+    "raw_file": "epa-stormwater-discharges-construction.md",
+    "source_url": "https://www.epa.gov/npdes/stormwater-discharges-construction-activities",
+    "agency": "EPA",
+    "note": ""
+  },
+  "178": {
+    "status": "no-source",
+    "note": "Environmental incident reporting is company procedure; no suitable agency talk source"
+  },
+  "179": {
+    "status": "no-source",
+    "note": "structurer rejected the source as unfit: OSHA oil-spill page does not cover spill kits"
+  },
+  "180": {
+    "status": "matched",
+    "raw_file": "epa-storm-drain-inlet-protection.md",
+    "source_url": "https://www.epa.gov/system/files/documents/2021-11/bmp-storm-drain-inlet-protection.pdf",
+    "agency": "EPA",
+    "note": ""
+  },
+  "183": {
+    "status": "matched",
+    "raw_file": "epa-construction-dust-control.md",
+    "source_url": "https://www.epa.gov/system/files/documents/2021-11/bmp-dust-control.pdf",
+    "agency": "EPA",
+    "note": ""
+  },
+  "207": {
+    "status": "no-source",
+    "note": "Protecting customer property; quality/customer relations, not agency-covered"
+  },
+  "239": {
+    "status": "no-source",
+    "note": "structurer rejected the source as unfit: source is a list of standards, no hazard/control content"
+  },
+  "240": {
+    "status": "no-source",
+    "note": "structurer rejected the source as unfit: OSHA 2236 only mentions racks in passing"
+  },
+  "241": {
+    "status": "no-source",
+    "note": "shares a source already claimed within this import (osha-materials-handling-and-storage.md); same source as first TBT in group"
+  },
+  "242": {
+    "status": "no-source",
+    "note": "shares a source already claimed within this import (osha-materials-handling-and-storage.md); same source as first TBT in group"
+  },
+  "243": {
+    "status": "no-source",
+    "note": "shares a source already claimed within this import (osha-materials-handling-and-storage.md); same source as first TBT in group"
+  },
+  "248": {
+    "status": "matched",
+    "raw_file": "osha-1926-350-gas-welding-and-cutting.md",
+    "source_url": "https://www.osha.gov/laws-regs/regulations/standardnumber/1926/1926.350",
+    "agency": "OSHA",
+    "note": ""
+  },
+  "249": {
+    "status": "duplicate-of-existing",
+    "existing_raw": "cpwr-housekeeping.md",
+    "note": ""
+  },
+  "250": {
+    "status": "matched",
+    "raw_file": "osha-grinder-checklist.md",
+    "source_url": "https://www.osha.gov/machine-guarding/new-grinder-checklist",
+    "agency": "OSHA",
+    "note": ""
+  },
+  "251": {
+    "status": "no-source",
+    "note": "source is a Susan Harwood grantee-authored work; OSHA permits reuse only for non-commercial use with no fee and no modification, which a paid product adapting the text cannot meet; reverted to Word-library content"
+  },
+  "253": {
+    "status": "matched",
+    "raw_file": "osha-1910-215-abrasive-wheel-machinery.md",
+    "source_url": "https://www.osha.gov/laws-regs/regulations/standardnumber/1910/1910.215",
+    "agency": "OSHA",
+    "note": ""
+  },
+  "256": {
+    "status": "matched",
+    "raw_file": "osha-hand-and-power-tools.md",
+    "source_url": "https://www.osha.gov/sites/default/files/publications/OSHA3080.pdf",
+    "agency": "OSHA",
+    "note": ""
+  },
+  "261": {
+    "status": "no-source",
+    "note": "shares a source already claimed within this import (osha-hand-and-power-tools.md); same source as first TBT in group"
+  },
+  "274": {
+    "status": "no-source",
+    "note": "Roller shutter/door safety; no suitable OSHA/NIOSH/CPWR talk found"
+  },
+  "275": {
+    "status": "no-source",
+    "note": "Moving doors; no suitable agency source found"
+  },
+  "276": {
+    "status": "no-source",
+    "note": "Conveyors: OSHA 1917.48 is marine terminals only; no construction-relevant source"
+  },
+  "277": {
+    "status": "matched",
+    "raw_file": "osha-fan-blade-guarding.md",
+    "source_url": "https://www.osha.gov/enforcement/directives/std-01-12-001",
+    "agency": "OSHA",
+    "note": ""
+  },
+  "295": {
+    "status": "no-source",
+    "note": "shares a source already claimed within this import (osha-hand-and-power-tools.md); same source as first TBT in group"
+  },
+  "296": {
+    "status": "matched",
+    "raw_file": "osha-1926-20-general-safety-provisions.md",
+    "source_url": "https://www.osha.gov/laws-regs/regulations/standardnumber/1926/1926.20",
+    "agency": "OSHA",
+    "note": ""
+  },
+  "297": {
+    "status": "matched",
+    "raw_file": "osha-1926-302-power-operated-hand-tools.md",
+    "source_url": "https://www.osha.gov/laws-regs/regulations/standardnumber/1926/1926.302",
+    "agency": "OSHA",
+    "note": ""
+  },
+  "298": {
+    "status": "no-source",
+    "note": "shares a source already claimed within this import (osha-1926-302-power-operated-hand-tools.md)"
+  },
+  "299": {
+    "status": "no-source",
+    "note": "Customer premises behavior; conduct topic, not agency-covered"
+  },
+  "300": {
+    "status": "no-source",
+    "note": "Customer premises hygiene; conduct topic, not agency-covered"
+  }
+}

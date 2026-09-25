@@ -1,0 +1,49 @@
+{
+  "n": "090",
+  "title": "Stop Work Authority",
+  "primary_trade": "General Construction",
+  "trade_tags": [
+    "General Construction"
+  ],
+  "osha_standards": [
+    "29 CFR 1926.20",
+    "29 CFR 1977.12"
+  ],
+  "source_url": "https://www.osha.gov/laws-regs/regulations/standardnumber/1977/1977.12",
+  "source_agency": "OSHA",
+  "source_checked": [
+    "https://www.osha.gov/laws-regs/regulations/standardnumber/1977/1977.12",
+    "https://www.osha.gov/laws-regs/regulations/standardnumber/1926/1926.20"
+  ],
+  "basis": "29 CFR 1977.12(b)(2) (refusal to work in dangerous conditions) and 29 CFR 1926.20(a)-(b)",
+  "summary": "Anyone on the crew should be able to stop work that looks unsafe. OSHA rules say what an employer may not require, and set narrow conditions under which a worker's refusal to do dangerous work is protected.",
+  "talking_points": [
+    "No contractor or subcontractor may require a worker to work in surroundings or under conditions that are unsanitary, hazardous or dangerous to health or safety (29 CFR 1926.20(a)).",
+    "Unsafe equipment must be tagged or locked out, or removed from service (1926.20(b)(3)). If you find a hazard, tell your supervisor so it can be fixed.",
+    "A worker's right to refuse dangerous work under 29 CFR 1977.12(b)(2) is protected only when all four of these are true: there is a real danger of death or serious injury that a reasonable person would see in the same circumstances; you refuse in good faith; there is no reasonable alternative; and there is not enough time, because of the urgency, to get the danger removed through regular enforcement channels.",
+    "Where possible, you must also have asked your employer to correct the danger and been unable to get it corrected.",
+    "Good practice: use your company's stop-work process first. Stop, make the area safe, report the hazard and do not restart until it is fixed."
+  ],
+  "site_hazards_to_check": [
+    "Work continuing near a hazard no one has corrected",
+    "Damaged or unsafe equipment still in use",
+    "Worker afraid to report a hazard",
+    "No named person to call when work is stopped",
+    "Restart without checking that the hazard is fixed"
+  ],
+  "discussion_questions": [
+    "Who do you tell first when you see a hazard, and what happens next?",
+    "What would make you stop work on this job today?",
+    "What has to be true before we restart after a stop?"
+  ],
+  "audit": {
+    "status": "approved",
+    "audited_at": "2026-09-25T20:37:49Z",
+    "osha_accuracy_verified": true,
+    "flags": [
+      "Verified 29 CFR 1977.12(b)(2) verbatim on osha.gov: real danger of death or serious injury a reasonable person would see, good-faith refusal, no reasonable alternative, insufficient time for regular enforcement channels, and where possible the employee sought correction from the employer. Talking points 3-4 match.",
+      "Verified 1926.20(a) (contractor may not require hazardous/dangerous conditions) and (b)(3) (tag/lock out or remove unsafe equipment).",
+      "1977.12 is an OSHA anti-discrimination interpretation (Part 1977), not a 1926 construction standard; no 1926 section states a stop-work right, so this is the appropriate cite. Talk frames refusal protection as narrow and does not promise legal protection."
+    ]
+  }
+}

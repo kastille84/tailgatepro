@@ -1,0 +1,56 @@
+{
+  "id": "chemical-spill-response",
+  "title": "Chemical Spill Response",
+  "primary_trade": "General Construction",
+  "trade_tags": [
+    "General Construction",
+    "Plumbing"
+  ],
+  "osha_standards": [
+    "29 CFR 1926.65"
+  ],
+  "estimated_minutes": 5,
+  "summary": "Not every spill is an emergency. OSHA separates small incidental releases the crew can control safely from emergencies that need a planned response, and tells you how to tell them apart.",
+  "talking_points": [
+    "A release that can be absorbed, neutralized or otherwise controlled at the time of release by workers in the immediate release area is not an emergency response under the standard (29 CFR 1926.65(a)(3)).",
+    "OSHA says the quantity spilled does not by itself decide whether a spill is an emergency. Consider the volume, the material and the location, and how much danger workers face.",
+    "OSHA lists signs of an emergency: high exposure to toxic substances, a threat to life or limb, workers having to evacuate, IDLH conditions, a fire or explosion hazard, an oxygen-deficient condition, or a need for immediate attention because of danger.",
+    "An ordinary spill that workers can handle safely is not an emergency. Nuisance spills and minor releases that do not require immediate attention because of danger are not emergencies.",
+    "Good practice: if you are in doubt whether a spill is safe to handle, leave the area, warn others and call your supervisor.",
+    "For real emergencies, the employer needs a written emergency response plan before anyone responds (1926.65(q)(1)). If the employer evacuates everyone and does not let workers handle the emergency, compliance with 1926.35 can stand in for the plan.",
+    "Only trained, designated responders handle an emergency. Responders exposed to an inhalation hazard wear positive-pressure self-contained breathing apparatus until monitoring shows a lower level of protection is enough (1926.65(q)(3)(iv)).",
+    "Good practice: before you clean up any spill, find out what spilled and read its safety data sheet."
+  ],
+  "site_hazards_to_check": [
+    "Spilled product that no one has identified",
+    "Vapors or fumes near the spill",
+    "Ignition sources near a spilled flammable liquid",
+    "Spill running toward a drain, excavation or confined space",
+    "Workers cleaning up without the PPE the SDS calls for",
+    "No named contact or plan for a spill that is too big to handle"
+  ],
+  "discussion_questions": [
+    "What is the difference between a spill we can clean up and one we must report and evacuate?",
+    "Who is the designated responder on this site, and how do we reach them?",
+    "Where do we find out what a spilled product is and what PPE we need to handle it?"
+  ],
+  "attribution": {
+    "source": "TailgatePro",
+    "publisher": "TailgatePro",
+    "copyright": "Original TailgatePro content, written from 29 CFR 1926.65 (Hazardous waste operations and emergency response) and OSHA's July 31, 1990 letter of interpretation on incidental spills. Regulation and agency text is U.S. Government work in the public domain; the wording here is TailgatePro's own.",
+    "license": "original-work",
+    "source_url": "https://www.osha.gov/laws-regs/regulations/standardnumber/1926/1926.65",
+    "source_ref": "TBT-112",
+    "notice": "Written from 29 CFR 1926.65 (Hazardous waste operations and emergency response) and OSHA's July 31, 1990 letter of interpretation on incidental spills. General guidance only; follow your company safety program and site-specific requirements. Not an endorsement by OSHA."
+  },
+  "audit": {
+    "status": "approved",
+    "audited_at": "2026-09-25T20:37:57.253Z",
+    "osha_accuracy_verified": true,
+    "flags": [
+      "Verified against 1926.65(a)(3), (q)(1), (q)(3)(iv) and OSHA 1990-07-31 interpretation: all quotes, paragraph cites and the emergency-sign list match; no changes.",
+      "Point 1 cites the incidental-release exclusion; no numeric claims. Good-practice points carry no regulatory claims.",
+      "Not a duplicate of any approved talk (processed spill talk is needs_revision)."
+    ]
+  }
+}

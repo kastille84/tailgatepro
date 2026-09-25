@@ -1,0 +1,280 @@
+{
+  "126": {
+    "status": "matched",
+    "raw_file": "osha-welding-fumes-and-gases.md",
+    "source_url": "https://www.osha.gov/sites/default/files/publications/OSHA_FS-3647_WELDING.pdf",
+    "agency": "OSHA",
+    "note": "ledger reconstructed after a tooling error; "
+  },
+  "127": {
+    "status": "matched",
+    "raw_file": "osha-welding-fumes-and-gases.md",
+    "source_url": "https://www.osha.gov/sites/default/files/publications/OSHA_FS-3647_WELDING.pdf",
+    "agency": "OSHA",
+    "note": "ledger reconstructed after a tooling error; "
+  },
+  "244": {
+    "status": "matched",
+    "raw_file": "osha-1926-441-batteries-and-battery-charging.md",
+    "source_url": "https://www.osha.gov/laws-regs/regulations/standardnumber/1926/1926.441",
+    "agency": "OSHA",
+    "note": "ledger reconstructed after a tooling error; "
+  },
+  "245": {
+    "status": "matched",
+    "raw_file": "osha-1926-441-batteries-and-battery-charging.md",
+    "source_url": "https://www.osha.gov/laws-regs/regulations/standardnumber/1926/1926.441",
+    "agency": "OSHA",
+    "note": "ledger reconstructed after a tooling error; "
+  },
+  "246": {
+    "status": "no-source",
+    "note": "ledger reconstructed after a tooling error; nothing usable on allowed domains"
+  },
+  "247": {
+    "status": "no-source",
+    "note": "ledger reconstructed after a tooling error; nothing usable on allowed domains"
+  },
+  "252": {
+    "status": "matched",
+    "raw_file": "osha-hand-and-power-tools.md",
+    "source_url": "https://www.osha.gov/sites/default/files/publications/osha3080.pdf",
+    "agency": "OSHA",
+    "note": "ledger reconstructed after a tooling error; "
+  },
+  "254": {
+    "status": "duplicate-of-existing",
+    "existing_raw": "cpwr-power-saw-safety.md",
+    "note": "ledger reconstructed after a tooling error; "
+  },
+  "255": {
+    "status": "duplicate-of-existing",
+    "existing_raw": "cpwr-power-saw-safety.md",
+    "note": "ledger reconstructed after a tooling error; "
+  },
+  "257": {
+    "status": "duplicate-of-existing",
+    "existing_raw": "cpwr-nail-gun-safety.md",
+    "note": "ledger reconstructed after a tooling error; "
+  },
+  "258": {
+    "status": "duplicate-of-existing",
+    "existing_raw": "cpwr-nail-gun-safety.md",
+    "note": "ledger reconstructed after a tooling error; "
+  },
+  "288": {
+    "status": "no-source",
+    "note": "ledger reconstructed after a tooling error; nothing usable on allowed domains"
+  },
+  "008": {
+    "status": "duplicate-of-existing",
+    "existing_raw": "niosh-equipment-safety-forklifts.md",
+    "note": "ledger reconstructed after a tooling error; "
+  },
+  "009": {
+    "status": "matched",
+    "raw_file": "cpwr-work-zone-safety-working-around-vehicles.md",
+    "source_url": "https://www.cpwr.com/wp-content/uploads/TT-Work_Zone_Safety_Working_Around_Vehicles.pdf",
+    "agency": "CPWR",
+    "note": "ledger reconstructed after a tooling error; "
+  },
+  "010": {
+    "status": "matched",
+    "raw_file": "cpwr-hand-tools.md",
+    "source_url": "https://www.cpwr.com/wp-content/uploads/HA-Hand_Tools.pdf",
+    "agency": "CPWR",
+    "note": "ledger reconstructed after a tooling error; "
+  },
+  "011": {
+    "status": "matched",
+    "raw_file": "osha-hand-and-power-tools.md",
+    "source_url": "https://www.osha.gov/sites/default/files/publications/osha3080.pdf",
+    "agency": "OSHA",
+    "note": "ledger reconstructed after a tooling error; "
+  },
+  "012": {
+    "status": "duplicate-of-existing",
+    "existing_raw": "niosh-electrical-safety-extension-cords.md",
+    "note": "ledger reconstructed after a tooling error; "
+  },
+  "015": {
+    "status": "duplicate-of-existing",
+    "existing_raw": "niosh-electrical-safety-power.md",
+    "note": "ledger reconstructed after a tooling error; "
+  },
+  "016": {
+    "status": "no-source",
+    "note": "ledger reconstructed after a tooling error; nothing usable on allowed domains"
+  },
+  "017": {
+    "status": "duplicate-of-existing",
+    "existing_raw": "niosh-arc-welding-and-fire-safety.md",
+    "note": "ledger reconstructed after a tooling error; "
+  },
+  "018": {
+    "status": "no-source",
+    "note": "ledger reconstructed after a tooling error; brazing/soldering not covered by the welding-fumes source"
+  },
+  "046": {
+    "status": "no-source",
+    "note": "ledger reconstructed after a tooling error; nothing usable on allowed domains"
+  },
+  "047": {
+    "status": "duplicate-of-existing",
+    "existing_raw": "cpwr-trench-safety.md",
+    "note": "ledger reconstructed after a tooling error; "
+  },
+  "050": {
+    "status": "matched",
+    "raw_file": "cpwr-preventing-falls-from-rooftops.md",
+    "source_url": "https://www.cpwr.com/wp-content/uploads/TT-Preventing_Falls_Rooftops.pdf",
+    "agency": "CPWR",
+    "note": "ledger reconstructed after a tooling error; "
+  },
+  "051": {
+    "status": "duplicate-of-existing",
+    "existing_raw": "niosh-prevent-falls-through-holes.md",
+    "note": "ledger reconstructed after a tooling error; "
+  },
+  "052": {
+    "status": "matched",
+    "raw_file": "cpwr-preventing-falls-from-rooftops.md",
+    "source_url": "https://www.cpwr.com/wp-content/uploads/TT-Preventing_Falls_Rooftops.pdf",
+    "agency": "CPWR",
+    "note": "ledger reconstructed after a tooling error; "
+  },
+  "053": {
+    "status": "matched",
+    "raw_file": "cpwr-preventing-falls-from-rooftops.md",
+    "source_url": "https://www.cpwr.com/wp-content/uploads/TT-Preventing_Falls_Rooftops.pdf",
+    "agency": "CPWR",
+    "note": "ledger reconstructed after a tooling error; "
+  },
+  "059": {
+    "status": "matched",
+    "raw_file": "cpwr-lift-zone-safety-planning-a-lift.md",
+    "source_url": "https://www.cpwr.com/wp-content/uploads/TT-Lift_Zone_Safety_Planning_Lift.pdf",
+    "agency": "CPWR",
+    "note": "ledger reconstructed after a tooling error; "
+  },
+  "060": {
+    "status": "matched",
+    "raw_file": "osha-1926-251-rigging-equipment-for-material-handling.md",
+    "source_url": "https://www.osha.gov/laws-regs/regulations/standardnumber/1926/1926.251",
+    "agency": "OSHA",
+    "note": "ledger reconstructed after a tooling error; "
+  },
+  "061": {
+    "status": "matched",
+    "raw_file": "osha-1926-251-rigging-equipment-for-material-handling.md",
+    "source_url": "https://www.osha.gov/laws-regs/regulations/standardnumber/1926/1926.251",
+    "agency": "OSHA",
+    "note": "ledger reconstructed after a tooling error; "
+  },
+  "062": {
+    "status": "matched",
+    "raw_file": "osha-1926-251-rigging-equipment-for-material-handling.md",
+    "source_url": "https://www.osha.gov/laws-regs/regulations/standardnumber/1926/1926.251",
+    "agency": "OSHA",
+    "note": "ledger reconstructed after a tooling error; "
+  },
+  "063": {
+    "status": "duplicate-of-existing",
+    "existing_raw": "niosh-crane-safety-stability-and-tipping.md",
+    "note": "ledger reconstructed after a tooling error; "
+  },
+  "064": {
+    "status": "matched",
+    "raw_file": "cpwr-lift-zone-safety-planning-a-lift.md",
+    "source_url": "https://www.cpwr.com/wp-content/uploads/TT-Lift_Zone_Safety_Planning_Lift.pdf",
+    "agency": "CPWR",
+    "note": "ledger reconstructed after a tooling error; "
+  },
+  "065": {
+    "status": "matched",
+    "raw_file": "osha-1926-1419-signals-general-requirements.md",
+    "source_url": "https://www.osha.gov/laws-regs/regulations/standardnumber/1926/1926.1419",
+    "agency": "OSHA",
+    "note": "ledger reconstructed after a tooling error; "
+  },
+  "066": {
+    "status": "no-source",
+    "note": "ledger reconstructed after a tooling error; nothing usable on allowed domains"
+  },
+  "067": {
+    "status": "no-source",
+    "note": "ledger reconstructed after a tooling error; nothing usable on allowed domains"
+  },
+  "068": {
+    "status": "matched",
+    "raw_file": "cpwr-work-zone-safety-working-around-vehicles.md",
+    "source_url": "https://www.cpwr.com/wp-content/uploads/TT-Work_Zone_Safety_Working_Around_Vehicles.pdf",
+    "agency": "CPWR",
+    "note": "ledger reconstructed after a tooling error; "
+  },
+  "069": {
+    "status": "matched",
+    "raw_file": "osha-motor-vehicle-crash-guidelines.md",
+    "source_url": "https://www.osha.gov/sites/default/files/publications/MOTOR_VEHICLE_GUIDE.pdf",
+    "agency": "OSHA",
+    "note": "ledger reconstructed after a tooling error; "
+  },
+  "070": {
+    "status": "matched",
+    "raw_file": "osha-motor-vehicle-crash-guidelines.md",
+    "source_url": "https://www.osha.gov/sites/default/files/publications/MOTOR_VEHICLE_GUIDE.pdf",
+    "agency": "OSHA",
+    "note": "ledger reconstructed after a tooling error; "
+  },
+  "071": {
+    "status": "no-source",
+    "note": "ledger reconstructed after a tooling error; nothing usable on allowed domains"
+  },
+  "072": {
+    "status": "no-source",
+    "note": "ledger reconstructed after a tooling error; nothing usable on allowed domains"
+  },
+  "073": {
+    "status": "matched",
+    "raw_file": "osha-motor-vehicle-crash-guidelines.md",
+    "source_url": "https://www.osha.gov/sites/default/files/publications/MOTOR_VEHICLE_GUIDE.pdf",
+    "agency": "OSHA",
+    "note": "ledger reconstructed after a tooling error; "
+  },
+  "074": {
+    "status": "no-source",
+    "note": "ledger reconstructed after a tooling error; shares a source already claimed within this import (cpwr-shiftwork-long-work-hours-fatigue.md); "
+  },
+  "075": {
+    "status": "matched",
+    "raw_file": "niosh-distracted-driving-at-work.md",
+    "source_url": "https://www.cdc.gov/niosh/motor-vehicle/distracted-driving/index.html",
+    "agency": "NIOSH",
+    "note": "ledger reconstructed after a tooling error; "
+  },
+  "076": {
+    "status": "matched",
+    "raw_file": "osha-motor-vehicle-crash-guidelines.md",
+    "source_url": "https://www.osha.gov/sites/default/files/publications/MOTOR_VEHICLE_GUIDE.pdf",
+    "agency": "OSHA",
+    "note": "ledger reconstructed after a tooling error; "
+  },
+  "077": {
+    "status": "no-source",
+    "note": "ledger reconstructed after a tooling error; nothing usable on allowed domains"
+  },
+  "078": {
+    "status": "no-source",
+    "note": "ledger reconstructed after a tooling error; nothing usable on allowed domains"
+  },
+  "081": {
+    "status": "duplicate-of-existing",
+    "existing_raw": "niosh-arc-welding-and-fire-safety.md",
+    "note": "ledger reconstructed after a tooling error; "
+  },
+  "098": {
+    "status": "duplicate-of-existing",
+    "existing_raw": "niosh-arc-welding-and-fire-safety.md",
+    "note": "ledger reconstructed after a tooling error; "
+  }
+}

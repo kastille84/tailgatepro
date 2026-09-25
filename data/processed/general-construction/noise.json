@@ -1,0 +1,53 @@
+{
+  "id": "noise",
+  "title": "Noise",
+  "primary_trade": "General Construction",
+  "trade_tags": [
+    "General Construction"
+  ],
+  "osha_standards": [
+    "29 CFR 1926.52"
+  ],
+  "estimated_minutes": 5,
+  "summary": "Loud noise damages the sensory cells in your ears, and the damage cannot be repaired. Wear the hearing protection your employer provides in high-noise areas and cut your time near loud equipment.",
+  "talking_points": [
+    "Loud noise damages the tiny sensory cells inside your ears. Once damaged, they cannot be repaired. Over time, too much noise causes permanent hearing loss and ringing in the ears (tinnitus).",
+    "Noise can also hide warnings and make it hard to understand what people say. Hearing loss can raise the risk of poor health outcomes such as cognitive decline and dementia.",
+    "Always wear the hearing protection your employer provides when you are around loud noise. Make sure it works with your other PPE.",
+    "Learn how to use hearing protection properly, including how to insert earplugs. Wash your hands before you insert them to help prevent infection.",
+    "Try the raised voice test. If you must shout to be heard from 3 feet away (arm's length), wear hearing protection.",
+    "Look for caution signs about hazardous noise, check the equipment manual to see if hearing protection is recommended, or ask your supervisor. A smartphone sound level meter app can also help.",
+    "Limit your time around loud noise. Take breaks from it, and move away from noise sources or move them away from your work area when possible.",
+    "Tell your supervisor if you notice ringing in your ears or muffled hearing at the end of your shift. Get a baseline hearing test early in your career and recheck it regularly."
+  ],
+  "site_hazards_to_check": [
+    "Jackhammers, saws, grinders, or other loud tools running where crews cannot talk at arm's length without shouting",
+    "Workers in loud areas with no hearing protection, or protection that does not fit with their hard hat or other PPE",
+    "Missing or faded caution signs for hazardous noise levels",
+    "Loud equipment placed close to where others are working"
+  ],
+  "discussion_questions": [
+    "Which tools or equipment on this job are loud enough to need hearing protection?",
+    "How do you do the raised voice test, and what does it tell you?",
+    "What could we do today to make the work area quieter or shorten how long people are exposed?"
+  ],
+  "attribution": {
+    "source": "NIOSH",
+    "publisher": "National Institute for Occupational Safety and Health (NIOSH)",
+    "copyright": "U.S. Government work — public domain.",
+    "license": "public-domain",
+    "source_url": "https://www.cdc.gov/niosh/media/pdfs/2026/09/2026-118.pdf",
+    "source_ref": "TBT-122",
+    "notice": "Adapted from a NIOSH publication co-developed with CPWR (U.S. Government work). Reproduced with attribution for jobsite safety training; not an endorsement by CPWR or NIOSH."
+  },
+  "audit": {
+    "status": "approved",
+    "audited_at": "2026-09-25T18:11:25Z",
+    "osha_accuracy_verified": true,
+    "flags": [
+      "Verified against NIOSH 2026-118: sensory cells/tinnitus, cognitive decline, wear employer-provided protection compatible with other PPE, earplug insertion and hand washing, limit time/move away, raised voice test at 3 feet, caution signs/manual/smartphone app, baseline hearing test, tell supervisor about ringing. All quote-accurate; 8 points; no UK wording.",
+      "Citation 29 CFR 1926.52 (occupational noise exposure) is printed in the source and is correct for construction.",
+      "Attribution: domain cdc.gov/niosh is allowed; agency notice preserved. Source rights line says 'Verify reuse terms'. This is a NIOSH (DHHS) publication with no copyright line in the extracted text, so public-domain is reasonable, but it is co-developed with CPWR. Non-blocking: owner should glance at the PDF footer for any CPWR copyright line and, if one exists, switch to the CPWR free-use-with-attribution template (docs/content-attribution.md). Notice already disclaims CPWR/NIOSH endorsement."
+    ]
+  }
+}

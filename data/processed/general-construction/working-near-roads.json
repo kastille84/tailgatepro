@@ -1,0 +1,58 @@
+{
+  "id": "working-near-roads",
+  "title": "Working Near Roads",
+  "primary_trade": "General Construction",
+  "trade_tags": [
+    "General Construction",
+    "Excavation"
+  ],
+  "osha_standards": [
+    "29 CFR 1926.200",
+    "29 CFR 1926.201",
+    "29 CFR 1926.56"
+  ],
+  "estimated_minutes": 5,
+  "summary": "Workers near moving vehicles and traffic can be struck by them. A traffic control plan, standard signs and devices, high-visibility clothing, trained flaggers, and good lighting help keep work zones safe.",
+  "talking_points": [
+    "Transportation incidents and workers struck by vehicles or mobile equipment account for the highest number of fatal work injuries, according to the Bureau of Labor Statistics.",
+    "Where vehicles and workers share an area, there must be a traffic control plan. Drivers, workers on foot, and pedestrians must be able to see and understand their routes.",
+    "Use standard highway signs, cones, barrels, barricades, and message boards. Use them inside the work zone, too.",
+    "Barriers, crash cushions, and truck-mounted attenuators help limit motorists from entering the work zone.",
+    "Flaggers must wear high-visibility clothing that is performance class 2 or 3. This makes them visible for at least 1,000 feet. Workers on foot should wear class 1, 2, or 3 garments.",
+    "Flaggers should be trained or certified. They should use STOP/SLOW paddles or paddles with lights. Use flags only in emergencies. Warn drivers with signs that a flagger is ahead.",
+    "Light flagger stations. Lighting for workers on foot and equipment operators should be at least 5 foot-candles. Where lighting is not enough, use flares or chemical lighting, and control glare.",
+    "Know your site's routes, hand signals, and each vehicle's blind spots. Use seat belts and rollover protection on equipment and vehicles as the manufacturer states."
+  ],
+  "site_hazards_to_check": [
+    "No traffic control plan, or routes drivers and workers on foot cannot see or understand",
+    "Missing or nonstandard signs, cones, barrels, or barricades",
+    "Workers on foot or flaggers without high-visibility clothing that is class 1, 2, or 3 as required",
+    "Poor lighting at flagger stations and night work areas, or glare affecting workers and drivers",
+    "Vehicles and equipment with blind spots near workers on foot",
+    "Workers in traffic areas with no barrier or crash protection"
+  ],
+  "discussion_questions": [
+    "What is our traffic control plan, and where do vehicles and people on foot cross paths?",
+    "What high-visibility class is your vest, and how far away can drivers see you?",
+    "What are the blind spots on the equipment working near us today?"
+  ],
+  "attribution": {
+    "source": "OSHA",
+    "publisher": "Occupational Safety and Health Administration (OSHA)",
+    "copyright": "U.S. Government work — public domain.",
+    "license": "public-domain",
+    "source_url": "https://www.osha.gov/sites/default/files/publications/work_zone_traffic_safety.pdf",
+    "source_ref": "TBT-166",
+    "notice": "Adapted from an OSHA publication (U.S. Government work). Reproduced with attribution for jobsite safety training; not an endorsement by OSHA."
+  },
+  "audit": {
+    "status": "approved",
+    "audited_at": "2026-09-25T18:10:19Z",
+    "osha_accuracy_verified": true,
+    "flags": [
+      "Every figure is quote-accurate to OSHA Work Zone Traffic Safety FactSheet: class 2 or 3 for flaggers, 1,000 ft visibility, class 1/2/3 for workers on foot, 5 foot-candles, flares/chemical lighting, paddles, flags only in emergencies, BLS statement.",
+      "Citations verified: 1926.56(a) requires the Table D-3 minimum illumination (5 foot-candles for general construction areas), so the 5 fc figure and 1926.56 are correct; 1926.200 (signs, MUTCD traffic control) and 1926.201 (signaling, flaggers, high-visibility apparel) are correct 1926 sections for this content.",
+      "Non-blocking: source is a 2005 FactSheet that says it imposes no new requirements; the talk phrases some items as must (traffic control plan). Encourage crews to follow the authority in charge/MUTCD and the site plan. Public domain, notice preserved. No UK wording."
+    ]
+  }
+}

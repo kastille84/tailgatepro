@@ -1,0 +1,61 @@
+{
+  "id": "power-tools",
+  "title": "Power Tools",
+  "primary_trade": "Carpentry",
+  "trade_tags": [
+    "Carpentry",
+    "Electrical",
+    "General Construction"
+  ],
+  "osha_standards": [
+    "29 CFR 1926.300",
+    "29 CFR 1926.301",
+    "29 CFR 1926.302",
+    "29 CFR 1926.303",
+    "29 CFR 1926.404(b)(1)"
+  ],
+  "estimated_minutes": 5,
+  "summary": "Power tools are extremely hazardous when used improperly. Keep guards on, check cords and grounding, use the right switches, and disconnect tools before servicing.",
+  "talking_points": [
+    "Five basic rules: keep tools in good condition, use the right tool for the job, examine each tool for damage before use, follow the manufacturer's instructions, and use the right PPE.",
+    "Never carry a tool by the cord or hose. Never yank the cord or hose to unplug it. Keep cords and hoses away from heat, oil, and sharp edges.",
+    "Disconnect tools when not in use, before servicing or cleaning, and when changing blades, bits, or cutters.",
+    "Never remove safety guards while a tool is in use. A circular saw with a blade over 2 inches needs an upper guard and a lower guard that returns to cover the teeth automatically.",
+    "Secure your work with clamps or a vise so both hands are free. Do not hold a finger on the switch while carrying a plugged-in tool.",
+    "Electric tools need a three-wire cord plugged into a grounded receptacle, double insulation, or a low-voltage isolation transformer. Never remove the third prong. On construction sites, use GFCIs or an assured equipment grounding conductor program.",
+    "Inspect and ring-test an abrasive wheel before mounting it. Never stand in the plane of rotation as the wheel comes up to speed. Always use eye or face protection.",
+    "Remove damaged portable electric tools from use and tag them \"Do Not Use.\" Avoid loose clothing, ties, and jewelry that can catch in moving parts."
+  ],
+  "site_hazards_to_check": [
+    "Missing, removed, or damaged guards",
+    "Damaged cords or plugs, or a removed third prong",
+    "Temporary power without GFCI or an assured equipment grounding conductor program",
+    "Abrasive wheels that sound cracked or dead when tapped",
+    "Electric tools used in damp or wet locations they are not approved for, or cords creating a trip hazard",
+    "Damaged tools still in use with no \"Do Not Use\" tag"
+  ],
+  "discussion_questions": [
+    "What do you check on a power tool before you plug it in?",
+    "How is our temporary power protected on this job?",
+    "What do you do when you find a tool with a damaged cord or guard?"
+  ],
+  "attribution": {
+    "source": "OSHA",
+    "publisher": "Occupational Safety and Health Administration (OSHA)",
+    "copyright": "U.S. Government work — public domain.",
+    "license": "public-domain",
+    "source_url": "https://www.osha.gov/sites/default/files/publications/osha3080.pdf",
+    "source_ref": "TBT-011",
+    "notice": "Adapted from OSHA Publication 3080, Hand and Power Tools (2002 revised). Reproduced with attribution for jobsite safety training; not an endorsement by OSHA."
+  },
+  "audit": {
+    "status": "approved",
+    "audited_at": "2026-09-25T18:11:08Z",
+    "osha_accuracy_verified": true,
+    "flags": [
+      "Verified against OSHA 3080: five basic rules, cord handling, disconnecting, guard and 2-inch circular saw rule, three-wire/double insulation/isolation transformer, GFCI or AEGCP on construction sites, abrasive wheel ring test and plane of rotation, \"Do Not Use\" tag.",
+      "FIX: added 29 CFR 1926.303 (abrasive wheels) and 1926.404(b)(1) (GFCI/AEGCP), which the talk content also covers; 1926.300-.302 already correct.",
+      "Attribution: osha.gov, public domain, notice preserved. No UK wording."
+    ]
+  }
+}

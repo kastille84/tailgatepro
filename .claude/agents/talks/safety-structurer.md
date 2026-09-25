@@ -92,6 +92,27 @@ display the copyright markings (a CPWR licensing condition). Populate
 
 Every `notice` string ends with "not an endorsement by CPWR or NIOSH".
 
+## Word-library (TBT) talks — `agency: Owner-Provided`
+
+Raw files staged by `safety-docx-importer` (`data/raw/tbt-<NNN>-*.md`) have the same fields as above but different section names, no agency source URL, and UK/HSE wording. Normalize them like this (implemented in `scripts/lib/tbtBuild.js`; classification data in `scripts/lib/tbtCatalog.js`; run with `node scripts/build-tbt-talks.js`):
+
+| Word section | Talk field |
+| --- | --- |
+| Why It Matters | `summary` (US English, title kept) |
+| REQUIRED CONTROLS (3) + EMPLOYEES MUST (1, non-repeating) + EMPLOYEES MUST NOT (2, as "Never …") + GOOD PRACTICE (1) | `talking_points` (≤ 8, de-duplicated) |
+| EMERGENCY / INCIDENT RESPONSE | one final talking point: "If something goes wrong: …" (no schema change, so `scripts/lib/talkRow.js` needs none) |
+| KEY HAZARDS | `site_hazards_to_check` |
+| Supervisor Discussion | `discussion_questions` |
+| Category, Duration | ignored (Category is identical on every talk; use 5 min) |
+
+- **Localize to US usage** with `scripts/lib/usEnglish.js` (banksman→signal person, COSHH→HazCom/SDS, RAMS→JHA, F-Gas→EPA Section 608, RIDDOR→OSHA recordkeeping, "Permit to Work"→work permit, licence→license, -ise→-ize, 1.2 m→5 feet, "emergency services"→911/emergency responders, …). Give UK-only titles a US title in `TITLE_OVERRIDES`. Nothing UK/HSE may remain.
+- **Map OSHA standards yourself** (`ROWS` in the catalog) — the source has none. Prefer the specific section (29 CFR 1926.x for construction; 1910.x only where 1926 has no equivalent); use the General Duty Clause when nothing fits. Never cite HSE/UK law.
+- **Route trades by title keyword** — Category is useless. Reuse existing trades where they fit; new trades used so far: `hvac-refrigeration` ("HVAC & Refrigeration") and `driving-transportation` ("Driving & Transportation"). Default `general-construction`. Secondary trades go in `trade_tags`.
+- **Attribution** (never claim CPWR/NIOSH): `source: "TailgatePro Library"`, `publisher: "TailgatePro"`, `license: "owner-provided-unverified"`, `source_url: null`, `source_ref: "TBT-NNN"`, and a `notice` with no CPWR/NIOSH wording. The "ends with *not an endorsement by CPWR or NIOSH*" rule applies only to CPWR/NIOSH talks.
+- **Agency-sourced replacements.** If `data/raw/_tbt-source-matches.json` marks a TBT as `matched`, structure that talk **from the agency raw file** (`replaces: TBT-NNN` in its frontmatter), exactly like any CPWR/NIOSH talk — do not use the Word body. Keep the talk's trade, title (adjust only if the source clearly names the topic differently) and `id` from `scripts/lib/tbtCatalog.js`; overwrite the TBT-derived JSON at the same path; add `attribution.source_ref: "TBT-NNN"`. Use the attribution template for the source agency (CPWR, NIOSH, or **OSHA**: `license: "public-domain"`, `copyright: "U.S. Government work — public domain."`, publisher `"Occupational Safety and Health Administration (OSHA)"`, notice ends "not an endorsement by OSHA"; EPA and other US agencies follow the same public-domain pattern with their own name). Re-derive OSHA standards from the source content. Talks marked `no-source` or `duplicate-of-existing` stay as generated (or are skipped), and `scripts/build-tbt-talks.js` never overwrites a sourced talk.
+- **Skip, don't structure:** duplicates of existing talks, duplicates inside the import, and non-safety topics (quality, IT, ethics, procurement, sustainability) — see `docs/toolbox-library-import-report.md`.
+- **Idempotent:** re-running rewrites the same files; the index keeps existing NIOSH/CPWR entries untouched.
+
 # Master Index Schema (`data/processed/index-by-trade.json`)
 
 After processing or updating individual talk files, create or update `data/processed/index-by-trade.json`:

@@ -1,0 +1,54 @@
+{
+  "n": "062",
+  "title": "Overhead Hoists",
+  "primary_trade": "Heavy Equipment",
+  "trade_tags": [
+    "Heavy Equipment",
+    "General Construction"
+  ],
+  "osha_standards": [
+    "29 CFR 1926.554",
+    "29 CFR 1926.20"
+  ],
+  "source_url": "https://www.osha.gov/laws-regs/regulations/standardnumber/1926/1926.554",
+  "source_agency": "OSHA",
+  "source_checked": [
+    "https://www.osha.gov/laws-regs/regulations/standardnumber/1926/1926.554",
+    "https://www.osha.gov/laws-regs/regulations/standardnumber/1926/1926.20"
+  ],
+  "basis": "29 CFR 1926.554 (Overhead hoists) and 29 CFR 1926.20(b)(3)",
+  "summary": "Chain, lever and air hoists hold a load overhead, so the rated load, the support and where you stand all matter. This talk covers OSHA's overhead hoist requirements.",
+  "talking_points": [
+    "The manufacturer must indicate the safe working load on the hoist, and it must never be exceeded (29 CFR 1926.554(a)(1)).",
+    "The structure holding the hoist must have a safe working load equal to that of the hoist (1926.554(a)(2)).",
+    "Supports must let the hoist move freely and must not keep it from lining up with the load (1926.554(a)(3)).",
+    "Install the hoist so the operator can stand clear of the load at all times (1926.554(a)(4)).",
+    "Air hoists need an air supply with enough capacity and pressure, and air hoses must be positively connected so they cannot come loose in use (1926.554(a)(5)).",
+    "Overhead hoists must meet the manufacturer's requirements for design, installation, testing, inspection, maintenance and operation (1926.554(a)(6)).",
+    "Unsafe equipment must be tagged or locked out, or removed from service, until it is fixed (1926.20(b)(3)).",
+    "Good practice: never stand or work under a suspended load, and check the hoist and its hook before each lift."
+  ],
+  "site_hazards_to_check": [
+    "Hoist with the rated load missing or unreadable",
+    "Overhead support not rated for the hoist load",
+    "Hoist hung where the operator has to stand under or beside the load",
+    "Air hoist hose not securely connected",
+    "Hoist with a damaged chain, hook or controls still in use",
+    "No manufacturer inspection or maintenance record"
+  ],
+  "discussion_questions": [
+    "How do we confirm the rated load of this hoist and of what it hangs from?",
+    "Where should the operator stand when the load is lifted?",
+    "Who tags out a hoist that fails its inspection?"
+  ],
+  "audit": {
+    "status": "approved",
+    "audited_at": "2026-09-25T20:37:49Z",
+    "osha_accuracy_verified": true,
+    "flags": [
+      "Verified 1926.554(a)(1)-(a)(6) verbatim on osha.gov and 1926.20(b)(3) (tag/lock out or remove unsafe equipment); talking points match.",
+      "'Good practice' point contains no numbers or regulatory claim.",
+      "US English; no duplicate approved talk."
+    ]
+  }
+}

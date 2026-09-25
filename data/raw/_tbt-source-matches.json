@@ -1,0 +1,1051 @@
+{
+  "101": {
+    "status": "no-source",
+    "note": "ledger reconstructed after a tooling error; shares a source already claimed within this import (osha-permit-required-confined-spaces.md); "
+  },
+  "102": {
+    "status": "no-source",
+    "note": "ledger reconstructed after a tooling error; shares a source already claimed within this import (osha-permit-required-confined-spaces.md); "
+  },
+  "103": {
+    "status": "no-source",
+    "note": "ledger reconstructed after a tooling error; shares a source already claimed within this import (osha-permit-required-confined-spaces.md); "
+  },
+  "105": {
+    "status": "no-source",
+    "note": "first source rejected by auditor; second search found nothing suitable on allowed domains: Only regulation text (1926.302, 1910.242, 1915.131), OSHA interpretation letters, and OSHA 3080 (claimed by TBT-011) exist on allowed domains; Cal/OSHA construction pocket guide has only 1-2 line pneumatic tool rules. No worker-level compressed-air talk (air on skin, dead-ending, whip checks, <30 psi) found."
+  },
+  "106": {
+    "status": "no-source",
+    "note": "source is a Susan Harwood grantee-authored work; OSHA permits reuse only for non-commercial use with no fee and no modification, which a paid product adapting the text cannot meet; reverted to Word-library content"
+  },
+  "107": {
+    "status": "matched",
+    "raw_file": "osha-hazcom-safety-data-sheets-brief.md",
+    "source_url": "https://www.osha.gov/sites/default/files/publications/OSHA3514.pdf",
+    "agency": "OSHA",
+    "note": "ledger reconstructed after a tooling error; "
+  },
+  "109": {
+    "status": "matched",
+    "raw_file": "osha-hazcom-labels-and-pictograms.md",
+    "source_url": "https://www.osha.gov/sites/default/files/publications/osha3636.pdf",
+    "agency": "OSHA",
+    "note": "ledger reconstructed after a tooling error; "
+  },
+  "110": {
+    "status": "matched",
+    "raw_file": "osha-quickcard-hazard-communication-safety-data-sheets.md",
+    "source_url": "https://www.osha.gov/sites/default/files/publications/OSHA3493QuickCardSafetyDataSheet.pdf",
+    "agency": "OSHA",
+    "note": "Quick Card on SDS sections"
+  },
+  "111": {
+    "status": "no-source",
+    "note": "No agency worker talk specific to chemical storage found"
+  },
+  "112": {
+    "status": "no-source",
+    "note": "No standalone agency talk for chemical spill response in construction (HAZWOPER FAQ already in raw)"
+  },
+  "113": {
+    "status": "no-source",
+    "note": "only source (OSHA oil spills) already claimed for TBT-179"
+  },
+  "114": {
+    "status": "no-source",
+    "note": "ledger reconstructed after a tooling error; no agency source found (hvac search was shallow)"
+  },
+  "115": {
+    "status": "no-source",
+    "note": "No agency talk on cleaning chemicals found"
+  },
+  "116": {
+    "status": "matched",
+    "raw_file": "cpwr-solvents.md",
+    "source_url": "https://www.cpwr.com/wp-content/uploads/TT-Solvents.pdf",
+    "agency": "CPWR",
+    "note": ""
+  },
+  "117": {
+    "status": "no-source",
+    "note": "No agency talk on adhesives and sealants (CPWR isocyanates is a different topic)"
+  },
+  "118": {
+    "status": "no-source",
+    "note": "No agency talk on aerosols found"
+  },
+  "120": {
+    "status": "matched",
+    "raw_file": "osha-silica-standard-for-construction-fact-sheet.md",
+    "source_url": "https://www.osha.gov/sites/default/files/publications/OSHA3681.pdf",
+    "agency": "OSHA",
+    "note": "Silica dust control fact sheet; different URL from existing CPWR 45-silica"
+  },
+  "122": {
+    "status": "matched",
+    "raw_file": "niosh-noise-and-hearing-protection.md",
+    "source_url": "https://www.cdc.gov/niosh/media/pdfs/2026/09/2026-118.pdf",
+    "agency": "NIOSH",
+    "note": "NIOSH/CPWR Noise and Hearing Protection toolbox talk"
+  },
+  "123": {
+    "status": "matched",
+    "raw_file": "osha-hearing-conservation-in-construction.md",
+    "source_url": "https://www.osha.gov/sites/default/files/HearingConservationInConstruction-ToolboxTalk.pdf",
+    "agency": "OSHA",
+    "note": ""
+  },
+  "124": {
+    "status": "matched",
+    "raw_file": "cpwr-vibration-hand-and-arm.md",
+    "source_url": "https://www.cpwr.com/wp-content/uploads/TT-Vibration_Hand_Arm.pdf",
+    "agency": "CPWR",
+    "note": "Short 1-page talk"
+  },
+  "125": {
+    "status": "no-source",
+    "note": "No agency talk on whole-body vibration found"
+  },
+  "126": {
+    "status": "matched",
+    "raw_file": "osha-welding-fumes-and-gases.md",
+    "source_url": "https://www.osha.gov/sites/default/files/publications/OSHA_FS-3647_WELDING.pdf",
+    "agency": "OSHA",
+    "note": "ledger reconstructed after a tooling error; "
+  },
+  "127": {
+    "status": "no-source",
+    "note": "source already claimed by TBT-126"
+  },
+  "128": {
+    "status": "matched",
+    "raw_file": "osha-asbestos-fact-sheet.md",
+    "source_url": "https://www.osha.gov/sites/default/files/publications/OSHA3507.pdf",
+    "agency": "OSHA",
+    "note": ""
+  },
+  "129": {
+    "status": "matched",
+    "raw_file": "osha-legionnaires-disease-questions-and-answers.md",
+    "source_url": "https://www.osha.gov/sites/default/files/faq.pdf",
+    "agency": "OSHA",
+    "note": "second-pass source (verbatim); Verbatim OSHA Q&A: symptoms, how spread (mist inhalation), risk factors, growth temperatures, prevention, Pontiac fever, what to do if a coworker is diagnosed. Lacks respirator guidance and plumbing/HVAC crew tasks (those are on the already-claimed osha-legionellosis-control-prevention page and osha.gov/legionnaires-disease/hazards, whose Hazard Recognition page could supplement if allowed)."
+  },
+  "131": {
+    "status": "no-source",
+    "note": "Only sharps source found (BBFACT02) is used for TBT-132; biohazards already covered by NIOSH talk"
+  },
+  "132": {
+    "status": "no-source",
+    "note": "first source rejected by auditor; second search found nothing suitable on allowed domains: Allowed domains only offer healthcare-oriented needlestick material (NIOSH 2012-123, OSHA BBFACT02 already used, OSHA hospitals eTool) or household needle disposal (EPA); Harwood NRCA bloodborne chapter is a generic sample program with no found-needle/jobsite sharps procedure. CDC pages returned 403 to curl."
+  },
+  "133": {
+    "status": "no-source",
+    "note": "OSHA restrooms/sanitation page only retrievable as summary, not lossless; standard 1926.51 is regulation text"
+  },
+  "136": {
+    "status": "matched",
+    "raw_file": "cpwr-skin-cancer.md",
+    "source_url": "https://www.cpwr.com/wp-content/uploads/TT-Skin_Cancer.pdf",
+    "agency": "CPWR",
+    "note": "Sun exposure / skin cancer"
+  },
+  "137": {
+    "status": "matched",
+    "raw_file": "niosh-osha-protecting-workers-from-heat-illness-infosheet.md",
+    "source_url": "https://www.cdc.gov/niosh/docs/2011-174/pdfs/2011-174.pdf",
+    "agency": "NIOSH",
+    "note": "Heat illness infosheet covering hydration"
+  },
+  "138": {
+    "status": "no-source",
+    "note": "Working in Extreme Weather is not the cold-environments topic; no distinct source"
+  },
+  "139": {
+    "status": "matched",
+    "raw_file": "cpwr-shiftwork-long-work-hours-fatigue.md",
+    "source_url": "https://www.cpwr.com/wp-content/uploads/TT-Shift_Work.pdf",
+    "agency": "CPWR",
+    "note": ""
+  },
+  "140": {
+    "status": "no-source",
+    "note": "No agency talk on general fitness for work"
+  },
+  "141": {
+    "status": "no-source",
+    "note": "Too generic; no agency talk"
+  },
+  "142": {
+    "status": "matched",
+    "raw_file": "cpwr-lifting-and-carrying-materials.md",
+    "source_url": "https://www.cpwr.com/wp-content/uploads/TT-Lifting_Carrying_Materials.pdf",
+    "agency": "CPWR",
+    "note": "Ergonomics of lifting/carrying"
+  },
+  "143": {
+    "status": "no-source",
+    "note": "No agency talk on office workstation set-up in construction"
+  },
+  "144": {
+    "status": "matched",
+    "raw_file": "cpwr-workplace-stress.md",
+    "source_url": "https://www.cpwr.com/wp-content/uploads/TT-Workplace_Stress.pdf",
+    "agency": "CPWR",
+    "note": ""
+  },
+  "145": {
+    "status": "matched",
+    "raw_file": "cpwr-suicide-prevention.md",
+    "source_url": "https://www.cpwr.com/wp-content/uploads/TT-Suicide_Prevention.pdf",
+    "agency": "CPWR",
+    "note": "Mental health talk"
+  },
+  "146": {
+    "status": "no-source",
+    "note": "HR conduct topic, not agency-covered"
+  },
+  "147": {
+    "status": "no-source",
+    "note": "HR conduct topic, not agency-covered"
+  },
+  "148": {
+    "status": "no-source",
+    "note": "HR conduct topic, not agency-covered"
+  },
+  "149": {
+    "status": "no-source",
+    "note": "No agency talk"
+  },
+  "150": {
+    "status": "no-source",
+    "note": "No agency talk"
+  },
+  "151": {
+    "status": "no-source",
+    "note": "No standalone agency talk on competence/training"
+  },
+  "152": {
+    "status": "no-source",
+    "note": "OSHA young-workers construction pages only retrievable as summary, not lossless"
+  },
+  "153": {
+    "status": "no-source",
+    "note": "No agency talk"
+  },
+  "154": {
+    "status": "matched",
+    "raw_file": "osha-twi-bulletin-4-safety-and-health-training.md",
+    "source_url": "https://www.osha.gov/sites/default/files/publications/OSHA3859.pdf",
+    "agency": "OSHA",
+    "note": "Bulletin for staffing agencies/host employers, not worker-facing; long"
+  },
+  "155": {
+    "status": "no-source",
+    "note": "No agency talk"
+  },
+  "156": {
+    "status": "no-source",
+    "note": "No agency talk"
+  },
+  "157": {
+    "status": "no-source",
+    "note": "No agency talk on working alone"
+  },
+  "158": {
+    "status": "no-source",
+    "note": "No agency talk on isolated areas"
+  },
+  "159": {
+    "status": "no-source",
+    "note": "No agency talk on occupied premises"
+  },
+  "160": {
+    "status": "no-source",
+    "note": "Customer/public relations conduct; no OSHA/NIOSH/EPA/CPWR talk material"
+  },
+  "161": {
+    "status": "no-source",
+    "note": "Public protection on customer sites; no dedicated agency content within allowed domains"
+  },
+  "162": {
+    "status": "no-source",
+    "note": "Site security/customer premises; not agency-covered"
+  },
+  "163": {
+    "status": "no-source",
+    "note": "Site access control (security); not agency-covered"
+  },
+  "164": {
+    "status": "no-source",
+    "note": "Vulnerable persons/children on site; not agency-covered"
+  },
+  "165": {
+    "status": "no-source",
+    "note": "Unauthorized access/security; not agency-covered"
+  },
+  "166": {
+    "status": "matched",
+    "raw_file": "osha-work-zone-traffic-safety.md",
+    "source_url": "https://www.osha.gov/sites/default/files/publications/work_zone_traffic_safety.pdf",
+    "agency": "OSHA",
+    "note": ""
+  },
+  "167": {
+    "status": "no-source",
+    "note": "source already claimed by TBT-009"
+  },
+  "168": {
+    "status": "no-source",
+    "note": "structurer rejected the source as unfit: source is a navigation page with no usable content"
+  },
+  "170": {
+    "status": "no-source",
+    "note": "Waste segregation is UK-style housekeeping/environmental; no suitable agency talk source found"
+  },
+  "172": {
+    "status": "no-source",
+    "note": "first source rejected by auditor; second search found nothing suitable on allowed domains: Only HAZWOPER administrative/standard material (OSHA fact sheet FS hazardous waste, 1910.120/1926.65, topic page link lists). Closest real content is NIOSH/OSHA/USCG/EPA Guidance Manual 85-115 (drum/container handling chapter) but it is a several-hundred-page site-manager document, not worker-level for a construction crew; not saved."
+  },
+  "173": {
+    "status": "no-source",
+    "note": "same source as 022/271, which the auditor judged unfit (EPA 608 is recovery compliance; NIOSH page is general cold stress)"
+  },
+  "174": {
+    "status": "no-source",
+    "note": "same source as 022/271, which the auditor judged unfit (EPA 608 is recovery compliance; NIOSH page is general cold stress)"
+  },
+  "177": {
+    "status": "matched",
+    "raw_file": "epa-stormwater-discharges-construction.md",
+    "source_url": "https://www.epa.gov/npdes/stormwater-discharges-construction-activities",
+    "agency": "EPA",
+    "note": ""
+  },
+  "178": {
+    "status": "no-source",
+    "note": "Environmental incident reporting is company procedure; no suitable agency talk source"
+  },
+  "179": {
+    "status": "no-source",
+    "note": "structurer rejected the source as unfit: OSHA oil-spill page does not cover spill kits"
+  },
+  "180": {
+    "status": "matched",
+    "raw_file": "epa-storm-drain-inlet-protection.md",
+    "source_url": "https://www.epa.gov/system/files/documents/2021-11/bmp-storm-drain-inlet-protection.pdf",
+    "agency": "EPA",
+    "note": ""
+  },
+  "183": {
+    "status": "matched",
+    "raw_file": "epa-construction-dust-control.md",
+    "source_url": "https://www.epa.gov/system/files/documents/2021-11/bmp-dust-control.pdf",
+    "agency": "EPA",
+    "note": ""
+  },
+  "207": {
+    "status": "no-source",
+    "note": "Protecting customer property; quality/customer relations, not agency-covered"
+  },
+  "238": {
+    "status": "no-source",
+    "note": "ledger reconstructed after a tooling error; no agency source found (hvac search was shallow)"
+  },
+  "239": {
+    "status": "no-source",
+    "note": "structurer rejected the source as unfit: source is a list of standards, no hazard/control content"
+  },
+  "240": {
+    "status": "no-source",
+    "note": "structurer rejected the source as unfit: OSHA 2236 only mentions racks in passing"
+  },
+  "241": {
+    "status": "no-source",
+    "note": "shares a source already claimed within this import (osha-materials-handling-and-storage.md); same source as first TBT in group"
+  },
+  "242": {
+    "status": "no-source",
+    "note": "shares a source already claimed within this import (osha-materials-handling-and-storage.md); same source as first TBT in group"
+  },
+  "243": {
+    "status": "no-source",
+    "note": "shares a source already claimed within this import (osha-materials-handling-and-storage.md); same source as first TBT in group"
+  },
+  "244": {
+    "status": "matched",
+    "raw_file": "osha-1926-441-batteries-and-battery-charging.md",
+    "source_url": "https://www.osha.gov/laws-regs/regulations/standardnumber/1926/1926.441",
+    "agency": "OSHA",
+    "note": "ledger reconstructed after a tooling error; "
+  },
+  "245": {
+    "status": "no-source",
+    "note": "source already claimed by TBT-244"
+  },
+  "246": {
+    "status": "no-source",
+    "note": "ledger reconstructed after a tooling error; nothing usable on allowed domains"
+  },
+  "247": {
+    "status": "no-source",
+    "note": "ledger reconstructed after a tooling error; nothing usable on allowed domains"
+  },
+  "248": {
+    "status": "matched",
+    "raw_file": "osha-1926-350-gas-welding-and-cutting.md",
+    "source_url": "https://www.osha.gov/laws-regs/regulations/standardnumber/1926/1926.350",
+    "agency": "OSHA",
+    "note": ""
+  },
+  "249": {
+    "status": "duplicate-of-existing",
+    "existing_raw": "cpwr-housekeeping.md",
+    "note": ""
+  },
+  "250": {
+    "status": "matched",
+    "raw_file": "osha-grinder-checklist.md",
+    "source_url": "https://www.osha.gov/machine-guarding/new-grinder-checklist",
+    "agency": "OSHA",
+    "note": ""
+  },
+  "251": {
+    "status": "no-source",
+    "note": "source is a Susan Harwood grantee-authored work; OSHA permits reuse only for non-commercial use with no fee and no modification, which a paid product adapting the text cannot meet; reverted to Word-library content"
+  },
+  "252": {
+    "status": "no-source",
+    "note": "source already claimed by TBT-011"
+  },
+  "253": {
+    "status": "matched",
+    "raw_file": "osha-1910-215-abrasive-wheel-machinery.md",
+    "source_url": "https://www.osha.gov/laws-regs/regulations/standardnumber/1910/1910.215",
+    "agency": "OSHA",
+    "note": ""
+  },
+  "254": {
+    "status": "duplicate-of-existing",
+    "existing_raw": "cpwr-power-saw-safety.md",
+    "note": "ledger reconstructed after a tooling error; "
+  },
+  "255": {
+    "status": "duplicate-of-existing",
+    "existing_raw": "cpwr-power-saw-safety.md",
+    "note": "ledger reconstructed after a tooling error; "
+  },
+  "256": {
+    "status": "no-source",
+    "note": "source already claimed by TBT-011"
+  },
+  "257": {
+    "status": "duplicate-of-existing",
+    "existing_raw": "cpwr-nail-gun-safety.md",
+    "note": "ledger reconstructed after a tooling error; "
+  },
+  "258": {
+    "status": "duplicate-of-existing",
+    "existing_raw": "cpwr-nail-gun-safety.md",
+    "note": "ledger reconstructed after a tooling error; "
+  },
+  "259": {
+    "status": "no-source",
+    "note": "ledger reconstructed after a tooling error; no agency source found (hvac search was shallow)"
+  },
+  "260": {
+    "status": "no-source",
+    "note": "ledger reconstructed after a tooling error; no agency source found (hvac search was shallow)"
+  },
+  "261": {
+    "status": "no-source",
+    "note": "shares a source already claimed within this import (osha-hand-and-power-tools.md); same source as first TBT in group"
+  },
+  "263": {
+    "status": "no-source",
+    "note": "ledger reconstructed after a tooling error; no agency source found (hvac search was shallow)"
+  },
+  "264": {
+    "status": "no-source",
+    "note": "ledger reconstructed after a tooling error; no agency source found (hvac search was shallow)"
+  },
+  "265": {
+    "status": "no-source",
+    "note": "ledger reconstructed after a tooling error; no agency source found (hvac search was shallow)"
+  },
+  "266": {
+    "status": "no-source",
+    "note": "ledger reconstructed after a tooling error; no agency source found (hvac search was shallow)"
+  },
+  "267": {
+    "status": "no-source",
+    "note": "ledger reconstructed after a tooling error; no agency source found (hvac search was shallow)"
+  },
+  "268": {
+    "status": "no-source",
+    "note": "ledger reconstructed after a tooling error; no agency source found (hvac search was shallow)"
+  },
+  "269": {
+    "status": "no-source",
+    "note": "ledger reconstructed after a tooling error; no agency source found (hvac search was shallow)"
+  },
+  "270": {
+    "status": "no-source",
+    "note": "ledger reconstructed after a tooling error; no agency source found (hvac search was shallow)"
+  },
+  "271": {
+    "status": "no-source",
+    "note": "auditor: NIOSH source is general cold stress, no cold-room entrapment content; reverted to Word-library content"
+  },
+  "272": {
+    "status": "no-source",
+    "note": "same source as 022/271, which the auditor judged unfit (EPA 608 is recovery compliance; NIOSH page is general cold stress)"
+  },
+  "273": {
+    "status": "no-source",
+    "note": "ledger reconstructed after a tooling error; no agency source found (hvac search was shallow)"
+  },
+  "274": {
+    "status": "no-source",
+    "note": "Roller shutter/door safety; no suitable OSHA/NIOSH/CPWR talk found"
+  },
+  "275": {
+    "status": "no-source",
+    "note": "Moving doors; no suitable agency source found"
+  },
+  "276": {
+    "status": "no-source",
+    "note": "Conveyors: OSHA 1917.48 is marine terminals only; no construction-relevant source"
+  },
+  "277": {
+    "status": "matched",
+    "raw_file": "osha-fan-blade-guarding.md",
+    "source_url": "https://www.osha.gov/enforcement/directives/std-01-12-001",
+    "agency": "OSHA",
+    "note": ""
+  },
+  "278": {
+    "status": "no-source",
+    "note": "ledger reconstructed after a tooling error; no agency source found (hvac search was shallow)"
+  },
+  "279": {
+    "status": "no-source",
+    "note": "ledger reconstructed after a tooling error; no agency source found (hvac search was shallow)"
+  },
+  "280": {
+    "status": "no-source",
+    "note": "ledger reconstructed after a tooling error; no agency source found (hvac search was shallow)"
+  },
+  "281": {
+    "status": "no-source",
+    "note": "ledger reconstructed after a tooling error; no agency source found (hvac search was shallow)"
+  },
+  "282": {
+    "status": "no-source",
+    "note": "ledger reconstructed after a tooling error; no agency source found (hvac search was shallow)"
+  },
+  "283": {
+    "status": "no-source",
+    "note": "ledger reconstructed after a tooling error; no agency source found (hvac search was shallow)"
+  },
+  "284": {
+    "status": "no-source",
+    "note": "ledger reconstructed after a tooling error; no agency source found (hvac search was shallow)"
+  },
+  "285": {
+    "status": "no-source",
+    "note": "ledger reconstructed after a tooling error; no agency source found (hvac search was shallow)"
+  },
+  "286": {
+    "status": "no-source",
+    "note": "ledger reconstructed after a tooling error; no agency source found (hvac search was shallow)"
+  },
+  "287": {
+    "status": "no-source",
+    "note": "ledger reconstructed after a tooling error; no agency source found (hvac search was shallow)"
+  },
+  "288": {
+    "status": "no-source",
+    "note": "ledger reconstructed after a tooling error; nothing usable on allowed domains"
+  },
+  "289": {
+    "status": "no-source",
+    "note": "ledger reconstructed after a tooling error; no agency source found (hvac search was shallow)"
+  },
+  "290": {
+    "status": "no-source",
+    "note": "ledger reconstructed after a tooling error; no agency source found (hvac search was shallow)"
+  },
+  "293": {
+    "status": "no-source",
+    "note": "ledger reconstructed after a tooling error; no agency source found (hvac search was shallow)"
+  },
+  "294": {
+    "status": "no-source",
+    "note": "ledger reconstructed after a tooling error; no agency source found (hvac search was shallow)"
+  },
+  "295": {
+    "status": "no-source",
+    "note": "shares a source already claimed within this import (osha-hand-and-power-tools.md); same source as first TBT in group"
+  },
+  "296": {
+    "status": "matched",
+    "raw_file": "osha-1926-20-general-safety-provisions.md",
+    "source_url": "https://www.osha.gov/laws-regs/regulations/standardnumber/1926/1926.20",
+    "agency": "OSHA",
+    "note": ""
+  },
+  "297": {
+    "status": "matched",
+    "raw_file": "osha-1926-302-power-operated-hand-tools.md",
+    "source_url": "https://www.osha.gov/laws-regs/regulations/standardnumber/1926/1926.302",
+    "agency": "OSHA",
+    "note": ""
+  },
+  "298": {
+    "status": "no-source",
+    "note": "shares a source already claimed within this import (osha-1926-302-power-operated-hand-tools.md)"
+  },
+  "299": {
+    "status": "no-source",
+    "note": "Customer premises behavior; conduct topic, not agency-covered"
+  },
+  "300": {
+    "status": "no-source",
+    "note": "Customer premises hygiene; conduct topic, not agency-covered"
+  },
+  "045": {
+    "status": "matched",
+    "raw_file": "osha-accident-prevention-signs-and-tags-1926-200.md",
+    "source_url": "https://www.osha.gov/laws-regs/regulations/standardnumber/1926/1926.200",
+    "agency": "OSHA",
+    "note": "ledger reconstructed after a tooling error; "
+  },
+  "036": {
+    "status": "matched",
+    "raw_file": "osha-control-of-hazardous-energy.md",
+    "source_url": "https://www.osha.gov/sites/default/files/publications/osha3120.pdf",
+    "agency": "OSHA",
+    "note": "ledger reconstructed after a tooling error; "
+  },
+  "003": {
+    "status": "matched",
+    "raw_file": "osha-fall-protection-in-construction.md",
+    "source_url": "https://www.osha.gov/sites/default/files/publications/OSHA3146.pdf",
+    "agency": "OSHA",
+    "note": "ledger reconstructed after a tooling error; "
+  },
+  "079": {
+    "status": "matched",
+    "raw_file": "osha-fire-safety-fact-sheet.md",
+    "source_url": "https://www.osha.gov/sites/default/files/publications/osha3527.pdf",
+    "agency": "OSHA",
+    "note": "ledger reconstructed after a tooling error; "
+  },
+  "085": {
+    "status": "matched",
+    "raw_file": "osha-fundamentals-of-workplace-first-aid-program.md",
+    "source_url": "https://www.osha.gov/sites/default/files/publications/OSHA3317FIRST-AID.pdf",
+    "agency": "OSHA",
+    "note": "ledger reconstructed after a tooling error; "
+  },
+  "058": {
+    "status": "matched",
+    "raw_file": "osha-general-requirements-for-storage-1926-250.md",
+    "source_url": "https://www.osha.gov/laws-regs/regulations/standardnumber/1926/1926.250",
+    "agency": "OSHA",
+    "note": "ledger reconstructed after a tooling error; "
+  },
+  "049": {
+    "status": "matched",
+    "raw_file": "osha-guide-to-scaffold-use.md",
+    "source_url": "https://www.osha.gov/sites/default/files/publications/OSHA3150.pdf",
+    "agency": "OSHA",
+    "note": "ledger reconstructed after a tooling error; "
+  },
+  "082": {
+    "status": "matched",
+    "raw_file": "osha-how-to-plan-for-workplace-emergencies.md",
+    "source_url": "https://www.osha.gov/sites/default/files/publications/osha3088.pdf",
+    "agency": "OSHA",
+    "note": "ledger reconstructed after a tooling error; "
+  },
+  "087": {
+    "status": "matched",
+    "raw_file": "osha-incident-investigation-guide.md",
+    "source_url": "https://www.osha.gov/sites/default/files/IncInvGuide4Empl_Dec2015.pdf",
+    "agency": "OSHA",
+    "note": "ledger reconstructed after a tooling error; "
+  },
+  "095": {
+    "status": "matched",
+    "raw_file": "osha-job-hazard-analysis.md",
+    "source_url": "https://www.osha.gov/sites/default/files/publications/OSHA3071.pdf",
+    "agency": "OSHA",
+    "note": "ledger reconstructed after a tooling error; "
+  },
+  "099": {
+    "status": "matched",
+    "raw_file": "osha-permit-required-confined-spaces.md",
+    "source_url": "https://www.osha.gov/sites/default/files/publications/OSHA3138.pdf",
+    "agency": "OSHA",
+    "note": "ledger reconstructed after a tooling error; "
+  },
+  "001": {
+    "status": "matched",
+    "raw_file": "osha-personal-protective-equipment.md",
+    "source_url": "https://www.osha.gov/sites/default/files/publications/osha3151.pdf",
+    "agency": "OSHA",
+    "note": "ledger reconstructed after a tooling error; "
+  },
+  "080": {
+    "status": "matched",
+    "raw_file": "osha-portable-fire-extinguishers-1910-157.md",
+    "source_url": "https://www.osha.gov/laws-regs/regulations/standardnumber/1910/1910.157",
+    "agency": "OSHA",
+    "note": "ledger reconstructed after a tooling error; "
+  },
+  "088": {
+    "status": "matched",
+    "raw_file": "osha-recordkeeping-requirements.md",
+    "source_url": "https://www.osha.gov/recordkeeping",
+    "agency": "OSHA",
+    "note": "ledger reconstructed after a tooling error; "
+  },
+  "086": {
+    "status": "matched",
+    "raw_file": "osha-reporting-fatalities-and-hospitalizations-1904-39.md",
+    "source_url": "https://www.osha.gov/laws-regs/regulations/standardnumber/1904/1904.39",
+    "agency": "OSHA",
+    "note": "ledger reconstructed after a tooling error; "
+  },
+  "091": {
+    "status": "matched",
+    "raw_file": "osha-safety-and-health-programs-in-construction.md",
+    "source_url": "https://www.osha.gov/Publications/OSHA3886.pdf",
+    "agency": "OSHA",
+    "note": "ledger reconstructed after a tooling error; "
+  },
+  "043": {
+    "status": "no-source",
+    "note": "second-pass source was a general-industry, grantee-authored handout (TPMA); auditor found it thin for construction and license unverified; reverted to Word-library content"
+  },
+  "040": {
+    "status": "no-source",
+    "note": "ledger reconstructed after a tooling error; no dedicated agency publication"
+  },
+  "041": {
+    "status": "no-source",
+    "note": "ledger reconstructed after a tooling error; no dedicated agency publication"
+  },
+  "090": {
+    "status": "no-source",
+    "note": "ledger reconstructed after a tooling error; no dedicated agency publication"
+  },
+  "092": {
+    "status": "no-source",
+    "note": "ledger reconstructed after a tooling error; no dedicated agency publication"
+  },
+  "094": {
+    "status": "no-source",
+    "note": "ledger reconstructed after a tooling error; no dedicated agency publication"
+  },
+  "097": {
+    "status": "no-source",
+    "note": "ledger reconstructed after a tooling error; no dedicated agency publication"
+  },
+  "044": {
+    "status": "duplicate-of-existing",
+    "existing_raw": "cpwr-housekeeping.md",
+    "note": "ledger reconstructed after a tooling error; covered by existing CPWR housekeeping talk"
+  },
+  "057": {
+    "status": "duplicate-of-existing",
+    "existing_raw": "niosh-preventing-falling-objects.md",
+    "note": "ledger reconstructed after a tooling error; tools at height / dropped objects"
+  },
+  "020": {
+    "status": "no-source",
+    "note": "ledger reconstructed after a tooling error; shares a source already claimed within this import (osha-1926-350-gas-welding-and-cutting.md); "
+  },
+  "039": {
+    "status": "no-source",
+    "note": "ledger reconstructed after a tooling error; shares a source already claimed within this import (osha-safety-and-health-programs-in-construction.md); "
+  },
+  "054": {
+    "status": "no-source",
+    "note": "ledger reconstructed after a tooling error; shares a source already claimed within this import (osha-fall-protection-in-construction.md); "
+  },
+  "055": {
+    "status": "no-source",
+    "note": "ledger reconstructed after a tooling error; shares a source already claimed within this import (osha-fall-protection-in-construction.md); "
+  },
+  "083": {
+    "status": "no-source",
+    "note": "ledger reconstructed after a tooling error; shares a source already claimed within this import (osha-how-to-plan-for-workplace-emergencies.md); "
+  },
+  "084": {
+    "status": "no-source",
+    "note": "ledger reconstructed after a tooling error; shares a source already claimed within this import (osha-how-to-plan-for-workplace-emergencies.md); "
+  },
+  "089": {
+    "status": "no-source",
+    "note": "ledger reconstructed after a tooling error; shares a source already claimed within this import (osha-incident-investigation-guide.md); "
+  },
+  "093": {
+    "status": "no-source",
+    "note": "ledger reconstructed after a tooling error; shares a source already claimed within this import (osha-job-hazard-analysis.md); "
+  },
+  "096": {
+    "status": "no-source",
+    "note": "ledger reconstructed after a tooling error; shares a source already claimed within this import (osha-job-hazard-analysis.md); "
+  },
+  "021": {
+    "status": "no-source",
+    "note": "ledger reconstructed after a tooling error; no agency source found (hvac search was shallow)"
+  },
+  "022": {
+    "status": "no-source",
+    "note": "auditor: EPA Section 608 recovery rule is compliance, not worker safety; reverted to Word-library content"
+  },
+  "023": {
+    "status": "no-source",
+    "note": "same source as 022/271, which the auditor judged unfit (EPA 608 is recovery compliance; NIOSH page is general cold stress)"
+  },
+  "024": {
+    "status": "no-source",
+    "note": "ledger reconstructed after a tooling error; no agency source found (hvac search was shallow)"
+  },
+  "025": {
+    "status": "matched",
+    "raw_file": "osha-ammonia-refrigeration-hazards.md",
+    "source_url": "https://www.osha.gov/ammonia-refrigeration/hazards",
+    "agency": "OSHA",
+    "note": "ledger reconstructed after a tooling error; "
+  },
+  "026": {
+    "status": "no-source",
+    "note": "ledger reconstructed after a tooling error; no agency source found (hvac search was shallow)"
+  },
+  "027": {
+    "status": "no-source",
+    "note": "ledger reconstructed after a tooling error; no agency source found (hvac search was shallow)"
+  },
+  "029": {
+    "status": "no-source",
+    "note": "ledger reconstructed after a tooling error; no agency source found (hvac search was shallow)"
+  },
+  "030": {
+    "status": "no-source",
+    "note": "ledger reconstructed after a tooling error; no agency source found (hvac search was shallow)"
+  },
+  "031": {
+    "status": "no-source",
+    "note": "ledger reconstructed after a tooling error; no agency source found (hvac search was shallow)"
+  },
+  "032": {
+    "status": "no-source",
+    "note": "ledger reconstructed after a tooling error; no agency source found (hvac search was shallow)"
+  },
+  "033": {
+    "status": "no-source",
+    "note": "ledger reconstructed after a tooling error; no agency source found (hvac search was shallow)"
+  },
+  "034": {
+    "status": "no-source",
+    "note": "ledger reconstructed after a tooling error; no agency source found (hvac search was shallow)"
+  },
+  "035": {
+    "status": "no-source",
+    "note": "ledger reconstructed after a tooling error; no agency source found (hvac search was shallow)"
+  },
+  "038": {
+    "status": "no-source",
+    "note": "ledger reconstructed after a tooling error; no agency source found (hvac search was shallow)"
+  },
+  "008": {
+    "status": "duplicate-of-existing",
+    "existing_raw": "niosh-equipment-safety-forklifts.md",
+    "note": "ledger reconstructed after a tooling error; "
+  },
+  "009": {
+    "status": "matched",
+    "raw_file": "cpwr-work-zone-safety-working-around-vehicles.md",
+    "source_url": "https://www.cpwr.com/wp-content/uploads/TT-Work_Zone_Safety_Working_Around_Vehicles.pdf",
+    "agency": "CPWR",
+    "note": "ledger reconstructed after a tooling error; "
+  },
+  "010": {
+    "status": "matched",
+    "raw_file": "cpwr-hand-tools.md",
+    "source_url": "https://www.cpwr.com/wp-content/uploads/HA-Hand_Tools.pdf",
+    "agency": "CPWR",
+    "note": "ledger reconstructed after a tooling error; "
+  },
+  "011": {
+    "status": "matched",
+    "raw_file": "osha-hand-and-power-tools.md",
+    "source_url": "https://www.osha.gov/sites/default/files/publications/osha3080.pdf",
+    "agency": "OSHA",
+    "note": "ledger reconstructed after a tooling error; "
+  },
+  "012": {
+    "status": "duplicate-of-existing",
+    "existing_raw": "niosh-electrical-safety-extension-cords.md",
+    "note": "ledger reconstructed after a tooling error; "
+  },
+  "015": {
+    "status": "duplicate-of-existing",
+    "existing_raw": "niosh-electrical-safety-power.md",
+    "note": "ledger reconstructed after a tooling error; "
+  },
+  "016": {
+    "status": "no-source",
+    "note": "ledger reconstructed after a tooling error; nothing usable on allowed domains"
+  },
+  "017": {
+    "status": "duplicate-of-existing",
+    "existing_raw": "niosh-arc-welding-and-fire-safety.md",
+    "note": "ledger reconstructed after a tooling error; "
+  },
+  "018": {
+    "status": "no-source",
+    "note": "ledger reconstructed after a tooling error; brazing/soldering not covered by the welding-fumes source"
+  },
+  "046": {
+    "status": "no-source",
+    "note": "ledger reconstructed after a tooling error; nothing usable on allowed domains"
+  },
+  "047": {
+    "status": "duplicate-of-existing",
+    "existing_raw": "cpwr-trench-safety.md",
+    "note": "ledger reconstructed after a tooling error; "
+  },
+  "050": {
+    "status": "matched",
+    "raw_file": "cpwr-preventing-falls-from-rooftops.md",
+    "source_url": "https://www.cpwr.com/wp-content/uploads/TT-Preventing_Falls_Rooftops.pdf",
+    "agency": "CPWR",
+    "note": "ledger reconstructed after a tooling error; "
+  },
+  "051": {
+    "status": "duplicate-of-existing",
+    "existing_raw": "niosh-prevent-falls-through-holes.md",
+    "note": "ledger reconstructed after a tooling error; "
+  },
+  "052": {
+    "status": "no-source",
+    "note": "source already claimed by TBT-050"
+  },
+  "053": {
+    "status": "no-source",
+    "note": "source already claimed by TBT-050"
+  },
+  "059": {
+    "status": "matched",
+    "raw_file": "cpwr-lift-zone-safety-planning-a-lift.md",
+    "source_url": "https://www.cpwr.com/wp-content/uploads/TT-Lift_Zone_Safety_Planning_Lift.pdf",
+    "agency": "CPWR",
+    "note": "ledger reconstructed after a tooling error; "
+  },
+  "060": {
+    "status": "matched",
+    "raw_file": "osha-1926-251-rigging-equipment-for-material-handling.md",
+    "source_url": "https://www.osha.gov/laws-regs/regulations/standardnumber/1926/1926.251",
+    "agency": "OSHA",
+    "note": "ledger reconstructed after a tooling error; "
+  },
+  "061": {
+    "status": "no-source",
+    "note": "source already claimed by TBT-060"
+  },
+  "062": {
+    "status": "no-source",
+    "note": "source already claimed by TBT-060"
+  },
+  "063": {
+    "status": "duplicate-of-existing",
+    "existing_raw": "niosh-crane-safety-stability-and-tipping.md",
+    "note": "ledger reconstructed after a tooling error; "
+  },
+  "064": {
+    "status": "no-source",
+    "note": "source already claimed by TBT-059"
+  },
+  "065": {
+    "status": "matched",
+    "raw_file": "osha-1926-1419-signals-general-requirements.md",
+    "source_url": "https://www.osha.gov/laws-regs/regulations/standardnumber/1926/1926.1419",
+    "agency": "OSHA",
+    "note": "ledger reconstructed after a tooling error; "
+  },
+  "066": {
+    "status": "no-source",
+    "note": "ledger reconstructed after a tooling error; nothing usable on allowed domains"
+  },
+  "067": {
+    "status": "no-source",
+    "note": "ledger reconstructed after a tooling error; nothing usable on allowed domains"
+  },
+  "068": {
+    "status": "no-source",
+    "note": "source already claimed by TBT-009"
+  },
+  "069": {
+    "status": "matched",
+    "raw_file": "osha-motor-vehicle-crash-guidelines.md",
+    "source_url": "https://www.osha.gov/sites/default/files/publications/MOTOR_VEHICLE_GUIDE.pdf",
+    "agency": "OSHA",
+    "note": "ledger reconstructed after a tooling error; "
+  },
+  "070": {
+    "status": "no-source",
+    "note": "source already claimed by TBT-069"
+  },
+  "071": {
+    "status": "no-source",
+    "note": "ledger reconstructed after a tooling error; nothing usable on allowed domains"
+  },
+  "072": {
+    "status": "no-source",
+    "note": "ledger reconstructed after a tooling error; nothing usable on allowed domains"
+  },
+  "073": {
+    "status": "no-source",
+    "note": "source already claimed by TBT-069"
+  },
+  "074": {
+    "status": "no-source",
+    "note": "ledger reconstructed after a tooling error; shares a source already claimed within this import (cpwr-shiftwork-long-work-hours-fatigue.md); "
+  },
+  "075": {
+    "status": "matched",
+    "raw_file": "niosh-distracted-driving-at-work.md",
+    "source_url": "https://www.cdc.gov/niosh/motor-vehicle/distracted-driving/index.html",
+    "agency": "NIOSH",
+    "note": "ledger reconstructed after a tooling error; "
+  },
+  "076": {
+    "status": "no-source",
+    "note": "source already claimed by TBT-069"
+  },
+  "077": {
+    "status": "no-source",
+    "note": "ledger reconstructed after a tooling error; nothing usable on allowed domains"
+  },
+  "078": {
+    "status": "no-source",
+    "note": "ledger reconstructed after a tooling error; nothing usable on allowed domains"
+  },
+  "081": {
+    "status": "duplicate-of-existing",
+    "existing_raw": "niosh-arc-welding-and-fire-safety.md",
+    "note": "ledger reconstructed after a tooling error; "
+  },
+  "098": {
+    "status": "duplicate-of-existing",
+    "existing_raw": "niosh-arc-welding-and-fire-safety.md",
+    "note": "ledger reconstructed after a tooling error; "
+  }
+}

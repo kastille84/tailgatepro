@@ -1,0 +1,55 @@
+{
+  "id": "working-near-conveyors",
+  "title": "Working Near Conveyors",
+  "primary_trade": "General Construction",
+  "trade_tags": [
+    "General Construction",
+    "Heavy Equipment"
+  ],
+  "osha_standards": [
+    "29 CFR 1926.555"
+  ],
+  "estimated_minutes": 5,
+  "summary": "Conveyors can start without warning, catch clothing and drop material on people below. OSHA's conveyor rule sets stops, warnings, guards and lockout for work around them.",
+  "talking_points": [
+    "There must be a way to stop the motor or engine at the operator's station, and an audible warning signal sounded immediately before the conveyor starts up (29 CFR 1926.555(a)(1)).",
+    "If the operator's station is remote, there must also be a way to stop the conveyor at the motor or engine location (1926.555(a)(2)).",
+    "After an emergency stop, the conveyor cannot restart until the stop switch has been reset to the running or on position (1926.555(a)(3)).",
+    "Screw conveyors must be guarded to prevent contact with turning flights (1926.555(a)(4)).",
+    "Where a conveyor passes over a work area or walkway, guards must protect the people working or walking below it (1926.555(a)(5)).",
+    "All crossovers, aisles and passageways must be conspicuously marked with signs (1926.555(a)(6)).",
+    "Lock out or otherwise disable a conveyor and tag it \"Do Not Operate\" during repairs (1926.555(a)(7)).",
+    "Good practice: know where every stop is before you work near a conveyor, and never reach into or step over a running belt."
+  ],
+  "site_hazards_to_check": [
+    "No working stop control or start-up warning signal",
+    "Emergency stop that restarts the conveyor without being reset",
+    "Exposed screw conveyor flights or other unguarded moving parts",
+    "Conveyor over a walkway with no guard below",
+    "Crossovers and aisles that are not marked",
+    "Repairs under way without lockout and a Do Not Operate tag"
+  ],
+  "discussion_questions": [
+    "Where are the stops on the conveyors we work near, and can we reach them quickly?",
+    "Who locks out and tags a conveyor before repairs, and who removes the lock?",
+    "Where is it safe to cross the conveyor line on this site?"
+  ],
+  "attribution": {
+    "source": "TailgatePro",
+    "publisher": "TailgatePro",
+    "copyright": "Original TailgatePro content, written from 29 CFR 1926.555 (Conveyors). Regulation and agency text is U.S. Government work in the public domain; the wording here is TailgatePro's own.",
+    "license": "original-work",
+    "source_url": "https://www.osha.gov/laws-regs/regulations/standardnumber/1926/1926.555",
+    "source_ref": "TBT-276",
+    "notice": "Written from 29 CFR 1926.555 (Conveyors). General guidance only; follow your company safety program and site-specific requirements. Not an endorsement by OSHA."
+  },
+  "audit": {
+    "status": "approved",
+    "audited_at": "2026-09-25T20:37:57.253Z",
+    "osha_accuracy_verified": true,
+    "flags": [
+      "Verified 1926.555(a)(1)-(7) verbatim; no changes. (a)(8) ANSI B20.1 not used and not cited.",
+      "1926.555 is the construction conveyors rule; scope is correct."
+    ]
+  }
+}

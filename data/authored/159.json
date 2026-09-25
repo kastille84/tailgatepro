@@ -1,0 +1,54 @@
+{
+  "n": "159",
+  "title": "Working in Occupied Buildings",
+  "primary_trade": "General Construction",
+  "trade_tags": [
+    "General Construction"
+  ],
+  "osha_standards": [
+    "29 CFR 1926.34",
+    "29 CFR 1926.150"
+  ],
+  "source_url": "https://www.osha.gov/laws-regs/regulations/standardnumber/1926/1926.34",
+  "source_agency": "OSHA",
+  "source_checked": [
+    "https://www.osha.gov/laws-regs/regulations/standardnumber/1926/1926.34",
+    "https://www.osha.gov/laws-regs/regulations/standardnumber/1926/1926.150",
+    "https://www.epa.gov/pcbs/steps-safe-renovation-and-repair-activities"
+  ],
+  "basis": "29 CFR 1926.34 (Means of egress), 29 CFR 1926.150(a) (Fire protection) and EPA's \"Steps to Safe Renovation and Repair Activities\"",
+  "summary": "When people are still in the building, blocked exits, missing fire protection and drifting dust put them at risk. OSHA's egress and fire protection rules apply, and EPA's renovation guidance shows how to contain the work.",
+  "talking_points": [
+    "Exits must be arranged and maintained to give free and unobstructed way out from all parts of the building whenever it is occupied (29 CFR 1926.34(a)).",
+    "Each exit needs a readily visible sign. Where the exit or the way to it is not immediately visible, signs must show the route (1926.34(b)).",
+    "Keep exit facilities free of obstructions so they can be used instantly in a fire or other emergency (1926.34(c)).",
+    "The employer must develop a fire protection program to be followed throughout all phases of the construction work (1926.150(a)(1)).",
+    "Firefighting equipment must stay accessible at all times, be conspicuously located, and be inspected and maintained. Defective equipment must be replaced immediately (1926.150(a)(2)-(4)).",
+    "EPA's renovation guidance, written for older buildings with PCB-containing building materials, says to cover floors in the work area with heavy plastic sheeting (for example 4- or 6-mil) secured with tape, to help contain dust.",
+    "The same PCB guidance says to place signs, barrier tape and/or cones to keep all non-workers out of the work area, and to lock fence gates or doors to the work area during off hours.",
+    "At cleanup, the PCB guidance says to vacuum exposed surfaces, including walls and ceilings, with a HEPA vacuum, then scrub the work area with a general-purpose cleaner on a wet rag or mop until dust and debris are removed. Good practice: use the same containment ideas on any occupied-building job, and follow your project's own dust and hazardous-material requirements."
+  ],
+  "site_hazards_to_check": [
+    "Exit, stairway or corridor blocked by materials or equipment",
+    "Exit signs covered or missing",
+    "Fire extinguishers hidden, blocked or out of service",
+    "Dust escaping the work area into occupied space",
+    "Work area left open to the public or occupants after hours",
+    "Building occupants not told about work that affects their exits"
+  ],
+  "discussion_questions": [
+    "Which exits do occupants use on this job, and how do we keep them clear?",
+    "How do we keep dust and debris out of the occupied areas?",
+    "Who locks up the work area at the end of the day?"
+  ],
+  "audit": {
+    "status": "approved",
+    "audited_at": "2026-09-25T20:37:57.253Z",
+    "osha_accuracy_verified": true,
+    "flags": [
+      "Verified 1926.34(a)-(c) and 1926.150(a)(1)-(4) verbatim; EPA 'Steps to Safe Renovation and Repair Activities' quotes for sheeting, signs/tape/cones, off-hours locking, HEPA and wet wipe cleanup.",
+      "Fixes: EPA point said sheeting on 'floors and other surfaces to keep dust from contaminating the building interior' -> source only says cover floors with heavy plastic (4- or 6-mil) taped; PCB scope of the EPA page now stated in points 6-8, with a Good practice sentence for general use.",
+      "EPA content is guidance for PCB work only and is not presented as an OSHA requirement."
+    ]
+  }
+}

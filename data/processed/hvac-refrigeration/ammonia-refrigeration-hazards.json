@@ -1,0 +1,57 @@
+{
+  "id": "ammonia-refrigeration-hazards",
+  "title": "Ammonia Refrigeration Hazards",
+  "primary_trade": "HVAC & Refrigeration",
+  "trade_tags": [
+    "HVAC & Refrigeration"
+  ],
+  "osha_standards": [
+    "29 CFR 1910.119",
+    "29 CFR 1926.64"
+  ],
+  "estimated_minutes": 5,
+  "summary": "Ammonia refrigeration spills and releases are a serious threat from skin contact, inhalation, and fire and explosion. Know the hazards, the protective gear, and how to flush exposed skin and eyes.",
+  "talking_points": [
+    "Anhydrous ammonia is used as a refrigerant in meat and poultry processing, dairy, breweries, juice plants, cold storage warehouses, and petrochemical operations.",
+    "Ammonia spills and releases pose a significant threat to workers from skin contact, inhalation, and fire and explosion.",
+    "Ammonia is corrosive to skin, eyes, and lungs.",
+    "300 ppm is IDLH (immediately dangerous to life or health).",
+    "Ammonia is flammable at about 15-28% by volume in air.",
+    "If ammonia gets on skin or in eyes, flush with water for 15+ minutes.",
+    "During spills, use ammonia-impervious gloves (neoprene), boots, and protective clothing.",
+    "A process hazard analysis (PHA) looks at what could fail and what safeguards are needed against releases. Past releases came from hydraulic shock failures and from galvanic corrosion of pipe near brine tanks.",
+    "Process safety management is set by 29 CFR 1910.119 (general industry) and 29 CFR 1926.64 (construction). These apply to covered facilities that hold threshold quantities of highly hazardous chemicals such as anhydrous ammonia. They are not general rules for every HVAC refrigerant. Ask the facility owner whether this system is covered."
+  ],
+  "site_hazards_to_check": [
+    "Corrosion on ammonia piping, especially near brine tanks",
+    "Piping at risk of hydraulic shock",
+    "Ignition sources near ammonia piping or equipment",
+    "Water source for flushing skin and eyes for 15 or more minutes",
+    "Ammonia-impervious gloves, boots, and protective clothing ready for spill response"
+  ],
+  "discussion_questions": [
+    "What could fail in our ammonia system, and what safeguards does our process hazard analysis call for?",
+    "Where can you flush your skin or eyes for 15 minutes or more?",
+    "What PPE do you use during a spill, and where is it kept?"
+  ],
+  "attribution": {
+    "source": "OSHA",
+    "publisher": "Occupational Safety and Health Administration (OSHA)",
+    "copyright": "U.S. Government work — public domain.",
+    "license": "public-domain",
+    "source_url": "https://www.osha.gov/ammonia-refrigeration/hazards",
+    "source_ref": "TBT-025",
+    "notice": "Adapted from OSHA web page, Ammonia Refrigeration: Hazard Recognition. Reproduced with attribution for jobsite safety training; not an endorsement by OSHA."
+  },
+  "audit": {
+    "status": "approved",
+    "audited_at": "2026-09-25T18:32:27.718Z",
+    "osha_accuracy_verified": true,
+    "flags": [
+      "Verified facts against the OSHA source and eTool excerpts: uses, threats, corrosive, 300 ppm IDLH, 15-28% flammable, 15+ minute flush, neoprene gloves/boots, PHA, hydraulic shock and galvanic corrosion cases all match. Title fits.",
+      "Fix made: split the standards disclosure into its own point. 1910.119 is general industry and the source does not cite it; the mapping is ours. Added 29 CFR 1926.64 (PSM, construction counterpart) and stated coverage is limited to covered facilities, not generic HVAC refrigerants. Verify 1926.64 wording before publishing (not in the source).",
+      "Non-blocking limitation: the source is a hazard-recognition summary. The talk does not cover evacuation, who may respond to a leak, respirator/SCBA use, or ventilation. Only trained, authorized people should respond to ammonia releases, and the PPE point is not a substitute for that training.",
+      "Non-blocking: numeric values (300 ppm, 15-28%) are from the OSHA eTool excerpt; the source is a condensed rendering."
+    ]
+  }
+}

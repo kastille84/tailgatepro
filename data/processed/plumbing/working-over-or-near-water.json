@@ -1,0 +1,53 @@
+{
+  "id": "working-over-or-near-water",
+  "title": "Working Over or Near Water",
+  "primary_trade": "Plumbing",
+  "trade_tags": [
+    "Plumbing",
+    "General Construction"
+  ],
+  "osha_standards": [
+    "29 CFR 1926.106"
+  ],
+  "estimated_minutes": 5,
+  "summary": "Falling into water can be fatal, even for good swimmers. OSHA requires life jackets, inspected gear, ring buoys and a rescue skiff when the danger of drowning exists.",
+  "talking_points": [
+    "Workers working over or next to water, where there is a danger of drowning, must be provided with a U.S. Coast Guard-approved life jacket or buoyant work vest (29 CFR 1926.106(a)).",
+    "Inspect life jackets, buoyant work vests and life preservers before and after each use for defects that would change their strength or buoyancy. Do not use one with a defect (1926.106(b)).",
+    "Keep ring buoys with at least 90 feet of line ready for rescue, and do not space them more than 200 feet apart (1926.106(c)).",
+    "At least one lifesaving skiff must be immediately available at locations over or next to water (1926.106(d)).",
+    "Good practice: know before you start where the buoys and skiff are and who will use them.",
+    "Good practice: never work near water alone, and agree on how you will call for help."
+  ],
+  "site_hazards_to_check": [
+    "Work over or next to water with no life jackets issued",
+    "Life jacket or vest that is damaged or has lost buoyancy",
+    "No ring buoy within reach, or buoys spaced more than 200 feet apart",
+    "Ring buoy with less than 90 feet of line",
+    "No skiff immediately available",
+    "Worker alone near the water"
+  ],
+  "discussion_questions": [
+    "Where are the life jackets, ring buoys and skiff on this job?",
+    "How do you check a life jacket before you put it on?",
+    "Who rescues a worker who falls in, and how quickly can they reach them?"
+  ],
+  "attribution": {
+    "source": "TailgatePro",
+    "publisher": "TailgatePro",
+    "copyright": "Original TailgatePro content, written from 29 CFR 1926.106 (Working over or near water). Regulation and agency text is U.S. Government work in the public domain; the wording here is TailgatePro's own.",
+    "license": "original-work",
+    "source_url": "https://www.osha.gov/laws-regs/regulations/standardnumber/1926/1926.106",
+    "source_ref": "TBT-278",
+    "notice": "Written from 29 CFR 1926.106 (Working over or near water). General guidance only; follow your company safety program and site-specific requirements. Not an endorsement by OSHA."
+  },
+  "audit": {
+    "status": "approved",
+    "audited_at": "2026-09-25T20:37:57.253Z",
+    "osha_accuracy_verified": true,
+    "flags": [
+      "Verified 1926.106(a)-(d) verbatim (90 feet of line, 200 feet spacing, skiff immediately available, inspect before and after each use).",
+      "Fix: point 5 was unsourced; prefixed Good practice."
+    ]
+  }
+}
