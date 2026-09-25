@@ -1,5 +1,6 @@
 // Plain CommonJS — see requireAuth.test.js for why (nested require() sharing).
 const meetingLogsService = require("../services/meetingLogs");
+const companiesService = require("../services/companies");
 const {
   listMeetings,
   getMeeting,
@@ -17,6 +18,7 @@ const completeSpy = vi.spyOn(meetingLogsService, "complete");
 const uploadCrewPhotoSpy = vi.spyOn(meetingLogsService, "uploadCrewPhoto");
 const getCrewPhotoUrlSpy = vi.spyOn(meetingLogsService, "getCrewPhotoUrl");
 const getPdfUrlSpy = vi.spyOn(meetingLogsService, "getPdfUrl");
+const getCompanySpy = vi.spyOn(companiesService, "getById");
 
 const meeting = {
   id: "meeting-1",
@@ -45,6 +47,9 @@ describe("meetingLogs controller", () => {
     uploadCrewPhotoSpy.mockReset();
     getCrewPhotoUrlSpy.mockReset();
     getPdfUrlSpy.mockReset();
+    getCompanySpy
+      .mockReset()
+      .mockResolvedValue({ id: "company-1", companyType: "subcontractor", tier: "premium" });
     req = {
       params: {},
       query: {},
@@ -70,10 +75,27 @@ describe("meetingLogs controller", () => {
       // Assert
       expect(listForCompanySpy).toHaveBeenCalledWith("company-1", {
         projectId: undefined,
+        historyDays: null,
       });
       expect(res.status).toHaveBeenCalledWith(200);
       expect(res.json).toHaveBeenCalledWith({ success: true, data: [meeting] });
       expect(next).not.toHaveBeenCalled();
+    });
+
+    it("should pass the Free plan's 30-day history window to the service", async () => {
+      // Arrange
+      getCompanySpy.mockResolvedValue({ id: "company-1", companyType: "subcontractor", tier: "basic" });
+      listForCompanySpy.mockResolvedValue([meeting]);
+
+      // Act
+      await listMeetings(req, res, next);
+
+      // Assert
+      expect(getCompanySpy).toHaveBeenCalledWith("company-1");
+      expect(listForCompanySpy).toHaveBeenCalledWith("company-1", {
+        projectId: undefined,
+        historyDays: 30,
+      });
     });
 
     it("should pass a projectId query param through to the service", async () => {
@@ -87,6 +109,7 @@ describe("meetingLogs controller", () => {
       // Assert
       expect(listForCompanySpy).toHaveBeenCalledWith("company-1", {
         projectId: "project-1",
+        historyDays: null,
       });
     });
 
@@ -114,10 +137,27 @@ describe("meetingLogs controller", () => {
       await getMeeting(req, res, next);
 
       // Assert
-      expect(getByIdSpy).toHaveBeenCalledWith("meeting-1", "company-1");
+      expect(getByIdSpy).toHaveBeenCalledWith("meeting-1", "company-1", {
+        historyDays: null,
+      });
       expect(res.status).toHaveBeenCalledWith(200);
       expect(res.json).toHaveBeenCalledWith({ success: true, data: meeting });
       expect(next).not.toHaveBeenCalled();
+    });
+
+    it("should pass the Free plan's history window when fetching one meeting", async () => {
+      // Arrange
+      req.params = { id: "meeting-1" };
+      getCompanySpy.mockResolvedValue({ id: "company-1", companyType: "subcontractor", tier: "basic" });
+      getByIdSpy.mockResolvedValue(meeting);
+
+      // Act
+      await getMeeting(req, res, next);
+
+      // Assert
+      expect(getByIdSpy).toHaveBeenCalledWith("meeting-1", "company-1", {
+        historyDays: 30,
+      });
     });
 
     it("should forward a service error to next() (e.g. the 404 not-found case)", async () => {

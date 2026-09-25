@@ -6,6 +6,7 @@ const {
   hasBrandingAccess,
   getLimits,
   getPlanId,
+  seatRoleFor,
   effectiveJobsiteLimit,
 } = require("./entitlements");
 
@@ -17,6 +18,16 @@ describe("entitlements: existing gates", () => {
   ])("tier %s -> translation/branding %s", (tier, expected) => {
     expect(hasTranslationAccess(tier)).toBe(expected);
     expect(hasBrandingAccess(tier)).toBe(expected);
+  });
+});
+
+describe("entitlements: seatRoleFor", () => {
+  it("Trade Free counts every role (one person total)", () => {
+    expect(seatRoleFor("subcontractor", "basic")).toBeNull();
+  });
+
+  it.each(["premium", "enterprise"])("Trade %s counts foremen only", (tier) => {
+    expect(seatRoleFor("subcontractor", tier)).toBe("foreman");
   });
 });
 

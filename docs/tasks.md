@@ -2163,7 +2163,7 @@ from the dashboard, so run the 8d-g backfill first.
 - [x] GC links a sub company to a project (`project_subcontractors`) — done: slim version (GC join code)
       shipped in Phase 6b–6d, superseded by 8d above
 
-## Phase 9 — Pricing-promise gaps · status: audited 2026-09-24; 9a (copy fixes) and 9b (entitlement foundation) done, 9c–9g not started
+## Phase 9 — Pricing-promise gaps · status: audited 2026-09-24; 9a (copy fixes) and 9b (entitlement foundation) done, 9c partly done (seat caps + history window), 9d–9g not started
 
 Audit of the pricing page (`client/src/data/plans.ts`, `Pricing.tsx` FAQ/callout) and landing page copy against
 the code. Full evidence table, statuses and per-gap resolution live in `docs/pricing-promise-gaps.md` — every
@@ -2213,11 +2213,23 @@ them (no client-side mirror of the table). Nothing is enforced yet — that is 9
 - [x] Extend `server/utility/entitlements.js` and its client mirror `client/src/hooks/useCurrentUser.ts` with the
       new limits; keep the server the authority.
 
-### 9c — Trade-side limits
+### 9c — Trade-side limits · status: seat caps + history window code complete; library split, archive and PDF-link TTL not started
 
-- [ ] Foreman seat caps (1 Free / 8 Pro / unlimited Enterprise) enforced on invites and join codes
-      (`server/services/companyInvites.js`, `server/routes/companies.js`) + upgrade prompt.
-- [ ] 30-day in-app history window for Free (`meetingLogs.listForCompany`) + lockout UI; emailed PDFs unaffected.
+Done: `server/services/seats.js` `assertSeatAvailable` runs on invite creation (counts pending invites) and again on
+invite acceptance. Free = one person total (every role counts, so the signup admin fills the seat); Pro/Enterprise
+count foreman-role users only (`seatRoleFor` in `entitlements.js`). Over the cap the server returns 403 with
+`data: { code: "PLAN_LIMIT", limit }`; the client shows the server message as a toast (`useInviteTeammate`). The join
+code is GC-only, so it needs no seat check. History: `meetingLogs.listForCompany` and the user-facing `getMeeting` hide
+rows older than `historyDays` (rows are never deleted; internal callers such as PDF generation are not gated).
+Pricing copy: Free is now "1 user account (you)" / "Solo foremen"; the FAQ states the 30-day window as live.
+**Open:** no client meeting-history list exists yet (see `useCreateMeetingLog`), so the lockout banner/upgrade prompt
+for history has nowhere to render — add it when that list view is built. No inline upgrade prompt on the invite form
+either (the client has no structured API error type; the toast carries the server message).
+
+- [x] Foreman seat caps (1 Free / 8 Pro / unlimited Enterprise) enforced on invites and invite acceptance
+      (`server/services/seats.js`) — server enforcement done; dedicated upgrade prompt still open (see above).
+- [x] 30-day in-app history window for Free (`meetingLogs.listForCompany`, `getMeeting`); emailed PDFs unaffected.
+- [ ] Lockout banner + upgrade prompt UI for the history window (blocked on a client meeting-history list view).
 - [ ] Free vs paid library split (Free = the 30 core talks; today every global talk goes to everyone in
       `server/services/talks.js`).
 - [ ] 5-year legal archive for Pro: retention statement, archive view/export, and resolve the crew-photo retention

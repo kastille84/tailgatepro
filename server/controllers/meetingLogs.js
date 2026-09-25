@@ -1,13 +1,22 @@
 const meetingLogsService = require("../services/meetingLogs");
+const companiesService = require("../services/companies");
+const { getLimits } = require("../utility/entitlements");
 
 // req.user is set by loadUserContext (which runs after requireAuth) — the
 // caller's company and id always come from there, never from req.body/req.params.
+
+// The plan's in-app history window in days (null = unlimited), Phase 9c.
+const getHistoryDays = async (companyId) => {
+  const company = await companiesService.getById(companyId);
+  return getLimits(company.companyType, company.tier).historyDays;
+};
 
 exports.listMeetings = async (req, res, next) => {
   try {
     const { projectId } = req.query;
     const data = await meetingLogsService.listForCompany(req.user.companyId, {
       projectId,
+      historyDays: await getHistoryDays(req.user.companyId),
     });
     return res.status(200).json({ success: true, data });
   } catch (error) {
@@ -20,6 +29,7 @@ exports.getMeeting = async (req, res, next) => {
     const data = await meetingLogsService.getById(
       req.params.id,
       req.user.companyId,
+      { historyDays: await getHistoryDays(req.user.companyId) },
     );
     return res.status(200).json({ success: true, data });
   } catch (error) {

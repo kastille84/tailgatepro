@@ -89,7 +89,12 @@ const create = async ({ id, companyId, projectId, talkId, foremanId }) => {
 // Every meeting log the caller's company owns, optionally scoped to one
 // project. `companyId` comes from the caller's verified `users` row (via
 // loadUserContext), never from request input.
-const listForCompany = async (companyId, { projectId } = {}) => {
+// `historyDays` (null = unlimited) is the plan's in-app history window
+// (Phase 9c): older rows are hidden, never deleted, so upgrading restores them.
+const historyCutoff = (historyDays) =>
+  new Date(Date.now() - historyDays * 24 * 60 * 60 * 1000).toISOString();
+
+const listForCompany = async (companyId, { projectId, historyDays = null } = {}) => {
   let query = supabase
     .from("meeting_logs")
     .select(MEETING_LOG_COLUMNS)
@@ -97,6 +102,9 @@ const listForCompany = async (companyId, { projectId } = {}) => {
 
   if (projectId) {
     query = query.eq("project_id", projectId);
+  }
+  if (historyDays !== null) {
+    query = query.gte("created_at", historyCutoff(historyDays));
   }
 
   const { data, error } = await query.order("created_at", { ascending: false });
@@ -109,8 +117,10 @@ const listForCompany = async (companyId, { projectId } = {}) => {
 };
 
 // Scoped the same way as listForCompany: a meeting log belonging to another
-// company is indistinguishable from a missing one (404), by design.
-const getById = async (id, companyId) => {
+// company is indistinguishable from a missing one (404), by design. Only the
+// user-facing route passes `historyDays`; internal callers (complete, PDF
+// generation) need the row regardless of the plan's history window.
+const getById = async (id, companyId, { historyDays = null } = {}) => {
   const { data, error } = await supabase
     .from("meeting_logs")
     .select(MEETING_LOG_COLUMNS)
@@ -123,6 +133,12 @@ const getById = async (id, companyId) => {
       throw new AppError("Meeting not found", 404, { cause: error });
     }
     throw new AppError("Could not load the meeting", 502, { cause: error });
+  }
+
+  if (historyDays !== null && new Date(data.created_at) < new Date(historyCutoff(historyDays))) {
+    throw new AppError("This meeting is older than your plan's history. Upgrade to view it.", 403, {
+      data: { code: "PLAN_LIMIT", limit: historyDays },
+    });
   }
 
   return toMeetingLog(data);

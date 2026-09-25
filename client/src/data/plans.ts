@@ -13,10 +13,10 @@ export const SUB_PLANS: Plan[] = [
   {
     id: "trade-free",
     name: "Trade Free",
-    target: "Solo foremen & small crews",
+    target: "Solo foremen",
     price: { monthly: "$0", annual: "$0" },
     features: [
-      "1 active foreman / supervisor",
+      "1 user account (you)",
       "Full offline PWA capabilities",
       "Core OSHA talk library",
       "Digital signatures & photo proof",
@@ -24,7 +24,6 @@ export const SUB_PLANS: Plan[] = [
       "App watermark on emailed PDFs",
       "30-day in-app history",
     ],
-    comingSoon: ["30-day in-app history"],
   },
   {
     id: "trade-pro",

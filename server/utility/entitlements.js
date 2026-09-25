@@ -87,6 +87,11 @@ const getLimits = (companyType, tier) =>
 
 const getPlanId = (companyType, tier) => getLimits(companyType, tier).planId;
 
+// Which role a plan's seat cap counts. Free is "one person total" so it counts
+// every member (null = any role); paid trade plans cap foremen only.
+const seatRoleFor = (companyType, tier) =>
+  getPlanId(companyType, tier) === "trade-free" ? null : "foreman";
+
 // A GC's active-jobsite cap: its plan's cap, plus one per paid Site Pro site
 // when on the free plan. Portfolio covers all sites up to its own cap.
 const effectiveJobsiteLimit = ({ tier, paidSiteCount = 0 }) => {
@@ -103,5 +108,6 @@ module.exports = {
   SITE_PLANS,
   getLimits,
   getPlanId,
+  seatRoleFor,
   effectiveJobsiteLimit,
 };

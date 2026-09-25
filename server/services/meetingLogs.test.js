@@ -176,6 +176,7 @@ describe("meetingLogs service: listForCompany", () => {
     order = vi.fn().mockResolvedValue({ data: [dbRow], error: null });
     builder = { order };
     builder.eq = vi.fn(() => builder);
+    builder.gte = vi.fn(() => builder);
     select = vi.fn(() => builder);
 
     fromSpy.mockReset();
@@ -183,6 +184,30 @@ describe("meetingLogs service: listForCompany", () => {
       if (table === "meeting_logs") return { select };
       throw new Error(`Unexpected table: ${table}`);
     });
+  });
+
+  it("should not apply a date cutoff when the plan has no history window", async () => {
+    // Act
+    await listForCompany("company-1");
+
+    // Assert
+    expect(builder.gte).not.toHaveBeenCalled();
+  });
+
+  it("should hide meetings older than the plan's history window", async () => {
+    // Arrange
+    const before = Date.now();
+
+    // Act
+    await listForCompany("company-1", { historyDays: 30 });
+
+    // Assert
+    const [column, cutoff] = builder.gte.mock.calls[0];
+    expect(column).toBe("created_at");
+    const cutoffMs = new Date(cutoff).getTime();
+    const thirtyDays = 30 * 24 * 60 * 60 * 1000;
+    expect(cutoffMs).toBeGreaterThanOrEqual(before - thirtyDays);
+    expect(cutoffMs).toBeLessThanOrEqual(Date.now() - thirtyDays);
   });
 
   it("should query every meeting log owned by the caller's company, newest first, mapped to camelCase", async () => {
@@ -248,6 +273,36 @@ describe("meetingLogs service: getById", () => {
     expect(eqId).toHaveBeenCalledWith("id", "meeting-1");
     expect(eqCompany).toHaveBeenCalledWith("company_id", "company-1");
     expect(result).toEqual(mappedMeetingLog);
+  });
+
+  it("should throw a 403 PLAN_LIMIT AppError for a meeting older than the plan's history window", async () => {
+    // Arrange
+    single.mockResolvedValue({
+      data: { ...dbRow, created_at: new Date(Date.now() - 31 * 24 * 60 * 60 * 1000).toISOString() },
+      error: null,
+    });
+
+    // Act & Assert
+    await expect(
+      getById("meeting-1", "company-1", { historyDays: 30 }),
+    ).rejects.toMatchObject({
+      statusCode: 403,
+      data: { code: "PLAN_LIMIT", limit: 30 },
+    });
+  });
+
+  it("should return a meeting inside the plan's history window", async () => {
+    // Arrange
+    single.mockResolvedValue({
+      data: { ...dbRow, created_at: new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString() },
+      error: null,
+    });
+
+    // Act
+    const result = await getById("meeting-1", "company-1", { historyDays: 30 });
+
+    // Assert
+    expect(result.id).toBe("meeting-1");
   });
 
   it("should throw a 404 AppError when no row matches the id and company", async () => {

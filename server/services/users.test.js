@@ -6,6 +6,7 @@
 const { supabase } = require("../utility/supabaseClient");
 const companyInvitesService = require("./companyInvites");
 const jobsitesService = require("./jobsites");
+const seatsService = require("./seats");
 const { createProfile, getUserContext, getAdminEmail } = require("./users");
 
 const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
@@ -17,6 +18,7 @@ const fromSpy = vi.spyOn(supabase, "from");
 const getUserByIdSpy = vi.spyOn(supabase.auth.admin, "getUserById");
 const getInviteForEmailSpy = vi.spyOn(companyInvitesService, "getInviteForEmail");
 const deleteInviteSpy = vi.spyOn(companyInvitesService, "deleteInvite");
+const assertSeatSpy = vi.spyOn(seatsService, "assertSeatAvailable");
 
 describe("users service: createProfile", () => {
   let companiesInsert;
@@ -183,6 +185,31 @@ describe("users service: createProfile (invite branch)", () => {
       role: "foreman",
     });
     deleteInviteSpy.mockReset().mockResolvedValue(undefined);
+    assertSeatSpy.mockReset().mockResolvedValue(undefined);
+  });
+
+  it("should re-check the plan's seats (without pending invites) before inserting the user", async () => {
+    // Act
+    await createProfile(payload);
+
+    // Assert
+    expect(assertSeatSpy).toHaveBeenCalledWith({
+      companyId: "company-1",
+      role: "foreman",
+      email: "jamie@example.com",
+      includePending: false,
+    });
+  });
+
+  it("should propagate a PLAN_LIMIT 403 without inserting a user row or consuming the invite", async () => {
+    // Arrange
+    const { AppError } = require("../utility/AppError");
+    assertSeatSpy.mockRejectedValue(new AppError("limit", 403, { data: { code: "PLAN_LIMIT" } }));
+
+    // Act & Assert
+    await expect(createProfile(payload)).rejects.toMatchObject({ statusCode: 403 });
+    expect(usersInsert).not.toHaveBeenCalled();
+    expect(deleteInviteSpy).not.toHaveBeenCalled();
   });
 
   it("should look up the invite by token+email, insert the user at the invite's company/role, and consume the invite", async () => {

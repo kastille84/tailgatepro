@@ -2,6 +2,7 @@ const { v4: uuidv4 } = require("uuid");
 const { supabase } = require("../utility/supabaseClient");
 const { AppError } = require("../utility/AppError");
 const { generateInviteToken, getInviteExpiry } = require("../utility/inviteToken");
+const seatsService = require("./seats");
 
 const INVITE_COLUMNS = "id, company_id, email, role, token, expires_at";
 
@@ -19,6 +20,8 @@ const toInvite = (row) => ({
 // constraint plus this upsert is the entire "re-invite regenerates the
 // token" mechanism — no separate duplicate-row cleanup exists anywhere else.
 const createInvite = async (companyId, email, role) => {
+  await seatsService.assertSeatAvailable({ companyId, role, email, includePending: true });
+
   const { data, error } = await supabase
     .from("company_invites")
     .upsert(
