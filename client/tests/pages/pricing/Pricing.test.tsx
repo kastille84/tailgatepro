@@ -1,6 +1,6 @@
 import React from "react";
 import { describe, it, expect, beforeEach, vi } from "vitest";
-import { render, screen } from "@testing-library/react";
+import { render, screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { MemoryRouter, Route, Routes } from "react-router-dom";
 import { ThemeProvider } from "styled-components";
@@ -61,6 +61,7 @@ vi.mock("../../../src/data/plans", () => ({
       price: { monthly: "$0", annual: "$0" },
       annualSub: "Always free",
       features: ["Feature A", "Feature B"],
+      comingSoon: ["Feature B"],
     },
     {
       id: "sub-pro",
@@ -178,6 +179,18 @@ describe("Pricing page", () => {
     const waitlist = screen.getByTestId("waitlist-form");
     expect(waitlist.getAttribute("data-audience")).toBe("gc");
     expect(waitlist.getAttribute("data-plan-interest")).toBe("");
+  });
+
+  it("tags only the comingSoon features with a Coming soon label", () => {
+    renderPricing();
+
+    expect(
+      within(screen.getByText("Feature B")).getByText("Coming soon"),
+    ).toBeTruthy();
+    expect(
+      within(screen.getByText("Feature A")).queryByText("Coming soon"),
+    ).toBeNull();
+    expect(screen.getAllByText("Coming soon")).toHaveLength(1);
   });
 
   it("updates billing and recalculates cadence when annual is selected", async () => {

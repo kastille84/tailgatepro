@@ -27,7 +27,7 @@ interface CompareRow {
 const COMPARE_ROWS: CompareRow[] = [
   {
     label: "Getting started",
-    us: "Open a URL or scan a QR code — nothing to install",
+    us: "Open a link — nothing to install",
     them: "Native App Store download on every phone",
   },
   {
@@ -42,17 +42,17 @@ const COMPARE_ROWS: CompareRow[] = [
   },
   {
     label: "Topic library",
-    us: "500+ OSHA talks + AI topic generator",
+    us: "OSHA talk library plus your own custom talks",
     them: "300–600 static topics or manual upload",
   },
   {
     label: "Compliance PDF",
-    us: "Tamper-evident, GPS-verified, branded seal",
+    us: "Signed, timestamped PDF locked once the talk is completed",
     them: "Basic PDF with a timestamp and signature",
   },
   {
     label: "Audit export",
-    us: "1-click OSHA Defense Bundle (indexed ZIP)",
+    us: "1-click OSHA Defense Bundle (indexed ZIP) — coming soon",
     them: "Manual cloud search, file by file",
   },
   {
@@ -62,12 +62,12 @@ const COMPARE_ROWS: CompareRow[] = [
   },
   {
     label: "Rollout",
-    us: "30-second field start",
+    us: "Open a link and start — no rollout",
     them: "1–4 weeks for enterprise rollout",
   },
   {
     label: "Languages",
-    us: "Text + AI audio in 10+ languages",
+    us: "Translate custom talks; read aloud in your device's languages",
     them: "Static English/Spanish text",
   },
 ];

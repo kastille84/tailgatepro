@@ -19,7 +19,7 @@ interface FaqEntry {
 const FAQ: FaqEntry[] = [
   {
     q: "Do my sub-foremen need to download an app?",
-    a: "No. Foremen scan a QR code or tap a link to open it straight away in their mobile browser — nothing to install.",
+    a: "No. Foremen tap a link to open it straight away in their mobile browser — nothing to install.",
   },
   {
     q: "Does it work with no signal?",
@@ -27,11 +27,11 @@ const FAQ: FaqEntry[] = [
   },
   {
     q: "What does it cost the subcontractor?",
-    a: "Crews start free — 30 core OSHA templates, offline talks, digital signatures and auto-emailed PDF exports. Paid plans add the 5-year legal archive, custom branding and AI multi-language audio.",
+    a: "Crews start free — the core OSHA talk library, offline talks, digital signatures and auto-emailed PDF exports. Paid plans add custom branding and multi-language talks, with the 5-year legal archive coming soon.",
   },
   {
     q: "How does a GC sponsor subcontractors for free?",
-    a: "On a paid GC site or portfolio plan you get project-specific QR codes and links. Any trade on that site scans one to log talks under your dashboard at $0 to them.",
+    a: "A GC invites subcontractors to a jobsite by email or shares a company join code, and their talks land on the GC's dashboard with no seat fee for the subs. Full sponsored access on paid GC plans is coming soon.",
   },
   {
     q: "When can I actually sign up?",

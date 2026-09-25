@@ -4,6 +4,10 @@ import type { Plan } from "../interfaces/plan";
  * Pricing tiers from docs/pricing-and-positioning-strategy_V2.md (§4.1 / §4.2).
  * Shared by the /pricing page and the homepage pricing teaser so the two never
  * drift. Prices are display strings, not numbers — there is no checkout yet.
+ *
+ * `comingSoon` lists the features (exact `features` strings) that are promised
+ * but not built yet — see docs/pricing-promise-gaps.md and Phase 9 in
+ * docs/tasks.md. Remove an entry from `comingSoon` when its feature ships.
  */
 export const SUB_PLANS: Plan[] = [
   {
@@ -14,11 +18,13 @@ export const SUB_PLANS: Plan[] = [
     features: [
       "1 active foreman / supervisor",
       "Full offline PWA capabilities",
-      "30 core OSHA talk templates",
+      "Core OSHA talk library",
       "Digital signatures & photo proof",
       "Auto-email PDF exports to GCs",
-      "30-day in-app history · app watermark",
+      "App watermark on emailed PDFs",
+      "30-day in-app history",
     ],
+    comingSoon: ["30-day in-app history"],
   },
   {
     id: "trade-pro",
@@ -29,10 +35,17 @@ export const SUB_PLANS: Plan[] = [
     featured: true,
     features: [
       "Up to 8 foremen on one account",
-      "5-year legal archive for OSHA audits",
       "Custom branding — your logo, no watermark",
-      "500+ OSHA library + AI Talk Builder",
-      "AI multi-language audio playback (10+ languages)",
+      "Write and share your own custom talks",
+      "Translate custom talks and read them aloud in multiple languages",
+      "5-year legal archive for OSHA audits",
+      "Expanded OSHA talk library",
+      "AI Talk Builder",
+    ],
+    comingSoon: [
+      "5-year legal archive for OSHA audits",
+      "Expanded OSHA talk library",
+      "AI Talk Builder",
     ],
   },
   {
@@ -43,6 +56,11 @@ export const SUB_PLANS: Plan[] = [
     annualSub: "$65/mo billed annually — save 20%",
     features: [
       "Unlimited foremen & crews",
+      "Custom safety manual upload",
+      "Procore, JobTread & QuickBooks sync",
+      "Multi-crew scheduling & equipment check-ins",
+    ],
+    comingSoon: [
       "Custom safety manual upload",
       "Procore, JobTread & QuickBooks sync",
       "Multi-crew scheduling & equipment check-ins",
@@ -58,10 +76,11 @@ export const GC_PLANS: Plan[] = [
     price: { monthly: "$0", annual: "$0" },
     features: [
       "1 active jobsite",
-      "Dashboard inbox for incoming sub PDFs",
+      "Dashboard with subcontractor PDFs & compliance status",
       "Basic sub roster overview",
       "1 subcontractor unlocked — others blurred",
     ],
+    comingSoon: ["1 subcontractor unlocked — others blurred"],
   },
   {
     id: "gc-site-pro",
@@ -71,6 +90,12 @@ export const GC_PLANS: Plan[] = [
     unit: "/site",
     annualSub: "$1,490 / site billed annually — save 20%",
     features: [
+      "Sponsor unlimited subcontractors on one site",
+      "Automated SMS nudges — 7:00 AM every Monday (single site)",
+      "Procore & Autodesk ACC sync — single project",
+      "1-click OSHA Defense Bundle for the site (indexed ZIP)",
+    ],
+    comingSoon: [
       "Sponsor unlimited subcontractors on one site",
       "Automated SMS nudges — 7:00 AM every Monday (single site)",
       "Procore & Autodesk ACC sync — single project",
@@ -86,6 +111,12 @@ export const GC_PLANS: Plan[] = [
     featured: true,
     features: [
       "$499/mo up to 10 sites · $799/mo unlimited",
+      "Cross-project subcontractor safety scorecards",
+      "Top-down corporate policy push across all sites",
+      "Multi-manager roles — Superintendent vs Safety Director",
+      "Custom company safety form & manual builder",
+    ],
+    comingSoon: [
       "Cross-project subcontractor safety scorecards",
       "Top-down corporate policy push across all sites",
       "Multi-manager roles — Superintendent vs Safety Director",

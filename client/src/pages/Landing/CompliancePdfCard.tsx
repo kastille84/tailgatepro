@@ -24,7 +24,7 @@ export const CompliancePdfCard = ({
   date = "May 14, 2025",
   crew = DEFAULT_CREW,
 }: CompliancePdfCardProps) => {
-  const label = `Example TailgatePro compliance PDF — a signed ${topic} toolbox talk with ${crew.length} crew signatures and a GPS-verified seal.`;
+  const label = `Example TailgatePro compliance PDF — a signed ${topic} toolbox talk with ${crew.length} crew signatures and a signed-and-locked seal.`;
 
   return (
     <StyledPdfCard role="img" aria-label={label}>
@@ -71,7 +71,7 @@ export const CompliancePdfCard = ({
         ))}
       </StyledPdfSignatures>
 
-      <StyledPdfSeal aria-hidden="true">GPS-Verified</StyledPdfSeal>
+      <StyledPdfSeal aria-hidden="true">Signed &amp; Locked</StyledPdfSeal>
 
       <StyledPdfWatermark aria-hidden="true">
         Logged via TailgatePro

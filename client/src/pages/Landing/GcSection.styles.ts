@@ -50,6 +50,22 @@ export const StyledGcItem = styled.li`
   }
 `;
 
+export const StyledSoonTag = styled.span`
+  display: inline-block;
+  margin-left: 0.7rem;
+  padding: 0.1rem 0.7rem;
+  border: 1px solid ${({ theme }) => theme.colors.navy[400]};
+  border-radius: 999rem;
+  color: ${({ theme }) => theme.colors.navy[600]};
+  font-size: 1rem;
+  font-weight: 800;
+  line-height: 1.4;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  white-space: nowrap;
+  vertical-align: middle;
+`;
+
 /* Ported from Pricing.styles.ts — consolidate into a shared Callout later. */
 export const StyledCallout = styled.div`
   display: grid;

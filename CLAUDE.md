@@ -98,6 +98,7 @@ other docs files:
 - `wcag.md`
 - `data-access.md`
 - `content-attribution.md` (toolbox-talk source credit + CPWR licensing conditions)
+- `pricing-promise-gaps.md` (audit of pricing/landing-page promises vs. what the code delivers; tracked as Phase 9 in `tasks.md`)
 
 ### Known code/doc mismatches (verify before relying on either)
 

@@ -2163,7 +2163,102 @@ from the dashboard, so run the 8d-g backfill first.
 - [x] GC links a sub company to a project (`project_subcontractors`) — done: slim version (GC join code)
       shipped in Phase 6b–6d, superseded by 8d above
 
+## Phase 9 — Pricing-promise gaps · status: audited 2026-09-24; 9a (copy fixes) done, 9b–9g not started
+
+Audit of the pricing page (`client/src/data/plans.ts`, `Pricing.tsx` FAQ/callout) and landing page copy against
+the code. Full evidence table, statuses and per-gap resolution live in `docs/pricing-promise-gaps.md` — every
+item below refers to it. Key fact: the only tier gates today are translation and PDF branding
+(`server/utility/entitlements.js`); there is no billing and no quantity limit of any kind. Items already
+tracked elsewhere are linked, not duplicated (Defense Bundle ~1158, tier-gating deferral ~1296/~1664, AI Talk
+Builder ~1736-1741, 500+ library licensing ~1749-1754, crew-photo retention ~762-768).
+
+Do 9a first: it is cheap, and it stops the public site over-promising while the rest is built.
+
+### 9a — Honest-copy fixes · status: code complete, 100% coverage (1118 tests passing)
+
+Done: `Plan` gained `comingSoon?: string[]` (a subset of `features`); `Pricing.tsx` and `PricingTeaser.tsx` render a
+"Coming soon" `StyledSoonTag` for those, and `plans.ts` flags every unbuilt paid feature. Unbuilt claims elsewhere
+were reworded to what exists: "GPS-verified"/"tamper-evident" → "signed, timestamped, locked once completed" (mock
+PDF seal now "Signed & Locked"), QR → link, "AI topic generator"/"500+"/"30 templates"/"10+ languages" → what's real,
+SMS and Defense Bundle stay on the landing page (GC bullets tagged "Coming soon", comparison "Audit export" row
+marked "— coming soon") — remove those markers when 9e ships them, "$0 for every sub" → "no seat fee" with
+sponsorship marked coming soon, "PDFs forever" → 30-day link wording. New `tests/data/plans.test.ts` guards that
+every `comingSoon` string exists in `features`. **Follow-up:** when a feature ships (9c–9e), delete its `comingSoon`
+entry (and restore/upgrade the copy where it was softened). Plan-definition limits (foremen/jobsite/site caps) were
+left as written — enforcement is 9c/9d.
+
+- [x] Reword or mark "coming soon" every unbuilt claim: "500+ OSHA library" and "30 core templates" (34 exist, no
+      free/paid split), "AI Talk Builder" / "AI topic generator" / "generate a custom hazard talk", "AI multi-language
+      audio (10+ languages)" (actually Google Translate on custom talks + device TTS), "Auto-SMS nudges", "GPS-verified"
+      seal (`CompliancePdfCard.tsx:74`), "tamper-evident", "Emailed PDFs stay in your inbox forever" (the link expires
+      after 30 days), QR-code claims, GC "inbox", "30-second field start" / "rollout 1-4 weeks" (unmeasured). Files:
+      `plans.ts`, `Pricing.tsx`, `ComparisonTable`, `GcSection`, `HowItWorks`, `LandingFaq`, `CompliancePdfCard`,
+      `PricingTeaser`. Update the client tests that assert this copy; keep 100% coverage. Never use the "45 seconds"
+      claim (it exists only in `pricing-and-positioning-strategy_V2.md`).
+- [x] Verify "can't be back-dated": `resolveHeldAt` (`server/utility/heldAt.js`) accepts a client time up to 7 days
+      in the past, so the claim was inaccurate — reworded to "a server timestamp is recorded and the meeting locks
+      once completed".
+
+### 9b — Entitlement foundation (prerequisite for 9c / 9d)
+
+- [ ] Reconcile `companies.tier` (`basic|premium|enterprise`) with the six plan names; decide the GC site-tier
+      model (per-site entitlement, paid-site count). Shares the decision with the Stripe deferral below.
+- [ ] Extend `server/utility/entitlements.js` and its client mirror `client/src/hooks/useCurrentUser.ts` with the
+      new limits; keep the server the authority.
+
+### 9c — Trade-side limits
+
+- [ ] Foreman seat caps (1 Free / 8 Pro / unlimited Enterprise) enforced on invites and join codes
+      (`server/services/companyInvites.js`, `server/routes/companies.js`) + upgrade prompt.
+- [ ] 30-day in-app history window for Free (`meetingLogs.listForCompany`) + lockout UI; emailed PDFs unaffected.
+- [ ] Free vs paid library split (Free = the 30 core talks; today every global talk goes to everyone in
+      `server/services/talks.js`).
+- [ ] 5-year legal archive for Pro: retention statement, archive view/export, and resolve the crew-photo retention
+      question (~762-768).
+- [ ] Decide PDF-email link lifetime (30-day signed link today, `EMAIL_PDF_URL_TTL_SECONDS`): longer TTL, a
+      re-issue-link flow, or an attachment.
+
+### 9d — GC-side limits and paywall
+
+- [ ] GC Free 1-active-jobsite cap (`server/services/jobsites.js` `create`) and the 10-site vs unlimited Portfolio cap.
+- [ ] GC Free "1 subcontractor unlocked, others blurred": server-side masking + client blur (today only the landing
+      mockup `GcDashboardMockup.tsx` shows it).
+- [ ] Sponsorship entitlement: a paid GC site lifts a linked sub's access ("every sub gets full access for $0");
+      accept-invite currently never touches the sub's tier.
+- [ ] Superintendent vs Safety Director roles for GC Portfolio (only `admin`/`safety_manager`/`foreman` exist,
+      `server/constants/roles.js`; the two manager roles are identical) + per-site scoping.
+
+### 9e — Feature builds (each needs its own design doc first)
+
+- [ ] Automated SMS nudges, Monday 7:00 AM (provider, phone-number storage + consent, scheduler; the only cron in
+      `server.js` is a leftover).
+- [ ] 1-click OSHA Defense Bundle ZIP (see ~1158; `pdfFilename.js` has the filename groundwork).
+- [ ] Cross-project sub safety scorecards (today: single-day compliance view only).
+- [ ] Top-down corporate policy push across all sites.
+- [ ] Company safety form and manual builder (GC Portfolio; the strategy doc also lists it for Trade Pro).
+- [ ] Custom safety manual upload (Trade Enterprise).
+- [ ] QR-code generation for jobsite invite / join-code links (no generator exists), or drop the QR claims.
+- [ ] Tamper-evidence: a content hash/seal on the PDF + audit log, and GPS capture if the "GPS-verified" claim
+      stays; otherwise remove both claims in 9a.
+- [ ] AI Talk Builder and cloud AI voice (see ~1736-1741).
+- [ ] Grow the library toward 500+ (see ~1749-1754; currently 34).
+- [ ] Multi-crew scheduling and equipment check-ins (no tables or code).
+
+### 9f — Integrations (blocked on billing; deferred)
+
+- [-] Procore, Autodesk ACC (Site Pro), JobTread, QuickBooks (Enterprise) sync.
+
+### 9g — Strategy-doc extras
+
+- [ ] Conversion-trigger modals from strategy doc §6 (2nd foreman, 30-day lockout, watermark, non-English audio,
+      sub #2 blur, SMS, 4th-site "$447 vs $499", policy push, scorecard). Only the non-English upsell note and the
+      watermark exist today.
+- [ ] PDF footer CTA "Claim Your Free GC Portal" (§7); the shipped watermark has no CTA.
+- [ ] Smart tagging / natural-language search, SOC-2, cryptographic timestamping (§2).
+- [ ] `plans.ts` listing gaps vs strategy doc §5 (permanent GC history, Trade Pro form builder, Procore/ACC add-on,
+      Portfolio-wide search) — decide whether to list or drop.
+
 ## Deferred
 
-- [-] Stripe billing (needs multi-user/site concepts; reconcile `companies.tier` enum first)
-- [-] Procore integration
+- [-] Stripe billing (needs multi-user/site concepts; reconcile `companies.tier` enum first) — see Phase 9b
+- [-] Procore integration — also JobTread, QuickBooks, Autodesk ACC (see Phase 9f)
