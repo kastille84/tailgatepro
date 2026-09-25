@@ -149,6 +149,7 @@ still its own row, now optionally pointed at one of these via `jobsite_id` (see 
 | `name` | Text | Not Null | E.g., "Riverside Tower" |
 | `status` | Enum | Default `active` | `active`, `completed` — reuses `project_status` |
 | `archived_at` | Timestamptz | Nullable | `NULL` = live; a timestamp = archived |
+| `plan` | Text | Not Null, Default `'free'`, CHECK in (`free`, `site_pro`) | Phase 9b: per-site GC plan. `site_pro` = a paid GC Site Pro site (see `server/utility/entitlements.js`). Not yet enforced or written (9d) |
 | `created_at` | Timestamptz | Default `now()` | |
 
 > RLS: enabled with no policies (server-brokered, deny-all) — see `docs/data-access.md`.

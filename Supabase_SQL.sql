@@ -290,6 +290,8 @@ CREATE TABLE jobsites (
   name TEXT NOT NULL,
   status project_status NOT NULL DEFAULT 'active',
   archived_at TIMESTAMPTZ,
+  -- Phase 9b: per-site GC plan; 'site_pro' = paid GC Site Pro site.
+  plan TEXT NOT NULL DEFAULT 'free' CHECK (plan IN ('free', 'site_pro')),
   created_at TIMESTAMPTZ DEFAULT NOW()
 );
 
@@ -302,6 +304,7 @@ CREATE INDEX idx_jobsites_gc_company ON jobsites (gc_company_id);
 -- If the table already exists from an earlier run:
 -- ALTER TABLE jobsites ENABLE ROW LEVEL SECURITY;
 -- CREATE INDEX IF NOT EXISTS idx_jobsites_gc_company ON jobsites (gc_company_id);
+-- ALTER TABLE jobsites ADD COLUMN IF NOT EXISTS plan TEXT NOT NULL DEFAULT 'free' CHECK (plan IN ('free', 'site_pro'));  -- Phase 9b
 
 -- 12. Jobsite Subcontractors (Phase 8d) — folds the GC's invite-by-email into
 -- the jobsite roster instead of a separate invites table, so "invited, not

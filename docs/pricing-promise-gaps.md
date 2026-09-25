@@ -30,6 +30,9 @@ server accepts a client `held_at` up to 7 days in the past (`server/utility/held
   names on the pricing page (Trade Free/Pro/Enterprise, GC Free/Site Pro/Portfolio). There is no GC tier value.
 - Signup hardcodes `tier: "basic"` (`server/services/users.js`). Nobody can reach a paid tier except by editing
   the row in the database. Stripe/billing is deferred and `/api/stripe` is commented out in `server.js`.
+- **Update (9b):** the plan is now resolved from `tier` + `company_type` (`PLAN_LIMITS` in
+  `entitlements.js`); GC Site Pro is per jobsite (`jobsites.plan`). Limits are defined and returned by
+  `/api/users/me` but not yet enforced (9c/9d).
 - There is **no quantity limit anywhere**: no foreman cap, no jobsite cap, no talk cap, no history window, no
   retention rule.
 

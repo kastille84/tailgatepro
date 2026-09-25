@@ -1,6 +1,6 @@
 // Plain CommonJS — see requireAuth.test.js for why (nested require() sharing).
 const usersService = require("../services/users");
-const { createProfile } = require("./users");
+const { createProfile, getCurrentUser } = require("./users");
 
 const createProfileSpy = vi.spyOn(usersService, "createProfile");
 
@@ -158,5 +158,28 @@ describe("users controller: createProfile (jobsite invite, Phase 8d)", () => {
     });
     expect(res.status).toHaveBeenCalledWith(201);
     expect(next).not.toHaveBeenCalled();
+  });
+});
+
+describe("users controller: getCurrentUser", () => {
+  it("should respond 200 with req.user plus the resolved plan and limits", () => {
+    const req = {
+      user: {
+        id: "u1",
+        companyId: "c1",
+        role: "admin",
+        tier: "premium",
+        companyType: "subcontractor",
+      },
+    };
+    const res = { status: vi.fn().mockReturnThis(), json: vi.fn().mockReturnThis() };
+
+    getCurrentUser(req, res);
+
+    expect(res.status).toHaveBeenCalledWith(200);
+    const { success, data } = res.json.mock.calls[0][0];
+    expect(success).toBe(true);
+    expect(data).toMatchObject({ ...req.user, plan: "trade-pro" });
+    expect(data.limits.foremanSeats).toBe(8);
   });
 });

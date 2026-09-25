@@ -2163,7 +2163,7 @@ from the dashboard, so run the 8d-g backfill first.
 - [x] GC links a sub company to a project (`project_subcontractors`) — done: slim version (GC join code)
       shipped in Phase 6b–6d, superseded by 8d above
 
-## Phase 9 — Pricing-promise gaps · status: audited 2026-09-24; 9a (copy fixes) done, 9b–9g not started
+## Phase 9 — Pricing-promise gaps · status: audited 2026-09-24; 9a (copy fixes) and 9b (entitlement foundation) done, 9c–9g not started
 
 Audit of the pricing page (`client/src/data/plans.ts`, `Pricing.tsx` FAQ/callout) and landing page copy against
 the code. Full evidence table, statuses and per-gap resolution live in `docs/pricing-promise-gaps.md` — every
@@ -2199,11 +2199,18 @@ left as written — enforcement is 9c/9d.
       in the past, so the claim was inaccurate — reworded to "a server timestamp is recorded and the meeting locks
       once completed".
 
-### 9b — Entitlement foundation (prerequisite for 9c / 9d)
+### 9b — Entitlement foundation (prerequisite for 9c / 9d) · status: code complete; run the `jobsites.plan` ALTER in Supabase
 
-- [ ] Reconcile `companies.tier` (`basic|premium|enterprise`) with the six plan names; decide the GC site-tier
+Decision: keep the `subscription_tier` enum and resolve the plan from `companies.tier` + `company_type`
+(sub: basic/premium/enterprise = Trade Free/Pro/Enterprise; GC: basic = GC Free, premium = Portfolio up to 10
+sites, enterprise = Portfolio unlimited). GC Site Pro is per jobsite (`jobsites.plan` = `free`|`site_pro`), not a
+company tier. `PLAN_LIMITS`, `getLimits`, `getPlanId`, `effectiveJobsiteLimit` live in
+`server/utility/entitlements.js`; `GET /api/users/me` returns `plan` + `limits`, and `useCurrentUser` exposes
+them (no client-side mirror of the table). Nothing is enforced yet — that is 9c/9d.
+
+- [x] Reconcile `companies.tier` (`basic|premium|enterprise`) with the six plan names; decide the GC site-tier
       model (per-site entitlement, paid-site count). Shares the decision with the Stripe deferral below.
-- [ ] Extend `server/utility/entitlements.js` and its client mirror `client/src/hooks/useCurrentUser.ts` with the
+- [x] Extend `server/utility/entitlements.js` and its client mirror `client/src/hooks/useCurrentUser.ts` with the
       new limits; keep the server the authority.
 
 ### 9c — Trade-side limits
@@ -2260,5 +2267,5 @@ left as written — enforcement is 9c/9d.
 
 ## Deferred
 
-- [-] Stripe billing (needs multi-user/site concepts; reconcile `companies.tier` enum first) — see Phase 9b
+- [-] Stripe billing (needs multi-user/site concepts; `companies.tier` enum reconciled in 9b) — see Phase 9b
 - [-] Procore integration — also JobTread, QuickBooks, Autodesk ACC (see Phase 9f)

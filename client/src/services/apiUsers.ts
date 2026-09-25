@@ -1,6 +1,18 @@
 import { fetchWithTimeout } from "../utils/fetchWithTimeout";
 import type { CompanyType } from "../interfaces/company";
 
+/** Per-plan limits from the server's `PLAN_LIMITS`
+ *  (`server/utility/entitlements.js`). `null` = unlimited. UI hints only —
+ *  the server enforces them. */
+export interface PlanLimits {
+  planId: string;
+  foremanSeats: number | null;
+  activeJobsites: number | null;
+  unlockedSubs: number | null;
+  historyDays: number | null;
+  archiveYears: number | null;
+}
+
 export interface CurrentUser {
   id: string;
   companyId: string | null;
@@ -12,6 +24,10 @@ export interface CurrentUser {
    *  (join code in Settings vs. linking a project to a GC). `null` in the
    *  same no-company-row case as `tier`. */
   companyType: CompanyType | null;
+  /** Pricing-plan id resolved server-side from tier + companyType
+   *  (e.g. "trade-pro"); GC Site Pro is per jobsite, not reported here. */
+  plan: string;
+  limits: PlanLimits;
 }
 
 /** GET /api/users/me — the caller's own resolved identity, including their
