@@ -297,6 +297,9 @@ CREATE TABLE jobsites (
   archived_at TIMESTAMPTZ,
   -- Phase 9b: per-site GC plan; 'site_pro' = paid GC Site Pro site.
   plan TEXT NOT NULL DEFAULT 'free' CHECK (plan IN ('free', 'site_pro')),
+  -- Who originated the row: 'gc' (POST /api/jobsites) or 'subcontractor'
+  -- (join-code link find-or-create). NULL = legacy/unknown, never guessed.
+  origin TEXT CHECK (origin IN ('gc', 'subcontractor')),
   created_at TIMESTAMPTZ DEFAULT NOW()
 );
 
@@ -310,6 +313,7 @@ CREATE INDEX idx_jobsites_gc_company ON jobsites (gc_company_id);
 -- ALTER TABLE jobsites ENABLE ROW LEVEL SECURITY;
 -- CREATE INDEX IF NOT EXISTS idx_jobsites_gc_company ON jobsites (gc_company_id);
 -- ALTER TABLE jobsites ADD COLUMN IF NOT EXISTS plan TEXT NOT NULL DEFAULT 'free' CHECK (plan IN ('free', 'site_pro'));  -- Phase 9b
+-- ALTER TABLE jobsites ADD COLUMN IF NOT EXISTS origin TEXT CHECK (origin IN ('gc', 'subcontractor'));  -- who created the jobsite; NULL = unknown
 
 -- 12. Jobsite Subcontractors (Phase 8d) — folds the GC's invite-by-email into
 -- the jobsite roster instead of a separate invites table, so "invited, not

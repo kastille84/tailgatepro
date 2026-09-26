@@ -1,4 +1,5 @@
 import { fetchWithTimeout } from "../utils/fetchWithTimeout";
+import { PlanLimitError } from "../utils/PlanLimitError";
 import type {
   InviteSubcontractorResult,
   Jobsite,
@@ -15,11 +16,16 @@ const authHeaders = (accessToken: string) => ({
   Authorization: `Bearer ${accessToken}`,
 });
 
-/** Unwraps the server's `{ success, data }` envelope, throwing its message. */
+/** Unwraps the server's `{ success, data }` envelope, throwing its message.
+ *  A 403 `PLAN_LIMIT` (job site cap) throws a `PlanLimitError` so the UI can
+ *  show an upgrade prompt instead of a toast. */
 const unwrap = async <T>(res: Response): Promise<T> => {
   const body = await res.json().catch(() => null);
 
   if (!res.ok || !body?.success) {
+    if (body?.data?.code === "PLAN_LIMIT") {
+      throw new PlanLimitError(body.error ?? GENERIC_ERROR, body.data.limit ?? null);
+    }
     throw new Error(body?.error ?? GENERIC_ERROR);
   }
 

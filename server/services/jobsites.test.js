@@ -1,6 +1,8 @@
 // Plain CommonJS — see requireAuth.test.js for why (nested require() sharing).
 const { supabase } = require("../utility/supabaseClient");
 const projectsService = require("./projects");
+const companiesService = require("./companies");
+const subAccessService = require("./subAccess");
 const {
   create,
   listForGc,
@@ -11,8 +13,9 @@ const {
   removeSubcontractor,
 } = require("./jobsites");
 
-const JOBSITE_COLUMNS = "id, gc_company_id, name, status, archived_at, created_at";
-const LIST_SELECT = `${JOBSITE_COLUMNS}, jobsite_subcontractors(id, invited_email, accepted_at, companies(name))`;
+const JOBSITE_COLUMNS =
+  "id, gc_company_id, name, status, archived_at, origin, created_at";
+const LIST_SELECT = `${JOBSITE_COLUMNS}, jobsite_subcontractors(id, sub_company_id, invited_email, accepted_at, companies(name))`;
 const ROSTER_COLUMNS =
   "id, jobsite_id, sub_company_id, invited_email, token, expires_at, accepted_at";
 
@@ -22,6 +25,7 @@ const dbRow = {
   name: "Riverside Tower",
   status: "active",
   archived_at: null,
+  origin: "gc",
   created_at: "2026-01-01T00:00:00.000Z",
 };
 
@@ -31,25 +35,133 @@ const mappedJobsite = {
   name: "Riverside Tower",
   status: "active",
   archivedAt: null,
+  createdBySub: false,
   createdAt: "2026-01-01T00:00:00.000Z",
 };
 
 const fromSpy = vi.spyOn(supabase, "from");
+const getCompanySpy = vi.spyOn(companiesService, "getById");
+const unlockedSpy = vi.spyOn(subAccessService, "getUnlockedSubIds");
+
+// Phase 9d defaults: nothing locked; a GC Free company (cap of 1 live jobsite).
+beforeEach(() => {
+  unlockedSpy.mockReset().mockResolvedValue(null);
+  getCompanySpy.mockReset().mockResolvedValue({ id: "gc-1", companyType: "gc", tier: "basic" });
+});
+
+// A chainable, awaitable count query. Each await resolves to the next value in
+// `counts` (the cap check awaits the paid-site count first, then the live count).
+const countQuery = (counts, error = null) => {
+  const query = {};
+  ["select", "eq", "is"].forEach((method) => {
+    query[method] = vi.fn(() => query);
+  });
+  query.then = (resolve, reject) =>
+    Promise.resolve({ count: counts.shift(), error }).then(resolve, reject);
+  return query;
+};
 
 describe("jobsites service: create", () => {
   let single;
   let select;
   let insert;
+  let capQuery;
+
+  const routeJobsites = () =>
+    fromSpy.mockImplementation((table) => {
+      if (table !== "jobsites") throw new Error(`Unexpected table: ${table}`);
+      // Cap counts start with select(..., { head: true }); the insert chain is separate.
+      return { insert, select: capQuery.select };
+    });
 
   beforeEach(() => {
     single = vi.fn().mockResolvedValue({ data: dbRow, error: null });
     select = vi.fn(() => ({ single }));
     insert = vi.fn(() => ({ select }));
+    capQuery = countQuery([0, 0]);
 
     fromSpy.mockReset();
-    fromSpy.mockImplementation((table) => {
-      if (table === "jobsites") return { insert };
-      throw new Error(`Unexpected table: ${table}`);
+    routeJobsites();
+  });
+
+  it("should throw a 403 PLAN_LIMIT and insert nothing when GC Free already has its one live jobsite", async () => {
+    // Arrange
+    capQuery = countQuery([0, 1]);
+    fromSpy.mockReset();
+    routeJobsites();
+
+    // Act & Assert
+    await expect(create({ gcCompanyId: "gc-1", name: "Second Site" })).rejects.toMatchObject({
+      statusCode: 403,
+      data: { code: "PLAN_LIMIT", limit: 1 },
+    });
+    expect(insert).not.toHaveBeenCalled();
+  });
+
+  it("should count only live (active, not archived) jobsites", async () => {
+    // Act
+    await create({ gcCompanyId: "gc-1", name: "Riverside Tower" });
+
+    // Assert
+    expect(capQuery.eq).toHaveBeenCalledWith("gc_company_id", "gc-1");
+    expect(capQuery.eq).toHaveBeenCalledWith("status", "active");
+    expect(capQuery.is).toHaveBeenCalledWith("archived_at", null);
+    expect(capQuery.eq).toHaveBeenCalledWith("plan", "site_pro");
+  });
+
+  it("should raise a GC Free cap by one per live Site Pro jobsite", async () => {
+    // Arrange: one paid site and two live sites -> limit 2, so a third is refused
+    capQuery = countQuery([1, 2]);
+    fromSpy.mockReset();
+    routeJobsites();
+
+    // Act & Assert
+    await expect(create({ gcCompanyId: "gc-1", name: "Third" })).rejects.toMatchObject({
+      statusCode: 403,
+      data: { code: "PLAN_LIMIT", limit: 2 },
+    });
+  });
+
+  it("should allow a Portfolio GC below its 10-site cap and refuse it at the cap", async () => {
+    // Arrange
+    getCompanySpy.mockResolvedValue({ id: "gc-1", companyType: "gc", tier: "premium" });
+    capQuery = countQuery([0, 9]);
+    fromSpy.mockReset();
+    routeJobsites();
+
+    // Act & Assert
+    await expect(create({ gcCompanyId: "gc-1", name: "Tenth" })).resolves.toEqual(mappedJobsite);
+
+    capQuery = countQuery([0, 10]);
+    fromSpy.mockReset();
+    routeJobsites();
+    await expect(create({ gcCompanyId: "gc-1", name: "Eleventh" })).rejects.toMatchObject({
+      statusCode: 403,
+      data: { code: "PLAN_LIMIT", limit: 10 },
+    });
+  });
+
+  it("should skip the live count for an unlimited Portfolio GC", async () => {
+    // Arrange
+    getCompanySpy.mockResolvedValue({ id: "gc-1", companyType: "gc", tier: "enterprise" });
+    capQuery = countQuery([0]);
+    fromSpy.mockReset();
+    routeJobsites();
+
+    // Act & Assert
+    await expect(create({ gcCompanyId: "gc-1", name: "Any" })).resolves.toEqual(mappedJobsite);
+  });
+
+  it("should throw a 502 when the cap check fails", async () => {
+    // Arrange
+    capQuery = countQuery([null], { code: "X" });
+    fromSpy.mockReset();
+    routeJobsites();
+
+    // Act & Assert
+    await expect(create({ gcCompanyId: "gc-1", name: "Any" })).rejects.toMatchObject({
+      statusCode: 502,
+      message: "Could not check your plan's job sites",
     });
   });
 
@@ -61,11 +173,26 @@ describe("jobsites service: create", () => {
     const payload = insert.mock.calls[0][0];
     expect(payload.gc_company_id).toBe("gc-1");
     expect(payload.name).toBe("Riverside Tower");
+    expect(payload.origin).toBe("gc");
     expect(payload.id).toMatch(
       /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i,
     );
     expect(select).toHaveBeenCalledWith(JOBSITE_COLUMNS);
     expect(result).toEqual(mappedJobsite);
+  });
+
+  it("should map a subcontractor-originated row to createdBySub true and a legacy null origin to false", async () => {
+    // Arrange
+    single.mockResolvedValueOnce({ data: { ...dbRow, origin: "subcontractor" }, error: null });
+    single.mockResolvedValueOnce({ data: { ...dbRow, origin: null }, error: null });
+
+    // Act
+    const subCreated = await create({ gcCompanyId: "gc-1", name: "Riverside Tower" });
+    const legacy = await create({ gcCompanyId: "gc-1", name: "Riverside Tower" });
+
+    // Assert
+    expect(subCreated.createdBySub).toBe(true);
+    expect(legacy.createdBySub).toBe(false);
   });
 
   it("should throw a 502 AppError on a query failure", async () => {
@@ -134,8 +261,36 @@ describe("jobsites service: listForGc", () => {
 
     // Assert
     expect(jobsite.subcontractors).toEqual([
-      { id: "sub-1", email: "a@acme.com", status: "pending", companyName: null },
-      { id: "sub-2", email: "b@roof.com", status: "accepted", companyName: "Roof Co" },
+      { id: "sub-1", email: "a@acme.com", status: "pending", companyName: null, locked: false },
+      { id: "sub-2", email: "b@roof.com", status: "accepted", companyName: "Roof Co", locked: false },
+    ]);
+  });
+
+  it("should hide a locked sub's email and company name but never lock a pending invite", async () => {
+    // Arrange
+    unlockedSpy.mockResolvedValue(new Set(["sub-co-1"]));
+    order.mockResolvedValue({
+      data: [
+        {
+          ...dbRow,
+          jobsite_subcontractors: [
+            { id: "r-1", sub_company_id: "sub-co-1", invited_email: "a@acme.com", accepted_at: "2026-02-01T00:00:00.000Z", companies: { name: "Acme" } },
+            { id: "r-2", sub_company_id: "sub-co-2", invited_email: "b@roof.com", accepted_at: "2026-03-01T00:00:00.000Z", companies: { name: "Roof Co" } },
+            { id: "r-3", sub_company_id: null, invited_email: "c@new.com", accepted_at: null, companies: null },
+          ],
+        },
+      ],
+      error: null,
+    });
+
+    // Act
+    const [jobsite] = await listForGc("gc-1");
+
+    // Assert
+    expect(jobsite.subcontractors).toEqual([
+      { id: "r-1", email: "a@acme.com", status: "accepted", companyName: "Acme", locked: false },
+      { id: "r-2", email: null, status: "accepted", companyName: null, locked: true },
+      { id: "r-3", email: "c@new.com", status: "pending", companyName: null, locked: false },
     ]);
   });
 
@@ -210,12 +365,77 @@ describe("jobsites service: update", () => {
     expect(payload.archived_at).toEqual(expect.any(String));
   });
 
-  it("should clear archived_at when archived is false", async () => {
-    // Act
-    await updateJobsite({ id: "jobsite-1", gcCompanyId: "gc-1", patch: { archived: false } });
+  describe("restoring a dormant jobsite (plan cap)", () => {
+    let lookup;
+    let capQuery;
 
-    // Assert
-    expect(update).toHaveBeenCalledWith({ archived_at: null });
+    // First jobsites call is the ownership lookup (select..eq..eq..single), then
+    // the cap counts, then the update itself.
+    const wire = (currentRow, counts) => {
+      lookup = chain({ data: { ...currentRow, companies: { name: "Turner" } }, error: null });
+      capQuery = countQuery(counts);
+      fromSpy.mockReset();
+      fromSpy.mockImplementationOnce(() => lookup);
+      fromSpy.mockImplementation(() => ({ update, select: capQuery.select }));
+    };
+
+    it("should clear archived_at when archived is false and a slot is free", async () => {
+      // Arrange
+      wire({ ...dbRow, archived_at: "2026-02-01T00:00:00.000Z" }, [0, 0]);
+
+      // Act
+      await updateJobsite({ id: "jobsite-1", gcCompanyId: "gc-1", patch: { archived: false } });
+
+      // Assert
+      expect(update).toHaveBeenCalledWith({ archived_at: null });
+    });
+
+    it("should refuse with a 403 PLAN_LIMIT when restoring would exceed the cap", async () => {
+      // Arrange
+      wire({ ...dbRow, archived_at: "2026-02-01T00:00:00.000Z" }, [0, 1]);
+
+      // Act & Assert
+      await expect(
+        updateJobsite({ id: "jobsite-1", gcCompanyId: "gc-1", patch: { archived: false } }),
+      ).rejects.toMatchObject({ statusCode: 403, data: { code: "PLAN_LIMIT", limit: 1 } });
+      expect(update).not.toHaveBeenCalled();
+    });
+
+    it("should cap re-activating a completed jobsite the same way", async () => {
+      // Arrange
+      wire({ ...dbRow, status: "completed" }, [0, 1]);
+
+      // Act & Assert
+      await expect(
+        updateJobsite({ id: "jobsite-1", gcCompanyId: "gc-1", patch: { status: "active" } }),
+      ).rejects.toMatchObject({ statusCode: 403 });
+    });
+
+    it("should not count a jobsite that is already live", async () => {
+      // Arrange: cap is full, but this row is already live so nothing changes
+      wire(dbRow, [0, 1]);
+
+      // Act
+      await updateJobsite({ id: "jobsite-1", gcCompanyId: "gc-1", patch: { archived: false } });
+
+      // Assert
+      expect(update).toHaveBeenCalledWith({ archived_at: null });
+    });
+
+    it("should not re-check when the jobsite stays archived", async () => {
+      // Arrange: un-completing an archived jobsite leaves it dormant
+      wire({ ...dbRow, status: "completed", archived_at: "2026-02-01T00:00:00.000Z" }, [0, 1]);
+
+      // Act
+      await updateJobsite({
+        id: "jobsite-1",
+        gcCompanyId: "gc-1",
+        patch: { status: "active" },
+      });
+
+      // Assert
+      expect(update).toHaveBeenCalledWith({ status: "active" });
+    });
   });
 
   it("should return the mapped row on success", async () => {

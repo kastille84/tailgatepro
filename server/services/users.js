@@ -8,6 +8,7 @@ const { AppError } = require("../utility/AppError");
 const companyInvitesService = require("./companyInvites");
 const jobsitesService = require("./jobsites");
 const seatsService = require("./seats");
+const { resolveEffectiveTier } = require("./sponsorship");
 
 // Creates the `companies` row and the `users` row for a newly self-signed-up
 // auth user. `role` is 'admin' — the user creating a brand-new company is its
@@ -177,7 +178,12 @@ const getUserContext = async (id) => {
     // `companies` is a to-one embed via the company_id FK -- an object, not
     // an array. Defensive fallback for the (schema-allowed but
     // never-in-practice) case of a user with no company row yet.
-    tier: data.companies?.tier ?? null,
+    // Effective tier: a Free sub on a Site Pro jobsite resolves as Pro (9d).
+    tier: await resolveEffectiveTier({
+      companyId: data.company_id,
+      companyType: data.companies?.company_type ?? null,
+      tier: data.companies?.tier ?? null,
+    }),
     companyType: data.companies?.company_type ?? null,
   };
 };

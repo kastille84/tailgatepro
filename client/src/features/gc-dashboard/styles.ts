@@ -84,6 +84,41 @@ export const StyledSubRow = styled.button`
   }
 `;
 
+/** A plan-locked sub: same footprint as StyledSubRow but not interactive. */
+export const StyledLockedRow = styled.div`
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1.2rem 1.6rem;
+  width: 100%;
+  padding: 1.6rem;
+  border: 0.1rem dashed ${({ theme }) => theme.colors.navy[100]};
+  border-radius: ${({ theme }) => theme.borderRadius.md};
+  background-color: ${({ theme }) => theme.colors.concrete[100]};
+  min-height: 4.8rem;
+`;
+
+/** Placeholder copy only -- no real data is ever rendered here, so the blur is
+ *  cosmetic and can't be undone from devtools. */
+export const StyledLockedText = styled.span`
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: ${({ theme }) => theme.colors.navy[700]};
+  filter: blur(0.5rem);
+  user-select: none;
+`;
+
+export const StyledUnlockLink = styled(Link)`
+  display: inline-flex;
+  align-items: center;
+  min-height: 4.8rem;
+  font-size: 1.4rem;
+  font-weight: 700;
+  color: ${({ theme }) => theme.colors.orange[600]};
+  text-decoration: underline;
+`;
+
 export const StyledSubName = styled.span`
   font-size: 1.5rem;
   font-weight: 700;

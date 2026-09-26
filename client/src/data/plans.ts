@@ -78,7 +78,6 @@ export const GC_PLANS: Plan[] = [
       "Basic sub roster overview",
       "1 subcontractor unlocked — others blurred",
     ],
-    comingSoon: ["1 subcontractor unlocked — others blurred"],
   },
   {
     id: "gc-site-pro",

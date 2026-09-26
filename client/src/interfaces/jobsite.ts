@@ -5,10 +5,14 @@ import type { ProjectStatus } from "./project";
  *  the invite email. */
 export interface JobsiteSubcontractor {
   id: string;
-  email: string;
+  /** Null when `locked` (hidden by the GC's plan). */
+  email: string | null;
   status: "pending" | "accepted";
-  /** Null until the invitee has accepted and named/joined a company. */
+  /** Null until the invitee has accepted and named/joined a company, and
+   *  always null when `locked`. */
   companyName: string | null;
+  /** True when the GC's plan (GC Free: 1 unlocked sub) hides this sub. */
+  locked: boolean;
 }
 
 /** GET /api/jobsites row â€” a GC-owned jobsite with its roster embedded. */
@@ -18,11 +22,14 @@ export interface Jobsite {
   name: string;
   status: ProjectStatus;
   archivedAt: string | null;
+  /** True when a subcontractor's join-code link created this jobsite. False
+   *  for GC-created and for jobsites of unknown origin. */
+  createdBySub: boolean;
   createdAt: string;
   subcontractors: JobsiteSubcontractor[];
 }
 
-/** POST/PATCH response — the jobsite row without its roster (only the list
+/** POST/PATCH response ï¿½ the jobsite row without its roster (only the list
  *  endpoint embeds it). */
 export type JobsiteSummary = Omit<Jobsite, "subcontractors">;
 

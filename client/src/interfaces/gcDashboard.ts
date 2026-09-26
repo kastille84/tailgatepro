@@ -2,14 +2,20 @@
  *  was requested. Mirrors a `getOverview` jobsite entry
  *  (server/services/gcDashboard.js). */
 export interface GcSubCompliance {
-  companyId: string;
+  /** Null when `locked`. */
+  companyId: string | null;
   companyName: string | null;
   /** The sub's earliest active project id in this jobsite — what a drill-in
    *  opens. `null` when an accepted sub has no active project there yet. */
   projectId: string | null;
-  status: "logged" | "missing";
+  /** Null when `locked`. */
+  status: "logged" | "missing" | null;
   lastLoggedAt: string | null;
-  count: number;
+  /** Null when `locked`. */
+  count: number | null;
+  /** True when the GC's plan (GC Free: 1 unlocked sub) hides this sub — the
+   *  server sends no identity or status for it, only this placeholder. */
+  locked: boolean;
 }
 
 /** One of the GC's real jobsites (the `jobsites` table) with its accepted
@@ -17,6 +23,9 @@ export interface GcSubCompliance {
 export interface GcJobsite {
   id: string;
   name: string;
+  /** True when a subcontractor's join-code link created this jobsite rather
+   *  than the GC. False for GC-created and for jobsites of unknown origin. */
+  createdBySub: boolean;
   subs: GcSubCompliance[];
 }
 

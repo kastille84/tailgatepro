@@ -14,7 +14,9 @@ const { AppError } = require("../utility/AppError");
 const { dayWindow } = require("../utility/dayWindow");
 const { computeCompliance } = require("../utility/compliance");
 const { buildPdfFilename } = require("../utility/pdfFilename");
+const { isSubLocked } = require("../utility/subLocking");
 const companiesService = require("./companies");
+const subAccessService = require("./subAccess");
 const storageService = require("./storage");
 const { PDF_BUCKET, PDF_URL_TTL_SECONDS } = require("./meetingLogs");
 
@@ -72,10 +74,17 @@ const getCompanyNamesByIds = async (ids) => {
   return new Map(data.map((row) => [row.id, row.name]));
 };
 
+const SUB_LOCKED_ERROR = () =>
+  new AppError("Upgrade to unlock this subcontractor", 403, {
+    data: { code: "PLAN_LIMIT" },
+  });
+
 // Confirms `projectId` is currently linked to this GC — anything else
-// (unknown id, a different GC's project, an unlinked one) is a 404. Returns
-// the mapped project so callers that need its name next (getMeeting,
-// getMeetingPdfUrl) don't have to look it up twice.
+// (unknown id, a different GC's project, an unlinked one) is a 404. A project
+// whose sub is locked on the GC's plan (Phase 9d) is a 403 PLAN_LIMIT, so the
+// blur can't be bypassed by calling the API directly. Returns the mapped
+// project so callers that need its name next (getMeeting, getMeetingPdfUrl)
+// don't have to look it up twice.
 const assertGcLinkedProject = async (projectId, gcCompanyId) => {
   const { data, error } = await supabase
     .from("projects")
@@ -90,6 +99,9 @@ const assertGcLinkedProject = async (projectId, gcCompanyId) => {
     }
     throw new AppError("Could not verify the project", 502, { cause: error });
   }
+
+  const unlocked = await subAccessService.getUnlockedSubIds(gcCompanyId);
+  if (isSubLocked(unlocked, data.owner_company_id)) throw SUB_LOCKED_ERROR();
 
   return toProject(data);
 };
@@ -122,7 +134,9 @@ const listCompletedLogsInWindow = async (projectIds, window) => {
 const listActiveJobsites = async (gcCompanyId) => {
   const { data, error } = await supabase
     .from("jobsites")
-    .select("id, name, jobsite_subcontractors(sub_company_id, accepted_at)")
+    .select(
+      "id, name, origin, jobsite_subcontractors(sub_company_id, accepted_at)",
+    )
     .eq("gc_company_id", gcCompanyId)
     .eq("status", "active")
     .is("archived_at", null);
@@ -134,6 +148,7 @@ const listActiveJobsites = async (gcCompanyId) => {
   return data.map((row) => ({
     id: row.id,
     name: row.name,
+    createdBySub: row.origin === "subcontractor",
     subIds: (row.jobsite_subcontractors ?? [])
       .filter((sub) => sub.sub_company_id && sub.accepted_at)
       .map((sub) => sub.sub_company_id),
@@ -146,9 +161,10 @@ const listActiveJobsites = async (gcCompanyId) => {
 const getOverview = async (gcCompanyId, { date, tzOffset }) => {
   const window = dayWindow({ date, tzOffset });
 
-  const [jobsiteRows, allProjects] = await Promise.all([
+  const [jobsiteRows, allProjects, unlocked] = await Promise.all([
     listActiveJobsites(gcCompanyId),
     listLinkedProjects(gcCompanyId),
+    subAccessService.getUnlockedSubIds(gcCompanyId),
   ]);
   const projects = allProjects.filter(
     (project) =>
@@ -194,6 +210,7 @@ const getOverview = async (gcCompanyId, { date, tzOffset }) => {
       return {
         id: jobsite.id,
         name: jobsite.name,
+        createdBySub: jobsite.createdBySub,
         subs: compliance.map((entry) => ({
           companyId: entry.subId,
           companyName: companyNamesById.get(entry.subId) ?? null,
@@ -206,6 +223,8 @@ const getOverview = async (gcCompanyId, { date, tzOffset }) => {
     })
     .sort((a, b) => a.name.localeCompare(b.name));
 
+  // Totals are counted before masking so a locked sub still shows up in the
+  // headline numbers (that's what makes the upgrade prompt tempting).
   const allSubs = jobsites.flatMap((jobsite) => jobsite.subs);
   const totals = {
     subs: allSubs.length,
@@ -213,7 +232,26 @@ const getOverview = async (gcCompanyId, { date, tzOffset }) => {
     missing: allSubs.filter((sub) => sub.status === "missing").length,
   };
 
-  return { jobsites, totals };
+  // Phase 9d: a locked sub keeps only a placeholder row -- no identity, status
+  // or drill-in target ever leaves the server.
+  const maskedJobsites = jobsites.map((jobsite) => ({
+    ...jobsite,
+    subs: jobsite.subs.map((sub) =>
+      isSubLocked(unlocked, sub.companyId)
+        ? {
+            companyId: null,
+            companyName: null,
+            projectId: null,
+            status: null,
+            lastLoggedAt: null,
+            count: null,
+            locked: true,
+          }
+        : { ...sub, locked: false },
+    ),
+  }));
+
+  return { jobsites: maskedJobsites, totals };
 };
 
 // Maps a completed meeting_logs row (optionally carrying an embedded
@@ -245,7 +283,13 @@ const listMeetings = async (gcCompanyId, { projectId, from, to } = {}) => {
     projectIds = [project.id];
     projectNameById = new Map([[project.id, project.name]]);
   } else {
-    const projects = await listLinkedProjects(gcCompanyId);
+    const [allProjects, unlocked] = await Promise.all([
+      listLinkedProjects(gcCompanyId),
+      subAccessService.getUnlockedSubIds(gcCompanyId),
+    ]);
+    const projects = allProjects.filter(
+      (project) => !isSubLocked(unlocked, project.ownerCompanyId),
+    );
     projectIds = projects.map((project) => project.id);
     projectNameById = new Map(projects.map((project) => [project.id, project.name]));
   }

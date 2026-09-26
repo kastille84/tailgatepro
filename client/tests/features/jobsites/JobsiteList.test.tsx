@@ -13,6 +13,7 @@ const base: Jobsite = {
   name: "Riverside",
   status: "active",
   archivedAt: null,
+  createdBySub: false,
   createdAt: "x",
   subcontractors: [
     { id: "s1", email: "a@a.com", status: "accepted", companyName: "A Co" },
@@ -54,6 +55,15 @@ describe("JobsiteList", () => {
 
     expect(screen.getByText("Archived")).toBeDefined();
     expect(screen.queryByText("active")).toBeNull();
+  });
+
+  it("shows a Created by subcontractor badge only for a sub-originated jobsite", () => {
+    const { unmount } = renderList();
+    expect(screen.queryByText("Created by subcontractor")).toBeNull();
+    unmount();
+
+    renderList({ jobsites: [{ ...base, createdBySub: true }] });
+    expect(screen.getByText("Created by subcontractor")).toBeDefined();
   });
 
   it("reports Subs and Edit clicks with the jobsite", () => {

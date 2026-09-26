@@ -9,6 +9,7 @@ import {
   removeSubcontractor,
   updateJobsite,
 } from "../../src/services/apiJobsites";
+import { PlanLimitError } from "../../src/utils/PlanLimitError";
 
 const GENERIC = "Something went wrong. Please try again.";
 
@@ -57,6 +58,42 @@ describe("apiJobsites", () => {
         }),
       );
       await expect(listJobsites("t")).rejects.toThrow("Forbidden");
+    });
+
+    it("rejects with a PlanLimitError carrying the limit on a PLAN_LIMIT response", async () => {
+      vi.stubGlobal(
+        "fetch",
+        vi.fn().mockResolvedValue({
+          ok: false,
+          status: 403,
+          json: async () => ({
+            success: false,
+            error: "Your plan's job site limit is reached.",
+            data: { code: "PLAN_LIMIT", limit: 1 },
+          }),
+        }),
+      );
+
+      const error = await listJobsites("t").catch((e) => e);
+      expect(error).toBeInstanceOf(PlanLimitError);
+      expect(error.message).toBe("Your plan's job site limit is reached.");
+      expect(error.limit).toBe(1);
+    });
+
+    it("falls back to the generic message and a null limit on a bare PLAN_LIMIT response", async () => {
+      vi.stubGlobal(
+        "fetch",
+        vi.fn().mockResolvedValue({
+          ok: false,
+          status: 403,
+          json: async () => ({ success: false, data: { code: "PLAN_LIMIT" } }),
+        }),
+      );
+
+      const error = await listJobsites("t").catch((e) => e);
+      expect(error).toBeInstanceOf(PlanLimitError);
+      expect(error.message).toBe(GENERIC);
+      expect(error.limit).toBeNull();
     });
 
     it("rejects with the generic message when the body is not JSON", async () => {

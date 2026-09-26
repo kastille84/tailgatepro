@@ -1,6 +1,6 @@
 import React from "react";
 import { describe, it, expect, vi, beforeEach } from "vitest";
-import { renderHook } from "@testing-library/react";
+import { act, renderHook, waitFor } from "@testing-library/react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import toast from "react-hot-toast";
 
@@ -10,6 +10,7 @@ import { useInviteSubcontractor } from "../../src/hooks/useInviteSubcontractor";
 import { useRemoveSubcontractor } from "../../src/hooks/useRemoveSubcontractor";
 import { JOBSITES_QUERY_KEY } from "../../src/hooks/useJobsites";
 import * as apiJobsites from "../../src/services/apiJobsites";
+import { PlanLimitError } from "../../src/utils/PlanLimitError";
 
 vi.mock("react-hot-toast");
 vi.mock("../../src/services/apiJobsites");
@@ -69,9 +70,47 @@ describe("jobsite mutation hooks", () => {
       expect(toast.error).toHaveBeenCalledWith("Nope");
       expect(invalidateSpy).not.toHaveBeenCalled();
     });
+
+    it("exposes a plan-limit rejection as planLimitError without a toast", async () => {
+      vi.mocked(apiJobsites.createJobsite).mockRejectedValue(
+        new PlanLimitError("Limit reached", 1),
+      );
+
+      const { result } = renderHook(() => useCreateJobsite(), { wrapper });
+      expect(result.current.planLimitError).toBeNull();
+
+      await act(async () => {
+        await result.current.createJobsite({ name: "x" }).catch(() => undefined);
+      });
+
+      expect(toast.error).not.toHaveBeenCalled();
+      await waitFor(() =>
+        expect(result.current.planLimitError?.message).toBe("Limit reached"),
+      );
+    });
   });
 
   describe("useUpdateJobsite", () => {
+    it("exposes a plan-limit rejection as planLimitError without a toast", async () => {
+      vi.mocked(apiJobsites.updateJobsite).mockRejectedValue(
+        new PlanLimitError("Limit reached", 1),
+      );
+
+      const { result } = renderHook(() => useUpdateJobsite(), { wrapper });
+      expect(result.current.planLimitError).toBeNull();
+
+      await act(async () => {
+        await result.current
+          .updateJobsite({ id: "j1", patch: { archived: false } })
+          .catch(() => undefined);
+      });
+
+      expect(toast.error).not.toHaveBeenCalled();
+      await waitFor(() =>
+        expect(result.current.planLimitError?.message).toBe("Limit reached"),
+      );
+    });
+
     it("patches, refetches the list, and toasts success", async () => {
       vi.mocked(apiJobsites.updateJobsite).mockResolvedValue({} as never);
 

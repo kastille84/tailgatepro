@@ -5,6 +5,7 @@ import { useAuth } from "../context/auth";
 import { updateJobsite } from "../services/apiJobsites";
 import { JOBSITES_QUERY_KEY } from "./useJobsites";
 import type { JobsitePatch, JobsiteSummary } from "../interfaces/jobsite";
+import { PlanLimitError } from "../utils/PlanLimitError";
 
 interface UpdateJobsiteVariables {
   id: string;
@@ -28,6 +29,9 @@ export const useUpdateJobsite = () => {
       toast.success("Job site updated");
     },
     onError: (error) => {
+      // Restoring past the plan's job site cap shows the form's inline
+      // upgrade prompt (via `planLimitError`) instead of a toast.
+      if (error instanceof PlanLimitError) return;
       toast.error(error.message);
     },
   });
@@ -35,5 +39,6 @@ export const useUpdateJobsite = () => {
   return {
     updateJobsite: mutation.mutateAsync,
     isUpdating: mutation.isPending,
+    planLimitError: mutation.error instanceof PlanLimitError ? mutation.error : null,
   };
 };

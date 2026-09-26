@@ -765,6 +765,7 @@ describe("projects service: linkGc", () => {
     expect(newJobsite).toMatchObject({
       gc_company_id: "gc-1",
       name: "Downtown Highrise",
+      origin: "subcontractor",
     });
 
     const [rosterInsert] = db.find("jobsite_subcontractors", "insert");

@@ -2,6 +2,7 @@ import React from "react";
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { render, screen, fireEvent, waitFor } from "@testing-library/react";
 import { ThemeProvider } from "styled-components";
+import { MemoryRouter } from "react-router-dom";
 
 import { JobsiteRosterModal } from "../../../src/features/jobsites/JobsiteRosterModal";
 import theme from "../../../src/styles/theme";
@@ -31,6 +32,7 @@ const jobsite: Jobsite = {
   name: "Riverside",
   status: "active",
   archivedAt: null,
+  createdBySub: false,
   createdAt: "x",
   subcontractors: [
     {
@@ -38,8 +40,9 @@ const jobsite: Jobsite = {
       email: "jane@acme.com",
       status: "accepted",
       companyName: "Acme Roofing",
+      locked: false,
     },
-    { id: "s2", email: "bob@new.com", status: "pending", companyName: null },
+    { id: "s2", email: "bob@new.com", status: "pending", companyName: null, locked: false },
   ],
 };
 
@@ -47,14 +50,16 @@ const renderModal = (
   props: Partial<React.ComponentProps<typeof JobsiteRosterModal>> = {},
 ) =>
   render(
-    <ThemeProvider theme={theme}>
-      <JobsiteRosterModal
-        jobsite={jobsite}
-        canManage
-        onClose={vi.fn()}
-        {...props}
-      />
-    </ThemeProvider>,
+    <MemoryRouter>
+      <ThemeProvider theme={theme}>
+        <JobsiteRosterModal
+          jobsite={jobsite}
+          canManage
+          onClose={vi.fn()}
+          {...props}
+        />
+      </ThemeProvider>
+    </MemoryRouter>,
   );
 
 describe("JobsiteRosterModal", () => {
@@ -74,6 +79,31 @@ describe("JobsiteRosterModal", () => {
     expect(screen.getByText("bob@new.com")).toBeDefined();
     expect(screen.getByText("Pending")).toBeDefined();
     expect(screen.getByTestId("invite-form").textContent).toBe("j1");
+  });
+
+  it("hides a locked sub's identity, offers an upgrade link, and still allows removal", async () => {
+    renderModal({
+      jobsite: {
+        ...jobsite,
+        subcontractors: [
+          { id: "s9", email: null, status: "accepted", companyName: null, locked: true },
+        ],
+      },
+    });
+
+    expect(screen.getByText("Locked subcontractor")).toBeDefined();
+    expect(
+      screen.getByRole("link", { name: /upgrade to unlock/i }).getAttribute("href"),
+    ).toBe("/pricing");
+
+    fireEvent.click(screen.getByRole("button", { name: "Remove Locked subcontractor" }));
+    expect(screen.getByText("Locked subcontractor", { selector: "strong" })).toBeDefined();
+    const confirm = screen.getAllByRole("button", { name: /^remove$/i });
+    fireEvent.click(confirm[confirm.length - 1]);
+
+    await waitFor(() =>
+      expect(mockRemove).toHaveBeenCalledWith({ jobsiteId: "j1", subId: "s9" }),
+    );
   });
 
   it("shows an empty message when nobody is invited", () => {
@@ -113,7 +143,7 @@ describe("JobsiteRosterModal", () => {
       jobsite: {
         ...jobsite,
         subcontractors: [
-          { id: "s3", email: "solo@x.com", status: "accepted", companyName: null },
+          { id: "s3", email: "solo@x.com", status: "accepted", companyName: null, locked: false },
         ],
       },
     });

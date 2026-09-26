@@ -20,6 +20,7 @@ const jobsite: Jobsite = {
   name: "Riverside",
   status: "active",
   archivedAt: null,
+  createdBySub: false,
   createdAt: "2026-09-01T00:00:00.000Z",
   subcontractors: [],
 };

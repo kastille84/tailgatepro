@@ -343,6 +343,35 @@ describe("users service: getUserContext", () => {
     });
   });
 
+  it("should resolve a sponsored Free subcontractor's tier as premium", async () => {
+    // Arrange
+    usersSingle.mockResolvedValue({
+      data: {
+        id: "auth-user-1",
+        name: "Alex Builder",
+        role: "foreman",
+        company_id: "company-1",
+        companies: { tier: "basic", company_type: "subcontractor" },
+      },
+      error: null,
+    });
+    const sponsorQuery = { then: (resolve) => Promise.resolve({ count: 1, error: null }).then(resolve) };
+    ["select", "eq", "not", "is"].forEach((method) => {
+      sponsorQuery[method] = vi.fn(() => sponsorQuery);
+    });
+    fromSpy.mockImplementation((table) => {
+      if (table === "users") return { select: usersSelect };
+      if (table === "jobsite_subcontractors") return sponsorQuery;
+      throw new Error(`Unexpected table: ${table}`);
+    });
+
+    // Act
+    const result = await getUserContext("auth-user-1");
+
+    // Assert
+    expect(result.tier).toBe("premium");
+  });
+
   it("should default tier and companyType to null when the company embed is missing", async () => {
     // Arrange
     usersSingle.mockResolvedValue({

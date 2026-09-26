@@ -2,19 +2,28 @@ const { v4: uuidv4 } = require("uuid");
 const { supabase } = require("../utility/supabaseClient");
 const { AppError } = require("../utility/AppError");
 const { generateInviteToken, getInviteExpiry } = require("../utility/inviteToken");
+const { effectiveJobsiteLimit } = require("../utility/entitlements");
+const { countRows } = require("../utility/countRows");
 const projectsService = require("./projects");
+const { isSubLocked } = require("../utility/subLocking");
+const companiesService = require("./companies");
+const subAccessService = require("./subAccess");
 
 // The columns every jobsites query selects, and the snake_case -> camelCase
 // mapper applied to each row before it leaves the service. Services never
 // leak DB column names to the controller layer.
-const JOBSITE_COLUMNS = "id, gc_company_id, name, status, archived_at, created_at";
+const JOBSITE_COLUMNS =
+  "id, gc_company_id, name, status, archived_at, origin, created_at";
 
+// A NULL origin (a jobsite that predates the column) maps to false: unknown is
+// never presented as sub-created.
 const toJobsite = (row) => ({
   id: row.id,
   gcCompanyId: row.gc_company_id,
   name: row.name,
   status: row.status,
   archivedAt: row.archived_at,
+  createdBySub: row.origin === "subcontractor",
   createdAt: row.created_at,
 });
 
@@ -30,24 +39,61 @@ const INVALID_INVITE_MESSAGE = "This invite link is invalid or has expired";
 
 // A jobsite with its roster embedded, for the GC's list view. The token is
 // deliberately absent from both the select and the mapped shape.
-const toJobsiteWithRoster = (row) => ({
+// `unlocked` (Phase 9d, from subAccess.getUnlockedSubIds) hides a locked sub's
+// email and company name; the row id stays so the GC can still remove it.
+const toJobsiteWithRoster = (row, unlocked) => ({
   ...toJobsite(row),
-  subcontractors: (row.jobsite_subcontractors ?? []).map((sub) => ({
-    id: sub.id,
-    email: sub.invited_email,
-    status: sub.accepted_at ? "accepted" : "pending",
-    companyName: sub.companies?.name ?? null,
-  })),
+  subcontractors: (row.jobsite_subcontractors ?? []).map((sub) => {
+    // A pending invite has no sub company yet, so there is nothing to lock.
+    const locked = Boolean(sub.sub_company_id) && isSubLocked(unlocked, sub.sub_company_id);
+    return {
+      id: sub.id,
+      email: locked ? null : sub.invited_email,
+      status: sub.accepted_at ? "accepted" : "pending",
+      companyName: locked ? null : (sub.companies?.name ?? null),
+      locked,
+    };
+  }),
 });
+
+// Throws a 403 PLAN_LIMIT when the GC already has as many live (active, not
+// archived) jobsites as its plan allows (Phase 9d). GC Free gets 1 plus one per
+// paid Site Pro site; Portfolio has its own cap (`effectiveJobsiteLimit`).
+// `gcCompanyId` is always the caller's verified company (loadUserContext).
+const assertJobsiteAvailable = async (gcCompanyId) => {
+  const company = await companiesService.getById(gcCompanyId);
+
+  const liveSites = () =>
+    supabase
+      .from("jobsites")
+      .select("id", { count: "exact", head: true })
+      .eq("gc_company_id", gcCompanyId)
+      .eq("status", "active")
+      .is("archived_at", null);
+
+  const failure = "Could not check your plan's job sites";
+  const paidSiteCount = await countRows(liveSites().eq("plan", "site_pro"), failure);
+  const limit = effectiveJobsiteLimit({ tier: company.tier, paidSiteCount });
+  if (limit === null) return;
+
+  const used = await countRows(liveSites(), failure);
+  if (used >= limit) {
+    throw new AppError("Your plan's job site limit is reached. Upgrade to add more.", 403, {
+      data: { code: "PLAN_LIMIT", limit },
+    });
+  }
+};
 
 // jobsites.id has no DB default (docs/jobsite-design.md's offline-sync-rule
 // exception, same as company_invites.id) — creating a jobsite is an
 // online-only action, so the server mints the id here rather than the client
 // generating one before an offline write, the way projects.create does.
 const create = async ({ gcCompanyId, name }) => {
+  await assertJobsiteAvailable(gcCompanyId);
+
   const { data, error } = await supabase
     .from("jobsites")
-    .insert({ id: uuidv4(), gc_company_id: gcCompanyId, name })
+    .insert({ id: uuidv4(), gc_company_id: gcCompanyId, name, origin: "gc" })
     .select(JOBSITE_COLUMNS)
     .single();
 
@@ -63,19 +109,22 @@ const create = async ({ gcCompanyId, name }) => {
 // accepted subs) embedded. Includes archived jobsites; nothing consumes this
 // list yet (8d-e), so there's no includeArchived toggle to wire up.
 const listForGc = async (gcCompanyId) => {
-  const { data, error } = await supabase
-    .from("jobsites")
-    .select(
-      `${JOBSITE_COLUMNS}, jobsite_subcontractors(id, invited_email, accepted_at, companies(name))`,
-    )
-    .eq("gc_company_id", gcCompanyId)
-    .order("created_at", { ascending: false });
+  const [{ data, error }, unlocked] = await Promise.all([
+    supabase
+      .from("jobsites")
+      .select(
+        `${JOBSITE_COLUMNS}, jobsite_subcontractors(id, sub_company_id, invited_email, accepted_at, companies(name))`,
+      )
+      .eq("gc_company_id", gcCompanyId)
+      .order("created_at", { ascending: false }),
+    subAccessService.getUnlockedSubIds(gcCompanyId),
+  ]);
 
   if (error) {
     throw new AppError("Could not load jobsites", 502, { cause: error });
   }
 
-  return data.map(toJobsiteWithRoster);
+  return data.map((row) => toJobsiteWithRoster(row, unlocked));
 };
 
 // Patches a jobsite the caller's GC company owns. Ownership is enforced in
@@ -88,6 +137,19 @@ const listForGc = async (gcCompanyId) => {
 // company member may rename, only a manager may archive" split to enforce
 // here, so `archived` needs no in-service role check.
 const update = async ({ id, gcCompanyId, patch }) => {
+  // Bringing a dormant (archived or non-active) jobsite back to live takes a
+  // slot, so it is capped like a create -- otherwise archive -> create ->
+  // restore would sidestep the plan limit.
+  if (patch.status === "active" || patch.archived === false) {
+    const current = await getOwnedJobsite(id, gcCompanyId);
+    const wasLive = current.status === "active" && !current.archivedAt;
+    const nextStatus = patch.status ?? current.status;
+    const nextArchived = patch.archived === undefined ? current.archivedAt : patch.archived;
+    if (!wasLive && nextStatus === "active" && !nextArchived) {
+      await assertJobsiteAvailable(gcCompanyId);
+    }
+  }
+
   const nextPatch = {};
   if (patch.name !== undefined) nextPatch.name = patch.name;
   if (patch.status !== undefined) nextPatch.status = patch.status;

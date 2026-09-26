@@ -9,6 +9,7 @@ import {
   StyledList,
   StyledMeta,
   StyledName,
+  StyledOriginBadge,
   StyledStatusBadge,
 } from "./styles";
 
@@ -49,6 +50,9 @@ export const JobsiteList = ({
           <StyledCardMain>
             <StyledName>{jobsite.name}</StyledName>
             <StyledMeta>{describeRoster(jobsite)}</StyledMeta>
+            {jobsite.createdBySub && (
+              <StyledOriginBadge>Created by subcontractor</StyledOriginBadge>
+            )}
           </StyledCardMain>
           <StyledCardActions>
             {jobsite.archivedAt ? (

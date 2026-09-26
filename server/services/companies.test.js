@@ -59,6 +59,26 @@ describe("companies service: getById", () => {
     expect(result).toEqual(mappedCompany);
   });
 
+  it("should report a sponsored Free subcontractor's effective tier as premium", async () => {
+    // Arrange: a Free sub holding an accepted row on a live Site Pro jobsite
+    single.mockResolvedValue({ data: { ...dbRow, tier: "basic" }, error: null });
+    const sponsorQuery = { then: (resolve) => Promise.resolve({ count: 1, error: null }).then(resolve) };
+    ["select", "eq", "not", "is"].forEach((method) => {
+      sponsorQuery[method] = vi.fn(() => sponsorQuery);
+    });
+    fromSpy.mockImplementation((table) => {
+      if (table === "companies") return { select };
+      if (table === "jobsite_subcontractors") return sponsorQuery;
+      throw new Error(`Unexpected table: ${table}`);
+    });
+
+    // Act
+    const result = await getById("company-1");
+
+    // Assert
+    expect(result.tier).toBe("premium");
+  });
+
   it("should map a null logo_path to a null logoPath", async () => {
     // Arrange
     single.mockResolvedValue({ data: { ...dbRow, logo_path: null }, error: null });

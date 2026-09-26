@@ -1,6 +1,7 @@
 const { supabase } = require("../utility/supabaseClient");
 const { AppError } = require("../utility/AppError");
 const { generateJoinCode, normalizeJoinCode } = require("../utility/joinCode");
+const { resolveEffectiveTier } = require("./sponsorship");
 
 // The columns every companies query selects, and the snake_case -> camelCase
 // mapper applied to each row before it leaves the service. Services never
@@ -19,7 +20,8 @@ const toCompany = (row) => ({
 // scoped against a second "caller's own company" id: the id passed in here
 // is always the caller's own verified companyId from loadUserContext
 // (trusted, never a route param), so there's no other party to scope
-// against.
+// against. `tier` is the *effective* tier (a Free sub on a Site Pro jobsite
+// resolves as Pro, Phase 9d), which is what every limit/gate reads.
 const getById = async (id) => {
   const { data, error } = await supabase
     .from("companies")
@@ -34,7 +36,15 @@ const getById = async (id) => {
     throw new AppError("Could not load the company", 502, { cause: error });
   }
 
-  return toCompany(data);
+  const company = toCompany(data);
+  return {
+    ...company,
+    tier: await resolveEffectiveTier({
+      companyId: company.id,
+      companyType: company.companyType,
+      tier: company.tier,
+    }),
+  };
 };
 
 // This service's first write operation. Sets (or clears) the caller's own

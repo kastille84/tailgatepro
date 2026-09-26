@@ -62,19 +62,19 @@ server accepts a client `held_at` up to 7 days in the past (`server/utility/held
 
 | Promise | Status | Evidence | Gap | Resolution |
 |---|---|---|---|---|
-| GC Free — 1 active jobsite | Missing | `services/jobsites.js` `create` is a bare insert | No count or tier check | Build (9d) |
+| GC Free — 1 active jobsite | Implemented (9d) | `jobsites.js` `assertJobsiteAvailable` on `create` and re-activation | Counts live sites; +1 per live Site Pro site; 403 `PLAN_LIMIT` + inline upgrade prompt | — |
 | GC Free — dashboard inbox for sub PDFs | Partial | `gcDashboard.js`, `features/gc-dashboard/*` | A per-sub meeting list with signed PDF links, capped at 200 (`MEETINGS_LIST_LIMIT`); not an "inbox"; ungated | Reword (9a) |
 | GC Free — basic sub roster overview | Partial | `JobsiteList.tsx`, `SubComplianceRow.tsx` | Exists, ungated for every GC | — |
-| GC Free — 1 sub unlocked, others blurred | Missing | Only the landing mockup (`GcDashboardMockup.tsx:82-91`) | No server masking, no client blur | Build (9d) |
-| Site Pro — sponsor unlimited subs on one site | Missing | `createInvite`/`acceptInvite` in `services/jobsites.js` | No sponsor/paid-site concept (every site can already invite unlimited subs) | Build (9d) |
+| GC Free — 1 sub unlocked, others blurred | Implemented (9d) | `utility/subLocking.js`, `services/subAccess.js`, `gcDashboard.js`, `SubComplianceRow.tsx` | Earliest-accepted sub (plus Site Pro subs) unlocked; locked subs are placeholders server-side and 403 on direct meeting/PDF calls | — |
+| Site Pro — sponsor unlimited subs on one site | Partial (9d) | `services/sponsorship.js`, `jobsites.plan` | A sub on a live `site_pro` jobsite resolves as Trade Pro; enforced, but no billing can set `jobsites.plan` yet, so still tagged "coming soon" | Defer (9f) |
 | Site Pro — SMS nudges, Mondays 7:00 AM | Missing | Only cron in `server.js` is a leftover 5am job | No SMS provider, phone storage or scheduler | Build (9e) |
 | Site Pro — Procore & Autodesk ACC sync | Missing | No code | Copy only | Defer (9f) |
 | Site Pro — 1-click OSHA Defense Bundle (ZIP) | Missing | Only a comment in `pdfFilename.js` | No zip dependency or route; see tasks.md 1158 | Build (9e) |
 | Portfolio — cross-project scorecards | Partial | `/api/gc/overview`, `utility/compliance.js` | Single-day compliance view; no scoring or history | Build (9e) |
 | Portfolio — top-down policy push | Missing | No code or schema | — | Build (9e) |
-| Portfolio — Superintendent vs Safety Director roles | Missing | `server/constants/roles.js`: `admin`, `safety_manager`, `foreman` | No "superintendent"; both manager roles have identical permissions; no per-site scoping | Build (9d) |
+| Portfolio — Superintendent vs Safety Director roles | Missing | `server/constants/roles.js`: `admin`, `safety_manager`, `foreman` | No "superintendent"; both manager roles have identical permissions; no per-site scoping | Build (9d-2) |
 | Portfolio — custom company safety form/manual builder | Missing | No code | — | Build (9e) |
-| Portfolio — 10 sites vs unlimited | Missing | No code | No site cap on any tier | Build (9d) |
+| Portfolio — 10 sites vs unlimited | Implemented (9d) | `effectiveJobsiteLimit` via `assertJobsiteAvailable` | Cap 10 (premium) / unlimited (enterprise); no billing sets the tier yet | — |
 
 ## FAQ, callout and landing claims
 
@@ -82,7 +82,7 @@ server accepts a client `held_at` up to 7 days in the past (`server/utility/held
 |---|---|---|---|---|
 | Scan a QR code or tap a link to open the app | Pricing FAQ, HowItWorks | Partial | A link works (PWA URL); no QR generator in the repo | Build (9e) or Reword |
 | Project-specific QR codes/links for GC sponsorship | Pricing FAQ, GcSection | Missing | Only a company-wide `join_code` and per-jobsite email invites exist; no QR | Build (9e) or Reword |
-| "Every subcontractor gets full access for $0" | Pricing callout | Missing | Accepting an invite never touches the sub's tier | Build (9d) |
+| "Every subcontractor gets full access for $0" | Pricing callout | Partial (9d) | Enforced via effective tier (see Site Pro row); unbuyable until billing, copy still says coming soon | Defer (9f) |
 | "Emailed PDFs stay in your inbox forever" | Pricing FAQ | Partial, misleading | The email carries a signed link expiring after 30 days (`EMAIL_PDF_URL_TTL_SECONDS`), not an attachment | Resolved: copy reworded (9a); a GC can re-open an expired link via the in-app report page (9c) |
 | "Tamper-evident signatures" / tamper-evident PDF | Pricing hero, ComparisonTable | Partial | App-level lock only; no hash/HMAC/seal/audit log; service-role writes bypass it | Build (9e) or Reword |
 | "GPS-verified" PDF seal | ComparisonTable, `CompliancePdfCard.tsx:74`, HowItWorks | Missing | No GPS capture in client, server or SQL | Reword (9a) or Build (9e) |

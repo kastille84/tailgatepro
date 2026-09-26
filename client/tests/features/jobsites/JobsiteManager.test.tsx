@@ -92,6 +92,7 @@ const jobsite = (over: Partial<Jobsite>): Jobsite => ({
   name: "Riverside",
   status: "active",
   archivedAt: null,
+  createdBySub: false,
   createdAt: "x",
   subcontractors: [],
   ...over,
