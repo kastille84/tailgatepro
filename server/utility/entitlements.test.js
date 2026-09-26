@@ -6,6 +6,7 @@ const {
   hasBrandingAccess,
   getLimits,
   getPlanId,
+  hasFullLibrary,
   seatRoleFor,
   effectiveJobsiteLimit,
 } = require("./entitlements");
@@ -69,6 +70,19 @@ describe("entitlements: plan resolution", () => {
 
   it("exposes the per-jobsite plan values", () => {
     expect(SITE_PLANS).toEqual(["free", "site_pro"]);
+  });
+});
+
+describe("entitlements: hasFullLibrary", () => {
+  it.each([
+    ["subcontractor", "basic", false],
+    ["subcontractor", "premium", true],
+    ["subcontractor", "enterprise", true],
+    ["gc", "basic", true],
+    ["gc", "premium", true],
+    [null, null, false],
+  ])("%s + %s -> %s", (companyType, tier, expected) => {
+    expect(hasFullLibrary(companyType, tier)).toBe(expected);
   });
 });
 

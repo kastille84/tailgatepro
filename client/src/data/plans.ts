@@ -42,7 +42,6 @@ export const SUB_PLANS: Plan[] = [
       "AI Talk Builder",
     ],
     comingSoon: [
-      "5-year legal archive for OSHA audits",
       "Expanded OSHA talk library",
       "AI Talk Builder",
     ],

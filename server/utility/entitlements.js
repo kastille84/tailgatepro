@@ -23,6 +23,7 @@ const hasBrandingAccess = (tier) => TRANSLATION_TIERS.includes(tier);
 // resolved from `companies.tier` + `companies.company_type`; GC Site Pro is the
 // exception -- it is per jobsite (`jobsites.plan`), not a company tier.
 // `null` = unlimited. This module only defines limits; enforcement is 9c/9d.
+// `libraryAccess`: "core" = only the talks flagged `is_core` (Trade Free), "full" = all.
 const FREE_PLAN_KEY = "subcontractor:basic";
 
 const PLAN_LIMITS = {
@@ -33,6 +34,7 @@ const PLAN_LIMITS = {
     unlockedSubs: null,
     historyDays: 30,
     archiveYears: 0,
+    libraryAccess: "core",
   },
   "subcontractor:premium": {
     planId: "trade-pro",
@@ -41,6 +43,7 @@ const PLAN_LIMITS = {
     unlockedSubs: null,
     historyDays: null,
     archiveYears: 5,
+    libraryAccess: "full",
   },
   "subcontractor:enterprise": {
     planId: "trade-enterprise",
@@ -49,6 +52,7 @@ const PLAN_LIMITS = {
     unlockedSubs: null,
     historyDays: null,
     archiveYears: 5,
+    libraryAccess: "full",
   },
   "gc:basic": {
     planId: "gc-free",
@@ -57,6 +61,7 @@ const PLAN_LIMITS = {
     unlockedSubs: 1,
     historyDays: null,
     archiveYears: 0,
+    libraryAccess: "full",
   },
   // premium = Portfolio up to 10 sites, enterprise = Portfolio unlimited.
   "gc:premium": {
@@ -66,6 +71,7 @@ const PLAN_LIMITS = {
     unlockedSubs: null,
     historyDays: null,
     archiveYears: null,
+    libraryAccess: "full",
   },
   "gc:enterprise": {
     planId: "gc-portfolio",
@@ -74,6 +80,7 @@ const PLAN_LIMITS = {
     unlockedSubs: null,
     historyDays: null,
     archiveYears: null,
+    libraryAccess: "full",
   },
 };
 
@@ -84,6 +91,10 @@ const SITE_PLANS = ["free", "site_pro"];
 // the most restrictive plan rather than granting anything.
 const getLimits = (companyType, tier) =>
   PLAN_LIMITS[`${companyType}:${tier}`] ?? PLAN_LIMITS[FREE_PLAN_KEY];
+
+// Whether the plan sees the whole global talk library (false = core talks only).
+const hasFullLibrary = (companyType, tier) =>
+  getLimits(companyType, tier).libraryAccess === "full";
 
 const getPlanId = (companyType, tier) => getLimits(companyType, tier).planId;
 
@@ -108,6 +119,7 @@ module.exports = {
   SITE_PLANS,
   getLimits,
   getPlanId,
+  hasFullLibrary,
   seatRoleFor,
   effectiveJobsiteLimit,
 };

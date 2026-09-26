@@ -1,10 +1,12 @@
 // Plain CommonJS — see requireAuth.test.js for why (nested require() sharing).
 const favoritesService = require("../services/favorites");
+const talksService = require("../services/talks");
 const { listFavorites, addFavorite, removeFavorite } = require("./favorites");
 
 const listForUserSpy = vi.spyOn(favoritesService, "listForUser");
 const addSpy = vi.spyOn(favoritesService, "add");
 const removeSpy = vi.spyOn(favoritesService, "remove");
+const getTalkSpy = vi.spyOn(talksService, "getById");
 
 const favorite = {
   talkId: "talk-1",
@@ -20,7 +22,17 @@ describe("favorites controller", () => {
     listForUserSpy.mockReset();
     addSpy.mockReset();
     removeSpy.mockReset();
-    req = { user: { id: "user-1" }, params: {}, body: {} };
+    getTalkSpy.mockReset().mockResolvedValue({ id: "talk-1" });
+    req = {
+      user: {
+        id: "user-1",
+        companyId: "company-1",
+        companyType: "subcontractor",
+        tier: "premium",
+      },
+      params: {},
+      body: {},
+    };
     res = {
       status: vi.fn().mockReturnThis(),
       json: vi.fn().mockReturnThis(),
@@ -71,6 +83,49 @@ describe("favorites controller", () => {
       expect(res.status).toHaveBeenCalledWith(201);
       expect(res.json).toHaveBeenCalledWith({ success: true, data: favorite });
       expect(next).not.toHaveBeenCalled();
+    });
+
+    it("should not check talk visibility for a plan with the full library", async () => {
+      // Arrange
+      req.body = { talkId: "talk-1" };
+      addSpy.mockResolvedValue(favorite);
+
+      // Act
+      await addFavorite(req, res, next);
+
+      // Assert
+      expect(getTalkSpy).not.toHaveBeenCalled();
+    });
+
+    it("should let a Trade Free caller favorite a core talk", async () => {
+      // Arrange
+      req.user.tier = "basic";
+      req.body = { talkId: "talk-1" };
+      addSpy.mockResolvedValue(favorite);
+
+      // Act
+      await addFavorite(req, res, next);
+
+      // Assert
+      expect(getTalkSpy).toHaveBeenCalledWith("talk-1", "company-1", {
+        fullLibrary: false,
+      });
+      expect(res.status).toHaveBeenCalledWith(201);
+    });
+
+    it("should reject a Trade Free caller favoriting a non-core talk", async () => {
+      // Arrange
+      req.user.tier = "basic";
+      req.body = { talkId: "pro-only" };
+      const error = new Error("Talk not found");
+      getTalkSpy.mockRejectedValue(error);
+
+      // Act
+      await addFavorite(req, res, next);
+
+      // Assert
+      expect(addSpy).not.toHaveBeenCalled();
+      expect(next).toHaveBeenCalledWith(error);
     });
 
     it("should forward a service error to next() (e.g. the 404 talk-not-found case)", async () => {

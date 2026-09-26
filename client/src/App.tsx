@@ -43,6 +43,7 @@ import { Dashboard } from "./pages/Dashboard";
 import { Projects } from "./pages/Projects";
 import { ContentLibrary } from "./pages/ContentLibrary";
 import { MeetingFlow } from "./pages/MeetingFlow";
+import { MeetingHistory } from "./pages/MeetingHistory";
 import { Settings } from "./pages/Settings";
 import { GcDashboard } from "./pages/GcDashboard";
 
@@ -105,6 +106,10 @@ function App() {
                         <Route
                           path="/talks"
                           element={<ContentLibrary />}
+                        ></Route>
+                        <Route
+                          path="/meetings"
+                          element={<MeetingHistory />}
                         ></Route>
                       </Route>
                       <Route

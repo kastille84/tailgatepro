@@ -27,7 +27,7 @@ const FAQ: FaqEntry[] = [
   },
   {
     q: "What does it cost the subcontractor?",
-    a: "Crews start free — the core OSHA talk library, offline talks, digital signatures and auto-emailed PDF exports. Paid plans add custom branding and multi-language talks, with the 5-year legal archive coming soon.",
+    a: "Crews start free — the core OSHA talk library, offline talks, digital signatures and auto-emailed PDF exports. Paid plans add custom branding and multi-language talks, and the 5-year legal archive.",
   },
   {
     q: "How does a GC sponsor subcontractors for free?",

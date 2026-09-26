@@ -1,16 +1,21 @@
 const talksService = require("../services/talks");
 const translationService = require("../services/translation");
 const { AppError } = require("../utility/AppError");
-const { hasTranslationAccess } = require("../utility/entitlements");
+const { hasTranslationAccess, hasFullLibrary } = require("../utility/entitlements");
 
 const UPGRADE_MESSAGE = "Upgrade to Trade Pro to unlock multi-language talks";
+
+// Trade Free sees only the core talks (Phase 9c); the server is the authority.
+const fullLibraryFor = (user) => hasFullLibrary(user.companyType, user.tier);
 
 // req.user is set by loadUserContext (which runs after requireAuth) — the
 // caller's company always comes from there, never from req.body/req.params.
 
 exports.listTalks = async (req, res, next) => {
   try {
-    const data = await talksService.listForCompany(req.user.companyId);
+    const data = await talksService.listForCompany(req.user.companyId, {
+      fullLibrary: fullLibraryFor(req.user),
+    });
     return res.status(200).json({ success: true, data });
   } catch (error) {
     return next(error);
@@ -19,7 +24,9 @@ exports.listTalks = async (req, res, next) => {
 
 exports.getTalk = async (req, res, next) => {
   try {
-    const data = await talksService.getById(req.params.id, req.user.companyId);
+    const data = await talksService.getById(req.params.id, req.user.companyId, {
+      fullLibrary: fullLibraryFor(req.user),
+    });
     return res.status(200).json({ success: true, data });
   } catch (error) {
     return next(error);

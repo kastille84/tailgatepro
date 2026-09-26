@@ -174,7 +174,10 @@ describe("findDuplicateCandidates", () => {
 
 // Real-file checks — the whole point of the parser.
 describe.skipIf(!fs.existsSync(DOCX))("300_Toolbox_Talks_Library.docx", () => {
-  const talks = parseTalks(readDocxText(fs.readFileSync(DOCX)));
+  let talks;
+  beforeAll(() => {
+    talks = parseTalks(readDocxText(fs.readFileSync(DOCX)));
+  });
 
   it("parses exactly 300 talks numbered 001..300", () => {
     expect(talks).toHaveLength(300);

@@ -11,6 +11,8 @@ export interface PlanLimits {
   unlockedSubs: number | null;
   historyDays: number | null;
   archiveYears: number | null;
+  /** "core" = Trade Free sees only the 30 core talks; "full" = every global talk. */
+  libraryAccess: "core" | "full";
 }
 
 export interface CurrentUser {

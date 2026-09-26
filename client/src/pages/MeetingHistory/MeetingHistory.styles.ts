@@ -67,21 +67,6 @@ export const StyledContainer = styled.div`
   margin: 0 auto;
 `;
 
-export const StyledButtonContainer = styled.div`
-  display: flex;
-  justify-content: flex-end;
-  margin-bottom: 1.6rem;
-`;
-
-export const StyledError = styled.p`
-  margin: 0;
-  padding: 2.4rem 1.6rem;
-  text-align: center;
-  font-size: 1.5rem;
-  font-weight: 600;
-  color: ${({ theme }) => theme.colors.red[600]};
-`;
-
 export const StyledStatus = styled.div`
   display: flex;
   align-items: center;
@@ -93,7 +78,23 @@ export const StyledStatus = styled.div`
   color: ${({ theme }) => theme.colors.navy[400]};
 `;
 
-/** Upgrade prompt shown to Trade Free users, who only see the 30 core talks. */
+export const StyledError = styled.p`
+  margin: 0;
+  padding: 2.4rem 1.6rem;
+  text-align: center;
+  font-size: 1.5rem;
+  font-weight: 600;
+  color: ${({ theme }) => theme.colors.red[600]};
+`;
+
+export const StyledRetentionNote = styled.p`
+  margin: 0 0 1.6rem;
+  font-size: 1.4rem;
+  font-weight: 600;
+  color: ${({ theme }) => theme.colors.navy[500]};
+`;
+
+/** Upgrade prompt shown when the plan's history window hides older logs. */
 export const StyledUpgradeBanner = styled.div`
   display: flex;
   flex-direction: column;
@@ -101,7 +102,7 @@ export const StyledUpgradeBanner = styled.div`
   margin-bottom: 1.6rem;
   padding: 1.6rem 2rem;
   border-radius: ${({ theme }) => theme.borderRadius.md};
-  background-color: ${({ theme }) => theme.colors.concrete[200]};
+  background-color: ${({ theme }) => theme.colors.concrete[100]};
 `;
 
 export const StyledUpgradeTitle = styled.p`

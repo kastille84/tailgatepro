@@ -20,6 +20,7 @@ const LIMITS = {
   unlockedSubs: null,
   historyDays: 30,
   archiveYears: 0,
+  libraryAccess: "core" as const,
 };
 
 describe("useCurrentUser", () => {

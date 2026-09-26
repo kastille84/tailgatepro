@@ -103,6 +103,9 @@ describe("Navbar", () => {
       screen.getByRole("link", { name: /toolbox talks/i }).getAttribute("href"),
     ).toBe("/talks");
     expect(
+      screen.getByRole("link", { name: /history/i }).getAttribute("href"),
+    ).toBe("/meetings");
+    expect(
       screen.getByRole("link", { name: /settings/i }).getAttribute("href"),
     ).toBe("/settings");
     expect(screen.queryByRole("button", { name: /^login$/i })).toBeNull();
@@ -125,6 +128,7 @@ describe("Navbar", () => {
     renderNavbar();
 
     expect(screen.queryByRole("link", { name: /toolbox talks/i })).toBeNull();
+    expect(screen.queryByRole("link", { name: /history/i })).toBeNull();
     expect(
       screen.getByRole("link", { name: /dashboard/i }).getAttribute("href"),
     ).toBe("/dashboard");

@@ -128,6 +128,10 @@ CREATE TABLE toolbox_talks (
   -- tier (see server/utility/entitlements.js). NULL = no translations yet.
   translations JSONB,
   is_global BOOLEAN DEFAULT true,
+  -- Phase 9c: true for the ~30 core talks Trade Free can see; Pro/Enterprise/GC
+  -- see every global talk. Set by the seed loader (scripts/lib/talkRow.js
+  -- CORE_TALK_SLUGS).
+  is_core BOOLEAN NOT NULL DEFAULT false,
   company_id UUID REFERENCES companies(id) ON DELETE CASCADE,
   created_at TIMESTAMPTZ DEFAULT NOW()
 );
@@ -145,6 +149,7 @@ ALTER TABLE toolbox_talks ENABLE ROW LEVEL SECURITY;
 -- ALTER TABLE toolbox_talks ADD COLUMN IF NOT EXISTS attribution JSONB;
 -- ALTER TABLE toolbox_talks ADD COLUMN IF NOT EXISTS quiz JSONB;
 -- ALTER TABLE toolbox_talks ADD COLUMN IF NOT EXISTS translations JSONB;
+-- ALTER TABLE toolbox_talks ADD COLUMN IF NOT EXISTS is_core BOOLEAN NOT NULL DEFAULT false;
 -- CREATE INDEX IF NOT EXISTS idx_toolbox_talks_trades ON toolbox_talks USING GIN (trade_tags);
 -- ALTER TABLE toolbox_talks ENABLE ROW LEVEL SECURITY;
 

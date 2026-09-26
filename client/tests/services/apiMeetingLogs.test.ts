@@ -3,6 +3,9 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import {
   completeMeeting,
   createMeetingLog,
+  getMeetingLogs,
+  getMeetingMonths,
+  getMeetingPdfUrl,
   uploadCrewPhoto,
 } from "../../src/services/apiMeetingLogs";
 import { DEFAULT_FETCH_TIMEOUT_MS } from "../../src/utils/fetchWithTimeout";
@@ -296,6 +299,202 @@ describe("apiMeetingLogs", () => {
       await expect(
         completeMeeting("token-123", "meeting-1"),
       ).rejects.toThrow(GENERIC);
+    });
+  });
+
+  describe("getMeetingLogs", () => {
+    it("GETs the list and returns the meetings", async () => {
+      const fetchMock = vi.fn().mockResolvedValue({
+        ok: true,
+        status: 200,
+        json: async () => ({ success: true, data: [meetingLog] }),
+      });
+      vi.stubGlobal("fetch", fetchMock);
+
+      await expect(getMeetingLogs("token-123")).resolves.toEqual([meetingLog]);
+      expect(fetchMock).toHaveBeenCalledWith(
+        "/api/meetings",
+        expect.objectContaining({
+          method: "GET",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: "Bearer token-123",
+          },
+        }),
+      );
+    });
+
+    it("sends the projectId and from/to month range as query params", async () => {
+      const fetchMock = vi.fn().mockResolvedValue({
+        ok: true,
+        status: 200,
+        json: async () => ({ success: true, data: [meetingLog] }),
+      });
+      vi.stubGlobal("fetch", fetchMock);
+
+      await getMeetingLogs("token-123", {
+        projectId: "project-1",
+        from: "2026-09-01T00:00:00.000Z",
+        to: "2026-10-01T00:00:00.000Z",
+      });
+
+      const url = new URL(fetchMock.mock.calls[0][0], "http://localhost");
+      expect(url.pathname).toBe("/api/meetings");
+      expect(url.searchParams.get("projectId")).toBe("project-1");
+      expect(url.searchParams.get("from")).toBe("2026-09-01T00:00:00.000Z");
+      expect(url.searchParams.get("to")).toBe("2026-10-01T00:00:00.000Z");
+    });
+
+    it("rejects with the backend error message on an error response", async () => {
+      vi.stubGlobal(
+        "fetch",
+        vi.fn().mockResolvedValue({
+          ok: false,
+          status: 502,
+          json: async () => ({ success: false, error: "Could not load meetings" }),
+        }),
+      );
+      await expect(getMeetingLogs("token-123")).rejects.toThrow(
+        "Could not load meetings",
+      );
+    });
+
+    it("rejects with the generic message when the response has no body", async () => {
+      vi.stubGlobal(
+        "fetch",
+        vi.fn().mockResolvedValue({
+          ok: false,
+          status: 500,
+          json: async () => {
+            throw new Error("not json");
+          },
+        }),
+      );
+      await expect(getMeetingLogs("token-123")).rejects.toThrow(GENERIC);
+    });
+  });
+
+  describe("getMeetingMonths", () => {
+    it("GETs the months with the tzOffset and returns them with the history meta", async () => {
+      const fetchMock = vi.fn().mockResolvedValue({
+        ok: true,
+        status: 200,
+        json: async () => ({
+          success: true,
+          data: [{ month: "2026-09", count: 3 }],
+          meta: { hiddenCount: 3, historyDays: 30 },
+        }),
+      });
+      vi.stubGlobal("fetch", fetchMock);
+
+      await expect(getMeetingMonths("token-123", 300)).resolves.toEqual({
+        months: [{ month: "2026-09", count: 3 }],
+        hiddenCount: 3,
+        historyDays: 30,
+      });
+      expect(fetchMock).toHaveBeenCalledWith(
+        "/api/meetings/months?tzOffset=300",
+        expect.objectContaining({ method: "GET" }),
+      );
+    });
+
+    it("defaults a missing meta to no hidden rows and no window", async () => {
+      vi.stubGlobal(
+        "fetch",
+        vi.fn().mockResolvedValue({
+          ok: true,
+          status: 200,
+          json: async () => ({ success: true, data: [] }),
+        }),
+      );
+
+      await expect(getMeetingMonths("token-123", 0)).resolves.toEqual({
+        months: [],
+        hiddenCount: 0,
+        historyDays: null,
+      });
+    });
+
+    it("rejects with the backend error message on an error response", async () => {
+      vi.stubGlobal(
+        "fetch",
+        vi.fn().mockResolvedValue({
+          ok: false,
+          status: 400,
+          json: async () => ({
+            success: false,
+            error: "tzOffset must be minutes between -840 and 840",
+          }),
+        }),
+      );
+      await expect(getMeetingMonths("token-123", 9999)).rejects.toThrow(
+        "tzOffset must be minutes",
+      );
+    });
+
+    it("rejects with the generic message when the response has no body", async () => {
+      vi.stubGlobal(
+        "fetch",
+        vi.fn().mockResolvedValue({
+          ok: false,
+          status: 500,
+          json: async () => null,
+        }),
+      );
+      await expect(getMeetingMonths("token-123", 0)).rejects.toThrow(GENERIC);
+    });
+  });
+
+  describe("getMeetingPdfUrl", () => {
+    it("GETs the pdf-url endpoint and returns the signed url", async () => {
+      const fetchMock = vi.fn().mockResolvedValue({
+        ok: true,
+        status: 200,
+        json: async () => ({
+          success: true,
+          data: { url: "https://signed.example/report.pdf" },
+        }),
+      });
+      vi.stubGlobal("fetch", fetchMock);
+
+      await expect(getMeetingPdfUrl("token-123", "meeting-1")).resolves.toBe(
+        "https://signed.example/report.pdf",
+      );
+      expect(fetchMock).toHaveBeenCalledWith(
+        "/api/meetings/meeting-1/pdf-url",
+        expect.objectContaining({ method: "GET" }),
+      );
+    });
+
+    it("rejects with the plan-limit message for a meeting outside the window", async () => {
+      vi.stubGlobal(
+        "fetch",
+        vi.fn().mockResolvedValue({
+          ok: false,
+          status: 403,
+          json: async () => ({
+            success: false,
+            error: "This meeting is older than your plan's history. Upgrade to view it.",
+          }),
+        }),
+      );
+      await expect(getMeetingPdfUrl("token-123", "meeting-1")).rejects.toThrow(
+        "older than your plan's history",
+      );
+    });
+
+    it("rejects with the generic message when the response has no body", async () => {
+      vi.stubGlobal(
+        "fetch",
+        vi.fn().mockResolvedValue({
+          ok: false,
+          status: 500,
+          json: async () => null,
+        }),
+      );
+      await expect(getMeetingPdfUrl("token-123", "meeting-1")).rejects.toThrow(
+        GENERIC,
+      );
     });
   });
 });

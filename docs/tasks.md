@@ -2163,7 +2163,7 @@ from the dashboard, so run the 8d-g backfill first.
 - [x] GC links a sub company to a project (`project_subcontractors`) — done: slim version (GC join code)
       shipped in Phase 6b–6d, superseded by 8d above
 
-## Phase 9 — Pricing-promise gaps · status: audited 2026-09-24; 9a (copy fixes) and 9b (entitlement foundation) done, 9c partly done (seat caps + history window), 9d–9g not started
+## Phase 9 — Pricing-promise gaps · status: audited 2026-09-24; 9a (copy fixes) and 9b (entitlement foundation) done, 9c mostly done (seat caps, history window, library split), 9d–9g not started
 
 Audit of the pricing page (`client/src/data/plans.ts`, `Pricing.tsx` FAQ/callout) and landing page copy against
 the code. Full evidence table, statuses and per-gap resolution live in `docs/pricing-promise-gaps.md` — every
@@ -2213,7 +2213,7 @@ them (no client-side mirror of the table). Nothing is enforced yet — that is 9
 - [x] Extend `server/utility/entitlements.js` and its client mirror `client/src/hooks/useCurrentUser.ts` with the
       new limits; keep the server the authority.
 
-### 9c — Trade-side limits · status: seat caps + history window code complete; library split, archive and PDF-link TTL not started
+### 9c — Trade-side limits · status: seat caps, history window, library split, history/archive page and lockout banner code complete (run the `is_core` ALTER + re-seed); PDF-link TTL not started
 
 Done: `server/services/seats.js` `assertSeatAvailable` runs on invite creation (counts pending invites) and again on
 invite acceptance. Free = one person total (every role counts, so the signup admin fills the seat); Pro/Enterprise
@@ -2222,18 +2222,35 @@ count foreman-role users only (`seatRoleFor` in `entitlements.js`). Over the cap
 code is GC-only, so it needs no seat check. History: `meetingLogs.listForCompany` and the user-facing `getMeeting` hide
 rows older than `historyDays` (rows are never deleted; internal callers such as PDF generation are not gated).
 Pricing copy: Free is now "1 user account (you)" / "Solo foremen"; the FAQ states the 30-day window as live.
-**Open:** no client meeting-history list exists yet (see `useCreateMeetingLog`), so the lockout banner/upgrade prompt
-for history has nowhere to render — add it when that list view is built. No inline upgrade prompt on the invite form
-either (the client has no structured API error type; the toast carries the server message).
+**Open:** no inline upgrade prompt on the invite form (the client has no structured API error type; the toast
+carries the server message).
 
 - [x] Foreman seat caps (1 Free / 8 Pro / unlimited Enterprise) enforced on invites and invite acceptance
       (`server/services/seats.js`) — server enforcement done; dedicated upgrade prompt still open (see above).
 - [x] 30-day in-app history window for Free (`meetingLogs.listForCompany`, `getMeeting`); emailed PDFs unaffected.
-- [ ] Lockout banner + upgrade prompt UI for the history window (blocked on a client meeting-history list view).
-- [ ] Free vs paid library split (Free = the 30 core talks; today every global talk goes to everyone in
-      `server/services/talks.js`).
-- [ ] 5-year legal archive for Pro: retention statement, archive view/export, and resolve the crew-photo retention
-      question (~762-768).
+- [x] Lockout banner + upgrade prompt UI for the history window — `client/src/pages/MeetingHistory/` at `/meetings`
+      (Navbar "History", subcontractors only). `GET /api/meetings` now returns `meta: { hiddenCount, historyDays }`
+      (`meetingLogs.countHiddenForCompany`); the page shows a banner with a `/pricing` link for every Free account ("viewable for 30 days"), switching to "N older meetings are hidden" once older logs exist.
+      `GET /api/meetings/:id/pdf-url` is now gated by the history window too (403 `PLAN_LIMIT`).
+      **Month-grouped archive:** the page shows one card per month ("September 2026 · 23 talks"); a card
+      (`?month=YYYY-MM`) loads only that month via `GET /api/meetings?from&to` (held-at range). Cards come from
+      `GET /api/meetings/months?tzOffset` (`meetingLogs.listMonthSummaries`, bucketed in the viewer's timezone) which
+      also carries the banner's `hiddenCount`/`historyDays`. The summary pages through rows in 1,000-row chunks because
+      PostgREST caps a single response at 1,000 rows. Note the unfiltered `listForCompany` is still uncapped-by-design
+      but subject to that same 1,000-row limit; the UI no longer uses it without a month range.
+- [x] Free vs paid library split — Trade Free sees only the 30 core talks (`toolbox_talks.is_core`, set by the seed from
+      `CORE_TALK_SLUGS` in `scripts/lib/talkRow.js`) plus its own custom talks; every other global talk is hidden (404 on
+      `getById`, absent from the list). Paid trades and all GCs see everything (`hasFullLibrary` in `entitlements.js`,
+      `libraryAccess` in `PLAN_LIMITS`). Also enforced on meeting-log create and favorites add. `ContentLibrary` shows an
+      upgrade banner linking to `/pricing`. **To ship:** run `ALTER TABLE toolbox_talks ADD COLUMN IF NOT EXISTS is_core BOOLEAN
+      NOT NULL DEFAULT false;` in Supabase, then re-run `scripts/seed-talks.js`. Known gap: the offline talks cache merges and
+      never clears, so a downgraded company can still read previously cached non-core talks offline.
+- [x] 5-year legal archive for Pro: the `/meetings` page is the archive view and shows "kept for 5 years" when
+      `limits.archiveYears > 0`; the "coming soon" tag is removed from Trade Pro. **Retention policy (decided):**
+      completed meeting logs, PDFs and signatures are kept at least `archiveYears` (5) for Pro/Enterprise; crew photos
+      follow the same lifetime as their meeting log (resolves the PRD §7 / ~762-768 question). Nothing is purged today
+      and there is no deletion job — retention is a policy guarantee, so any future purge job must honor it. Free
+      rows are retained but only viewable for 30 days. No export/ZIP (that overlaps the 9e Defense Bundle).
 - [ ] Decide PDF-email link lifetime (30-day signed link today, `EMAIL_PDF_URL_TTL_SECONDS`): longer TTL, a
       re-issue-link flow, or an attachment.
 

@@ -42,13 +42,13 @@ server accepts a client `held_at` up to 7 days in the past (`server/utility/held
 |---|---|---|---|---|
 | Trade Free — 1 user account | Implemented (9c) | `server/services/seats.js`, `companyInvites.js`, `users.js` | Free counts every role, so the signup admin is the one seat; enforced on invite and on accept. No dedicated upgrade UI (toast only) | — |
 | Trade Free — full offline PWA | Implemented | `client/src/service-worker.ts`, `client/src/utils/db/*`, `*ReplayHandler.ts` | Real-device airplane-mode pass still owed (see tasks Phase 3) | — |
-| Trade Free — 30 core OSHA templates | Partial | `data/processed/` has 34 talks; `server/services/talks.js` returns every global talk to everyone | 34 not 30; no free/paid split | Build (9c) + Reword (9a) |
+| Trade Free — 30 core OSHA templates | Done (9c) | 30 talks flagged `is_core` (`scripts/lib/talkRow.js` `CORE_TALK_SLUGS`); `server/services/talks.js` hides the rest from Trade Free | — | Built (9c); Free sees 30 of ~112 global talks, upgrade banner in `ContentLibrary.tsx` |
 | Trade Free — digital signatures + photo proof | Implemented | `signature-pad`, `SignaturesStep.tsx`, `PhotoCapture.tsx`, `server/services/signatures.js` | — | — |
 | Trade Free — auto-email PDF to GCs | Implemented | `pdfGenerationQueue.js`, `email.js` | Sends only when a GC admin or `gc_contact_email` exists; logs instead of sending if Mailgun is unset | — |
-| Trade Free — 30-day in-app history | Implemented server-side (9c) | `meetingLogs.listForCompany` / `getMeeting` apply `historyDays` | No client history list yet, so no lockout banner | Build UI with the history list |
+| Trade Free — 30-day in-app history | Implemented (9c) | `meetingLogs.listForCompany` / `getMeeting` / `getPdfUrl` apply `historyDays`; `MeetingHistory.tsx` shows the hidden-count banner | — | — |
 | Trade Free — app watermark | Implemented | `pdfGeneration.js` (footer line for non-premium tiers) | A text footer, not an overlay; no "Claim your free GC portal" CTA (strategy doc §7) | 9g |
 | Trade Pro — up to 8 foremen | Implemented (9c) | as above | Counts foreman-role users + pending foreman invites; admins/safety managers are free | — |
-| Trade Pro — 5-year legal archive | Missing | Completed logs are immutable (`assertNotCompleted`); PDFs in `meeting-pdfs` bucket | No retention policy, archive view or tier difference; Free and Pro behave identically | Build (9c) |
+| Trade Pro — 5-year legal archive | Implemented (9c) | `MeetingHistory.tsx` (`/meetings`), `archiveYears` in `PLAN_LIMITS`; nothing is ever purged | Retention is a policy guarantee (5 yrs, crew photos follow their meeting), not a purge job; no export | — |
 | Trade Pro — custom logo, no watermark | Implemented | `companies.js` controller, `pdfGeneration.js`, `LogoUpload.tsx` | — | — |
 | Trade Pro — 500+ OSHA library | Missing | 34 global talks | ~7% of the claim; licensing question at tasks.md 1749-1754 | Reword (9a) + Build (9e) |
 | Trade Pro — AI Talk Builder | Missing | Only manual authoring (`TalkForm.tsx`) | No LLM code; see tasks.md 1736-1741 | Reword (9a) + Build (9e) |

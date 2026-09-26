@@ -7,7 +7,7 @@ const translation = require("./translation");
 // mapper applied to each row before it leaves the service. Services never leak
 // DB column names to the controller layer.
 const TALK_COLUMNS =
-  "id, slug, title, trade_tag, trade_tags, content, structured, attribution, quiz, translations, is_global, company_id, created_at";
+  "id, slug, title, trade_tag, trade_tags, content, structured, attribution, quiz, translations, is_global, is_core, company_id, created_at";
 
 const toTalk = (row) => ({
   id: row.id,
@@ -21,6 +21,7 @@ const toTalk = (row) => ({
   quiz: row.quiz ?? null,
   translations: row.translations ?? null,
   isGlobal: row.is_global,
+  isCore: row.is_core ?? false,
   companyId: row.company_id,
   createdAt: row.created_at,
 });
@@ -47,11 +48,18 @@ const buildTranslations = async ({ title, structured, targetLanguages }) => {
 // verified `users` row (via loadUserContext), never from request input, so
 // the interpolation into the PostgREST `or` filter is not an injection
 // vector — same pattern as projects.listForCompany.
-const listForCompany = async (companyId) => {
+// `fullLibrary` false (Trade Free, Phase 9c) narrows the global half to the talks
+// flagged `is_core`; the company's own custom talks are always included.
+const visibilityFilter = (companyId, fullLibrary) =>
+  fullLibrary
+    ? `is_global.eq.true,company_id.eq.${companyId}`
+    : `and(is_global.eq.true,is_core.eq.true),company_id.eq.${companyId}`;
+
+const listForCompany = async (companyId, { fullLibrary = true } = {}) => {
   const { data, error } = await supabase
     .from("toolbox_talks")
     .select(TALK_COLUMNS)
-    .or(`is_global.eq.true,company_id.eq.${companyId}`)
+    .or(visibilityFilter(companyId, fullLibrary))
     .order("title", { ascending: true });
 
   if (error) {
@@ -65,12 +73,12 @@ const listForCompany = async (companyId) => {
 // it's global or belongs to the caller's own company. A talk belonging to
 // another company is indistinguishable from a missing one (404), by design —
 // mirrors projects.update's ownership-in-the-query pattern.
-const getById = async (id, companyId) => {
+const getById = async (id, companyId, { fullLibrary = true } = {}) => {
   const { data, error } = await supabase
     .from("toolbox_talks")
     .select(TALK_COLUMNS)
     .eq("id", id)
-    .or(`is_global.eq.true,company_id.eq.${companyId}`)
+    .or(visibilityFilter(companyId, fullLibrary))
     .single();
 
   if (error) {

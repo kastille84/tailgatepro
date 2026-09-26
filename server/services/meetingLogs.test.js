@@ -7,6 +7,8 @@ const companiesService = require("./companies");
 const {
   create,
   listForCompany,
+  listMonthSummaries,
+  countHiddenForCompany,
   getById,
   complete,
   assertNotCompleted,
@@ -233,12 +235,216 @@ describe("meetingLogs service: listForCompany", () => {
     expect(builder.eq).toHaveBeenCalledWith("project_id", "project-1");
   });
 
+  it("should narrow to completed meetings held in a from/to range, newest held first", async () => {
+    // Arrange
+    builder.not = vi.fn(() => builder);
+    builder.or = vi.fn(() => builder);
+
+    // Act
+    await listForCompany("company-1", {
+      from: "2026-09-01T00:00:00.000Z",
+      to: "2026-10-01T00:00:00.000Z",
+    });
+
+    // Assert
+    expect(builder.not).toHaveBeenCalledWith("completed_at", "is", null);
+    expect(builder.or).toHaveBeenCalledWith(
+      "and(held_at.gte.2026-09-01T00:00:00.000Z,held_at.lt.2026-10-01T00:00:00.000Z),and(held_at.is.null,completed_at.gte.2026-09-01T00:00:00.000Z,completed_at.lt.2026-10-01T00:00:00.000Z)",
+    );
+    expect(order).toHaveBeenCalledWith("held_at", { ascending: false });
+  });
+
   it("should throw a 502 AppError when the query fails", async () => {
     // Arrange
     order.mockResolvedValue({ data: null, error: new Error("db down") });
 
     // Act & Assert
     await expect(listForCompany("company-1")).rejects.toMatchObject({
+      statusCode: 502,
+      message: "Could not load meetings",
+    });
+  });
+});
+
+describe("meetingLogs service: listMonthSummaries", () => {
+  let range;
+  let builder;
+  let select;
+
+  const row = {
+    held_at: "2026-09-02T12:00:00.000Z",
+    completed_at: "2026-09-02T12:05:00.000Z",
+  };
+
+  beforeEach(() => {
+    range = vi.fn().mockResolvedValue({ data: [], error: null });
+    builder = {};
+    builder.eq = vi.fn(() => builder);
+    builder.not = vi.fn(() => builder);
+    builder.gte = vi.fn(() => builder);
+    builder.order = vi.fn(() => builder);
+    builder.range = range;
+    select = vi.fn(() => builder);
+
+    fromSpy.mockReset();
+    fromSpy.mockImplementation((table) => {
+      if (table === "meeting_logs") return { select };
+      throw new Error(`Unexpected table: ${table}`);
+    });
+  });
+
+  it("should return an empty list when there are no completed meetings", async () => {
+    // Act & Assert
+    await expect(listMonthSummaries("company-1")).resolves.toEqual([]);
+    expect(select).toHaveBeenCalledWith("held_at, completed_at");
+    expect(builder.eq).toHaveBeenCalledWith("company_id", "company-1");
+    expect(builder.not).toHaveBeenCalledWith("completed_at", "is", null);
+    expect(builder.gte).not.toHaveBeenCalled();
+    expect(range).toHaveBeenCalledWith(0, 999);
+  });
+
+  it("should count meetings per held month, newest month first, falling back to completed_at", async () => {
+    // Arrange
+    range.mockResolvedValue({
+      data: [
+        { held_at: "2026-08-15T12:00:00.000Z", completed_at: "2026-08-15T12:05:00.000Z" },
+        row,
+        { held_at: "2026-09-20T12:00:00.000Z", completed_at: "2026-09-20T12:05:00.000Z" },
+        { held_at: null, completed_at: "2026-09-21T12:05:00.000Z" },
+      ],
+      error: null,
+    });
+
+    // Act & Assert
+    await expect(listMonthSummaries("company-1")).resolves.toEqual([
+      { month: "2026-09", count: 3 },
+      { month: "2026-08", count: 1 },
+    ]);
+  });
+
+  it("should bucket by the viewer's local month across a timezone boundary", async () => {
+    // Arrange — 02:00 UTC on Oct 1 is still Sept 30 evening in UTC-5
+    // (tzOffset 300, the Date#getTimezoneOffset sign).
+    range.mockResolvedValue({
+      data: [
+        { held_at: "2026-10-01T02:00:00.000Z", completed_at: "2026-10-01T02:05:00.000Z" },
+      ],
+      error: null,
+    });
+
+    // Act & Assert
+    await expect(
+      listMonthSummaries("company-1", { tzOffset: 300 }),
+    ).resolves.toEqual([{ month: "2026-09", count: 1 }]);
+    await expect(
+      listMonthSummaries("company-1", { tzOffset: 0 }),
+    ).resolves.toEqual([{ month: "2026-10", count: 1 }]);
+  });
+
+  it("should apply the plan's history window", async () => {
+    // Act
+    await listMonthSummaries("company-1", { historyDays: 30 });
+
+    // Assert
+    expect(builder.gte.mock.calls[0][0]).toBe("created_at");
+  });
+
+  it("should page past the 1,000-row response cap", async () => {
+    // Arrange — a full first page forces a second request
+    range
+      .mockResolvedValueOnce({ data: Array(1000).fill(row), error: null })
+      .mockResolvedValueOnce({ data: Array(5).fill(row), error: null });
+
+    // Act & Assert
+    await expect(listMonthSummaries("company-1")).resolves.toEqual([
+      { month: "2026-09", count: 1005 },
+    ]);
+    expect(range).toHaveBeenNthCalledWith(1, 0, 999);
+    expect(range).toHaveBeenNthCalledWith(2, 1000, 1999);
+  });
+
+  it("should throw a 502 AppError when the query fails", async () => {
+    // Arrange
+    range.mockResolvedValue({ data: null, error: new Error("db down") });
+
+    // Act & Assert
+    await expect(listMonthSummaries("company-1")).rejects.toMatchObject({
+      statusCode: 502,
+      message: "Could not load meetings",
+    });
+  });
+});
+
+describe("meetingLogs service: countHiddenForCompany", () => {
+  let result;
+  let builder;
+  let select;
+
+  beforeEach(() => {
+    result = { count: 4, error: null };
+    builder = {};
+    builder.eq = vi.fn(() => builder);
+    builder.lt = vi.fn(() => builder);
+    // The query is awaited directly, so the builder itself is thenable.
+    builder.then = (resolve) => resolve(result);
+    select = vi.fn(() => builder);
+
+    fromSpy.mockReset();
+    fromSpy.mockImplementation((table) => {
+      if (table === "meeting_logs") return { select };
+      throw new Error(`Unexpected table: ${table}`);
+    });
+  });
+
+  it("should return 0 without querying when the plan has no history window", async () => {
+    // Act
+    const count = await countHiddenForCompany("company-1");
+
+    // Assert
+    expect(count).toBe(0);
+    expect(fromSpy).not.toHaveBeenCalled();
+  });
+
+  it("should count the company's rows older than the history window", async () => {
+    // Act
+    const count = await countHiddenForCompany("company-1", { historyDays: 30 });
+
+    // Assert
+    expect(select).toHaveBeenCalledWith("id", { count: "exact", head: true });
+    expect(builder.eq).toHaveBeenCalledWith("company_id", "company-1");
+    expect(builder.eq).not.toHaveBeenCalledWith("project_id", expect.anything());
+    const [column, cutoff] = builder.lt.mock.calls[0];
+    expect(column).toBe("created_at");
+    expect(new Date(cutoff).getTime()).toBeLessThanOrEqual(
+      Date.now() - 30 * 24 * 60 * 60 * 1000,
+    );
+    expect(count).toBe(4);
+  });
+
+  it("should additionally scope by projectId when given", async () => {
+    // Act
+    await countHiddenForCompany("company-1", { projectId: "project-1", historyDays: 30 });
+
+    // Assert
+    expect(builder.eq).toHaveBeenCalledWith("project_id", "project-1");
+  });
+
+  it("should treat a null count as 0", async () => {
+    // Arrange
+    result = { count: null, error: null };
+
+    // Act & Assert
+    await expect(countHiddenForCompany("company-1", { historyDays: 30 })).resolves.toBe(0);
+  });
+
+  it("should throw a 502 AppError when the query fails", async () => {
+    // Arrange
+    result = { count: null, error: new Error("db down") };
+
+    // Act & Assert
+    await expect(
+      countHiddenForCompany("company-1", { historyDays: 30 }),
+    ).rejects.toMatchObject({
       statusCode: 502,
       message: "Could not load meetings",
     });
@@ -900,6 +1106,15 @@ describe("meetingLogs service: getPdfUrl", () => {
       "acme-roofing-downtown-highrise-undated-meeting1.pdf",
     );
     expect(url).toBe("https://signed.example/report.pdf");
+  });
+
+  it("should refuse a PDF older than the plan's history window with a 403", async () => {
+    // Arrange — dbRow was created 2026-09-14, well outside a 1-day window
+    // Act & Assert
+    await expect(
+      getPdfUrl("meeting-1", "company-1", { historyDays: 1 }),
+    ).rejects.toMatchObject({ statusCode: 403 });
+    expect(storageService.getSignedUrl).not.toHaveBeenCalled();
   });
 
   it("should date the filename by when the meeting was held, not when the server received the completion", async () => {
