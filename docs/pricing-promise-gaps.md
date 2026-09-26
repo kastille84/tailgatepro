@@ -83,7 +83,7 @@ server accepts a client `held_at` up to 7 days in the past (`server/utility/held
 | Scan a QR code or tap a link to open the app | Pricing FAQ, HowItWorks | Partial | A link works (PWA URL); no QR generator in the repo | Build (9e) or Reword |
 | Project-specific QR codes/links for GC sponsorship | Pricing FAQ, GcSection | Missing | Only a company-wide `join_code` and per-jobsite email invites exist; no QR | Build (9e) or Reword |
 | "Every subcontractor gets full access for $0" | Pricing callout | Missing | Accepting an invite never touches the sub's tier | Build (9d) |
-| "Emailed PDFs stay in your inbox forever" | Pricing FAQ | Partial, misleading | The email carries a signed link expiring after 30 days (`EMAIL_PDF_URL_TTL_SECONDS`), not an attachment | Reword (9a) or Build (9c) |
+| "Emailed PDFs stay in your inbox forever" | Pricing FAQ | Partial, misleading | The email carries a signed link expiring after 30 days (`EMAIL_PDF_URL_TTL_SECONDS`), not an attachment | Resolved: copy reworded (9a); a GC can re-open an expired link via the in-app report page (9c) |
 | "Tamper-evident signatures" / tamper-evident PDF | Pricing hero, ComparisonTable | Partial | App-level lock only; no hash/HMAC/seal/audit log; service-role writes bypass it | Build (9e) or Reword |
 | "GPS-verified" PDF seal | ComparisonTable, `CompliancePdfCard.tsx:74`, HowItWorks | Missing | No GPS capture in client, server or SQL | Reword (9a) or Build (9e) |
 | "Can't be back-dated" | Landing | Partial | `held_at` plumbing exists (`utility/heldAt.js`); server clamping not verified | Verify (9a) |

@@ -46,6 +46,7 @@ import { MeetingFlow } from "./pages/MeetingFlow";
 import { MeetingHistory } from "./pages/MeetingHistory";
 import { Settings } from "./pages/Settings";
 import { GcDashboard } from "./pages/GcDashboard";
+import { GcMeetingReport } from "./pages/GcMeetingReport";
 
 // Pins Navbar + SyncStatusBanner together as one scroll-fixed block, so the
 // banner never scrolls away from the nav it sits under.
@@ -119,6 +120,10 @@ function App() {
                       <Route path="/settings" element={<Settings />}></Route>
                       <Route element={<RequireGc />}>
                         <Route path="/gc" element={<GcDashboard />}></Route>
+                        <Route
+                          path="/gc/meetings/:id/report"
+                          element={<GcMeetingReport />}
+                        ></Route>
                       </Route>
                     </Route>
                   </Routes>

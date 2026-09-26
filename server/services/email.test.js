@@ -17,6 +17,7 @@ const params = {
   projectName: "Downtown Highrise",
   companyName: "Acme Roofing",
   pdfUrl: "https://signed.example/report.pdf",
+  reportUrl: "https://app.example/gc/meetings/m-1/report",
   meetingDate: "2026-09-14T01:00:00.000Z",
 };
 
@@ -104,6 +105,7 @@ describe("email service: sendMeetingLogEmail", () => {
       companyName: params.companyName,
       projectName: params.projectName,
       pdfUrl: params.pdfUrl,
+      reportUrl: params.reportUrl,
       completedDate: "September 14, 2026 at 1:00 AM UTC",
     });
     expect(consoleErrorSpy).not.toHaveBeenCalled();

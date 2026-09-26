@@ -1,4 +1,4 @@
-import { Navigate, Outlet } from "react-router-dom";
+import { Navigate, Outlet, useLocation } from "react-router-dom";
 
 import { useAuth } from "../../context/auth";
 import { StyledAuthStatus } from "./RequireAuth.styles";
@@ -9,6 +9,7 @@ import { StyledAuthStatus } from "./RequireAuth.styles";
  *  /login before their session is confirmed. */
 export const RequireAuth = () => {
   const { user, loading } = useAuth();
+  const location = useLocation();
 
   if (loading) {
     return (
@@ -19,7 +20,15 @@ export const RequireAuth = () => {
   }
 
   if (!user) {
-    return <Navigate to="/login" replace />;
+    // `from` lets Login send the user back here afterwards (e.g. the emailed
+    // report link at /gc/meetings/:id/report).
+    return (
+      <Navigate
+        to="/login"
+        replace
+        state={{ from: `${location.pathname}${location.search}` }}
+      />
+    );
   }
 
   return <Outlet />;

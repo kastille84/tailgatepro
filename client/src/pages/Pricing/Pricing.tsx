@@ -64,7 +64,7 @@ const FAQ: { q: string; a: string }[] = [
   },
   {
     q: "What happens to my safety logs on the Trade Free plan after 30 days?",
-    a: "Every completed talk is emailed to your GC as a PDF link that stays valid for 30 days, so save a copy if you need it longer. The Free plan's in-app history shows the last 30 days; Trade Pro adds the 5-year legal cloud archive.",
+    a: "Every completed talk is emailed to your GC as a PDF link that stays valid for 30 days; after that, your GC can sign in to open a fresh link. The Free plan's in-app history shows the last 30 days; Trade Pro adds the 5-year legal cloud archive.",
   },
   {
     q: "How does a general contractor sponsor subcontractors for free?",

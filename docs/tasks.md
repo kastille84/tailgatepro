@@ -2163,7 +2163,7 @@ from the dashboard, so run the 8d-g backfill first.
 - [x] GC links a sub company to a project (`project_subcontractors`) — done: slim version (GC join code)
       shipped in Phase 6b–6d, superseded by 8d above
 
-## Phase 9 — Pricing-promise gaps · status: audited 2026-09-24; 9a (copy fixes) and 9b (entitlement foundation) done, 9c mostly done (seat caps, history window, library split), 9d–9g not started
+## Phase 9 — Pricing-promise gaps · status: audited 2026-09-24; 9a (copy fixes) and 9b (entitlement foundation) done, 9c done (seat caps, history window, library split, archive, PDF-link re-issue), 9d–9g not started
 
 Audit of the pricing page (`client/src/data/plans.ts`, `Pricing.tsx` FAQ/callout) and landing page copy against
 the code. Full evidence table, statuses and per-gap resolution live in `docs/pricing-promise-gaps.md` — every
@@ -2213,7 +2213,7 @@ them (no client-side mirror of the table). Nothing is enforced yet — that is 9
 - [x] Extend `server/utility/entitlements.js` and its client mirror `client/src/hooks/useCurrentUser.ts` with the
       new limits; keep the server the authority.
 
-### 9c — Trade-side limits · status: seat caps, history window, library split, history/archive page and lockout banner code complete (run the `is_core` ALTER + re-seed); PDF-link TTL not started
+### 9c — Trade-side limits · status: seat caps, history window, library split, history/archive page, lockout banner, inline invite upgrade prompt and PDF-link re-issue flow code complete (run the `is_core` ALTER + re-seed; paste the updated `docs/mailgun-templates/meeting-log-report.html` into Mailgun)
 
 Done: `server/services/seats.js` `assertSeatAvailable` runs on invite creation (counts pending invites) and again on
 invite acceptance. Free = one person total (every role counts, so the signup admin fills the seat); Pro/Enterprise
@@ -2222,11 +2222,12 @@ count foreman-role users only (`seatRoleFor` in `entitlements.js`). Over the cap
 code is GC-only, so it needs no seat check. History: `meetingLogs.listForCompany` and the user-facing `getMeeting` hide
 rows older than `historyDays` (rows are never deleted; internal callers such as PDF generation are not gated).
 Pricing copy: Free is now "1 user account (you)" / "Solo foremen"; the FAQ states the 30-day window as live.
-**Open:** no inline upgrade prompt on the invite form (the client has no structured API error type; the toast
-carries the server message).
+The invite form now shows an inline upgrade prompt (`PlanLimitError` in `client/src/utils/PlanLimitError.ts`, thrown
+by `apiCompanies.inviteTeammate` on a `PLAN_LIMIT` 403; `useInviteTeammate` exposes `planLimitError` and skips the
+toast for it) with a `/pricing` link.
 
 - [x] Foreman seat caps (1 Free / 8 Pro / unlimited Enterprise) enforced on invites and invite acceptance
-      (`server/services/seats.js`) — server enforcement done; dedicated upgrade prompt still open (see above).
+      (`server/services/seats.js`) — server enforcement done; inline upgrade prompt on the invite form done.
 - [x] 30-day in-app history window for Free (`meetingLogs.listForCompany`, `getMeeting`); emailed PDFs unaffected.
 - [x] Lockout banner + upgrade prompt UI for the history window — `client/src/pages/MeetingHistory/` at `/meetings`
       (Navbar "History", subcontractors only). `GET /api/meetings` now returns `meta: { hiddenCount, historyDays }`
@@ -2251,8 +2252,13 @@ carries the server message).
       follow the same lifetime as their meeting log (resolves the PRD §7 / ~762-768 question). Nothing is purged today
       and there is no deletion job — retention is a policy guarantee, so any future purge job must honor it. Free
       rows are retained but only viewable for 30 days. No export/ZIP (that overlaps the 9e Defense Bundle).
-- [ ] Decide PDF-email link lifetime (30-day signed link today, `EMAIL_PDF_URL_TTL_SECONDS`): longer TTL, a
-      re-issue-link flow, or an attachment.
+- [x] PDF-email link lifetime (decided: keep the 30-day signed link, add a re-issue flow). The email now also carries
+      `reportUrl` (`/gc/meetings/:id/report`, `GcMeetingReport` page behind `RequireAuth` + `RequireGc`), which mints a
+      fresh signed URL via `useGcMeetingPdfUrl`. `RequireAuth` now passes `state.from` so Login returns the user to
+      that page (email/password login; the Google OAuth redirect still lands on the dashboard). The Pricing FAQ says
+      the link lasts 30 days and a GC can sign in for a fresh one. **To ship:** paste the updated
+      `docs/mailgun-templates/meeting-log-report.html` (new `{{reportUrl}}` variable) into the Mailgun template.
+      Recipients with only `gc_contact_email` and no GC account still cannot re-issue.
 
 ### 9d — GC-side limits and paywall
 

@@ -1,3 +1,4 @@
+import { Link } from "react-router-dom";
 import styled from "styled-components";
 
 export const StyledSection = styled.div`
@@ -146,6 +147,35 @@ export const StyledInviteNote = styled.p`
   font-weight: 500;
   line-height: 1.6;
   color: ${({ theme }) => theme.colors.navy[500]};
+`;
+
+/** Inline upgrade prompt shown when an invite hits the plan's seat cap. */
+export const StyledUpgradePrompt = styled.div`
+  display: flex;
+  flex-direction: column;
+  gap: 0.8rem;
+  padding: 1.6rem 2rem;
+  border-radius: ${({ theme }) => theme.borderRadius.md};
+  border: 0.1rem solid ${({ theme }) => theme.colors.orange[500]};
+  background-color: ${({ theme }) => theme.colors.concrete[200]};
+`;
+
+export const StyledUpgradeText = styled.p`
+  margin: 0;
+  font-size: 1.4rem;
+  font-weight: 600;
+  line-height: 1.6;
+  color: ${({ theme }) => theme.colors.navy[700]};
+`;
+
+export const StyledUpgradeLink = styled(Link)`
+  display: inline-flex;
+  align-items: center;
+  min-height: 4.8rem;
+  width: fit-content;
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: ${({ theme }) => theme.colors.orange[600]};
 `;
 
 export const StyledInviteFields = styled.div`

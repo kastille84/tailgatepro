@@ -1,4 +1,5 @@
 import { fetchWithTimeout } from "../utils/fetchWithTimeout";
+import { PlanLimitError } from "../utils/PlanLimitError";
 import type { Company } from "../interfaces/company";
 import type {
   InvitePreview,
@@ -143,6 +144,9 @@ export const inviteTeammate = async (
   const body = await res.json().catch(() => null);
 
   if (!res.ok || !body?.success) {
+    if (body?.data?.code === "PLAN_LIMIT") {
+      throw new PlanLimitError(body.error ?? GENERIC_ERROR, body.data.limit ?? null);
+    }
     throw new Error(body?.error ?? GENERIC_ERROR);
   }
 

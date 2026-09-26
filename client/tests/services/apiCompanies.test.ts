@@ -9,6 +9,7 @@ import {
   uploadCompanyLogo,
 } from "../../src/services/apiCompanies";
 import { DEFAULT_FETCH_TIMEOUT_MS } from "../../src/utils/fetchWithTimeout";
+import { PlanLimitError } from "../../src/utils/PlanLimitError";
 
 const GENERIC = "Something went wrong. Please try again.";
 
@@ -377,6 +378,46 @@ describe("apiCompanies", () => {
       await expect(
         inviteTeammate("token-123", { email: "newhire@example.com", role: "admin" }),
       ).rejects.toThrow("You don't have permission to do this");
+    });
+
+    it("rejects with a PlanLimitError carrying the limit on a PLAN_LIMIT 403", async () => {
+      vi.stubGlobal(
+        "fetch",
+        vi.fn().mockResolvedValue({
+          ok: false,
+          status: 403,
+          json: async () => ({
+            success: false,
+            error: "Your plan allows 1 seat",
+            data: { code: "PLAN_LIMIT", limit: 1 },
+          }),
+        }),
+      );
+      const error = await inviteTeammate("token-123", {
+        email: "newhire@example.com",
+        role: "foreman",
+      }).catch((e) => e);
+      expect(error).toBeInstanceOf(PlanLimitError);
+      expect(error.message).toBe("Your plan allows 1 seat");
+      expect(error.limit).toBe(1);
+    });
+
+    it("falls back to the generic message and a null limit on a bare PLAN_LIMIT body", async () => {
+      vi.stubGlobal(
+        "fetch",
+        vi.fn().mockResolvedValue({
+          ok: false,
+          status: 403,
+          json: async () => ({ success: false, data: { code: "PLAN_LIMIT" } }),
+        }),
+      );
+      const error = await inviteTeammate("token-123", {
+        email: "newhire@example.com",
+        role: "foreman",
+      }).catch((e) => e);
+      expect(error).toBeInstanceOf(PlanLimitError);
+      expect(error.message).toBe(GENERIC);
+      expect(error.limit).toBeNull();
     });
 
     it("rejects with the generic message when the response has no body", async () => {

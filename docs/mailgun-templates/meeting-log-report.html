@@ -10,6 +10,8 @@
     {{companyName}}    - the reporting subcontractor's name
     {{projectName}}    - the project the meeting was held on
     {{pdfUrl}}         - a signed, time-limited (30 day) download link
+    {{reportUrl}}      - an in-app page (requires signing in as the GC) that re-issues a fresh
+                         download link after {{pdfUrl}} expires
     {{completedDate}}  - when the meeting was held (meeting_logs.held_at), human-readable,
                          e.g. "September 18, 2026 at 12:00 PM UTC". The variable name is kept
                          from before held_at existed so the live Mailgun template needn't change.
@@ -169,7 +171,10 @@
                   "
                 >
                   This link expires 30 days from when it was sent. If it has
-                  expired, ask {{companyName}} to resend the report.
+                  expired,
+                  <a href="{{reportUrl}}" style="color: #ff5f15"
+                    >sign in to TailgatePro to open the report again</a
+                  >.
                 </p>
               </td>
             </tr>
