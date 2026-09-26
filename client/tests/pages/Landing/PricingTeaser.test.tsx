@@ -1,5 +1,5 @@
 import React from "react";
-import { render, screen } from "@testing-library/react";
+import { render, screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { ThemeProvider } from "styled-components";
 import { MemoryRouter } from "react-router-dom";
@@ -50,5 +50,21 @@ describe("PricingTeaser", () => {
 
     const link = screen.getByRole("link", { name: /See full plan details/i });
     expect(link.getAttribute("href")).toBe("/pricing?audience=gc");
+  });
+
+  it("tags unbuilt features with Coming soon and leaves built ones untagged", () => {
+    render(
+      <MemoryRouter>
+        <ThemeProvider theme={theme}>
+          <PricingTeaser />
+        </ThemeProvider>
+      </MemoryRouter>,
+    );
+
+    const unbuilt = screen.getByText("Custom safety manual upload");
+    expect(within(unbuilt).getByText("Coming soon")).toBeDefined();
+
+    const built = screen.getByText("Full offline PWA capabilities");
+    expect(within(built).queryByText("Coming soon")).toBeNull();
   });
 });

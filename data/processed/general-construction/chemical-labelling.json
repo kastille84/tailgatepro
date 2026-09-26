@@ -1,0 +1,55 @@
+{
+  "id": "chemical-labelling",
+  "title": "Chemical Labelling",
+  "primary_trade": "General Construction",
+  "trade_tags": [
+    "General Construction"
+  ],
+  "osha_standards": [
+    "29 CFR 1926.59",
+    "29 CFR 1910.1200"
+  ],
+  "estimated_minutes": 5,
+  "summary": "Labels on hazardous chemicals must show standard elements: product identifier, signal word, hazard statements, precautionary statements, pictograms, and the supplier's contact information. The label is a quick alert, and the SDS has the full details.",
+  "talking_points": [
+    "Every container of a hazardous chemical must have a label with six elements: product identifier, signal word, hazard statement(s), precautionary statement(s), pictogram(s), and the supplier's name, address, and phone number.",
+    "There are only two signal words. \"Danger\" is for the more severe hazards and \"Warning\" is for the less severe. Only one appears on a label.",
+    "Hazard statements describe the nature and degree of the hazard. The same hazard has the same statement on any chemical label.",
+    "Precautionary statements tell you how to prevent or respond to exposure, and how to store and dispose of the chemical.",
+    "A pictogram is a black symbol on a white background inside a red square frame set on a point. A red frame with no symbol is not allowed.",
+    "Labels are limited in space. Check the Safety Data Sheet for full details.",
+    "The product identifier on the label matches Section 1 of the SDS.",
+    "OSHA enforces eight of the nine GHS pictograms. The environmental pictogram is not mandatory but may appear."
+  ],
+  "site_hazards_to_check": [
+    "Containers with missing, torn, or unreadable labels",
+    "Labels missing a signal word, pictogram, or supplier contact",
+    "Chemicals moved to unlabeled containers",
+    "No Safety Data Sheet available to match the label",
+    "Crew who do not know what the label pictograms mean"
+  ],
+  "discussion_questions": [
+    "What are the two signal words, and which one means the more severe hazard?",
+    "What does the pictogram on this container tell us?",
+    "Where can we find more details when the label runs out of space?"
+  ],
+  "attribution": {
+    "source": "OSHA",
+    "publisher": "Occupational Safety and Health Administration (OSHA)",
+    "copyright": "U.S. Government work — public domain.",
+    "license": "public-domain",
+    "source_url": "https://www.osha.gov/sites/default/files/publications/osha3636.pdf",
+    "source_ref": "TBT-109",
+    "notice": "Adapted from OSHA published material. Reproduced with attribution for jobsite safety training; not an endorsement by OSHA."
+  },
+  "audit": {
+    "status": "approved",
+    "audited_at": "2026-09-25T18:10:37Z",
+    "osha_accuracy_verified": true,
+    "flags": [
+      "Verified against OSHA 3636 (HazCom labels and pictograms brief): six label elements, only two signal words (Danger more severe, Warning less) with only one on a label, hazard statements standardized, precautionary statements, red square frame set on a point with black symbol on white and empty red frame not permitted, product identifier matches SDS Section 1, OSHA enforces eight of nine GHS pictograms (environmental not mandatory).",
+      "Citations: 29 CFR 1926.59 (structurer-added) exists and applies HazCom to construction, correct; 1910.1200 is the text the source cites and applies to construction through 1926.59.",
+      "Non-blocking: the point that precautionary statements cover storage and disposal is in the source. Talk does not cover workplace secondary-container labelling rules (1910.1200(f)(6)); site_hazards mention unlabeled containers as a hazard only."
+    ]
+  }
+}

@@ -1,0 +1,57 @@
+{
+  "id": "legionella-awareness",
+  "title": "Legionella Awareness",
+  "primary_trade": "Plumbing",
+  "trade_tags": [
+    "Plumbing",
+    "HVAC & Refrigeration"
+  ],
+  "osha_standards": [
+    "OSH Act Section 5(a)(1) General Duty Clause"
+  ],
+  "estimated_minutes": 5,
+  "summary": "Legionnaires' disease is a pneumonia caused by Legionella bacteria. A person can get it by inhaling water mist contaminated with Legionella, and warm, stagnant water helps the bacteria grow.",
+  "talking_points": [
+    "Legionella bacteria can grow in water heaters, cooling towers, and warm, stagnant water. Mist from cooling towers, evaporative coolers, humidifiers, misters, showers, faucets, and hot tubs can carry it. Inhaling or swallowing contaminated mist can cause the disease.",
+    "Growth conditions: the organism can multiply between 68 and 122 F (20 to 50 C). 95 to 115 F (35 to 46 C) is ideal. Rust, scale, and other microorganisms can also promote growth.",
+    "Early symptoms are like the flu: slight fever, headache, aching joints and muscles, tiredness, and appetite loss. Later symptoms can include high fever (102 to 105 F), cough, shortness of breath, chills, and chest pains.",
+    "Symptoms usually appear within 2 to 10 days after exposure. The pneumonia is often severe enough to need hospitalization, and in some cases it results in death. Early antibiotic treatment improves chances for recovery.",
+    "Most people resist the disease. Higher risk includes older age, heavy smoking, a weakened immune system, and underlying medical problems such as respiratory disease or diabetes.",
+    "Legionnaires' disease is not contagious and does not pass from one person to another.",
+    "OSHA's Q&A lists these preventive measures: keep workplace water heaters at 140 F (60 C) and water at the faucet at 122 F (50 C) or higher; avoid stagnant water and flush unused water lines often; clean and maintain cooling towers and evaporative condensers regularly, including twice-yearly cleaning. Water this hot can scald, so do not change heater settings on your own. Follow the building owner's or employer's water management plan and local code.",
+    "Seek professional help before trying to clean or decontaminate a water system that may have Legionella. If a coworker is diagnosed, follow your employer's guidance."
+  ],
+  "site_hazards_to_check": [
+    "Cooling towers, evaporative condensers, and evaporative (swamp) coolers",
+    "Water heaters not kept at 140 F, or faucet water below 122 F",
+    "Unused water lines and stagnant, warm water",
+    "Humidifiers, misters, showers, and faucets that make water mist",
+    "Large water storage tanks exposed to sunlight",
+    "Rust and scale in water systems"
+  ],
+  "discussion_questions": [
+    "What are the early symptoms of Legionnaires' disease, and who should you tell if you have them?",
+    "Which water systems on our jobs are warm, stagnant, or make mist?",
+    "Why does flushing unused water lines help, and who is responsible for it here?"
+  ],
+  "attribution": {
+    "source": "OSHA",
+    "publisher": "Occupational Safety and Health Administration (OSHA)",
+    "copyright": "U.S. Government work — public domain.",
+    "license": "public-domain",
+    "source_url": "https://www.osha.gov/sites/default/files/faq.pdf",
+    "source_ref": "TBT-129",
+    "notice": "Adapted from OSHA's Legionnaires' Disease: Questions and Answers (U.S. Government work). Reproduced with attribution for jobsite safety training; not an endorsement by OSHA."
+  },
+  "audit": {
+    "status": "approved",
+    "audited_at": "2026-09-25T19:00:00Z",
+    "osha_accuracy_verified": true,
+    "flags": [
+      "Every fact (temperatures, 2-10 day incubation, symptom lists, mist sources, risk factors, not contagious, 140/122 F, twice-yearly cleaning, seek professional help, follow employer guidance) checked against the OSHA Q&A and matches.",
+      "Awareness-only scope is adequate for the title 'Legionella Awareness'; no respirator or crew-procedure claims are made. No 1926 standard applies; General Duty Clause 5(a)(1) is the mapping OSHA itself uses for Legionella, so this is acceptable.",
+      "Fixed: prevention point read as a flat directive to hold heaters at 140 F. Reworded as OSHA's listed measures and added a scald caution and do-not-adjust-on-your-own note (safety/liability addition not in source; keep it). Also said 'twice a year' cleaning now attributed to OSHA.",
+      "Non-blocking: source Q&A text has no explicit license line; OSHA-authored, so public-domain U.S. Government work is appropriate. No UK terms found."
+    ]
+  }
+}

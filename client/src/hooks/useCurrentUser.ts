@@ -38,6 +38,9 @@ export const useCurrentUser = () => {
     isGc: companyType === "gc",
     isSubcontractor: companyType === "subcontractor",
     tier,
+    // Server-resolved plan + limits (single source of truth, not mirrored).
+    plan: query.data?.plan ?? null,
+    limits: query.data?.limits ?? null,
     hasTranslationAccess: tier !== null && TRANSLATION_TIERS.includes(tier),
     // Custom PDF branding (upload logo, remove watermark) is the same
     // Trade Pro/Enterprise paywall as translation — reuses the identical

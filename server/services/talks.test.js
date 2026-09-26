@@ -6,7 +6,7 @@ const { listForCompany, getById, create, update, remove } = require("./talks");
 const translation = require("./translation");
 
 const TALK_COLUMNS =
-  "id, slug, title, trade_tag, trade_tags, content, structured, attribution, quiz, translations, is_global, company_id, created_at";
+  "id, slug, title, trade_tag, trade_tags, content, structured, attribution, quiz, translations, is_global, is_core, company_id, created_at";
 
 const translateSpy = vi.spyOn(translation, "translateStructuredFields");
 
@@ -43,6 +43,7 @@ const mappedTalk = {
   quiz: sampleQuiz,
   translations: null,
   isGlobal: true,
+  isCore: false,
   companyId: null,
   createdAt: "2026-09-09T00:00:00.000Z",
 };
@@ -75,6 +76,16 @@ describe("talks service: listForCompany", () => {
     expect(or).toHaveBeenCalledWith("is_global.eq.true,company_id.eq.company-1");
     expect(order).toHaveBeenCalledWith("title", { ascending: true });
     expect(result).toEqual([mappedTalk]);
+  });
+
+  it("should narrow the global half to core talks when the plan lacks the full library", async () => {
+    // Act
+    await listForCompany("company-1", { fullLibrary: false });
+
+    // Assert
+    expect(or).toHaveBeenCalledWith(
+      "and(is_global.eq.true,is_core.eq.true),company_id.eq.company-1",
+    );
   });
 
   it("should default missing structured/attribution/quiz/trade_tags to []/null", async () => {
@@ -136,6 +147,16 @@ describe("talks service: getById", () => {
     expect(eq).toHaveBeenCalledWith("id", "talk-1");
     expect(or).toHaveBeenCalledWith("is_global.eq.true,company_id.eq.company-1");
     expect(result).toEqual(mappedTalk);
+  });
+
+  it("should scope to core talks + own custom talks when the plan lacks the full library", async () => {
+    // Act
+    await getById("talk-1", "company-1", { fullLibrary: false });
+
+    // Assert
+    expect(or).toHaveBeenCalledWith(
+      "and(is_global.eq.true,is_core.eq.true),company_id.eq.company-1",
+    );
   });
 
   it("should throw a 404 AppError when no row matches the id (missing, or belongs to another company)", async () => {
@@ -201,6 +222,7 @@ describe("talks service: create", () => {
     quiz: null,
     translations: null,
     isGlobal: false,
+    isCore: false,
     companyId: "company-1",
     createdAt: "2026-09-12T00:00:00.000Z",
   };

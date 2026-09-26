@@ -1,0 +1,60 @@
+{
+  "id": "working-at-heights",
+  "title": "Working at Heights",
+  "primary_trade": "General Construction",
+  "trade_tags": [
+    "General Construction",
+    "Roofing"
+  ],
+  "osha_standards": [
+    "29 CFR 1926.500",
+    "29 CFR 1926.501",
+    "29 CFR 1926.502",
+    "29 CFR 1926.503"
+  ],
+  "estimated_minutes": 5,
+  "summary": "Falls are the leading cause of death in construction, about one-third of all fatalities. Fall protection is required at 6 feet or more above a lower level, so plan and check it before you go up.",
+  "talking_points": [
+    "Falls are the leading cause of fatalities in construction, accounting for about one-third of all fatalities in the industry.",
+    "Use fall protection when working 6 feet or more above a lower level. It also applies below 6 feet near dangerous equipment, such as open drive belts, pulleys, gears, or open vats of acid.",
+    "Fall protection can be guardrail systems, safety net systems, or personal fall arrest systems. OSHA encourages systems that prevent falls, such as guardrails.",
+    "Guardrail top rails must be 42 inches, plus or minus 3 inches, above the working level. The guardrail must withstand at least 200 pounds on the top edge.",
+    "Protect holes, including skylights, 6 feet or more above a lower level with covers, guardrails, or personal fall arrest systems. Guard the edges of excavations 6 feet or more deep.",
+    "Inspect your fall arrest gear before each use for wear, damage, and deterioration. Remove defective parts from service. The system must be rigged so you cannot free fall more than 6 feet or hit a lower level.",
+    "Anchorages must support at least 5,000 pounds per worker attached, or be designed by a qualified person with a safety factor of at least two. Lanyards and vertical lifelines need a minimum breaking strength of 5,000 pounds.",
+    "Workers exposed to fall hazards must be trained by a competent person to recognize fall hazards and to use the fall protection on the job."
+  ],
+  "site_hazards_to_check": [
+    "Unprotected sides and edges 6 feet or more above a lower level",
+    "Holes and skylights without covers or guardrails",
+    "Wall openings, hoist areas, ramps, and runways without protection",
+    "Edges of excavations 6 feet or more deep",
+    "Damaged harnesses, lanyards, lifelines, or snaphooks",
+    "Guardrails with the wrong top-rail height or openings wider than 19 inches"
+  ],
+  "discussion_questions": [
+    "Where on this job could someone fall 6 feet or more, and what protection is in place there?",
+    "How do we inspect our harness, lanyard, and anchorage before each use?",
+    "What will you do if fall protection is missing or looks damaged?"
+  ],
+  "attribution": {
+    "source": "OSHA",
+    "publisher": "Occupational Safety and Health Administration (OSHA)",
+    "copyright": "U.S. Government work — public domain.",
+    "license": "public-domain",
+    "source_url": "https://www.osha.gov/sites/default/files/publications/OSHA3146.pdf",
+    "source_ref": "TBT-003",
+    "notice": "Adapted from OSHA Publication 3146, Fall Protection in Construction (2015). Reproduced with attribution for jobsite safety training; not an endorsement by OSHA."
+  },
+  "audit": {
+    "status": "approved",
+    "audited_at": "2026-09-25T18:11:08Z",
+    "osha_accuracy_verified": true,
+    "flags": [
+      "Facts verified against OSHA 3146 (2015): 6-foot rule and dangerous-equipment exception, 42 in +/-3 in top rail, 200 lb, 5,000 lb anchorage/lanyard strength, 6 ft free-fall limit, competent-person training, one-third of construction fatalities.",
+      "FIX: \"more than 6 feet\" for holes/skylights changed to \"6 feet or more\" to match 1926.501(b)(4).",
+      "Non-blocking: anchorage point is a simplification (5,000 lb per worker OR qualified-person design with safety factor of 2); acceptable for a talk.",
+      "Citations 1926.500-.503 correct (Subpart M). Attribution: osha.gov, public domain, notice preserved. No UK wording."
+    ]
+  }
+}

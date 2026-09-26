@@ -6,6 +6,7 @@ const { loadUserContext } = require("../middlewares/loadUserContext");
 const { validate } = require("../middlewares/validate");
 const {
   listMeetings,
+  listMeetingMonths,
   getMeeting,
   createMeeting,
   completeMeeting,
@@ -28,9 +29,34 @@ router.get(
       .optional({ checkFalsy: true })
       .isUUID()
       .withMessage("projectId must be a valid id"),
+    query("from")
+      .optional({ checkFalsy: true })
+      .isISO8601()
+      .withMessage("from must be an ISO 8601 timestamp"),
+    query("to")
+      .optional({ checkFalsy: true })
+      .isISO8601()
+      .withMessage("to must be an ISO 8601 timestamp"),
   ],
   validate,
   listMeetings,
+);
+
+// GET /api/meetings/months?tzOffset — one entry per month that has a
+// completed meeting, for the archive's month cards. Registered before
+// `/:id` so "months" isn't parsed as a meeting id. tzOffset is required: the
+// server never guesses a timezone (same rule as GET /api/gc/overview).
+router.get(
+  "/months",
+  requireAuth,
+  loadUserContext,
+  [
+    query("tzOffset")
+      .isInt({ min: -840, max: 840 })
+      .withMessage("tzOffset must be minutes between -840 and 840"),
+  ],
+  validate,
+  listMeetingMonths,
 );
 
 // GET /api/meetings/:id — scoped the same way as the list: a meeting log

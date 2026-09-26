@@ -1,0 +1,63 @@
+{
+  "id": "safe-lifting-operations",
+  "title": "Safe Lifting Operations",
+  "primary_trade": "Heavy Equipment",
+  "trade_tags": [
+    "Heavy Equipment",
+    "General Construction"
+  ],
+  "osha_standards": [
+    "29 CFR 1926.1408",
+    "29 CFR 1926.1417",
+    "29 CFR 1926.1419",
+    "29 CFR 1926.1424",
+    "29 CFR 1926.251",
+    "29 CFR 1926.1412",
+    "29 CFR 1926.1427"
+  ],
+  "estimated_minutes": 5,
+  "summary": "Before a lift, everyone involved must know their roles, the rigging and hoisting hazards, and how the lift will be done. Plan the lift, check the crane and rigging, and keep people out of the swing path.",
+  "talking_points": [
+    "Hold a lift planning meeting before any work begins so everyone involved knows the plan. Anyone involved in the lift should be licensed or certified and trained, if appropriate.",
+    "Check the lifting points, methods of attachment, sling angles, center of gravity, boom and swing angles, and crane orientation.",
+    "Inspect the crane and rigging before use for wear or damage. Make sure the outriggers are properly extended and supported, and that the soil or mats can bear the load.",
+    "Set the load swing path and keep everyone clear of it. Set up barricades and post warning signs around the lift zone. Do not stand in the swing radius or under the load.",
+    "Watch the weather (such as wind speed) and ground conditions. Do NOT operate the crane if it is unsafe. Do NOT lift more than the capacity of the crane or rigging.",
+    "Test the load. Raise it a few inches and hold, check capacity and balance, and test the brakes.",
+    "Keep the crane clear of obstructions, including overhead power lines, and keep a safe working clearance from them.",
+    "Keep the load under control with tag lines and push sticks. Follow the load, stay out of its path, and use clear hand signals or radio."
+  ],
+  "site_hazards_to_check": [
+    "The load swing path and swing radius of the crane",
+    "Worn or damaged rigging and lifting gear",
+    "Outriggers not fully extended, or soil and mats too weak to carry the load",
+    "Overhead power lines and other obstructions near the crane",
+    "High wind or poor ground conditions",
+    "Workers not involved in the lift who are inside the lift zone"
+  ],
+  "discussion_questions": [
+    "Two workers were killed when a crane lifted a rigged concrete slab without a load test and the inappropriate rigging broke. How could that have been prevented?",
+    "Who is in our lift planning meeting, and what signals will we use?",
+    "Where is the swing path today, and who will be standing where?"
+  ],
+  "attribution": {
+    "source": "CPWR",
+    "publisher": "CPWR — The Center for Construction Research and Training",
+    "copyright": "© 2021 CPWR — The Center for Construction Research and Training. All rights reserved.",
+    "license": "free-use-with-attribution",
+    "source_url": "https://www.cpwr.com/wp-content/uploads/TT-Lift_Zone_Safety_Planning_Lift.pdf",
+    "source_ref": "TBT-059",
+    "notice": "Adapted from a CPWR/NIOSH Toolbox Talk, produced under NIOSH cooperative agreement OH 009762. Reproduced with attribution for jobsite safety training; not an endorsement by CPWR or NIOSH."
+  },
+  "audit": {
+    "status": "approved",
+    "audited_at": "2026-09-25T18:11:08Z",
+    "osha_accuracy_verified": true,
+    "flags": [
+      "All points quote-accurate to CPWR \"Lift Zone Safety: Planning a Lift\" (2021); copyright year matches source.",
+      "FIX: discussion question referred to Laura's story, which is not in the talk; rewritten to be self-contained from the source story.",
+      "Citations (structurer-chosen, source cites none): 1926.1408 (power lines), 1926.1417 (operation), 1926.1419 (signals), 1926.1424 (work area control/swing radius) and 1926.251 (rigging) exist and match. Added 1926.1412 (crane inspections) and 1926.1427 (operator qualification/certification) which match the inspect and licensed/certified points.",
+      "Non-blocking: the source says licensed/certified \"if appropriate\"; operator certification is required under 1926.1427. CPWR licensing: free-use-with-attribution is satisfied (talk is a bundled feature of a subscription product, CPWR/NIOSH credit and no-endorsement notice retained in attribution, no endorsement implied; see docs/content-attribution.md)."
+    ]
+  }
+}

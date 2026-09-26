@@ -1,0 +1,35 @@
+{
+  "043": {
+    "status": "matched",
+    "raw_file": "osha-slips-trips-falls-handout.md",
+    "source_url": "https://www.osha.gov/sites/default/files/2018-12/fy16_sh-29672-sh6_SlipsTripsFallsHandoutforSafetyCommitteeMeetings.pdf",
+    "agency": "OSHA",
+    "note": "Verbatim. Worker-level slip/trip/fall tips (short steps, spills, lighting, clutter, footwear, docks/stairs); general-industry, not construction-specific; no cords/ice detail beyond ice mention. No construction-oriented same-level talk found on allowed domains (CPWR housekeeping already claimed; CDC pages blocked)."
+  },
+  "105": {
+    "status": "no-source",
+    "note": "Only regulation text (1926.302, 1910.242, 1915.131), OSHA interpretation letters, and OSHA 3080 (claimed by TBT-011) exist on allowed domains; Cal/OSHA construction pocket guide has only 1-2 line pneumatic tool rules. No worker-level compressed-air talk (air on skin, dead-ending, whip checks, <30 psi) found."
+  },
+  "106": {
+    "status": "matched",
+    "raw_file": "osha-sheet-metal-gas-cylinders-chapter.md",
+    "source_url": "https://obis.osha.gov/dte/grant_materials/fy09/sh-18796-09/sheetmetal.pdf",
+    "agency": "OSHA",
+    "note": "Verbatim whole Sheet Metal chapter from OSHA Harwood grant materials; contains a full plain-language Gas Cylinders section (upright, valve caps, rolling on bottom edge, hoisting cradle, 20 ft oxygen/fuel separation, storage, cracking, opening, hoses). Chapter also covers unrelated sheet metal topics; structurer should use only the cylinder/gas welding portion."
+  },
+  "129": {
+    "status": "matched",
+    "raw_file": "osha-legionnaires-disease-questions-and-answers.md",
+    "source_url": "https://www.osha.gov/sites/default/files/faq.pdf",
+    "agency": "OSHA",
+    "note": "Verbatim OSHA Q&A: symptoms, how spread (mist inhalation), risk factors, growth temperatures, prevention, Pontiac fever, what to do if a coworker is diagnosed. Lacks respirator guidance and plumbing/HVAC crew tasks (those are on the already-claimed osha-legionellosis-control-prevention page and osha.gov/legionnaires-disease/hazards, whose Hazard Recognition page could supplement if allowed)."
+  },
+  "132": {
+    "status": "no-source",
+    "note": "Allowed domains only offer healthcare-oriented needlestick material (NIOSH 2012-123, OSHA BBFACT02 already used, OSHA hospitals eTool) or household needle disposal (EPA); Harwood NRCA bloodborne chapter is a generic sample program with no found-needle/jobsite sharps procedure. CDC pages returned 403 to curl."
+  },
+  "172": {
+    "status": "no-source",
+    "note": "Only HAZWOPER administrative/standard material (OSHA fact sheet FS hazardous waste, 1910.120/1926.65, topic page link lists). Closest real content is NIOSH/OSHA/USCG/EPA Guidance Manual 85-115 (drum/container handling chapter) but it is a several-hundred-page site-manager document, not worker-level for a construction crew; not saved."
+  }
+}

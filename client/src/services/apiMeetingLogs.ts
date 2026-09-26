@@ -106,3 +106,109 @@ export const uploadCrewPhoto = async (
 
   return body.data as MeetingLog;
 };
+
+/** Optional filters accepted by `GET /api/meetings`. `from`/`to` are ISO
+ *  timestamps bounding when the meeting was held, `[from, to)`. */
+export interface MeetingLogsFilters {
+  projectId?: string;
+  from?: string;
+  to?: string;
+}
+
+/**
+ * GET /api/meetings — the caller's company's meeting logs, newest first,
+ * limited to the plan's history window. Pass `from`/`to` for one month of the
+ * archive (completed meetings only).
+ */
+export const getMeetingLogs = async (
+  accessToken: string,
+  filters: MeetingLogsFilters = {},
+): Promise<MeetingLog[]> => {
+  const params = new URLSearchParams();
+  if (filters.projectId) params.set("projectId", filters.projectId);
+  if (filters.from) params.set("from", filters.from);
+  if (filters.to) params.set("to", filters.to);
+  const query = params.toString();
+
+  const res = await fetchWithTimeout(
+    `/api/meetings${query ? `?${query}` : ""}`,
+    {
+      method: "GET",
+      headers: authHeaders(accessToken),
+    },
+  );
+
+  const body = await res.json().catch(() => null);
+
+  if (!res.ok || !body?.success) {
+    throw new Error(body?.error ?? GENERIC_ERROR);
+  }
+
+  return body.data as MeetingLog[];
+};
+
+/** One archive month with at least one completed meeting. `month` is
+ *  `YYYY-MM` in the viewer's local timezone. */
+export interface MeetingMonth {
+  month: string;
+  count: number;
+}
+
+/** The result of `GET /api/meetings/months`: the month cards plus how many
+ *  older logs the plan's history window hides (Free: 30 days). `historyDays`
+ *  is null for plans with no window. */
+export interface MeetingMonthsPage {
+  months: MeetingMonth[];
+  hiddenCount: number;
+  historyDays: number | null;
+}
+
+/**
+ * GET /api/meetings/months — one entry per month that has a completed
+ * meeting, newest first. `tzOffset` (minutes, same sign as
+ * `Date#getTimezoneOffset()`) is required; the server never guesses a
+ * timezone. Rows outside the plan's history window are hidden, not deleted;
+ * `hiddenCount` says how many so the UI can prompt an upgrade.
+ */
+export const getMeetingMonths = async (
+  accessToken: string,
+  tzOffset: number,
+): Promise<MeetingMonthsPage> => {
+  const res = await fetchWithTimeout(`/api/meetings/months?tzOffset=${tzOffset}`, {
+    method: "GET",
+    headers: authHeaders(accessToken),
+  });
+
+  const body = await res.json().catch(() => null);
+
+  if (!res.ok || !body?.success) {
+    throw new Error(body?.error ?? GENERIC_ERROR);
+  }
+
+  return {
+    months: body.data as MeetingMonth[],
+    hiddenCount: body.meta?.hiddenCount ?? 0,
+    historyDays: body.meta?.historyDays ?? null,
+  };
+};
+
+/** GET /api/meetings/:meetingId/pdf-url — a short-lived (5 minute) signed URL
+ *  for the meeting's PDF. 404s if none was generated yet; 403s for a meeting
+ *  outside the plan's history window. */
+export const getMeetingPdfUrl = async (
+  accessToken: string,
+  meetingId: string,
+): Promise<string> => {
+  const res = await fetchWithTimeout(`/api/meetings/${meetingId}/pdf-url`, {
+    method: "GET",
+    headers: authHeaders(accessToken),
+  });
+
+  const body = await res.json().catch(() => null);
+
+  if (!res.ok || !body?.success) {
+    throw new Error(body?.error ?? GENERIC_ERROR);
+  }
+
+  return body.data.url as string;
+};

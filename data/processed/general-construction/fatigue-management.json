@@ -1,0 +1,55 @@
+{
+  "id": "fatigue-management",
+  "title": "Fatigue Management",
+  "primary_trade": "General Construction",
+  "trade_tags": [
+    "General Construction"
+  ],
+  "osha_standards": [
+    "OSH Act Section 5(a)(1) General Duty Clause"
+  ],
+  "estimated_minutes": 5,
+  "summary": "Night shifts and long work hours make it hard to get enough sleep, and tired workers have a harder time focusing and are at higher risk of injury. Recognize the signs of fatigue and take action.",
+  "talking_points": [
+    "Lack of sleep and long work hours can make you tired. Tired workers have a harder time focusing, which puts them at higher risk of injury.",
+    "Signs of fatigue include poor sleep, feeling tired or falling asleep at work, lack of energy or motivation, difficulty focusing, slowed reactions, and increased anger or irritability.",
+    "Take breaks at least every 1 to 2 hours, or spend time on another task.",
+    "Eat healthy snacks such as fruit and nuts. Candy, chips, and other processed and sugary foods make you feel more tired. Drink plenty of water.",
+    "If possible, stay in or go often to brightly lit areas to improve alertness.",
+    "Do not drive or operate machinery if you are overly tired. Drowsiness raises your risk of a car crash or other incident.",
+    "Rest on your days off and have at least one day off per week. Limit caffeine, especially 5 hours or more before bed.",
+    "Most people need 7 to 9 hours of quality sleep each day. Keep your sleeping space comfortable, dark, and quiet, and avoid lighted screens 60 to 90 minutes before bed. See a doctor if you have trouble sleeping or fall asleep at work."
+  ],
+  "site_hazards_to_check": [
+    "Crews on long shifts or many days in a row of night work",
+    "Workers who look drowsy or are slow to react around saws, equipment, or vehicles",
+    "Operators of machinery or drivers who report being overly tired",
+    "Dim work areas during night shifts",
+    "No scheduled breaks or place to rest"
+  ],
+  "discussion_questions": [
+    "What are the signs that you are too tired to work safely?",
+    "What do you do to stay alert, and what makes you more tired?",
+    "Who do you tell if you are too sleepy to drive or run equipment?"
+  ],
+  "attribution": {
+    "source": "CPWR",
+    "publisher": "CPWR — The Center for Construction Research and Training",
+    "copyright": "© 2017 CPWR — The Center for Construction Research and Training. All rights reserved.",
+    "license": "free-use-with-attribution",
+    "source_url": "https://www.cpwr.com/wp-content/uploads/TT-Shift_Work.pdf",
+    "source_ref": "TBT-139",
+    "notice": "Adapted from a CPWR/NIOSH Toolbox Talk, produced under NIOSH cooperative agreement OH 009762. Reproduced with attribution for jobsite safety training; not an endorsement by CPWR or NIOSH."
+  },
+  "audit": {
+    "status": "approved",
+    "audited_at": "2026-09-25T18:10:19Z",
+    "osha_accuracy_verified": true,
+    "flags": [
+      "All points (breaks every 1-2 h, snacks, bright light, do not drive/operate machinery if overly tired, one day off per week, caffeine 5 h before bed, 7-9 h sleep, screens 60-90 min) are quote-accurate to CPWR TT-Shift_Work; 8 points; covers title.",
+      "OSHA mapping verified: source itself cites the General Duty Clause 5(a)(1); no 1926 fatigue standard exists.",
+      "RIGHTS (non-blocking): source file rights line says 'Verify reuse terms with CPWR before redistribution'. Per docs/content-attribution.md the CPWR condition set is met (bundled in a subscription product, never sold standalone; CPWR copyright line and no-endorsement notice retained in attribution; no endorsement claimed). Keep the reminder to confirm terms before public launch.",
+      "No UK wording found."
+    ]
+  }
+}

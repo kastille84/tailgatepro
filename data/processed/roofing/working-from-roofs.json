@@ -1,0 +1,56 @@
+{
+  "id": "working-from-roofs",
+  "title": "Working from Roofs",
+  "primary_trade": "Roofing",
+  "trade_tags": [
+    "Roofing",
+    "General Construction"
+  ],
+  "osha_standards": [
+    "29 CFR 1926.501",
+    "29 CFR 1926.502"
+  ],
+  "estimated_minutes": 5,
+  "summary": "In construction, falls from higher levels cause more deaths and injuries than any other cause, and many are falls from rooftops. Use fall protection any time the drop is 6 feet or more.",
+  "talking_points": [
+    "Falls from higher levels result in more deaths and injuries than any other cause in construction. Many are falls from rooftops.",
+    "Fall protection is required for anyone working on roofs or other areas where the distance to the ground or another surface is 6 feet or more.",
+    "Roofing slide guards are not fall protection.",
+    "Always inspect your fall arrest equipment for damage.",
+    "If fall arrest equipment looks like it needs repair, remove it from service and have an expert examine it.",
+    "Ask your supervisor about adding permanent anchorages during roofing operations.",
+    "Permanent anchorages must support 5,000 pounds for each person attached to them by a lanyard or a lifeline.",
+    "Bill slipped on a garage roof about 10 feet up and nearly slid off. His harness and lifeline stopped the fall."
+  ],
+  "site_hazards_to_check": [
+    "Roof edges where the drop to the ground or another surface is 6 feet or more",
+    "Slippery roof surfaces where a worker could slide toward the edge",
+    "Damaged harnesses, lanyards, or lifelines",
+    "Roofing slide guards being used as the only protection",
+    "Anchorages that are missing or not rated for 5,000 pounds per person"
+  ],
+  "discussion_questions": [
+    "What is the purpose of a lifeline?",
+    "Do you know anyone who has fallen off a rooftop? What happened?",
+    "What will we do at this worksite to prevent falls from rooftops?"
+  ],
+  "attribution": {
+    "source": "CPWR",
+    "publisher": "CPWR — The Center for Construction Research and Training",
+    "copyright": "© 2017 CPWR — The Center for Construction Research and Training. All rights reserved.",
+    "license": "free-use-with-attribution",
+    "source_url": "https://www.cpwr.com/wp-content/uploads/TT-Preventing_Falls_Rooftops.pdf",
+    "source_ref": "TBT-050",
+    "notice": "Adapted from a CPWR/NIOSH Toolbox Talk, produced under NIOSH cooperative agreement OH 009762. Reproduced with attribution for jobsite safety training; not an endorsement by CPWR or NIOSH."
+  },
+  "audit": {
+    "status": "approved",
+    "audited_at": "2026-09-25T18:11:08Z",
+    "osha_accuracy_verified": true,
+    "flags": [
+      "All points quote-accurate to the CPWR Toolbox Talk \"Preventing Falls from Rooftops\" (2017); the source itself cites OSHA 1926.501-1926.502, which are correct.",
+      "FIX: the source says \"more than 6 feet\"; the regulation (1926.501(b)(1), (b)(13)) triggers at 6 feet or more, so wording was corrected in summary, talking point, and hazard list.",
+      "Non-blocking: talk is narrow (fall protection only; no ladder access or skylight points), but has 6 substantive points plus the story. Consider \"competent person\" instead of \"an expert\" for gear inspection. CPWR licensing: free-use-with-attribution is satisfied (talk is a bundled feature of a subscription product, CPWR/NIOSH credit and no-endorsement notice retained in attribution, no endorsement implied; see docs/content-attribution.md)."
+    ]
+  }
+}

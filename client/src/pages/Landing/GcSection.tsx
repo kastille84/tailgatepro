@@ -16,16 +16,31 @@ import {
   StyledGcAside,
   StyledGcList,
   StyledGcItem,
+  StyledSoonTag,
   StyledCallout,
   StyledCalloutTitle,
   StyledCalloutText,
 } from "./GcSection.styles";
 
-const GC_POINTS = [
-  "Flat rate per site or portfolio — never per user seat.",
-  "Every subcontractor on your job gets full access for $0.",
-  "Auto-SMS nudges non-compliant foremen every Monday at 7:00 AM.",
-  "1-click OSHA Defense Bundle — an indexed ZIP of every site log.",
+interface GcPoint {
+  text: string;
+  comingSoon?: boolean;
+}
+
+const GC_POINTS: GcPoint[] = [
+  { text: "Flat rate per site or portfolio — never per user seat." },
+  {
+    text: "Invite subcontractors to your jobsite — no seat fees for the subs.",
+  },
+  { text: "See who has logged a talk today and open each signed PDF." },
+  {
+    text: "Auto-SMS nudges non-compliant foremen every Monday at 7:00 AM.",
+    comingSoon: true,
+  },
+  {
+    text: "1-click OSHA Defense Bundle — an indexed ZIP of every site log.",
+    comingSoon: true,
+  },
 ];
 
 export const GcSection = () => (
@@ -58,10 +73,13 @@ export const GcSection = () => (
 
         <StyledGcAside>
           <StyledGcList>
-            {GC_POINTS.map((point) => (
-              <StyledGcItem key={point}>
+            {GC_POINTS.map(({ text, comingSoon }) => (
+              <StyledGcItem key={text}>
                 <HiCheck aria-hidden="true" />
-                <span>{point}</span>
+                <span>
+                  {text}
+                  {comingSoon && <StyledSoonTag>Coming soon</StyledSoonTag>}
+                </span>
               </StyledGcItem>
             ))}
           </StyledGcList>
@@ -73,11 +91,8 @@ export const GcSection = () => (
               trade subcontractors to your project. With <strong>GC Site Pro</strong>{" "}
               or <strong>GC Portfolio</strong> you pay a flat rate per site or
               portfolio, and{" "}
-              <strong>
-                every subcontractor on your job gets full access for $0
-              </strong>{" "}
-              — no app-store downloads, no user-billing disputes, 100% site
-              compliance on day one.
+              <strong>subcontractors on your job never pay a seat fee</strong>{" "}
+              — no app-store downloads and no user-billing disputes.
             </StyledCalloutText>
           </StyledCallout>
         </StyledGcAside>

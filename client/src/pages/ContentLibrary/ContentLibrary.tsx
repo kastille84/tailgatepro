@@ -1,6 +1,8 @@
 import { lazy, Suspense, useState } from "react";
+import { Link } from "react-router-dom";
 
 import { useAuth } from "../../context/auth";
+import { useCurrentUser } from "../../hooks/useCurrentUser";
 import { useTalks } from "../../hooks/useTalks";
 import { useFavorites } from "../../hooks/useFavorites";
 import { useTalkFilters } from "../../hooks/useTalkFilters";
@@ -27,6 +29,9 @@ import {
   StyledPage,
   StyledSection,
   StyledStatus,
+  StyledUpgradeBanner,
+  StyledUpgradeBody,
+  StyledUpgradeTitle,
 } from "./ContentLibrary.styles";
 import { HiOutlinePlus } from "react-icons/hi2";
 
@@ -48,6 +53,7 @@ export const ContentLibrary = () => {
   const { user, loading } = useAuth();
   const { talks, tradeOptions, isLoading, isError } = useTalks();
   const { favoriteIds } = useFavorites();
+  const { limits } = useCurrentUser();
   const {
     trade,
     setTrade,
@@ -77,6 +83,9 @@ export const ContentLibrary = () => {
   };
 
   const closeForm = () => setIsFormOpen(false);
+
+  // Trade Free only sees the core talks; the server hides the rest.
+  const isCoreOnly = limits?.libraryAccess === "core";
 
   if (loading) {
     return (
@@ -113,6 +122,18 @@ export const ContentLibrary = () => {
 
       <StyledSection>
         <StyledContainer>
+          {isCoreOnly && (
+            <StyledUpgradeBanner>
+              <StyledUpgradeTitle>
+                You&apos;re on the free plan: 30 core talks
+              </StyledUpgradeTitle>
+              <StyledUpgradeBody>
+                The full OSHA talk library is a Trade Pro feature —{" "}
+                <Link to="/pricing">upgrade to Trade Pro</Link> to unlock every
+                talk.
+              </StyledUpgradeBody>
+            </StyledUpgradeBanner>
+          )}
           <TalkFilters
             trade={trade}
             onTradeChange={setTrade}

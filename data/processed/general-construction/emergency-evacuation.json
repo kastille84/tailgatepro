@@ -1,0 +1,58 @@
+{
+  "id": "emergency-evacuation",
+  "title": "Emergency Evacuation",
+  "primary_trade": "General Construction",
+  "trade_tags": [
+    "General Construction"
+  ],
+  "osha_standards": [
+    "29 CFR 1926.35",
+    "29 CFR 1926.34",
+    "29 CFR 1926.159"
+  ],
+  "estimated_minutes": 5,
+  "summary": "A disorganized evacuation can cause confusion, injury, and property damage. Everyone should know the alarm, the routes, the assembly area, and who is in charge before an emergency happens.",
+  "talking_points": [
+    "Know how to report a fire or other emergency and what the alarm sounds like. Alarms must be distinctive and recognized by all as a signal to evacuate.",
+    "Know the primary and secondary evacuation routes and exits for your work area.",
+    "Routes and exits should be clearly marked, well lit, wide enough for everyone, and clear of debris at all times.",
+    "Know who is in charge of emergencies. That person has the authority to order an evacuation or shutdown.",
+    "Go to the assembly area after you leave. A head count is taken so no one is missed.",
+    "Do not go back in to look for someone. Report their name and last known location to the person in charge.",
+    "Leave rescue work to people who are trained, equipped, and certified. Untrained rescuers can endanger themselves and others.",
+    "Look out for coworkers who may need extra help, use the buddy system, and avoid hazardous areas during an evacuation."
+  ],
+  "site_hazards_to_check": [
+    "Evacuation routes or exits blocked or cluttered with debris",
+    "Routes not marked or poorly lit",
+    "No posted evacuation procedures or route drawings",
+    "No designated assembly area or head-count method",
+    "Alarm that not everyone can hear, see, or recognize",
+    "No plan for helping people with disabilities or who do not speak English"
+  ],
+  "discussion_questions": [
+    "What is our alarm signal, and where is our assembly area?",
+    "Who has the authority to order an evacuation on this site?",
+    "Why should untrained people not attempt a rescue?"
+  ],
+  "attribution": {
+    "source": "OSHA",
+    "publisher": "Occupational Safety and Health Administration (OSHA)",
+    "copyright": "U.S. Government work — public domain.",
+    "license": "public-domain",
+    "source_url": "https://www.osha.gov/sites/default/files/publications/osha3088.pdf",
+    "source_ref": "TBT-082",
+    "notice": "Adapted from OSHA Publication 3088, How to Plan for Workplace Emergencies and Evacuations. Reproduced with attribution for jobsite safety training; not an endorsement by OSHA."
+  },
+  "audit": {
+    "status": "approved",
+    "audited_at": "2026-09-25T18:11:08Z",
+    "osha_accuracy_verified": true,
+    "flags": [
+      "Content verified against OSHA 3088: distinctive alarms, marked/lit/wide/clear routes, coordinator authority to order evacuation or shutdown, assembly area and head count with names/last known location to the official, rescue only by trained/certified persons, buddy system and special needs.",
+      "FIX: general-industry citations 1910.38 and 1910.165 replaced by construction equivalents 1926.35 (emergency action plans), 1926.34 (means of egress) and 1926.159 (employee alarm systems). The source publication is general-industry oriented.",
+      "FIX: notice now names OSHA Publication 3088 instead of \"OSHA published material\".",
+      "Non-blocking: 'Do not go back in to look for someone' is a sound extension of the source's advice to report the missing to the official and leave rescue to the trained; not a verbatim source line. No UK wording."
+    ]
+  }
+}

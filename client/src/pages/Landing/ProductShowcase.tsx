@@ -21,7 +21,7 @@ export const ProductShowcase = () => (
           See it the way the crew does
         </StyledSectionTitle>
         <StyledSectionLede>
-          The whole talk lives on one screen. The GC gets a signed, GPS-verified
+          The whole talk lives on one screen. The GC gets a signed, timestamped
           PDF — not a shoebox of paper.
         </StyledSectionLede>
       </StyledSectionHead>

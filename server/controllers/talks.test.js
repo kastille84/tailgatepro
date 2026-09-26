@@ -49,7 +49,12 @@ describe("talks controller", () => {
     req = {
       params: {},
       body: {},
-      user: { id: "user-1", companyId: "company-1", tier: "premium" },
+      user: {
+        id: "user-1",
+        companyId: "company-1",
+        companyType: "subcontractor",
+        tier: "premium",
+      },
     };
     res = {
       status: vi.fn().mockReturnThis(),
@@ -67,10 +72,26 @@ describe("talks controller", () => {
       await listTalks(req, res, next);
 
       // Assert
-      expect(listForCompanySpy).toHaveBeenCalledWith("company-1");
+      expect(listForCompanySpy).toHaveBeenCalledWith("company-1", {
+        fullLibrary: true,
+      });
       expect(res.status).toHaveBeenCalledWith(200);
       expect(res.json).toHaveBeenCalledWith({ success: true, data: [talk] });
       expect(next).not.toHaveBeenCalled();
+    });
+
+    it("should narrow the list to core talks for a Trade Free caller", async () => {
+      // Arrange
+      req.user.tier = "basic";
+      listForCompanySpy.mockResolvedValue([talk]);
+
+      // Act
+      await listTalks(req, res, next);
+
+      // Assert
+      expect(listForCompanySpy).toHaveBeenCalledWith("company-1", {
+        fullLibrary: false,
+      });
     });
 
     it("should forward a service error to next()", async () => {
@@ -97,10 +118,27 @@ describe("talks controller", () => {
       await getTalk(req, res, next);
 
       // Assert
-      expect(getByIdSpy).toHaveBeenCalledWith("talk-1", "company-1");
+      expect(getByIdSpy).toHaveBeenCalledWith("talk-1", "company-1", {
+        fullLibrary: true,
+      });
       expect(res.status).toHaveBeenCalledWith(200);
       expect(res.json).toHaveBeenCalledWith({ success: true, data: talk });
       expect(next).not.toHaveBeenCalled();
+    });
+
+    it("should scope a Trade Free caller to core talks", async () => {
+      // Arrange
+      req.user.tier = "basic";
+      req.params = { id: "talk-1" };
+      getByIdSpy.mockResolvedValue(talk);
+
+      // Act
+      await getTalk(req, res, next);
+
+      // Assert
+      expect(getByIdSpy).toHaveBeenCalledWith("talk-1", "company-1", {
+        fullLibrary: false,
+      });
     });
 
     it("should forward a service error to next() (e.g. the 404 not-found case)", async () => {

@@ -31,17 +31,17 @@ const STEPS: Step[] = [
   {
     icon: HiQrCode,
     title: "Open with a tap",
-    body: "Scan the site QR code or tap a link. The talk opens in your phone's browser — no app store, no login, five floors underground or on a remote site.",
+    body: "Tap the link your GC or company shares. The talk opens in your phone's browser — no app store, no login, five floors underground or on a remote site.",
   },
   {
     icon: HiPencilSquare,
     title: "Run the talk",
-    body: "Pick today's topic from the OSHA talk library or generate a custom hazard talk. Each worker signs on-screen or you snap one crew photo.",
+    body: "Pick today's topic from the OSHA talk library or write your own custom talk. Each worker signs on-screen or you snap one crew photo.",
   },
   {
     icon: HiPaperAirplane,
     title: "Submit",
-    body: "Attendance, GPS location and a timestamp lock to a tamper-evident PDF. It emails to the GC and hits their dashboard the moment you tap send.",
+    body: "Attendance and a server timestamp lock into a signed PDF. It emails to the GC and hits their dashboard the moment you tap send.",
   },
 ];
 

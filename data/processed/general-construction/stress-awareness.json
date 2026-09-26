@@ -1,0 +1,53 @@
+{
+  "id": "stress-awareness",
+  "title": "Stress Awareness",
+  "primary_trade": "General Construction",
+  "trade_tags": [
+    "General Construction"
+  ],
+  "osha_standards": [
+    "OSH Act Section 5(a)(1) General Duty Clause"
+  ],
+  "estimated_minutes": 5,
+  "summary": "Job stress is the physical and emotional harm that happens when job demands do not match a worker's abilities or resources. It can lead to poor health and injury, so ask for help and watch out for coworkers.",
+  "talking_points": [
+    "Job stress can lead to poor health and even injury. It happens when the demands of the work do not match your abilities or the resources you have.",
+    "Ask for help if you feel overwhelmed by the work.",
+    "Look out for your coworkers. If one shows signs of stress, offer to help if you can.",
+    "Tell your supervisor or your shop steward if the schedule is creating pressure that is affecting your work and health.",
+    "Take good care of yourself to reduce stress. Exercise regularly. It is a powerful stress reliever.",
+    "See a doctor if you have frequent headaches, cannot sleep, have trouble concentrating, have an upset stomach, or have a short temper."
+  ],
+  "site_hazards_to_check": [
+    "Projects behind schedule with crews under heavy pressure to work faster",
+    "Workers who seem overwhelmed, withdrawn, or short-tempered",
+    "Yelling or blaming on the site instead of problem solving",
+    "Workers rushing and cutting corners because of the schedule",
+    "No clear way for workers to raise concerns about workload"
+  ],
+  "discussion_questions": [
+    "How can pressure to hurry affect the quality and safety of our work?",
+    "What signs of stress have you seen in yourself or a coworker?",
+    "Who can you go to if the schedule or workload is too much?"
+  ],
+  "attribution": {
+    "source": "CPWR",
+    "publisher": "CPWR — The Center for Construction Research and Training",
+    "copyright": "© 2017 CPWR — The Center for Construction Research and Training. All rights reserved.",
+    "license": "free-use-with-attribution",
+    "source_url": "https://www.cpwr.com/wp-content/uploads/TT-Workplace_Stress.pdf",
+    "source_ref": "TBT-144",
+    "notice": "Adapted from a CPWR/NIOSH Toolbox Talk, produced under NIOSH cooperative agreement OH 009762. Reproduced with attribution for jobsite safety training; not an endorsement by CPWR or NIOSH."
+  },
+  "audit": {
+    "status": "approved",
+    "audited_at": "2026-09-25T18:10:19Z",
+    "osha_accuracy_verified": true,
+    "flags": [
+      "Content is quote-accurate to CPWR TT-Workplace_Stress (definition of job stress, ask for help, tell supervisor or shop steward, exercise, see a doctor for the listed symptoms). 6 points, minimum but sufficient with the discussion questions.",
+      "OSHA citation: source cites 29 CFR 1926.56, which is construction illumination and does not apply to stress. The structurer's use of the General Duty Clause 5(a)(1) is the correct substitution; verified.",
+      "RIGHTS (non-blocking): source file rights line says 'Verify reuse terms with CPWR before redistribution'. Per docs/content-attribution.md the CPWR condition set is met (bundled in a subscription product, never sold standalone; CPWR copyright line and no-endorsement notice retained in attribution; no endorsement claimed). Keep the reminder to confirm terms before public launch.",
+      "No UK wording found."
+    ]
+  }
+}

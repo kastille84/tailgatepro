@@ -70,6 +70,9 @@ vi.mock("../src/pages/Dashboard", () => ({
   Dashboard: () => <div data-testid="dashboard-page">Dashboard page</div>,
 }));
 
+vi.mock("../src/pages/MeetingHistory", () => ({
+  MeetingHistory: () => <div data-testid="meeting-history-page">History page</div>,
+}));
 vi.mock("../src/pages/ContentLibrary", () => ({
   ContentLibrary: () => <div data-testid="talks-page">Talks page</div>,
 }));
@@ -169,5 +172,12 @@ describe("App", () => {
     render(<App />);
 
     expect(screen.getByTestId("talks-page")).toBeDefined();
+  });
+
+  it("renders the meeting history route shell behind the RequireAuth + RequireSubcontractor layout routes", () => {
+    window.history.pushState({}, "", "/meetings");
+    render(<App />);
+
+    expect(screen.getByTestId("meeting-history-page")).toBeDefined();
   });
 });

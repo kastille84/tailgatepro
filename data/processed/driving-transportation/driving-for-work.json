@@ -1,0 +1,55 @@
+{
+  "id": "driving-for-work",
+  "title": "Driving for Work",
+  "primary_trade": "Driving & Transportation",
+  "trade_tags": [
+    "Driving & Transportation"
+  ],
+  "osha_standards": [
+    "OSH Act Section 5(a)(1) General Duty Clause"
+  ],
+  "estimated_minutes": 5,
+  "summary": "Driving for work is risky. Wear your seat belt, stay focused, stay rested and sober, secure your loads, and drive a well-maintained vehicle.",
+  "talking_points": [
+    "Wear your seat belt. Seat belts are the single most effective means of reducing deaths and serious injuries in traffic crashes.",
+    "Distracted driving is a factor in 25 to 30 percent of all traffic crashes. Drivers make more than 200 decisions every mile. When driving for work, safe driving is your primary responsibility.",
+    "Drowsy driving may be involved in more than 100,000 crashes each year. If you are tired, stop. A short nap (15 to 45 minutes) and caffeine can help temporarily. Get out of the car every 2 hours to stretch and walk briskly.",
+    "Warning signs of fatigue: you cannot remember the last few miles, you drift from your lane or hit a rumble strip, you yawn repeatedly, or you tailgate.",
+    "Alcohol, certain prescription and over-the-counter drugs, and illegal drugs reduce alertness, coordination, and reaction time. Alcohol is a factor in 39 percent of work-related traffic crashes. Avoid medications that cause drowsiness.",
+    "Avoid aggressive driving such as excessive speed, tailgating, failing to signal, running red lights, and passing on the right. Do not engage other drivers, and let others merge.",
+    "Secure tools and equipment in transit. Loose objects can slide or become airborne in a crash, so store them outside the passenger compartment.",
+    "Vehicles should be on a routine preventive maintenance schedule, and a mechanic should inspect each one at least annually."
+  ],
+  "site_hazards_to_check": [
+    "Loose tools or materials in the passenger compartment",
+    "Vehicles with overdue maintenance or inspection",
+    "Drivers showing signs of fatigue",
+    "Phones, food, or other distractions in the cab",
+    "Long drives with no planned rest stops",
+    "Workers who took medication that causes drowsiness"
+  ],
+  "discussion_questions": [
+    "What distracts you when you drive for work, and how can you remove it?",
+    "What are the warning signs of fatigue, and what will you do when you notice them?",
+    "How do we secure tools and materials in our trucks?"
+  ],
+  "attribution": {
+    "source": "OSHA",
+    "publisher": "Occupational Safety and Health Administration (OSHA)",
+    "copyright": "U.S. Government work — public domain.",
+    "license": "public-domain",
+    "source_url": "https://www.osha.gov/sites/default/files/publications/MOTOR_VEHICLE_GUIDE.pdf",
+    "source_ref": "TBT-069",
+    "notice": "Adapted from OSHA Guidelines for Employers to Reduce Motor Vehicle Crashes. Reproduced with attribution for jobsite safety training; not an endorsement by OSHA."
+  },
+  "audit": {
+    "status": "approved",
+    "audited_at": "2026-09-25T18:11:08Z",
+    "osha_accuracy_verified": true,
+    "flags": [
+      "All stats and advice quote-accurate to OSHA Guidelines for Employers to Reduce Motor Vehicle Crashes: seat belts most effective, 25-30% distracted, 200+ decisions/mile, 100,000 drowsy crashes, 15-45 min nap, 2-hour breaks, fatigue signs, 39% work-related crashes alcohol, aggressive driving list, secure loads, annual mechanic inspection.",
+      "Citation: General Duty Clause 5(a)(1) is the correct hook (OSHA has no driving standard); it is not a 1926 section and is the honest mapping. Talk makes no legal commitment.",
+      "Non-blocking: statistics come from a 2004-era guide and are dated; consider refreshing with current NHTSA/NIOSH figures. Attribution: osha.gov, public domain. No UK wording."
+    ]
+  }
+}

@@ -13,6 +13,16 @@ vi.mock("../../src/context/auth", () => ({
   useAuth: () => mockUseAuth(),
 }));
 
+const LIMITS = {
+  planId: "trade-free",
+  foremanSeats: 1,
+  activeJobsites: null,
+  unlockedSubs: null,
+  historyDays: 30,
+  archiveYears: 0,
+  libraryAccess: "core" as const,
+};
+
 describe("useCurrentUser", () => {
   let queryClient: QueryClient;
 
@@ -35,6 +45,8 @@ describe("useCurrentUser", () => {
       role: "foreman",
       tier: "premium",
       companyType: "subcontractor",
+      plan: "trade-free",
+      limits: LIMITS,
     });
 
     const { result } = renderHook(() => useCurrentUser(), { wrapper });
@@ -44,6 +56,8 @@ describe("useCurrentUser", () => {
     expect(result.current.tier).toBe("premium");
     expect(result.current.hasTranslationAccess).toBe(true);
     expect(result.current.hasBrandingAccess).toBe(true);
+    expect(result.current.plan).toBe("trade-free");
+    expect(result.current.limits).toEqual(LIMITS);
   });
 
   it("reports hasTranslationAccess true for enterprise tier", async () => {
@@ -53,6 +67,8 @@ describe("useCurrentUser", () => {
       role: "foreman",
       tier: "enterprise",
       companyType: "subcontractor",
+      plan: "trade-free",
+      limits: LIMITS,
     });
 
     const { result } = renderHook(() => useCurrentUser(), { wrapper });
@@ -69,6 +85,8 @@ describe("useCurrentUser", () => {
       role: "foreman",
       tier: "basic",
       companyType: "subcontractor",
+      plan: "trade-free",
+      limits: LIMITS,
     });
 
     const { result } = renderHook(() => useCurrentUser(), { wrapper });
@@ -85,6 +103,8 @@ describe("useCurrentUser", () => {
       role: "foreman",
       tier: "basic",
       companyType: "subcontractor",
+      plan: "trade-free",
+      limits: LIMITS,
     });
 
     const { result } = renderHook(() => useCurrentUser(), { wrapper });
@@ -103,6 +123,8 @@ describe("useCurrentUser", () => {
       role: "admin",
       tier: "basic",
       companyType: "gc",
+      plan: "trade-free",
+      limits: LIMITS,
     });
 
     const { result } = renderHook(() => useCurrentUser(), { wrapper });
@@ -124,6 +146,8 @@ describe("useCurrentUser", () => {
     expect(result.current.role).toBeNull();
     expect(result.current.companyId).toBeNull();
     expect(result.current.companyType).toBeNull();
+    expect(result.current.plan).toBeNull();
+    expect(result.current.limits).toBeNull();
     expect(result.current.isGc).toBe(false);
     expect(result.current.isSubcontractor).toBe(false);
   });

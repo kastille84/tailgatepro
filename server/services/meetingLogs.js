@@ -89,7 +89,18 @@ const create = async ({ id, companyId, projectId, talkId, foremanId }) => {
 // Every meeting log the caller's company owns, optionally scoped to one
 // project. `companyId` comes from the caller's verified `users` row (via
 // loadUserContext), never from request input.
-const listForCompany = async (companyId, { projectId } = {}) => {
+// `historyDays` (null = unlimited) is the plan's in-app history window
+// (Phase 9c): older rows are hidden, never deleted, so upgrading restores them.
+const historyCutoff = (historyDays) =>
+  new Date(Date.now() - historyDays * 24 * 60 * 60 * 1000).toISOString();
+
+// `from`/`to` (ISO timestamps, [from, to)) narrow the list to completed
+// meetings held in that range — the month view. A row whose `held_at` was never
+// populated falls back to `completed_at`, matching `toMeetingLog`.
+const listForCompany = async (
+  companyId,
+  { projectId, historyDays = null, from, to } = {},
+) => {
   let query = supabase
     .from("meeting_logs")
     .select(MEETING_LOG_COLUMNS)
@@ -98,8 +109,20 @@ const listForCompany = async (companyId, { projectId } = {}) => {
   if (projectId) {
     query = query.eq("project_id", projectId);
   }
+  if (historyDays !== null) {
+    query = query.gte("created_at", historyCutoff(historyDays));
+  }
+  if (from && to) {
+    query = query
+      .not("completed_at", "is", null)
+      .or(
+        `and(held_at.gte.${from},held_at.lt.${to}),and(held_at.is.null,completed_at.gte.${from},completed_at.lt.${to})`,
+      );
+  }
 
-  const { data, error } = await query.order("created_at", { ascending: false });
+  const { data, error } = await query.order(from && to ? "held_at" : "created_at", {
+    ascending: false,
+  });
 
   if (error) {
     throw new AppError("Could not load meetings", 502, { cause: error });
@@ -108,9 +131,85 @@ const listForCompany = async (companyId, { projectId } = {}) => {
   return data.map(toMeetingLog);
 };
 
+const MONTH_PAGE_SIZE = 1000;
+
+// One `{ month: "YYYY-MM", count }` per month that has a completed meeting,
+// newest first, for the archive's month cards. A month is when the meeting was
+// held (held_at, falling back to completed_at) in the viewer's timezone;
+// `tzOffset` is minutes with the sign of `Date#getTimezoneOffset()` (UTC minus
+// local). Pages through the rows in chunks because PostgREST caps a single
+// response (1,000 rows by default), which a daily logger passes within
+// three years.
+const listMonthSummaries = async (companyId, { historyDays = null, tzOffset = 0 } = {}) => {
+  const counts = new Map();
+
+  for (let offset = 0; ; offset += MONTH_PAGE_SIZE) {
+    let query = supabase
+      .from("meeting_logs")
+      .select("held_at, completed_at")
+      .eq("company_id", companyId)
+      .not("completed_at", "is", null);
+
+    if (historyDays !== null) {
+      query = query.gte("created_at", historyCutoff(historyDays));
+    }
+
+    const { data, error } = await query
+      .order("created_at", { ascending: false })
+      .order("id", { ascending: false })
+      .range(offset, offset + MONTH_PAGE_SIZE - 1);
+
+    if (error) {
+      throw new AppError("Could not load meetings", 502, { cause: error });
+    }
+
+    for (const row of data) {
+      const local = new Date(
+        new Date(row.held_at ?? row.completed_at).getTime() - tzOffset * 60 * 1000,
+      );
+      const month = `${local.getUTCFullYear()}-${String(local.getUTCMonth() + 1).padStart(2, "0")}`;
+      counts.set(month, (counts.get(month) ?? 0) + 1);
+    }
+
+    if (data.length < MONTH_PAGE_SIZE) break;
+  }
+
+  return [...counts.entries()]
+    .map(([month, count]) => ({ month, count }))
+    .sort((a, b) => (a.month < b.month ? 1 : -1));
+};
+
+// How many of the company's rows the history window hides, so the client can
+// show an upgrade prompt. Always 0 for an unlimited plan (`historyDays` null).
+const countHiddenForCompany = async (companyId, { projectId, historyDays = null } = {}) => {
+  if (historyDays === null) {
+    return 0;
+  }
+
+  let query = supabase
+    .from("meeting_logs")
+    .select("id", { count: "exact", head: true })
+    .eq("company_id", companyId)
+    .lt("created_at", historyCutoff(historyDays));
+
+  if (projectId) {
+    query = query.eq("project_id", projectId);
+  }
+
+  const { count, error } = await query;
+
+  if (error) {
+    throw new AppError("Could not load meetings", 502, { cause: error });
+  }
+
+  return count ?? 0;
+};
+
 // Scoped the same way as listForCompany: a meeting log belonging to another
-// company is indistinguishable from a missing one (404), by design.
-const getById = async (id, companyId) => {
+// company is indistinguishable from a missing one (404), by design. Only the
+// user-facing route passes `historyDays`; internal callers (complete, PDF
+// generation) need the row regardless of the plan's history window.
+const getById = async (id, companyId, { historyDays = null } = {}) => {
   const { data, error } = await supabase
     .from("meeting_logs")
     .select(MEETING_LOG_COLUMNS)
@@ -123,6 +222,12 @@ const getById = async (id, companyId) => {
       throw new AppError("Meeting not found", 404, { cause: error });
     }
     throw new AppError("Could not load the meeting", 502, { cause: error });
+  }
+
+  if (historyDays !== null && new Date(data.created_at) < new Date(historyCutoff(historyDays))) {
+    throw new AppError("This meeting is older than your plan's history. Upgrade to view it.", 403, {
+      data: { code: "PLAN_LIMIT", limit: historyDays },
+    });
   }
 
   return toMeetingLog(data);
@@ -300,8 +405,8 @@ const setFinalPdfUrl = async (id, companyId, path) => {
 // caller's own company (identical to meeting.companyId by construction of
 // getById's scoping filter, so no second id to reconcile) and can't 404
 // either — a genuine failure from either just propagates like anywhere else.
-const getPdfUrl = async (id, companyId) => {
-  const meeting = await getById(id, companyId);
+const getPdfUrl = async (id, companyId, { historyDays = null } = {}) => {
+  const meeting = await getById(id, companyId, { historyDays });
 
   if (!meeting.finalPdfUrl) {
     throw new AppError("No PDF has been generated for this meeting yet", 404);
@@ -330,6 +435,8 @@ const getPdfUrl = async (id, companyId) => {
 module.exports = {
   create,
   listForCompany,
+  listMonthSummaries,
+  countHiddenForCompany,
   getById,
   complete,
   assertNotCompleted,

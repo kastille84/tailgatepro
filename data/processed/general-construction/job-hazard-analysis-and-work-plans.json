@@ -1,0 +1,54 @@
+{
+  "id": "job-hazard-analysis-and-work-plans",
+  "title": "Job Hazard Analysis and Work Plans",
+  "primary_trade": "General Construction",
+  "trade_tags": [
+    "General Construction"
+  ],
+  "osha_standards": [
+    "OSH Act Section 5(a)(1) General Duty Clause"
+  ],
+  "estimated_minutes": 5,
+  "summary": "A job hazard analysis breaks a job into steps to find hazards before they cause harm. It looks at the worker, the task, the tools, and the work environment.",
+  "talking_points": [
+    "A hazard is the potential for harm. A job hazard analysis finds hazards before they occur by focusing on job tasks.",
+    "Involve the crew. Workers know the job best, and their knowledge helps find hazards others miss.",
+    "Start with jobs that have the highest injury rates, could cause severe injuries, or where one human error could cause a severe accident.",
+    "New jobs, changed jobs, and jobs complex enough to need written instructions also come first.",
+    "Break the job into steps. Watch the worker do the job, list each step, then review the steps with the worker. You are evaluating the job, not the worker.",
+    "For each step ask what can go wrong, what the consequences are, how it could happen, what else contributes, and how likely it is.",
+    "If a hazard is an immediate danger to life or health, act right away. Do not wait for the analysis to finish.",
+    "Review the analysis when an injury or close call happens, and train everyone affected on any changes."
+  ],
+  "site_hazards_to_check": [
+    "Jobs with past injuries or near misses",
+    "New or changed tasks with no written steps",
+    "Unguarded moving parts, such as a rotating pulley, that a hand could contact",
+    "Hazards that happen too fast for a worker to react to",
+    "Uncontrolled hazards found earlier and not yet corrected"
+  ],
+  "discussion_questions": [
+    "What can go wrong at each step of today's job?",
+    "Which step could cause the worst injury, and how do we control it?",
+    "What close call or injury on a past job should change how we do this one?"
+  ],
+  "attribution": {
+    "source": "OSHA",
+    "publisher": "Occupational Safety and Health Administration (OSHA)",
+    "copyright": "U.S. Government work — public domain.",
+    "license": "public-domain",
+    "source_url": "https://www.osha.gov/sites/default/files/publications/OSHA3071.pdf",
+    "source_ref": "TBT-095",
+    "notice": "Adapted from OSHA published material. Reproduced with attribution for jobsite safety training; not an endorsement by OSHA."
+  },
+  "audit": {
+    "status": "approved",
+    "audited_at": "2026-09-25T18:09:06Z",
+    "osha_accuracy_verified": true,
+    "flags": [
+      "Verified against OSHA 3071 Job Hazard Analysis: hazard definition, involve employees, priority job types, new/changed/complex jobs, watch worker and review steps (evaluating the job not the worker), what-can-go-wrong question set, immediate danger acts right away, review after injury/close call and retrain. Rotating pulley and 'happens too fast' hazards are in the source example.",
+      "Non-blocking: title says 'Work Plans' but content covers JHA only (no work plan or method-statement content); consider retitling to 'Job Hazard Analysis'. OSH Act 5(a)(1) citation is not in the source but is a valid statute; OSHA 3071 is a general (not construction-specific) guide, no 1926 section applies.",
+      "Non-blocking: 'Unguarded moving parts, such as a rotating pulley' comes from the general-industry grinding example; fine as a hazard prompt."
+    ]
+  }
+}

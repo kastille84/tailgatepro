@@ -1,0 +1,55 @@
+{
+  "id": "working-around-fans",
+  "title": "Working Around Fans",
+  "primary_trade": "General Construction",
+  "trade_tags": [
+    "General Construction",
+    "HVAC & Refrigeration"
+  ],
+  "osha_standards": [
+    "29 CFR 1926.300(b)(2)",
+    "29 CFR 1910.212(a)(5)"
+  ],
+  "estimated_minutes": 5,
+  "summary": "Unguarded fan blades within reach can cause serious injuries. This talk covers OSHA's rule on guarding fans within 7 feet of the floor or working level. The interpretation comes from the general-industry standard 29 CFR 1910.212(a)(5); the same 7 foot and one-half inch rule appears in the construction standard 29 CFR 1926.300(b)(2).",
+  "talking_points": [
+    "All fans within 7 feet of the floor or working level must be guarded.",
+    "The guard must not have openings greater than one-half inch in width.",
+    "Concentric rings spaced no more than one-half inch apart are acceptable if there are enough radial spokes and firm mountings to keep the guard rigid.",
+    "The guard must be rigid enough that it cannot be pushed into the fan blade during normal use.",
+    "Nylon mesh or a similar material with holes no larger than one-half inch may be used to fix a substandard guard on an existing fan. The mesh and guard together must be strong enough that the mesh cannot be pushed into the blade.",
+    "Floor fans are a common case. Check them for missing or bent guards.",
+    "Report any fan with a missing or damaged guard so it is fixed."
+  ],
+  "site_hazards_to_check": [
+    "Fans within 7 feet of the floor or working level with no guard",
+    "Guard openings wider than one-half inch",
+    "Guards that flex or can be pushed into the blade",
+    "Loose or missing guard mountings",
+    "Floor fans where the guard has been removed or damaged"
+  ],
+  "discussion_questions": [
+    "Which fans on our site are within 7 feet of the floor or working level?",
+    "How can you tell if a fan guard is rigid enough?",
+    "Who do you tell if you find a fan with no guard?"
+  ],
+  "attribution": {
+    "source": "OSHA",
+    "publisher": "Occupational Safety and Health Administration (OSHA)",
+    "copyright": "U.S. Government work — public domain.",
+    "license": "public-domain",
+    "source_url": "https://www.osha.gov/enforcement/directives/std-01-12-001",
+    "source_ref": "TBT-277",
+    "notice": "Adapted from OSHA Instruction STD 01-12-001, Defining Acceptable Guarding of Fan Blades. Reproduced with attribution for jobsite safety training; not an endorsement by OSHA."
+  },
+  "audit": {
+    "status": "approved",
+    "audited_at": "2026-09-25T18:10:19Z",
+    "osha_accuracy_verified": true,
+    "flags": [
+      "Every figure (7 ft, one-half inch openings, concentric rings, rigid, nylon mesh retrofit) is quote-accurate to OSHA Instruction STD 1-12.1 (1978). Point 6 (floor fans) reflects the background statement; point 7 (report a damaged guard) is practical advice not in the source.",
+      "FIX MADE: the talk cited only general-industry 1910.212(a)(5) and did not say so. Verified that 29 CFR 1926.300(b) carries the same fan rule (blades less than 7 ft above floor or working level guarded, openings no larger than 1/2 inch). Added 1926.300(b)(2) and a general-industry disclosure in the summary.",
+      "Non-blocking: the directive dates from 1978; fine as an interpretation but not a current construction directive. Public domain, osha.gov. No UK wording."
+    ]
+  }
+}

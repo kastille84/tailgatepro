@@ -31,6 +31,7 @@ import {
   StyledPriceSub,
   StyledFeatureList,
   StyledFeatureItem,
+  StyledSoonTag,
   StyledPlanCta,
   StyledCallout,
   StyledCalloutTitle,
@@ -59,19 +60,19 @@ const BILLING_OPTIONS: { value: Billing; label: string }[] = [
 const FAQ: { q: string; a: string }[] = [
   {
     q: "Do my sub-foremen need to download an app from the App Store?",
-    a: "No. TailgatePro is an offline-first Progressive Web App. Foremen scan a QR code or tap a link to open it straight away in their mobile browser — nothing to install.",
+    a: "No. TailgatePro is an offline-first Progressive Web App. Foremen tap a link to open it straight away in their mobile browser — nothing to install.",
   },
   {
     q: "What happens to my safety logs on the Trade Free plan after 30 days?",
-    a: "Emailed PDFs stay in your inbox forever. The in-app dashboard history locks after 30 days; Trade Pro unlocks your full 5-year legal cloud archive.",
+    a: "Every completed talk is emailed to your GC as a PDF link that stays valid for 30 days; after that, your GC can sign in to open a fresh link. The Free plan's in-app history shows the last 30 days; Trade Pro adds the 5-year legal cloud archive.",
   },
   {
     q: "How does a general contractor sponsor subcontractors for free?",
-    a: "On GC Site Pro or GC Portfolio you get project-specific QR codes and links. Any trade subcontractor working those sites scans one to log talks under your dashboard at zero cost to them.",
+    a: "Sponsoring subcontractors at zero cost to them is coming soon on GC Site Pro and GC Portfolio. Today, a GC invites subcontractors to a jobsite by email or shares a company join code, and their talks show up on the GC's dashboard.",
   },
   {
     q: "What's the difference between GC Site Pro and GC Portfolio?",
-    a: "GC Site Pro covers a single jobsite at $149/site/mo. GC Portfolio is flat-rate multi-site — $499/mo for up to 10 sites, $799/mo unlimited — and adds cross-project subcontractor safety scorecards, top-down corporate policy push, and multi-manager roles (Superintendent vs Safety Director).",
+    a: "GC Site Pro covers a single jobsite at $149/site/mo. GC Portfolio is flat-rate multi-site — $499/mo for up to 10 sites, $799/mo unlimited — and is planned to add cross-project subcontractor safety scorecards, top-down corporate policy push, and multi-manager roles (Superintendent vs Safety Director), all coming soon.",
   },
   {
     q: "When can I actually sign up?",
@@ -112,8 +113,8 @@ export const Pricing = () => {
           </StyledHeadline>
           <StyledLede>
             No app-store downloads. Run offline toolbox talks, collect
-            tamper-evident signatures, and send automated compliance logs to any
-            GC before the crew gears up. Subcontractors can start free — general
+            on-screen signatures, and send automated compliance logs to any GC
+            before the crew gears up. Subcontractors can start free — general
             contractors pay a flat rate per active jobsite or portfolio.
           </StyledLede>
         </StyledHeroInner>
@@ -172,7 +173,12 @@ export const Pricing = () => {
                     {plan.features.map((feature) => (
                       <StyledFeatureItem key={feature}>
                         <HiCheck aria-hidden="true" />
-                        <span>{feature}</span>
+                        <span>
+                          {feature}
+                          {plan.comingSoon?.includes(feature) && (
+                            <StyledSoonTag>Coming soon</StyledSoonTag>
+                          )}
+                        </span>
                       </StyledFeatureItem>
                     ))}
                   </StyledFeatureList>
@@ -197,10 +203,10 @@ export const Pricing = () => {
               <strong>GC Site Pro</strong> or <strong>GC Portfolio</strong> you
               pay a flat rate per site or portfolio, and{" "}
               <strong>
-                every subcontractor on your job gets full access for $0
+                subcontractors on your job never pay a seat fee
               </strong>{" "}
-              — no app-store downloads, no user-billing disputes, 100% site
-              compliance on day one.
+              — no app-store downloads and no user-billing disputes. Full
+              sponsored access for every sub is coming soon.
             </StyledCalloutText>
           </StyledCallout>
         </StyledContainer>

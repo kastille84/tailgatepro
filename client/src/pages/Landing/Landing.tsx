@@ -81,7 +81,7 @@ const SOLUTION_CARDS: InfoCard[] = [
   {
     icon: HiQrCode,
     title: "Zero app-store friction",
-    body: "Open the talk from a browser link or QR code. Nothing to install, even five floors underground or on a remote site.",
+    body: "Open the talk from a browser link. Nothing to install, even five floors underground or on a remote site.",
   },
   {
     icon: HiSignalSlash,
@@ -91,18 +91,18 @@ const SOLUTION_CARDS: InfoCard[] = [
   {
     icon: HiBolt,
     title: "Fast to run, every shift",
-    body: "Pick a topic, the crew signs on-screen or you snap a photo, you submit. A timestamp and GPS location lock to the record so it can't be back-dated or redone later.",
+    body: "Pick a topic, the crew signs on-screen or you snap a photo, you submit. A server timestamp is recorded and the meeting locks once it's completed, so it can't be edited later.",
   },
   {
     icon: HiChartBar,
     title: "Instant compliance for the GC",
-    body: "Every completed talk lands on the general contractor's dashboard the moment the meeting ends — as a tamper-evident, GPS-verified PDF.",
+    body: "Every completed talk lands on the general contractor's dashboard the moment the meeting ends — as a signed, timestamped PDF.",
   },
 ];
 
 const REASSURANCES = [
   "No credit card, no app to install.",
-  "Crews start free — keep your emailed PDFs forever.",
+  "Crews start free — keep your signed PDFs.",
   "One email when we launch. No spam.",
 ];
 
@@ -128,7 +128,7 @@ export const Landing = () => {
               OSHA expects a toolbox talk before every shift. On paper that
               means lost sign-in sheets, illegible signatures, and GCs chasing
               proof across every trade. Run the talk on any phone — no app to
-              install, no signal required — and a tamper-evident record reaches
+              install, no signal required — and a signed, timestamped record reaches
               the GC the moment you hit send.
             </StyledLede>
             <StyledFormWrap>

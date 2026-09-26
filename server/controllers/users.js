@@ -1,4 +1,5 @@
 const usersService = require("../services/users");
+const { getLimits, getPlanId } = require("../utility/entitlements");
 
 exports.createProfile = async (req, res, next) => {
   try {
@@ -30,5 +31,11 @@ exports.createProfile = async (req, res, next) => {
 // what it put on req.user. First endpoint that exposes profile/tier to the
 // client at all.
 exports.getCurrentUser = (req, res) => {
-  return res.status(200).json({ success: true, data: req.user });
+  const { companyType, tier } = req.user;
+  const data = {
+    ...req.user,
+    plan: getPlanId(companyType, tier),
+    limits: getLimits(companyType, tier),
+  };
+  return res.status(200).json({ success: true, data });
 };

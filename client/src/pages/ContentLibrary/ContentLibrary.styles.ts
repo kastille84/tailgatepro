@@ -92,3 +92,37 @@ export const StyledStatus = styled.div`
   font-weight: 600;
   color: ${({ theme }) => theme.colors.navy[400]};
 `;
+
+/** Upgrade prompt shown to Trade Free users, who only see the 30 core talks. */
+export const StyledUpgradeBanner = styled.div`
+  display: flex;
+  flex-direction: column;
+  gap: 0.8rem;
+  margin-bottom: 1.6rem;
+  padding: 1.6rem 2rem;
+  border-radius: ${({ theme }) => theme.borderRadius.md};
+  background-color: ${({ theme }) => theme.colors.concrete[200]};
+`;
+
+export const StyledUpgradeTitle = styled.p`
+  margin: 0;
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: ${({ theme }) => theme.colors.navy[700]};
+`;
+
+export const StyledUpgradeBody = styled.p`
+  margin: 0;
+  font-size: 1.4rem;
+  font-weight: 500;
+  line-height: 1.6;
+  color: ${({ theme }) => theme.colors.navy[500]};
+
+  a {
+    display: inline-flex;
+    align-items: center;
+    min-height: 4.8rem;
+    color: ${({ theme }) => theme.colors.orange[600]};
+    font-weight: 700;
+  }
+`;

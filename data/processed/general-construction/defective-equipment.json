@@ -1,0 +1,58 @@
+{
+  "id": "defective-equipment",
+  "title": "Defective Equipment",
+  "primary_trade": "General Construction",
+  "trade_tags": [
+    "General Construction"
+  ],
+  "osha_standards": [
+    "29 CFR 1926.302",
+    "29 CFR 1926.300(a)",
+    "29 CFR 1926.20(b)(3)"
+  ],
+  "estimated_minutes": 5,
+  "summary": "Power-operated hand tools must be in proper working order. This talk covers OSHA's rules for electric, pneumatic, fuel, hydraulic and powder-actuated tools, and what to do when one is defective.",
+  "talking_points": [
+    "Keep all hand and power tools in a safe condition. A tool or machine that does not meet the rules must be tagged as unsafe, have its controls locked so it cannot run, or be removed from where it operates.",
+    "A powder-actuated tool that is not in proper working order, or develops a defect during use, must be removed from service right away and not used until it is properly repaired.",
+    "Test powder-actuated tools each day before loading to make sure the safety devices work.",
+    "Electric power tools must be double-insulated or grounded. Never use the cord to hoist or lower a tool.",
+    "Pneumatic tools must be secured to the hose or whip so they cannot disconnect by accident. Keep safety clips or retainers installed on impact tools.",
+    "Nailers and staplers that run above 100 p.s.i. must have a muzzle safety device that stops fasteners from firing unless the muzzle is touching the work surface.",
+    "Do not use compressed air for cleaning unless it is reduced to less than 30 p.s.i. with chip guarding and PPE.",
+    "Never exceed the manufacturer's safe operating pressure for hoses, valves, pipes, filters and fittings.",
+    "Stop fuel powered tools before refueling, servicing or maintaining them."
+  ],
+  "site_hazards_to_check": [
+    "Tools with damaged cords, missing ground pins or cracked housings",
+    "Pneumatic tools not secured to the hose or missing safety clips",
+    "Nailers or staplers with a missing or defeated muzzle safety device",
+    "Hoses or fittings rated below the operating pressure",
+    "Powder-actuated tools failing the daily test or left loaded",
+    "Defective tools left in the tool crib or work area instead of pulled from service"
+  ],
+  "discussion_questions": [
+    "What do we do with a tool that develops a defect during use?",
+    "Who tests our powder-actuated tools each day, and how?",
+    "How do we know the safe operating pressure for the air hose and fittings we use?"
+  ],
+  "attribution": {
+    "source": "OSHA",
+    "publisher": "Occupational Safety and Health Administration (OSHA)",
+    "copyright": "U.S. Government work — public domain.",
+    "license": "public-domain",
+    "source_url": "https://www.osha.gov/laws-regs/regulations/standardnumber/1926/1926.302",
+    "source_ref": "TBT-297",
+    "notice": "Adapted from 29 CFR 1926.302, Power-operated hand tools. Reproduced with attribution for jobsite safety training; not an endorsement by OSHA."
+  },
+  "audit": {
+    "status": "approved",
+    "audited_at": "2026-09-25T18:10:19Z",
+    "osha_accuracy_verified": true,
+    "flags": [
+      "All original points are quote-accurate to 29 CFR 1926.302(a)-(e): powder-actuated tool removal from service (e)(3) and daily test (e)(2), double-insulated or grounded, no cord for hoisting, pneumatic tool secured to hose, safety clips, muzzle safety above 100 psi, compressed air under 30 psi, manufacturer pressure limits, fuel tools stopped for refueling.",
+      "FIX MADE: the title is Defective Equipment but the only defective-tool rule in 1926.302 is for powder-actuated tools. Added a general lead point from 1926.300(a) (tools maintained in safe condition; verified) and 1926.20(b)(3) (tag, lock controls, or remove; verified in the TBT-296 source) and cited both.",
+      "Non-blocking: scope remains power-operated hand tools, not all equipment (heavy equipment, ladders, rigging); acceptable. Public domain, osha.gov. No UK wording."
+    ]
+  }
+}

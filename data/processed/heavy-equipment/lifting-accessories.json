@@ -1,0 +1,55 @@
+{
+  "id": "lifting-accessories",
+  "title": "Lifting Accessories",
+  "primary_trade": "Heavy Equipment",
+  "trade_tags": [
+    "Heavy Equipment",
+    "General Construction"
+  ],
+  "osha_standards": [
+    "29 CFR 1926.251"
+  ],
+  "estimated_minutes": 5,
+  "summary": "Rigging equipment must be inspected before each shift and during use, marked with safe working loads, and never loaded past those limits. Defective gear comes out of service right away.",
+  "talking_points": [
+    "Inspect rigging equipment before each shift and during use. Remove defective equipment from service immediately.",
+    "Rigging must have permanent, legible manufacturer markings showing safe working loads. Never load it beyond those limits.",
+    "Chain slings need permanent markings for size, grade, and rated capacity. Job or shop hooks and links, and makeshift fasteners made from bolts or rods, are prohibited. Inspect them at least annually and remove them when wear limits in Table H-1 are exceeded.",
+    "Wire rope: do not exceed rated capacity. Remove slings with broken wires exceeding 10 percent of the total wires in any 8-diameter length. Do not shock load, and do not pull slings out from under loads.",
+    "Fiber rope: remove for abnormal wear, broken fibers, or discoloration. Rope can be used from -20 F to +180 F without load reduction.",
+    "Synthetic webbing must be marked with the maker's name, rated capacities, and material type. Remove it if it is burnt, torn, or has broken stitches.",
+    "Keep nylon webbing away from acids. Keep polyester and polypropylene webbing away from caustics.",
+    "Shackles and hooks must not exceed rated capacities. Hooks with no manufacturer recommendations must be proof-tested to twice the intended safe working load."
+  ],
+  "site_hazards_to_check": [
+    "Missing or unreadable safe working load markings",
+    "Broken wires in wire rope slings, or worn chain past the wear limits",
+    "Burnt or torn webbing, or broken stitches",
+    "Makeshift hooks, links, or fasteners made from bolts or rods",
+    "Slings exposed to acids, caustics, or heat above the limits",
+    "Knots in wire rope, or slings being pulled out from under loads"
+  ],
+  "discussion_questions": [
+    "Where is the safe working load on this sling, and can you read it?",
+    "What would make you take a sling out of service today?",
+    "Why must we avoid shock loading and pulling wire rope slings out from under loads?"
+  ],
+  "attribution": {
+    "source": "OSHA",
+    "publisher": "Occupational Safety and Health Administration (OSHA)",
+    "copyright": "U.S. Government work — public domain.",
+    "license": "public-domain",
+    "source_url": "https://www.osha.gov/laws-regs/regulations/standardnumber/1926/1926.251",
+    "source_ref": "TBT-060",
+    "notice": "Adapted from OSHA standard 29 CFR 1926.251, Rigging equipment for material handling. Reproduced with attribution for jobsite safety training; not an endorsement by OSHA."
+  },
+  "audit": {
+    "status": "approved",
+    "audited_at": "2026-09-25T18:11:08Z",
+    "osha_accuracy_verified": true,
+    "flags": [
+      "Verified against 29 CFR 1926.251 (a)-(f): inspection each shift, SWL markings, chain markings/H-1/annual inspection, wire rope 10%/8-diameter, shock loading, fiber rope -20 to +180 F, webbing marking/removal, nylon-acid, polyester/polypropylene-caustic, hooks proof-tested 2x.",
+      "Citation 1926.251 correct. Attribution: osha.gov, public domain. No UK wording. Note: source file is a condensed summary of the regulation but every stated figure matches the regulation."
+    ]
+  }
+}

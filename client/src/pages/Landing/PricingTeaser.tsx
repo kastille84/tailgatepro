@@ -24,6 +24,7 @@ import {
   StyledTarget,
   StyledFeatures,
   StyledFeatureItem,
+  StyledSoonTag,
   StyledMore,
   StyledMoreLink,
 } from "./PricingTeaser.styles";
@@ -76,7 +77,12 @@ export const PricingTeaser = () => {
                   {plan.features.slice(0, 3).map((feature) => (
                     <StyledFeatureItem key={feature}>
                       <HiCheck aria-hidden="true" />
-                      <span>{feature}</span>
+                      <span>
+                        {feature}
+                        {plan.comingSoon?.includes(feature) && (
+                          <StyledSoonTag>Coming soon</StyledSoonTag>
+                        )}
+                      </span>
                     </StyledFeatureItem>
                   ))}
                 </StyledFeatures>

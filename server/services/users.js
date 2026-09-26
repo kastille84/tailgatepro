@@ -7,6 +7,7 @@ const { supabase } = require("../utility/supabaseClient");
 const { AppError } = require("../utility/AppError");
 const companyInvitesService = require("./companyInvites");
 const jobsitesService = require("./jobsites");
+const seatsService = require("./seats");
 
 // Creates the `companies` row and the `users` row for a newly self-signed-up
 // auth user. `role` is 'admin' — the user creating a brand-new company is its
@@ -103,6 +104,16 @@ const createProfile = async ({
 // — getInviteForEmail is where the email-match security check actually runs.
 const createProfileFromInvite = async ({ id, email, name, inviteToken }) => {
   const invite = await companyInvitesService.getInviteForEmail(inviteToken, email);
+
+  // Re-checked here (not only at invite time) so a downgrade or several
+  // invites sent earlier can't push the company past its seats. Pending
+  // invites aren't counted: this one is the invite being redeemed.
+  await seatsService.assertSeatAvailable({
+    companyId: invite.companyId,
+    role: invite.role,
+    email: invite.email,
+    includePending: false,
+  });
 
   const { data, error } = await supabase
     .from("users")

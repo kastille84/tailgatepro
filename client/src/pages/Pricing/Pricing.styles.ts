@@ -245,6 +245,22 @@ export const StyledFeatureItem = styled.li`
   }
 `;
 
+export const StyledSoonTag = styled.span`
+  display: inline-block;
+  margin-left: 0.8rem;
+  padding: 0.2rem 0.8rem;
+  border: 1px solid ${({ theme }) => theme.colors.navy[400]};
+  border-radius: 999rem;
+  color: ${({ theme }) => theme.colors.navy[600]};
+  font-size: 1.05rem;
+  font-weight: 800;
+  line-height: 1.4;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  white-space: nowrap;
+  vertical-align: middle;
+`;
+
 export const StyledPlanCta = styled.a<{ $featured?: boolean }>`
   margin-top: auto;
   display: inline-flex;

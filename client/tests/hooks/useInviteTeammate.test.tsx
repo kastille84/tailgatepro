@@ -1,11 +1,12 @@
 import React from "react";
 import { describe, it, expect, vi, beforeEach } from "vitest";
-import { renderHook } from "@testing-library/react";
+import { act, renderHook, waitFor } from "@testing-library/react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import toast from "react-hot-toast";
 
 import { useInviteTeammate } from "../../src/hooks/useInviteTeammate";
 import * as apiCompanies from "../../src/services/apiCompanies";
+import { PlanLimitError } from "../../src/utils/PlanLimitError";
 
 vi.mock("react-hot-toast");
 vi.mock("../../src/services/apiCompanies");
@@ -63,5 +64,25 @@ describe("useInviteTeammate", () => {
     ).rejects.toThrow("You don't have permission to do this");
     expect(toast.error).toHaveBeenCalledWith("You don't have permission to do this");
     expect(toast.success).not.toHaveBeenCalled();
+  });
+
+  it("exposes a plan-limit rejection as planLimitError without toasting", async () => {
+    vi.mocked(apiCompanies.inviteTeammate).mockRejectedValue(
+      new PlanLimitError("Your plan allows 1 seat", 1),
+    );
+
+    const { result } = renderHook(() => useInviteTeammate(), { wrapper });
+    expect(result.current.planLimitError).toBeNull();
+
+    await act(async () => {
+      await result.current
+        .inviteTeammate({ email: "newhire@example.com", role: "foreman" })
+        .catch(() => undefined);
+    });
+
+    await waitFor(() =>
+      expect(result.current.planLimitError?.message).toBe("Your plan allows 1 seat"),
+    );
+    expect(toast.error).not.toHaveBeenCalled();
   });
 });

@@ -1,6 +1,6 @@
 import React from "react";
 import { describe, it, expect, vi } from "vitest";
-import { render, screen } from "@testing-library/react";
+import { render, screen, within } from "@testing-library/react";
 import { ThemeProvider } from "styled-components";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 
@@ -146,9 +146,24 @@ describe("Landing", () => {
     ).toBeTruthy();
     expect(
       screen.getByText(
-        /no user-billing disputes, 100% site compliance on day one/i,
+        /no app-store downloads and no user-billing disputes/i,
       ),
     ).toBeTruthy();
+  });
+
+  it("tags the unbuilt GC bullets Coming soon and leaves built ones untagged", () => {
+    renderLanding();
+
+    const defenseBundle = screen.getByText(/1-click OSHA Defense Bundle — an/i);
+    expect(within(defenseBundle).getByText("Coming soon")).toBeTruthy();
+
+    const sms = screen.getByText(/Auto-SMS nudges non-compliant foremen/i);
+    expect(within(sms).getByText("Coming soon")).toBeTruthy();
+
+    const built = screen.getByText(
+      "Flat rate per site or portfolio — never per user seat.",
+    );
+    expect(within(built).queryByText("Coming soon")).toBeNull();
   });
 
   it("renders the comparison section with both columns and a feature row", () => {

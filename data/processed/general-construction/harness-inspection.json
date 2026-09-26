@@ -1,0 +1,57 @@
+{
+  "id": "harness-inspection",
+  "title": "Harness Inspection",
+  "primary_trade": "General Construction",
+  "trade_tags": [
+    "General Construction",
+    "Roofing"
+  ],
+  "osha_standards": [
+    "29 CFR 1926.502"
+  ],
+  "estimated_minutes": 5,
+  "summary": "A harness only protects you if it is in good condition. OSHA requires inspection before each use, and removal of any system that has caught a fall until a competent person clears it.",
+  "talking_points": [
+    "Inspect personal fall arrest systems before each use for wear, damage and other deterioration, and remove defective components from service (29 CFR 1926.502(d)(21)).",
+    "A system or component that has been subjected to impact loading, meaning it arrested a fall, must be removed from service immediately. It cannot be used again until a competent person inspects it and finds it undamaged and suitable for reuse (1926.502(d)(19)).",
+    "Body harnesses and components are for employee protection only. Never use them to hoist materials (1926.502(d)(18)).",
+    "On a harness, the attachment point sits in the center of your back near shoulder level, or above your head (1926.502(d)(17)).",
+    "The system must limit the arresting force to 1,800 pounds with a harness, and be rigged so you cannot free fall more than 6 feet or hit a lower level (1926.502(d)(16)).",
+    "The system must bring you to a complete stop with a maximum deceleration distance of 3.5 feet (1926.502(d)(16)(iv)).",
+    "The employer must provide for prompt rescue after a fall, or make sure workers can rescue themselves (1926.502(d)(20)).",
+    "Good practice (not a quoted OSHA requirement): before you climb, look over the webbing for cuts, fraying, burns and chemical damage, check stitching for pulled threads, and check hardware for cracks, distortion and rust."
+  ],
+  "site_hazards_to_check": [
+    "Harness or lanyard with cuts, fraying, burns or damaged stitching",
+    "Cracked, bent or rusted hardware",
+    "Equipment that has caught a fall and was put back into use",
+    "Harness used to hoist material",
+    "No rescue plan for a suspended worker",
+    "Anchorage that cannot support 5,000 pounds per person attached"
+  ],
+  "discussion_questions": [
+    "What do you check on your harness before every climb?",
+    "Who is the competent person who decides whether a system that caught a fall can be reused?",
+    "If someone is hanging in a harness, what is our rescue plan and how fast can we carry it out?"
+  ],
+  "attribution": {
+    "source": "TailgatePro",
+    "publisher": "TailgatePro",
+    "copyright": "Original TailgatePro content, written from 29 CFR 1926.502(d) (personal fall arrest systems). Regulation and agency text is U.S. Government work in the public domain; the wording here is TailgatePro's own.",
+    "license": "original-work",
+    "source_url": "https://www.osha.gov/laws-regs/regulations/standardnumber/1926/1926.502",
+    "source_ref": "TBT-055",
+    "notice": "Written from 29 CFR 1926.502(d) (personal fall arrest systems). General guidance only; follow your company safety program and site-specific requirements. Not an endorsement by OSHA."
+  },
+  "audit": {
+    "status": "approved",
+    "audited_at": "2026-09-25T20:37:49Z",
+    "osha_accuracy_verified": true,
+    "flags": [
+      "Verified 1926.502(d)(15)-(d)(21) verbatim on osha.gov: 1,800 lb harness arrest force, 6 ft free fall, 3.5 ft deceleration, back-center attachment, no hoisting, impact-loaded removal until competent person clears it, prompt rescue, pre-use inspection.",
+      "5,000 lb anchorage in hazards list matches (d)(15).",
+      "The 'Good practice' inspection point is correctly labeled as not an OSHA quote.",
+      "US English."
+    ]
+  }
+}

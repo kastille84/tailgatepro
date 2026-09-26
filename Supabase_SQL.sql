@@ -128,6 +128,10 @@ CREATE TABLE toolbox_talks (
   -- tier (see server/utility/entitlements.js). NULL = no translations yet.
   translations JSONB,
   is_global BOOLEAN DEFAULT true,
+  -- Phase 9c: true for the ~30 core talks Trade Free can see; Pro/Enterprise/GC
+  -- see every global talk. Set by the seed loader (scripts/lib/talkRow.js
+  -- CORE_TALK_SLUGS).
+  is_core BOOLEAN NOT NULL DEFAULT false,
   company_id UUID REFERENCES companies(id) ON DELETE CASCADE,
   created_at TIMESTAMPTZ DEFAULT NOW()
 );
@@ -145,6 +149,7 @@ ALTER TABLE toolbox_talks ENABLE ROW LEVEL SECURITY;
 -- ALTER TABLE toolbox_talks ADD COLUMN IF NOT EXISTS attribution JSONB;
 -- ALTER TABLE toolbox_talks ADD COLUMN IF NOT EXISTS quiz JSONB;
 -- ALTER TABLE toolbox_talks ADD COLUMN IF NOT EXISTS translations JSONB;
+-- ALTER TABLE toolbox_talks ADD COLUMN IF NOT EXISTS is_core BOOLEAN NOT NULL DEFAULT false;
 -- CREATE INDEX IF NOT EXISTS idx_toolbox_talks_trades ON toolbox_talks USING GIN (trade_tags);
 -- ALTER TABLE toolbox_talks ENABLE ROW LEVEL SECURITY;
 
@@ -290,6 +295,8 @@ CREATE TABLE jobsites (
   name TEXT NOT NULL,
   status project_status NOT NULL DEFAULT 'active',
   archived_at TIMESTAMPTZ,
+  -- Phase 9b: per-site GC plan; 'site_pro' = paid GC Site Pro site.
+  plan TEXT NOT NULL DEFAULT 'free' CHECK (plan IN ('free', 'site_pro')),
   created_at TIMESTAMPTZ DEFAULT NOW()
 );
 
@@ -302,6 +309,7 @@ CREATE INDEX idx_jobsites_gc_company ON jobsites (gc_company_id);
 -- If the table already exists from an earlier run:
 -- ALTER TABLE jobsites ENABLE ROW LEVEL SECURITY;
 -- CREATE INDEX IF NOT EXISTS idx_jobsites_gc_company ON jobsites (gc_company_id);
+-- ALTER TABLE jobsites ADD COLUMN IF NOT EXISTS plan TEXT NOT NULL DEFAULT 'free' CHECK (plan IN ('free', 'site_pro'));  -- Phase 9b
 
 -- 12. Jobsite Subcontractors (Phase 8d) — folds the GC's invite-by-email into
 -- the jobsite roster instead of a separate invites table, so "invited, not

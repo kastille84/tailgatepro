@@ -28,6 +28,7 @@ const { buildPdfFilename } = require("../utility/pdfFilename");
 // file back, so — like pdfGeneration/companiesService above — it's safe at
 // the top level, unlike meetingLogsService/signaturesService below.
 const emailService = require("./email");
+const envUtils = require("../utility/envUtils");
 
 const PDF_BUCKET = "meeting-pdfs";
 const CREW_PHOTO_BUCKET = "crew-photos";
@@ -184,6 +185,9 @@ const enqueue = async (meetingLogId, companyId) => {
         projectName: project.name,
         companyName: company.name,
         pdfUrl,
+        // Durable in-app fallback for after the signed link above expires: the
+        // GC Report page mints a fresh signed URL for a logged-in GC.
+        reportUrl: `${envUtils.keysBasedOnEnv().clientUrl}/gc/meetings/${meetingLogId}/report`,
         meetingDate: meetingLog.heldAt,
       });
     }

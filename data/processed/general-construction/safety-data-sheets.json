@@ -1,0 +1,55 @@
+{
+  "id": "safety-data-sheets",
+  "title": "Safety Data Sheets",
+  "primary_trade": "General Construction",
+  "trade_tags": [
+    "General Construction"
+  ],
+  "osha_standards": [
+    "29 CFR 1926.59",
+    "29 CFR 1910.1200(g)"
+  ],
+  "estimated_minutes": 5,
+  "summary": "Manufacturers, distributors, and importers must provide a Safety Data Sheet for each hazardous chemical, in a uniform 16-section format. Employers must make SDSs readily accessible to employees.",
+  "talking_points": [
+    "An SDS must come with each hazardous chemical, in a uniform format with 16 numbered sections and set headings.",
+    "Section 1 gives the product identifier, supplier contact, emergency phone number, and recommended and restricted uses.",
+    "Section 2 lists the hazards and required label elements. Section 3 lists ingredients.",
+    "Section 4 has first-aid measures and symptoms. Section 5 covers fire-fighting. Section 6 covers accidental release and cleanup.",
+    "Section 7 covers safe handling and storage, including incompatibilities.",
+    "Section 8 lists exposure limits, engineering controls, and PPE. Sections 9, 10, and 11 cover physical and chemical properties, stability and reactivity, and toxicology.",
+    "OSHA does not enforce Sections 12 through 15, because other agencies regulate that information.",
+    "Employers must make sure SDSs are readily accessible to employees."
+  ],
+  "site_hazards_to_check": [
+    "SDS binder or file missing, out of date, or locked away",
+    "Chemicals on site with no matching SDS",
+    "Workers who do not know where SDSs are kept",
+    "SDS not in the uniform 16-section format",
+    "Emergency phone number not known for the chemical"
+  ],
+  "discussion_questions": [
+    "Where are the SDSs for our chemicals, and can everyone reach them?",
+    "Which SDS section do you check for first aid, and which for spills?",
+    "What would you look up on the SDS before starting work with a new product?"
+  ],
+  "attribution": {
+    "source": "OSHA",
+    "publisher": "Occupational Safety and Health Administration (OSHA)",
+    "copyright": "U.S. Government work — public domain.",
+    "license": "public-domain",
+    "source_url": "https://www.osha.gov/sites/default/files/publications/OSHA3493QuickCardSafetyDataSheet.pdf",
+    "source_ref": "TBT-110",
+    "notice": "Adapted from OSHA published material. Reproduced with attribution for jobsite safety training; not an endorsement by OSHA."
+  },
+  "audit": {
+    "status": "approved",
+    "audited_at": "2026-09-25T18:10:37Z",
+    "osha_accuracy_verified": true,
+    "flags": [
+      "Verified against OSHA QuickCard 3493: 16 numbered sections in uniform format, Section 1-8 contents, Sections 9-11, OSHA does not enforce Sections 12-15, employers must ensure SDSs are readily accessible. All quote-accurate.",
+      "Citations: 29 CFR 1926.59 (structurer-added) verified valid; 1910.1200(g) is cited by the source and applies to construction via 1926.59.",
+      "Non-blocking: 8 points, but they are mostly section-number recitation; discussion questions and site checks supply the field action. Overlaps TBT-107."
+    ]
+  }
+}

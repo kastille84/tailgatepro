@@ -13,5 +13,7 @@ export interface Plan {
   /** Small line under the price, only shown on the annual view. */
   annualSub?: string;
   features: string[];
+  /** Subset of `features` that is not built yet; shown with a "Coming soon" tag. */
+  comingSoon?: string[];
   featured?: boolean;
 }

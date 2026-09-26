@@ -1,0 +1,53 @@
+{
+  "id": "manual-material-handling-and-lifting",
+  "title": "Manual Material Handling and Lifting",
+  "primary_trade": "General Construction",
+  "trade_tags": [
+    "General Construction"
+  ],
+  "osha_standards": [
+    "OSH Act Section 5(a)(1) General Duty Clause"
+  ],
+  "estimated_minutes": 5,
+  "summary": "Manual Material Handling and Lifting matters because poor manual handling technique is one of the leading causes of lost-time injury in our industry.",
+  "talking_points": [
+    "Assess the load before lifting (TILE: Task, Individual, Load, Environment).",
+    "Use mechanical aids or team lifts for heavy/awkward items.",
+    "Plan the route and clear obstructions first.",
+    "Use the correct lifting technique.",
+    "Never lift beyond your safe capability.",
+    "Never twist while carrying a load.",
+    "Keep loads close to the body.",
+    "If something goes wrong: stop lifting immediately if you feel strain or pain; put the load down safely; seek first aid."
+  ],
+  "site_hazards_to_check": [
+    "Heavy or awkward loads (compressors, plant, cylinders)",
+    "Repetitive lifting",
+    "Twisting while carrying",
+    "Restricted access routes",
+    "Sharp edges on components"
+  ],
+  "discussion_questions": [
+    "What are the main hazards of Manual Material Handling and Lifting on our jobs, and which of today's controls matters most on this site?",
+    "Which of these controls is easiest to skip when we're under time pressure — and what's the cost if it goes wrong?",
+    "What would make you stop the job and ask for help?"
+  ],
+  "attribution": {
+    "source": "TailgatePro Library",
+    "publisher": "TailgatePro",
+    "copyright": "Adapted for U.S. construction use from the \"300 Toolbox Talks Library\" (Rev. 2.0).",
+    "license": "owner-provided-unverified",
+    "source_url": null,
+    "source_ref": "TBT-002",
+    "notice": "Localized to U.S. (OSHA) terminology. General guidance only; follow your company safety program and site-specific requirements."
+  },
+  "audit": {
+    "status": "approved",
+    "audited_at": "2026-09-25T20:53:47Z",
+    "osha_accuracy_verified": true,
+    "flags": [
+      "PROVENANCE (non-blocking): source is the owner-supplied \"300 Toolbox Talks Library\" Word document, which carries no author, source or license (attribution.license = owner-provided-unverified). Confirm rights before publishing.",
+      "LOCALIZATION: UK/HSE wording converted to U.S. usage by scripts/lib/usEnglish.js; OSHA standards assigned from the topic, not present in the source."
+    ]
+  }
+}

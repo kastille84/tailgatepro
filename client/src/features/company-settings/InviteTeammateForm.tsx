@@ -12,6 +12,9 @@ import {
   StyledInviteFields,
   StyledInviteNote,
   StyledSectionHelp,
+  StyledUpgradeLink,
+  StyledUpgradePrompt,
+  StyledUpgradeText,
 } from "./styles";
 
 const ROLE_OPTIONS: SelectOption[] = [
@@ -44,7 +47,7 @@ type InviteValues = z.infer<typeof inviteSchema>;
  */
 export const InviteTeammateForm = () => {
   const { isOnline } = useOnlineStatus();
-  const { inviteTeammate, isInviting } = useInviteTeammate();
+  const { inviteTeammate, isInviting, planLimitError } = useInviteTeammate();
 
   const {
     register,
@@ -80,6 +83,13 @@ export const InviteTeammateForm = () => {
         <StyledInviteNote role="status">
           You're offline. Connect to the internet to send an invite.
         </StyledInviteNote>
+      )}
+
+      {planLimitError && (
+        <StyledUpgradePrompt role="alert">
+          <StyledUpgradeText>{planLimitError.message}</StyledUpgradeText>
+          <StyledUpgradeLink to="/pricing">See plans</StyledUpgradeLink>
+        </StyledUpgradePrompt>
       )}
 
       <Form onSubmit={handleSubmit(onSubmit)} noValidate>

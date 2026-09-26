@@ -1,0 +1,58 @@
+{
+  "id": "bench-grinder-safety",
+  "title": "Bench Grinder Safety",
+  "primary_trade": "General Construction",
+  "trade_tags": [
+    "General Construction",
+    "Carpentry"
+  ],
+  "osha_standards": [
+    "29 CFR 1926.303",
+    "29 CFR 1926.102",
+    "29 CFR 1910.215"
+  ],
+  "estimated_minutes": 5,
+  "summary": "A bench grinder is safe only when its guards, work rest and wheel are set up right. This talk follows OSHA's grinder checklist. The side-guard and tongue-guard figures come from the general-industry standard 29 CFR 1910.215; the construction rule is 29 CFR 1926.303.",
+  "talking_points": [
+    "Side guards must cover the spindle, nut and flange and 75% of the wheel diameter.",
+    "Keep the work rest adjusted to within 1/8-inch of the wheel. Adjust it only when the wheel is stopped.",
+    "Keep the adjustable tongue guard on the top of the grinder within 1/4-inch of the wheel.",
+    "The maximum RPM rating of each wheel must be compatible with the RPM rating of the grinder motor.",
+    "Before mounting a new wheel, inspect it and ring test it.",
+    "Always wear goggles or a face shield when grinding.",
+    "Bench and pedestal grinders must be permanently mounted, and each grinder needs an individual on and off switch and a continuous path to ground.",
+    "Keep the area around the grinder clean, and use dust collectors or powered exhaust where grinding makes a lot of dust."
+  ],
+  "site_hazards_to_check": [
+    "Missing or damaged side guard or tongue guard",
+    "Work rest set wider than 1/8-inch from the wheel",
+    "Tongue guard set wider than 1/4-inch from the wheel",
+    "Grinder not permanently mounted, or without an on and off switch",
+    "Wheel with cracks, or rated for a lower RPM than the motor",
+    "Grinding dust or clutter building up around the machine"
+  ],
+  "discussion_questions": [
+    "How close is the work rest on our grinder, and who checks it?",
+    "What is the ring test, and when do we do it?",
+    "What eye protection is required every time we grind?"
+  ],
+  "attribution": {
+    "source": "OSHA",
+    "publisher": "Occupational Safety and Health Administration (OSHA)",
+    "copyright": "U.S. Government work — public domain.",
+    "license": "public-domain",
+    "source_url": "https://www.osha.gov/machine-guarding/new-grinder-checklist",
+    "source_ref": "TBT-250",
+    "notice": "Adapted from OSHA's Machine Guarding Checklist for Abrasive Wheel Equipment Grinders (from OSHA Publication 2209). Reproduced with attribution for jobsite safety training; not an endorsement by OSHA."
+  },
+  "audit": {
+    "status": "approved",
+    "audited_at": "2026-09-25T18:10:19Z",
+    "osha_accuracy_verified": true,
+    "flags": [
+      "All points quote-accurate to the OSHA Abrasive Wheel Grinder checklist (75% side guard, 1/8-inch work rest, 1/4-inch tongue guard, RPM match, ring test, goggles/face shield, permanent mount, individual switch, ground, housekeeping, dust collection).",
+      "FIX MADE: the 75% side-guard and 1/4-inch tongue-guard specifics come from general-industry 29 CFR 1910.215 (source cites it). 29 CFR 1926.303 (verified) is the construction equivalent for grinder guarding, ring test, and the 1/8-inch work rest, but does not restate the tongue guard figure. Added the general-industry disclosure to the summary, added 1926.102 (eye and face protection, replacing the checklist's 1910.133), and kept 1910.215 as the cited source.",
+      "Non-blocking: permanent mounting (1910.212(b)) and grounding/switch (1910.304/305) are cited in the checklist as general industry; construction electrical equivalents are Subpart K. Public domain, osha.gov. No UK wording."
+    ]
+  }
+}

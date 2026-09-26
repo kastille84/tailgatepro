@@ -9,6 +9,43 @@ const { composeTalkMarkdown } = require("../../server/utility/composeTalkMarkdow
 // makes re-running the loader idempotent: the primary key never churns.
 const TALK_NAMESPACE = "7c9e6679-7425-40de-944b-e07fc1f90ae7";
 
+// The Trade Free library (docs/tasks.md Phase 9c): broadly applicable talks
+// (Focus Four falls/electrical/caught-in, PPE, heat, hazcom, fire, JHA) that
+// every trade runs. Every other global talk is Trade Pro/Enterprise + GC only.
+// Keyed by slug so re-seeding keeps the flag in sync with this list.
+const CORE_TALK_SLUGS = new Set([
+  "prevent-falls-guardrails",
+  "working-at-heights",
+  "falls-extension-ladders",
+  "prevent-falls-scaffolds",
+  "prevent-falls-through-holes",
+  "preventing-falling-objects",
+  "slip-trip-and-fall-prevention",
+  "harness-inspection",
+  "electrical-safety-power",
+  "electrical-safety-extension-cords",
+  "overhead-power-line-safety",
+  "trench-safety",
+  "ppe-selection-use-and-care",
+  "eye-protection",
+  "hearing-protection",
+  "respiratory-protection",
+  "silica",
+  "hot-environments",
+  "cold-environments",
+  "sun-protection",
+  "housekeeping",
+  "fire-safety",
+  "fire-extinguishers",
+  "chemical-safety",
+  "safety-data-sheets",
+  "job-hazard-analysis-and-work-plans",
+  "near-miss-reporting",
+  "emergency-evacuation",
+  "safe-use-of-hand-tools",
+  "power-saw-safety",
+]);
+
 /**
  * True only when the safety-auditor has signed the file off.
  * @param {object} json - a parsed data/processed/**.json file
@@ -53,6 +90,7 @@ const buildRow = (json) => {
     // of talks today.
     translations: json.translations ?? null,
     is_global: true,
+    is_core: CORE_TALK_SLUGS.has(json.id),
     company_id: null,
   };
 };
@@ -62,6 +100,7 @@ const buildRow = (json) => {
 // tests now live in server/utility/composeTalkMarkdown.js.
 module.exports = {
   TALK_NAMESPACE,
+  CORE_TALK_SLUGS,
   isApproved,
   composeMarkdown: composeTalkMarkdown,
   buildRow,

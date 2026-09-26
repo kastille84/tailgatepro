@@ -1,0 +1,208 @@
+{
+  "110": {
+    "status": "matched",
+    "raw_file": "osha-quickcard-hazard-communication-safety-data-sheets.md",
+    "source_url": "https://www.osha.gov/sites/default/files/publications/OSHA3493QuickCardSafetyDataSheet.pdf",
+    "agency": "OSHA",
+    "note": "Quick Card on SDS sections"
+  },
+  "111": {
+    "status": "no-source",
+    "note": "No agency worker talk specific to chemical storage found"
+  },
+  "112": {
+    "status": "no-source",
+    "note": "No standalone agency talk for chemical spill response in construction (HAZWOPER FAQ already in raw)"
+  },
+  "113": {
+    "status": "no-source",
+    "note": "only source (OSHA oil spills) already claimed for TBT-179"
+  },
+  "115": {
+    "status": "no-source",
+    "note": "No agency talk on cleaning chemicals found"
+  },
+  "116": {
+    "status": "matched",
+    "raw_file": "cpwr-solvents.md",
+    "source_url": "https://www.cpwr.com/wp-content/uploads/TT-Solvents.pdf",
+    "agency": "CPWR",
+    "note": ""
+  },
+  "117": {
+    "status": "no-source",
+    "note": "No agency talk on adhesives and sealants (CPWR isocyanates is a different topic)"
+  },
+  "118": {
+    "status": "no-source",
+    "note": "No agency talk on aerosols found"
+  },
+  "120": {
+    "status": "matched",
+    "raw_file": "osha-silica-standard-for-construction-fact-sheet.md",
+    "source_url": "https://www.osha.gov/sites/default/files/publications/OSHA3681.pdf",
+    "agency": "OSHA",
+    "note": "Silica dust control fact sheet; different URL from existing CPWR 45-silica"
+  },
+  "122": {
+    "status": "matched",
+    "raw_file": "niosh-noise-and-hearing-protection.md",
+    "source_url": "https://www.cdc.gov/niosh/media/pdfs/2026/09/2026-118.pdf",
+    "agency": "NIOSH",
+    "note": "NIOSH/CPWR Noise and Hearing Protection toolbox talk"
+  },
+  "123": {
+    "status": "matched",
+    "raw_file": "osha-hearing-conservation-in-construction.md",
+    "source_url": "https://www.osha.gov/sites/default/files/HearingConservationInConstruction-ToolboxTalk.pdf",
+    "agency": "OSHA",
+    "note": ""
+  },
+  "124": {
+    "status": "matched",
+    "raw_file": "cpwr-vibration-hand-and-arm.md",
+    "source_url": "https://www.cpwr.com/wp-content/uploads/TT-Vibration_Hand_Arm.pdf",
+    "agency": "CPWR",
+    "note": "Short 1-page talk"
+  },
+  "125": {
+    "status": "no-source",
+    "note": "No agency talk on whole-body vibration found"
+  },
+  "128": {
+    "status": "matched",
+    "raw_file": "osha-asbestos-fact-sheet.md",
+    "source_url": "https://www.osha.gov/sites/default/files/publications/OSHA3507.pdf",
+    "agency": "OSHA",
+    "note": ""
+  },
+  "131": {
+    "status": "no-source",
+    "note": "Only sharps source found (BBFACT02) is used for TBT-132; biohazards already covered by NIOSH talk"
+  },
+  "132": {
+    "status": "no-source",
+    "note": "first source rejected by auditor; second search found nothing suitable on allowed domains: Allowed domains only offer healthcare-oriented needlestick material (NIOSH 2012-123, OSHA BBFACT02 already used, OSHA hospitals eTool) or household needle disposal (EPA); Harwood NRCA bloodborne chapter is a generic sample program with no found-needle/jobsite sharps procedure. CDC pages returned 403 to curl."
+  },
+  "133": {
+    "status": "no-source",
+    "note": "OSHA restrooms/sanitation page only retrievable as summary, not lossless; standard 1926.51 is regulation text"
+  },
+  "136": {
+    "status": "matched",
+    "raw_file": "cpwr-skin-cancer.md",
+    "source_url": "https://www.cpwr.com/wp-content/uploads/TT-Skin_Cancer.pdf",
+    "agency": "CPWR",
+    "note": "Sun exposure / skin cancer"
+  },
+  "137": {
+    "status": "matched",
+    "raw_file": "niosh-osha-protecting-workers-from-heat-illness-infosheet.md",
+    "source_url": "https://www.cdc.gov/niosh/docs/2011-174/pdfs/2011-174.pdf",
+    "agency": "NIOSH",
+    "note": "Heat illness infosheet covering hydration"
+  },
+  "138": {
+    "status": "no-source",
+    "note": "Working in Extreme Weather is not the cold-environments topic; no distinct source"
+  },
+  "139": {
+    "status": "matched",
+    "raw_file": "cpwr-shiftwork-long-work-hours-fatigue.md",
+    "source_url": "https://www.cpwr.com/wp-content/uploads/TT-Shift_Work.pdf",
+    "agency": "CPWR",
+    "note": ""
+  },
+  "140": {
+    "status": "no-source",
+    "note": "No agency talk on general fitness for work"
+  },
+  "141": {
+    "status": "no-source",
+    "note": "Too generic; no agency talk"
+  },
+  "142": {
+    "status": "matched",
+    "raw_file": "cpwr-lifting-and-carrying-materials.md",
+    "source_url": "https://www.cpwr.com/wp-content/uploads/TT-Lifting_Carrying_Materials.pdf",
+    "agency": "CPWR",
+    "note": "Ergonomics of lifting/carrying"
+  },
+  "143": {
+    "status": "no-source",
+    "note": "No agency talk on office workstation set-up in construction"
+  },
+  "144": {
+    "status": "matched",
+    "raw_file": "cpwr-workplace-stress.md",
+    "source_url": "https://www.cpwr.com/wp-content/uploads/TT-Workplace_Stress.pdf",
+    "agency": "CPWR",
+    "note": ""
+  },
+  "145": {
+    "status": "matched",
+    "raw_file": "cpwr-suicide-prevention.md",
+    "source_url": "https://www.cpwr.com/wp-content/uploads/TT-Suicide_Prevention.pdf",
+    "agency": "CPWR",
+    "note": "Mental health talk"
+  },
+  "146": {
+    "status": "no-source",
+    "note": "HR conduct topic, not agency-covered"
+  },
+  "147": {
+    "status": "no-source",
+    "note": "HR conduct topic, not agency-covered"
+  },
+  "148": {
+    "status": "no-source",
+    "note": "HR conduct topic, not agency-covered"
+  },
+  "149": {
+    "status": "no-source",
+    "note": "No agency talk"
+  },
+  "150": {
+    "status": "no-source",
+    "note": "No agency talk"
+  },
+  "151": {
+    "status": "no-source",
+    "note": "No standalone agency talk on competence/training"
+  },
+  "152": {
+    "status": "no-source",
+    "note": "OSHA young-workers construction pages only retrievable as summary, not lossless"
+  },
+  "153": {
+    "status": "no-source",
+    "note": "No agency talk"
+  },
+  "154": {
+    "status": "matched",
+    "raw_file": "osha-twi-bulletin-4-safety-and-health-training.md",
+    "source_url": "https://www.osha.gov/sites/default/files/publications/OSHA3859.pdf",
+    "agency": "OSHA",
+    "note": "Bulletin for staffing agencies/host employers, not worker-facing; long"
+  },
+  "155": {
+    "status": "no-source",
+    "note": "No agency talk"
+  },
+  "156": {
+    "status": "no-source",
+    "note": "No agency talk"
+  },
+  "157": {
+    "status": "no-source",
+    "note": "No agency talk on working alone"
+  },
+  "158": {
+    "status": "no-source",
+    "note": "No agency talk on isolated areas"
+  },
+  "159": {
+    "status": "no-source",
+    "note": "No agency talk on occupied premises"
+  }
+}

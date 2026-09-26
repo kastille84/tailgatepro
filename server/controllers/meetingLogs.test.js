@@ -1,7 +1,10 @@
 // Plain CommonJS — see requireAuth.test.js for why (nested require() sharing).
 const meetingLogsService = require("../services/meetingLogs");
+const companiesService = require("../services/companies");
+const talksService = require("../services/talks");
 const {
   listMeetings,
+  listMeetingMonths,
   getMeeting,
   createMeeting,
   completeMeeting,
@@ -11,12 +14,16 @@ const {
 } = require("./meetingLogs");
 
 const listForCompanySpy = vi.spyOn(meetingLogsService, "listForCompany");
+const countHiddenSpy = vi.spyOn(meetingLogsService, "countHiddenForCompany");
+const listMonthSummariesSpy = vi.spyOn(meetingLogsService, "listMonthSummaries");
 const getByIdSpy = vi.spyOn(meetingLogsService, "getById");
 const createSpy = vi.spyOn(meetingLogsService, "create");
 const completeSpy = vi.spyOn(meetingLogsService, "complete");
 const uploadCrewPhotoSpy = vi.spyOn(meetingLogsService, "uploadCrewPhoto");
 const getCrewPhotoUrlSpy = vi.spyOn(meetingLogsService, "getCrewPhotoUrl");
 const getPdfUrlSpy = vi.spyOn(meetingLogsService, "getPdfUrl");
+const getCompanySpy = vi.spyOn(companiesService, "getById");
+const getTalkSpy = vi.spyOn(talksService, "getById");
 
 const meeting = {
   id: "meeting-1",
@@ -39,17 +46,28 @@ describe("meetingLogs controller", () => {
 
   beforeEach(() => {
     listForCompanySpy.mockReset();
+    countHiddenSpy.mockReset().mockResolvedValue(0);
+    listMonthSummariesSpy.mockReset();
     getByIdSpy.mockReset();
     createSpy.mockReset();
     completeSpy.mockReset();
     uploadCrewPhotoSpy.mockReset();
     getCrewPhotoUrlSpy.mockReset();
     getPdfUrlSpy.mockReset();
+    getTalkSpy.mockReset().mockResolvedValue({ id: "talk-1" });
+    getCompanySpy
+      .mockReset()
+      .mockResolvedValue({ id: "company-1", companyType: "subcontractor", tier: "premium" });
     req = {
       params: {},
       query: {},
       body: {},
-      user: { id: "user-1", companyId: "company-1" },
+      user: {
+        id: "user-1",
+        companyId: "company-1",
+        companyType: "subcontractor",
+        tier: "premium",
+      },
       get: vi.fn().mockReturnValue("image/jpeg"),
     };
     res = {
@@ -70,10 +88,41 @@ describe("meetingLogs controller", () => {
       // Assert
       expect(listForCompanySpy).toHaveBeenCalledWith("company-1", {
         projectId: undefined,
+        historyDays: null,
       });
       expect(res.status).toHaveBeenCalledWith(200);
-      expect(res.json).toHaveBeenCalledWith({ success: true, data: [meeting] });
+      expect(res.json).toHaveBeenCalledWith({
+        success: true,
+        data: [meeting],
+        meta: { hiddenCount: 0, historyDays: null },
+      });
       expect(next).not.toHaveBeenCalled();
+    });
+
+    it("should pass the Free plan's 30-day history window to the service and report the hidden count", async () => {
+      // Arrange
+      getCompanySpy.mockResolvedValue({ id: "company-1", companyType: "subcontractor", tier: "basic" });
+      listForCompanySpy.mockResolvedValue([meeting]);
+      countHiddenSpy.mockResolvedValue(4);
+
+      // Act
+      await listMeetings(req, res, next);
+
+      // Assert
+      expect(getCompanySpy).toHaveBeenCalledWith("company-1");
+      expect(listForCompanySpy).toHaveBeenCalledWith("company-1", {
+        projectId: undefined,
+        historyDays: 30,
+      });
+      expect(countHiddenSpy).toHaveBeenCalledWith("company-1", {
+        projectId: undefined,
+        historyDays: 30,
+      });
+      expect(res.json).toHaveBeenCalledWith({
+        success: true,
+        data: [meeting],
+        meta: { hiddenCount: 4, historyDays: 30 },
+      });
     });
 
     it("should pass a projectId query param through to the service", async () => {
@@ -87,6 +136,27 @@ describe("meetingLogs controller", () => {
       // Assert
       expect(listForCompanySpy).toHaveBeenCalledWith("company-1", {
         projectId: "project-1",
+        historyDays: null,
+      });
+    });
+
+    it("should pass a from/to month range through to the service", async () => {
+      // Arrange
+      req.query = {
+        from: "2026-09-01T00:00:00.000Z",
+        to: "2026-10-01T00:00:00.000Z",
+      };
+      listForCompanySpy.mockResolvedValue([meeting]);
+
+      // Act
+      await listMeetings(req, res, next);
+
+      // Assert
+      expect(listForCompanySpy).toHaveBeenCalledWith("company-1", {
+        projectId: undefined,
+        historyDays: null,
+        from: "2026-09-01T00:00:00.000Z",
+        to: "2026-10-01T00:00:00.000Z",
       });
     });
 
@@ -104,6 +174,53 @@ describe("meetingLogs controller", () => {
     });
   });
 
+  describe("listMeetingMonths", () => {
+    it("should respond 200 with the month summaries and the history meta", async () => {
+      // Arrange
+      req.query = { tzOffset: "300" };
+      getCompanySpy.mockResolvedValue({
+        id: "company-1",
+        companyType: "subcontractor",
+        tier: "basic",
+      });
+      listMonthSummariesSpy.mockResolvedValue([{ month: "2026-09", count: 3 }]);
+      countHiddenSpy.mockResolvedValue(2);
+
+      // Act
+      await listMeetingMonths(req, res, next);
+
+      // Assert
+      expect(listMonthSummariesSpy).toHaveBeenCalledWith("company-1", {
+        historyDays: 30,
+        tzOffset: 300,
+      });
+      expect(countHiddenSpy).toHaveBeenCalledWith("company-1", {
+        historyDays: 30,
+      });
+      expect(res.status).toHaveBeenCalledWith(200);
+      expect(res.json).toHaveBeenCalledWith({
+        success: true,
+        data: [{ month: "2026-09", count: 3 }],
+        meta: { hiddenCount: 2, historyDays: 30 },
+      });
+      expect(next).not.toHaveBeenCalled();
+    });
+
+    it("should forward a service error to next()", async () => {
+      // Arrange
+      req.query = { tzOffset: "0" };
+      const error = new Error("boom");
+      listMonthSummariesSpy.mockRejectedValue(error);
+
+      // Act
+      await listMeetingMonths(req, res, next);
+
+      // Assert
+      expect(next).toHaveBeenCalledWith(error);
+      expect(res.status).not.toHaveBeenCalled();
+    });
+  });
+
   describe("getMeeting", () => {
     it("should call the service with req.params.id + the caller's companyId and respond 200", async () => {
       // Arrange
@@ -114,10 +231,27 @@ describe("meetingLogs controller", () => {
       await getMeeting(req, res, next);
 
       // Assert
-      expect(getByIdSpy).toHaveBeenCalledWith("meeting-1", "company-1");
+      expect(getByIdSpy).toHaveBeenCalledWith("meeting-1", "company-1", {
+        historyDays: null,
+      });
       expect(res.status).toHaveBeenCalledWith(200);
       expect(res.json).toHaveBeenCalledWith({ success: true, data: meeting });
       expect(next).not.toHaveBeenCalled();
+    });
+
+    it("should pass the Free plan's history window when fetching one meeting", async () => {
+      // Arrange
+      req.params = { id: "meeting-1" };
+      getCompanySpy.mockResolvedValue({ id: "company-1", companyType: "subcontractor", tier: "basic" });
+      getByIdSpy.mockResolvedValue(meeting);
+
+      // Act
+      await getMeeting(req, res, next);
+
+      // Assert
+      expect(getByIdSpy).toHaveBeenCalledWith("meeting-1", "company-1", {
+        historyDays: 30,
+      });
     });
 
     it("should forward a service error to next() (e.g. the 404 not-found case)", async () => {
@@ -158,6 +292,59 @@ describe("meetingLogs controller", () => {
       expect(res.status).toHaveBeenCalledWith(201);
       expect(res.json).toHaveBeenCalledWith({ success: true, data: meeting });
       expect(next).not.toHaveBeenCalled();
+    });
+
+    it("should not check talk visibility for a plan with the full library", async () => {
+      // Arrange
+      createSpy.mockResolvedValue(meeting);
+
+      // Act
+      await createMeeting(req, res, next);
+
+      // Assert
+      expect(getTalkSpy).not.toHaveBeenCalled();
+    });
+
+    it("should let a Trade Free caller run a core talk", async () => {
+      // Arrange
+      req.user.tier = "basic";
+      createSpy.mockResolvedValue(meeting);
+
+      // Act
+      await createMeeting(req, res, next);
+
+      // Assert
+      expect(getTalkSpy).toHaveBeenCalledWith("talk-1", "company-1", {
+        fullLibrary: false,
+      });
+      expect(res.status).toHaveBeenCalledWith(201);
+    });
+
+    it("should reject a Trade Free caller running a non-core talk", async () => {
+      // Arrange
+      req.user.tier = "basic";
+      const error = new Error("Talk not found");
+      getTalkSpy.mockRejectedValue(error);
+
+      // Act
+      await createMeeting(req, res, next);
+
+      // Assert
+      expect(createSpy).not.toHaveBeenCalled();
+      expect(next).toHaveBeenCalledWith(error);
+    });
+
+    it("should skip the talk check when no talk is attached", async () => {
+      // Arrange
+      req.user.tier = "basic";
+      req.body.talkId = undefined;
+      createSpy.mockResolvedValue(meeting);
+
+      // Act
+      await createMeeting(req, res, next);
+
+      // Assert
+      expect(getTalkSpy).not.toHaveBeenCalled();
     });
 
     it("should never take foremanId from the request body, even if one is supplied", async () => {
@@ -341,13 +528,30 @@ describe("meetingLogs controller", () => {
       await getPdfUrl(req, res, next);
 
       // Assert
-      expect(getPdfUrlSpy).toHaveBeenCalledWith("meeting-1", "company-1");
+      expect(getPdfUrlSpy).toHaveBeenCalledWith("meeting-1", "company-1", {
+        historyDays: null,
+      });
       expect(res.status).toHaveBeenCalledWith(200);
       expect(res.json).toHaveBeenCalledWith({
         success: true,
         data: { url: "https://signed.example/report.pdf" },
       });
       expect(next).not.toHaveBeenCalled();
+    });
+
+    it("should pass the Free plan's history window so older PDFs are gated too", async () => {
+      // Arrange
+      req.params = { id: "meeting-1" };
+      getCompanySpy.mockResolvedValue({ id: "company-1", companyType: "subcontractor", tier: "basic" });
+      getPdfUrlSpy.mockResolvedValue("https://signed.example/report.pdf");
+
+      // Act
+      await getPdfUrl(req, res, next);
+
+      // Assert
+      expect(getPdfUrlSpy).toHaveBeenCalledWith("meeting-1", "company-1", {
+        historyDays: 30,
+      });
     });
 
     it("should forward a service error to next() (e.g. no PDF generated yet)", async () => {

@@ -57,6 +57,7 @@
 | `quiz` | JSONB | Nullable | Exactly 3 `{ question, choices, correctIndex }` objects — post-TTS comprehension check before signing (Phase 4, see `docs/meeting-flow-design.md`) |
 | `translations` | JSONB | Nullable | Per-language `{ title, summary, talking_points, site_hazards_to_check, discussion_questions }`, keyed by ISO 639-1 code (e.g. `"es"`). English is implicit (the row's own fields). Global talks: official agency-published translations only, never machine-translated. Custom talks: Google Cloud Translation API at create/edit time, gated to `premium`/`enterprise` tier — see `server/utility/entitlements.js` |
 | `is_global` | Boolean | Default `true` | True for the shared global library; false for a company's custom talk |
+| `is_core` | Boolean | NOT NULL, default `false` | Phase 9c: true for the 30 core talks Trade Free can see (set by the seed from `CORE_TALK_SLUGS`); paid plans and GCs see every global talk |
 | `company_id` | UUID | FK (Nullable) | Populated if a sub writes a custom talk |
 
 > RLS: enabled with no policies (server-brokered, deny-all) — see `docs/data-access.md`.
@@ -149,6 +150,7 @@ still its own row, now optionally pointed at one of these via `jobsite_id` (see 
 | `name` | Text | Not Null | E.g., "Riverside Tower" |
 | `status` | Enum | Default `active` | `active`, `completed` — reuses `project_status` |
 | `archived_at` | Timestamptz | Nullable | `NULL` = live; a timestamp = archived |
+| `plan` | Text | Not Null, Default `'free'`, CHECK in (`free`, `site_pro`) | Phase 9b: per-site GC plan. `site_pro` = a paid GC Site Pro site (see `server/utility/entitlements.js`). Not yet enforced or written (9d) |
 | `created_at` | Timestamptz | Default `now()` | |
 
 > RLS: enabled with no policies (server-brokered, deny-all) — see `docs/data-access.md`.

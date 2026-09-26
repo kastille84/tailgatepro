@@ -1,15 +1,52 @@
 const meetingLogsService = require("../services/meetingLogs");
+const companiesService = require("../services/companies");
+const talksService = require("../services/talks");
+const { getLimits, hasFullLibrary } = require("../utility/entitlements");
 
 // req.user is set by loadUserContext (which runs after requireAuth) — the
 // caller's company and id always come from there, never from req.body/req.params.
 
+// The plan's in-app history window in days (null = unlimited), Phase 9c.
+const getHistoryDays = async (companyId) => {
+  const company = await companiesService.getById(companyId);
+  return getLimits(company.companyType, company.tier).historyDays;
+};
+
 exports.listMeetings = async (req, res, next) => {
   try {
-    const { projectId } = req.query;
-    const data = await meetingLogsService.listForCompany(req.user.companyId, {
-      projectId,
-    });
-    return res.status(200).json({ success: true, data });
+    const { projectId, from, to } = req.query;
+    const historyDays = await getHistoryDays(req.user.companyId);
+    const options = { projectId, historyDays, from, to };
+    const [data, hiddenCount] = await Promise.all([
+      meetingLogsService.listForCompany(req.user.companyId, options),
+      meetingLogsService.countHiddenForCompany(req.user.companyId, options),
+    ]);
+    return res
+      .status(200)
+      .json({ success: true, data, meta: { hiddenCount, historyDays } });
+  } catch (error) {
+    return next(error);
+  }
+};
+
+// The archive's month cards: one entry per month with a completed meeting,
+// plus the plan's history window and how many older rows it hides (for the
+// upgrade banner, which shows regardless of which month is open).
+exports.listMeetingMonths = async (req, res, next) => {
+  try {
+    const historyDays = await getHistoryDays(req.user.companyId);
+    const [data, hiddenCount] = await Promise.all([
+      meetingLogsService.listMonthSummaries(req.user.companyId, {
+        historyDays,
+        tzOffset: Number(req.query.tzOffset),
+      }),
+      meetingLogsService.countHiddenForCompany(req.user.companyId, {
+        historyDays,
+      }),
+    ]);
+    return res
+      .status(200)
+      .json({ success: true, data, meta: { hiddenCount, historyDays } });
   } catch (error) {
     return next(error);
   }
@@ -20,6 +57,7 @@ exports.getMeeting = async (req, res, next) => {
     const data = await meetingLogsService.getById(
       req.params.id,
       req.user.companyId,
+      { historyDays: await getHistoryDays(req.user.companyId) },
     );
     return res.status(200).json({ success: true, data });
   } catch (error) {
@@ -32,6 +70,12 @@ exports.getMeeting = async (req, res, next) => {
 exports.createMeeting = async (req, res, next) => {
   try {
     const { id, projectId, talkId } = req.body;
+    // Trade Free can only run core talks (Phase 9c): a hidden talk is a 404.
+    if (talkId && !hasFullLibrary(req.user.companyType, req.user.tier)) {
+      await talksService.getById(talkId, req.user.companyId, {
+        fullLibrary: false,
+      });
+    }
     const data = await meetingLogsService.create({
       id,
       companyId: req.user.companyId,
@@ -88,7 +132,11 @@ exports.getCrewPhotoUrl = async (req, res, next) => {
 
 exports.getPdfUrl = async (req, res, next) => {
   try {
-    const url = await meetingLogsService.getPdfUrl(req.params.id, req.user.companyId);
+    const url = await meetingLogsService.getPdfUrl(
+      req.params.id,
+      req.user.companyId,
+      { historyDays: await getHistoryDays(req.user.companyId) },
+    );
     return res.status(200).json({ success: true, data: { url } });
   } catch (error) {
     return next(error);

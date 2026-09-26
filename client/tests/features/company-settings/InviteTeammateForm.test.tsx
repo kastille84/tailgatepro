@@ -1,7 +1,10 @@
 import React from "react";
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { render, screen, fireEvent, waitFor } from "@testing-library/react";
+import { MemoryRouter } from "react-router-dom";
 import { ThemeProvider } from "styled-components";
+
+import { PlanLimitError } from "../../../src/utils/PlanLimitError";
 
 import { InviteTeammateForm } from "../../../src/features/company-settings/InviteTeammateForm";
 import theme from "../../../src/styles/theme";
@@ -19,9 +22,11 @@ vi.mock("../../../src/hooks/useInviteTeammate", () => ({
 
 const renderForm = () =>
   render(
-    <ThemeProvider theme={theme}>
-      <InviteTeammateForm />
-    </ThemeProvider>,
+    <MemoryRouter>
+      <ThemeProvider theme={theme}>
+        <InviteTeammateForm />
+      </ThemeProvider>
+    </MemoryRouter>,
   );
 
 describe("InviteTeammateForm", () => {
@@ -142,5 +147,19 @@ describe("InviteTeammateForm", () => {
   it("shows no offline note while online", () => {
     renderForm();
     expect(screen.queryByRole("status")).toBeNull();
+  });
+
+  it("shows an inline upgrade prompt linking to /pricing on a plan-limit error", () => {
+    mockUseInviteTeammate.mockReturnValue({
+      inviteTeammate: mockInvite,
+      isInviting: false,
+      planLimitError: new PlanLimitError("Your plan allows 1 seat", 1),
+    });
+    renderForm();
+
+    expect(screen.getByRole("alert").textContent).toContain("Your plan allows 1 seat");
+    expect(
+      screen.getByRole("link", { name: /see plans/i }).getAttribute("href"),
+    ).toBe("/pricing");
   });
 });

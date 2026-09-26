@@ -1,7 +1,7 @@
 // Plain CommonJS — no `import` (see vitest.config.js / CLAUDE.md). Vitest
 // exposes describe/it/expect as globals.
 
-const { buildRow, isApproved } = require("./talkRow");
+const { buildRow, isApproved, CORE_TALK_SLUGS } = require("./talkRow");
 
 const baseJson = {
   id: "electrical-arc-flash-safety",
@@ -43,6 +43,12 @@ describe("isApproved", () => {
 });
 
 describe("buildRow", () => {
+  it("flags only the 30 core talks as is_core", () => {
+    expect(CORE_TALK_SLUGS.size).toBe(30);
+    expect(buildRow(baseJson).is_core).toBe(false);
+    expect(buildRow({ ...baseJson, id: "silica" }).is_core).toBe(true);
+  });
+
   it("maps pipeline fields onto toolbox_talks columns", () => {
     const row = buildRow(baseJson);
     expect(row.slug).toBe("electrical-arc-flash-safety");

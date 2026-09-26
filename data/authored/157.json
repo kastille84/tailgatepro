@@ -1,0 +1,49 @@
+{
+  "n": "157",
+  "title": "Working Alone",
+  "primary_trade": "General Construction",
+  "trade_tags": [
+    "General Construction"
+  ],
+  "osha_standards": [],
+  "source_url": "https://www.cdc.gov/niosh/bulletin/2024/lone-workers.html",
+  "source_agency": "NIOSH",
+  "source_checked": [
+    "https://www.cdc.gov/niosh/bulletin/2024/lone-workers.html"
+  ],
+  "basis": "NIOSH Science Bulletin \"A New Partnership Focuses on the Occupational Safety and Health Needs of Lone Workers\" (2024)",
+  "summary": "When no one can see or hear you, help is slow to arrive. NIOSH describes the extra risks of lone work and the controls that can help.",
+  "talking_points": [
+    "NIOSH and OSHA define lone work as a potentially hazardous working condition that occurs when a person cannot be seen or heard by another worker, so help is not readily available.",
+    "NIOSH estimates about 53 million lone workers across the U.S., Canada and Europe, roughly 15 percent of the workforce. The number in the U.S. is unknown because most occupational health information systems do not systematically record whether a person was working alone.",
+    "Lone workers are found in many industries, on fixed work sites such as a factory or warehouse and on mobile ones such as a construction site.",
+    "Lone workers can encounter the same hazards as workers surrounded by co-workers, and some hazards, such as exposure to violence, may become more likely when a worker is alone.",
+    "NIOSH says working alone can delay or deny a robust response to a workplace emergency, and that timely access to emergency help can improve the chance of surviving a heart attack or traumatic injury.",
+    "NIOSH says loneliness and social isolation are each associated with long-term health risks. A lone worker may lack co-workers or supervisors to help when something unexpected comes up that no workplace policy covers.",
+    "NIOSH says controls based on the hierarchy of controls are a sound way to reduce risk to lone workers. For heat stress it recommends communication methods, a buddy system or electronic tracking. Published research on how well lone worker controls work is limited.",
+    "Good practice: before working alone, agree with your supervisor how and when you will check in, and what happens if you do not."
+  ],
+  "site_hazards_to_check": [
+    "Worker alone with no way to call for help",
+    "No agreed check-in time or person to check",
+    "Hazardous work started with nobody within sight or hearing",
+    "Working in a remote or isolated part of the site",
+    "Cell phone with no signal in the work area",
+    "Worker alone after hours"
+  ],
+  "discussion_questions": [
+    "When do we allow someone to work alone, and when do we not?",
+    "How does the person working alone check in, and who notices if they don't?",
+    "What is our plan if a lone worker is hurt?"
+  ],
+  "audit": {
+    "status": "approved",
+    "audited_at": "2026-09-25T20:37:57.253Z",
+    "osha_accuracy_verified": true,
+    "flags": [
+      "Verified against NIOSH Science Bulletin 2024 lone-workers page: definition, 53 million/15 percent, mobile sites such as construction, same hazards plus violence, delayed emergency response, loneliness/isolation, hierarchy of controls, limited research.",
+      "Fixes: 'all major industries' -> 'many industries'; 'tracked systematically' reworded to source's reason; the communication/buddy/tracking recommendation is stated in the source for heat-stress exposure, so it is now attributed that way; learning-safe-practices claim reworded to source's wording.",
+      "osha_standards intentionally empty: no OSHA construction standard specifically covers lone work."
+    ]
+  }
+}

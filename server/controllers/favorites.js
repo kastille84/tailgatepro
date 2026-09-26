@@ -1,4 +1,6 @@
 const favoritesService = require("../services/favorites");
+const talksService = require("../services/talks");
+const { hasFullLibrary } = require("../utility/entitlements");
 
 // req.user is set by loadUserContext (which runs after requireAuth) — the
 // caller's own id, never req.body/req.params, scopes every read/write here.
@@ -14,6 +16,12 @@ exports.listFavorites = async (req, res, next) => {
 
 exports.addFavorite = async (req, res, next) => {
   try {
+    // Trade Free can only favorite core talks (Phase 9c): a hidden talk is a 404.
+    if (!hasFullLibrary(req.user.companyType, req.user.tier)) {
+      await talksService.getById(req.body.talkId, req.user.companyId, {
+        fullLibrary: false,
+      });
+    }
     const data = await favoritesService.add({
       userId: req.user.id,
       talkId: req.body.talkId,

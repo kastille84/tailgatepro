@@ -1,0 +1,1794 @@
+{
+  "source": "data/300_Toolbox_Talks_Library.docx",
+  "generated_at": "2026-09-25T16:56:28.463Z",
+  "vsExisting": [
+    {
+      "tbt": "TBT-003",
+      "title": "Working at Height",
+      "matches": [
+        {
+          "id": "aerial-lifts-safety",
+          "title": "Aerial Lift Safety: Fall Protection, Stability, and Power Lines",
+          "sharedGroups": [
+            "fall-protection"
+          ]
+        },
+        {
+          "id": "falls-extension-ladders",
+          "title": "Extension Ladder Fall Prevention",
+          "sharedGroups": [
+            "fall-protection"
+          ]
+        },
+        {
+          "id": "prevent-falls-scaffolds",
+          "title": "Preventing Falls From Scaffolds",
+          "sharedGroups": [
+            "fall-protection"
+          ]
+        },
+        {
+          "id": "prevent-falls-through-holes",
+          "title": "Preventing Falls Through Floor and Roof Holes",
+          "sharedGroups": [
+            "fall-protection"
+          ]
+        },
+        {
+          "id": "prevent-falls-guardrails",
+          "title": "Preventing Falls With Guardrails",
+          "sharedGroups": [
+            "fall-protection"
+          ]
+        }
+      ]
+    },
+    {
+      "tbt": "TBT-004",
+      "title": "Ladder Safety",
+      "matches": [
+        {
+          "id": "falls-extension-ladders",
+          "title": "Extension Ladder Fall Prevention",
+          "sharedGroups": [
+            "ladder"
+          ]
+        }
+      ]
+    },
+    {
+      "tbt": "TBT-005",
+      "title": "Mobile Towers and Scaffolds",
+      "matches": [
+        {
+          "id": "prevent-falls-scaffolds",
+          "title": "Preventing Falls From Scaffolds",
+          "sharedGroups": [
+            "scaffold"
+          ]
+        }
+      ]
+    },
+    {
+      "tbt": "TBT-006",
+      "title": "MEWPs and Mobile Access Equipment",
+      "matches": [
+        {
+          "id": "aerial-lifts-safety",
+          "title": "Aerial Lift Safety: Fall Protection, Stability, and Power Lines",
+          "sharedGroups": [
+            "aerial-lift"
+          ]
+        }
+      ]
+    },
+    {
+      "tbt": "TBT-007",
+      "title": "Forklift Truck Safety",
+      "matches": [
+        {
+          "id": "equipment-safety-forklifts",
+          "title": "Forklift Safety on Construction Sites",
+          "sharedGroups": [
+            "forklift"
+          ]
+        }
+      ]
+    },
+    {
+      "tbt": "TBT-008",
+      "title": "Reach Truck Safety",
+      "matches": [
+        {
+          "id": "equipment-safety-forklifts",
+          "title": "Forklift Safety on Construction Sites",
+          "sharedGroups": [
+            "forklift"
+          ]
+        }
+      ]
+    },
+    {
+      "tbt": "TBT-010",
+      "title": "Safe Use of Hand Tools",
+      "matches": [
+        {
+          "id": "power-saw-safety",
+          "title": "Power Saw Safety",
+          "sharedGroups": [
+            "power-saw-tools"
+          ]
+        }
+      ]
+    },
+    {
+      "tbt": "TBT-011",
+      "title": "Power Tools",
+      "matches": [
+        {
+          "id": "power-saw-safety",
+          "title": "Power Saw Safety",
+          "sharedGroups": [
+            "power-saw-tools"
+          ]
+        }
+      ]
+    },
+    {
+      "tbt": "TBT-012",
+      "title": "Portable Electrical Equipment",
+      "matches": [
+        {
+          "id": "electrical-safety-extension-cords",
+          "title": "Extension Cord Safety on the Jobsite",
+          "sharedGroups": [
+            "electrical-cords-equipment"
+          ]
+        }
+      ]
+    },
+    {
+      "tbt": "TBT-013",
+      "title": "Electrical Isolation",
+      "matches": [
+        {
+          "id": "electrical-safety-power",
+          "title": "Electrical Power Safety: De-Energize, Lock Out, Tag",
+          "sharedGroups": [
+            "electrical-live"
+          ]
+        },
+        {
+          "id": "electrical-safety-wiring",
+          "title": "Electrical Wiring Safety",
+          "sharedGroups": [
+            "electrical-live"
+          ]
+        },
+        {
+          "id": "electrical-safety-extension-cords",
+          "title": "Extension Cord Safety on the Jobsite",
+          "sharedGroups": [
+            "electrical-live"
+          ]
+        },
+        {
+          "id": "equipment-safety-maintenance",
+          "title": "Safe Equipment Maintenance and Lockout/Tagout",
+          "sharedGroups": [
+            "lockout-isolation"
+          ]
+        }
+      ]
+    },
+    {
+      "tbt": "TBT-014",
+      "title": "Lockout/Tagout",
+      "matches": [
+        {
+          "id": "equipment-safety-maintenance",
+          "title": "Safe Equipment Maintenance and Lockout/Tagout",
+          "sharedGroups": [
+            "lockout-isolation"
+          ]
+        }
+      ]
+    },
+    {
+      "tbt": "TBT-015",
+      "title": "Working Near Live Electrical Equipment",
+      "matches": [
+        {
+          "id": "electrical-safety-power",
+          "title": "Electrical Power Safety: De-Energize, Lock Out, Tag",
+          "sharedGroups": [
+            "electrical-live"
+          ]
+        },
+        {
+          "id": "electrical-safety-wiring",
+          "title": "Electrical Wiring Safety",
+          "sharedGroups": [
+            "electrical-live"
+          ]
+        },
+        {
+          "id": "electrical-safety-extension-cords",
+          "title": "Extension Cord Safety on the Jobsite",
+          "sharedGroups": [
+            "electrical-cords-equipment",
+            "electrical-live"
+          ]
+        }
+      ]
+    },
+    {
+      "tbt": "TBT-016",
+      "title": "Electrical Inspection and Defect Reporting",
+      "matches": [
+        {
+          "id": "electrical-safety-extension-cords",
+          "title": "Extension Cord Safety on the Jobsite",
+          "sharedGroups": [
+            "electrical-cords-equipment"
+          ]
+        }
+      ]
+    },
+    {
+      "tbt": "TBT-017",
+      "title": "Hot Work",
+      "matches": [
+        {
+          "id": "arc-welding-and-fire-safety",
+          "title": "Arc Welding and Fire Prevention",
+          "sharedGroups": [
+            "hot-work-welding"
+          ]
+        }
+      ]
+    },
+    {
+      "tbt": "TBT-018",
+      "title": "Brazing and Soldering",
+      "matches": [
+        {
+          "id": "arc-welding-and-fire-safety",
+          "title": "Arc Welding and Fire Prevention",
+          "sharedGroups": [
+            "hot-work-welding"
+          ]
+        }
+      ]
+    },
+    {
+      "tbt": "TBT-019",
+      "title": "Welding Safety",
+      "matches": [
+        {
+          "id": "arc-welding-and-fire-safety",
+          "title": "Arc Welding and Fire Prevention",
+          "sharedGroups": [
+            "hot-work-welding"
+          ]
+        }
+      ]
+    },
+    {
+      "tbt": "TBT-036",
+      "title": "Stored Energy",
+      "matches": [
+        {
+          "id": "equipment-safety-maintenance",
+          "title": "Safe Equipment Maintenance and Lockout/Tagout",
+          "sharedGroups": [
+            "lockout-isolation"
+          ]
+        }
+      ]
+    },
+    {
+      "tbt": "TBT-037",
+      "title": "Safe Isolation Verification",
+      "matches": [
+        {
+          "id": "equipment-safety-maintenance",
+          "title": "Safe Equipment Maintenance and Lockout/Tagout",
+          "sharedGroups": [
+            "lockout-isolation"
+          ]
+        }
+      ]
+    },
+    {
+      "tbt": "TBT-042",
+      "title": "Housekeeping",
+      "matches": [
+        {
+          "id": "housekeeping",
+          "title": "Jobsite Housekeeping",
+          "sharedGroups": [
+            "housekeeping"
+          ]
+        }
+      ]
+    },
+    {
+      "tbt": "TBT-043",
+      "title": "Slip, Trip and Fall Prevention",
+      "matches": [
+        {
+          "id": "aerial-lifts-safety",
+          "title": "Aerial Lift Safety: Fall Protection, Stability, and Power Lines",
+          "sharedGroups": [
+            "fall-protection"
+          ]
+        },
+        {
+          "id": "falls-extension-ladders",
+          "title": "Extension Ladder Fall Prevention",
+          "sharedGroups": [
+            "fall-protection"
+          ]
+        },
+        {
+          "id": "prevent-falls-scaffolds",
+          "title": "Preventing Falls From Scaffolds",
+          "sharedGroups": [
+            "fall-protection"
+          ]
+        },
+        {
+          "id": "prevent-falls-through-holes",
+          "title": "Preventing Falls Through Floor and Roof Holes",
+          "sharedGroups": [
+            "fall-protection"
+          ]
+        },
+        {
+          "id": "prevent-falls-guardrails",
+          "title": "Preventing Falls With Guardrails",
+          "sharedGroups": [
+            "fall-protection"
+          ]
+        }
+      ]
+    },
+    {
+      "tbt": "TBT-047",
+      "title": "Excavation Awareness",
+      "matches": [
+        {
+          "id": "buried-utilities-and-safety",
+          "title": "Digging Safely Around Buried Utilities",
+          "sharedGroups": [
+            "excavation"
+          ]
+        },
+        {
+          "id": "trench-safety",
+          "title": "Trench Cave-In Prevention",
+          "sharedGroups": [
+            "excavation"
+          ]
+        }
+      ]
+    },
+    {
+      "tbt": "TBT-048",
+      "title": "Underground Services",
+      "matches": [
+        {
+          "id": "buried-utilities-and-safety",
+          "title": "Digging Safely Around Buried Utilities",
+          "sharedGroups": [
+            "excavation"
+          ]
+        },
+        {
+          "id": "trench-safety",
+          "title": "Trench Cave-In Prevention",
+          "sharedGroups": [
+            "excavation"
+          ]
+        }
+      ]
+    },
+    {
+      "tbt": "TBT-049",
+      "title": "Scaffolding Inspection",
+      "matches": [
+        {
+          "id": "prevent-falls-scaffolds",
+          "title": "Preventing Falls From Scaffolds",
+          "sharedGroups": [
+            "scaffold"
+          ]
+        }
+      ]
+    },
+    {
+      "tbt": "TBT-050",
+      "title": "Working from Roofs",
+      "matches": [
+        {
+          "id": "aerial-lifts-safety",
+          "title": "Aerial Lift Safety: Fall Protection, Stability, and Power Lines",
+          "sharedGroups": [
+            "fall-protection"
+          ]
+        },
+        {
+          "id": "falls-extension-ladders",
+          "title": "Extension Ladder Fall Prevention",
+          "sharedGroups": [
+            "fall-protection"
+          ]
+        },
+        {
+          "id": "prevent-falls-scaffolds",
+          "title": "Preventing Falls From Scaffolds",
+          "sharedGroups": [
+            "fall-protection"
+          ]
+        },
+        {
+          "id": "prevent-falls-through-holes",
+          "title": "Preventing Falls Through Floor and Roof Holes",
+          "sharedGroups": [
+            "fall-protection"
+          ]
+        },
+        {
+          "id": "prevent-falls-guardrails",
+          "title": "Preventing Falls With Guardrails",
+          "sharedGroups": [
+            "fall-protection"
+          ]
+        }
+      ]
+    },
+    {
+      "tbt": "TBT-051",
+      "title": "Fragile Roofs",
+      "matches": [
+        {
+          "id": "aerial-lifts-safety",
+          "title": "Aerial Lift Safety: Fall Protection, Stability, and Power Lines",
+          "sharedGroups": [
+            "fall-protection"
+          ]
+        },
+        {
+          "id": "falls-extension-ladders",
+          "title": "Extension Ladder Fall Prevention",
+          "sharedGroups": [
+            "fall-protection"
+          ]
+        },
+        {
+          "id": "prevent-falls-scaffolds",
+          "title": "Preventing Falls From Scaffolds",
+          "sharedGroups": [
+            "fall-protection"
+          ]
+        },
+        {
+          "id": "prevent-falls-through-holes",
+          "title": "Preventing Falls Through Floor and Roof Holes",
+          "sharedGroups": [
+            "fall-protection"
+          ]
+        },
+        {
+          "id": "prevent-falls-guardrails",
+          "title": "Preventing Falls With Guardrails",
+          "sharedGroups": [
+            "fall-protection"
+          ]
+        }
+      ]
+    },
+    {
+      "tbt": "TBT-052",
+      "title": "Roof Edge Protection",
+      "matches": [
+        {
+          "id": "aerial-lifts-safety",
+          "title": "Aerial Lift Safety: Fall Protection, Stability, and Power Lines",
+          "sharedGroups": [
+            "fall-protection"
+          ]
+        },
+        {
+          "id": "falls-extension-ladders",
+          "title": "Extension Ladder Fall Prevention",
+          "sharedGroups": [
+            "fall-protection"
+          ]
+        },
+        {
+          "id": "prevent-falls-scaffolds",
+          "title": "Preventing Falls From Scaffolds",
+          "sharedGroups": [
+            "fall-protection"
+          ]
+        },
+        {
+          "id": "prevent-falls-through-holes",
+          "title": "Preventing Falls Through Floor and Roof Holes",
+          "sharedGroups": [
+            "fall-protection"
+          ]
+        },
+        {
+          "id": "prevent-falls-guardrails",
+          "title": "Preventing Falls With Guardrails",
+          "sharedGroups": [
+            "fall-protection"
+          ]
+        }
+      ]
+    },
+    {
+      "tbt": "TBT-053",
+      "title": "Roof Access",
+      "matches": [
+        {
+          "id": "aerial-lifts-safety",
+          "title": "Aerial Lift Safety: Fall Protection, Stability, and Power Lines",
+          "sharedGroups": [
+            "fall-protection"
+          ]
+        },
+        {
+          "id": "falls-extension-ladders",
+          "title": "Extension Ladder Fall Prevention",
+          "sharedGroups": [
+            "fall-protection"
+          ]
+        },
+        {
+          "id": "prevent-falls-scaffolds",
+          "title": "Preventing Falls From Scaffolds",
+          "sharedGroups": [
+            "fall-protection"
+          ]
+        },
+        {
+          "id": "prevent-falls-through-holes",
+          "title": "Preventing Falls Through Floor and Roof Holes",
+          "sharedGroups": [
+            "fall-protection"
+          ]
+        },
+        {
+          "id": "prevent-falls-guardrails",
+          "title": "Preventing Falls With Guardrails",
+          "sharedGroups": [
+            "fall-protection"
+          ]
+        }
+      ]
+    },
+    {
+      "tbt": "TBT-054",
+      "title": "Fall Arrest Equipment",
+      "matches": [
+        {
+          "id": "aerial-lifts-safety",
+          "title": "Aerial Lift Safety: Fall Protection, Stability, and Power Lines",
+          "sharedGroups": [
+            "fall-protection"
+          ]
+        },
+        {
+          "id": "falls-extension-ladders",
+          "title": "Extension Ladder Fall Prevention",
+          "sharedGroups": [
+            "fall-protection"
+          ]
+        },
+        {
+          "id": "prevent-falls-scaffolds",
+          "title": "Preventing Falls From Scaffolds",
+          "sharedGroups": [
+            "fall-protection"
+          ]
+        },
+        {
+          "id": "prevent-falls-through-holes",
+          "title": "Preventing Falls Through Floor and Roof Holes",
+          "sharedGroups": [
+            "fall-protection"
+          ]
+        },
+        {
+          "id": "prevent-falls-guardrails",
+          "title": "Preventing Falls With Guardrails",
+          "sharedGroups": [
+            "fall-protection"
+          ]
+        }
+      ]
+    },
+    {
+      "tbt": "TBT-055",
+      "title": "Harness Inspection",
+      "matches": [
+        {
+          "id": "aerial-lifts-safety",
+          "title": "Aerial Lift Safety: Fall Protection, Stability, and Power Lines",
+          "sharedGroups": [
+            "fall-protection"
+          ]
+        },
+        {
+          "id": "falls-extension-ladders",
+          "title": "Extension Ladder Fall Prevention",
+          "sharedGroups": [
+            "fall-protection"
+          ]
+        },
+        {
+          "id": "prevent-falls-scaffolds",
+          "title": "Preventing Falls From Scaffolds",
+          "sharedGroups": [
+            "fall-protection"
+          ]
+        },
+        {
+          "id": "prevent-falls-through-holes",
+          "title": "Preventing Falls Through Floor and Roof Holes",
+          "sharedGroups": [
+            "fall-protection"
+          ]
+        },
+        {
+          "id": "prevent-falls-guardrails",
+          "title": "Preventing Falls With Guardrails",
+          "sharedGroups": [
+            "fall-protection"
+          ]
+        }
+      ]
+    },
+    {
+      "tbt": "TBT-056",
+      "title": "Dropped Objects",
+      "matches": [
+        {
+          "id": "preventing-falling-objects",
+          "title": "Preventing Falling Objects and Struck-By Injuries",
+          "sharedGroups": [
+            "falling-objects"
+          ]
+        }
+      ]
+    },
+    {
+      "tbt": "TBT-057",
+      "title": "Tools at Height",
+      "matches": [
+        {
+          "id": "preventing-falling-objects",
+          "title": "Preventing Falling Objects and Struck-By Injuries",
+          "sharedGroups": [
+            "falling-objects"
+          ]
+        }
+      ]
+    },
+    {
+      "tbt": "TBT-059",
+      "title": "Safe Lifting Operations",
+      "matches": [
+        {
+          "id": "materials-handling-drywall",
+          "title": "Safe Drywall Handling and Lifting",
+          "sharedGroups": [
+            "crane"
+          ]
+        },
+        {
+          "id": "boom-truck-safety",
+          "title": "Boom Truck Crane Safety",
+          "sharedGroups": [
+            "crane"
+          ]
+        },
+        {
+          "id": "crane-safety-stability-and-tipping",
+          "title": "Crane Stability and Tip-Over Prevention",
+          "sharedGroups": [
+            "crane"
+          ]
+        }
+      ]
+    },
+    {
+      "tbt": "TBT-060",
+      "title": "Lifting Accessories",
+      "matches": [
+        {
+          "id": "materials-handling-drywall",
+          "title": "Safe Drywall Handling and Lifting",
+          "sharedGroups": [
+            "crane"
+          ]
+        },
+        {
+          "id": "boom-truck-safety",
+          "title": "Boom Truck Crane Safety",
+          "sharedGroups": [
+            "crane"
+          ]
+        },
+        {
+          "id": "crane-safety-stability-and-tipping",
+          "title": "Crane Stability and Tip-Over Prevention",
+          "sharedGroups": [
+            "crane"
+          ]
+        }
+      ]
+    },
+    {
+      "tbt": "TBT-063",
+      "title": "Mobile Cranes Awareness",
+      "matches": [
+        {
+          "id": "materials-handling-drywall",
+          "title": "Safe Drywall Handling and Lifting",
+          "sharedGroups": [
+            "crane"
+          ]
+        },
+        {
+          "id": "boom-truck-safety",
+          "title": "Boom Truck Crane Safety",
+          "sharedGroups": [
+            "crane"
+          ]
+        },
+        {
+          "id": "crane-safety-stability-and-tipping",
+          "title": "Crane Stability and Tip-Over Prevention",
+          "sharedGroups": [
+            "crane"
+          ]
+        }
+      ]
+    },
+    {
+      "tbt": "TBT-064",
+      "title": "Working Near Cranes",
+      "matches": [
+        {
+          "id": "materials-handling-drywall",
+          "title": "Safe Drywall Handling and Lifting",
+          "sharedGroups": [
+            "crane"
+          ]
+        },
+        {
+          "id": "boom-truck-safety",
+          "title": "Boom Truck Crane Safety",
+          "sharedGroups": [
+            "crane"
+          ]
+        },
+        {
+          "id": "crane-safety-stability-and-tipping",
+          "title": "Crane Stability and Tip-Over Prevention",
+          "sharedGroups": [
+            "crane"
+          ]
+        }
+      ]
+    },
+    {
+      "tbt": "TBT-065",
+      "title": "Banksman and Slinger Duties",
+      "matches": [
+        {
+          "id": "materials-handling-drywall",
+          "title": "Safe Drywall Handling and Lifting",
+          "sharedGroups": [
+            "crane"
+          ]
+        },
+        {
+          "id": "boom-truck-safety",
+          "title": "Boom Truck Crane Safety",
+          "sharedGroups": [
+            "crane"
+          ]
+        },
+        {
+          "id": "crane-safety-stability-and-tipping",
+          "title": "Crane Stability and Tip-Over Prevention",
+          "sharedGroups": [
+            "crane"
+          ]
+        }
+      ]
+    },
+    {
+      "tbt": "TBT-078",
+      "title": "Winter Driving",
+      "matches": [
+        {
+          "id": "cold-environments",
+          "title": "Working Safely in Cold Environments",
+          "sharedGroups": [
+            "cold"
+          ]
+        }
+      ]
+    },
+    {
+      "tbt": "TBT-081",
+      "title": "Hot Work Fire Watch",
+      "matches": [
+        {
+          "id": "arc-welding-and-fire-safety",
+          "title": "Arc Welding and Fire Prevention",
+          "sharedGroups": [
+            "hot-work-welding"
+          ]
+        }
+      ]
+    },
+    {
+      "tbt": "TBT-098",
+      "title": "Permit to Work: Hot Work",
+      "matches": [
+        {
+          "id": "arc-welding-and-fire-safety",
+          "title": "Arc Welding and Fire Prevention",
+          "sharedGroups": [
+            "hot-work-welding"
+          ]
+        }
+      ]
+    },
+    {
+      "tbt": "TBT-099",
+      "title": "Permit to Work: Confined Spaces",
+      "matches": [
+        {
+          "id": "confined-spaces-and-safety",
+          "title": "Confined Space Entry Safety",
+          "sharedGroups": [
+            "confined-space"
+          ]
+        }
+      ]
+    },
+    {
+      "tbt": "TBT-100",
+      "title": "Confined Space Awareness",
+      "matches": [
+        {
+          "id": "confined-spaces-and-safety",
+          "title": "Confined Space Entry Safety",
+          "sharedGroups": [
+            "confined-space"
+          ]
+        }
+      ]
+    },
+    {
+      "tbt": "TBT-101",
+      "title": "Gas Testing",
+      "matches": [
+        {
+          "id": "confined-spaces-and-safety",
+          "title": "Confined Space Entry Safety",
+          "sharedGroups": [
+            "confined-space"
+          ]
+        }
+      ]
+    },
+    {
+      "tbt": "TBT-102",
+      "title": "Working in Poorly Ventilated Areas",
+      "matches": [
+        {
+          "id": "confined-spaces-and-safety",
+          "title": "Confined Space Entry Safety",
+          "sharedGroups": [
+            "confined-space"
+          ]
+        }
+      ]
+    },
+    {
+      "tbt": "TBT-103",
+      "title": "Oxygen Deficiency",
+      "matches": [
+        {
+          "id": "confined-spaces-and-safety",
+          "title": "Confined Space Entry Safety",
+          "sharedGroups": [
+            "confined-space"
+          ]
+        }
+      ]
+    },
+    {
+      "tbt": "TBT-104",
+      "title": "Carbon Monoxide Awareness",
+      "matches": [
+        {
+          "id": "carbon-monoxide-poisoning",
+          "title": "Preventing Carbon Monoxide Poisoning",
+          "sharedGroups": [
+            "carbon-monoxide"
+          ]
+        }
+      ]
+    },
+    {
+      "tbt": "TBT-119",
+      "title": "Silica Dust",
+      "matches": [
+        {
+          "id": "silica",
+          "title": "Controlling Silica Dust Exposure",
+          "sharedGroups": [
+            "silica"
+          ]
+        }
+      ]
+    },
+    {
+      "tbt": "TBT-121",
+      "title": "Respiratory Protective Equipment",
+      "matches": [
+        {
+          "id": "respiratory-protection",
+          "title": "Respiratory Protection Basics",
+          "sharedGroups": [
+            "respiratory"
+          ]
+        }
+      ]
+    },
+    {
+      "tbt": "TBT-124",
+      "title": "Hand-Arm Vibration",
+      "matches": [
+        {
+          "id": "repetitive-motion-carpal-tunnel-syndrome",
+          "title": "Repetitive Motion and Carpal Tunnel Syndrome",
+          "sharedGroups": [
+            "repetitive-motion"
+          ]
+        }
+      ]
+    },
+    {
+      "tbt": "TBT-125",
+      "title": "Whole-Body Vibration",
+      "matches": [
+        {
+          "id": "repetitive-motion-carpal-tunnel-syndrome",
+          "title": "Repetitive Motion and Carpal Tunnel Syndrome",
+          "sharedGroups": [
+            "repetitive-motion"
+          ]
+        }
+      ]
+    },
+    {
+      "tbt": "TBT-126",
+      "title": "Welding Fumes",
+      "matches": [
+        {
+          "id": "arc-welding-and-fire-safety",
+          "title": "Arc Welding and Fire Prevention",
+          "sharedGroups": [
+            "hot-work-welding"
+          ]
+        }
+      ]
+    },
+    {
+      "tbt": "TBT-127",
+      "title": "Fume Extraction",
+      "matches": [
+        {
+          "id": "arc-welding-and-fire-safety",
+          "title": "Arc Welding and Fire Prevention",
+          "sharedGroups": [
+            "hot-work-welding"
+          ]
+        }
+      ]
+    },
+    {
+      "tbt": "TBT-130",
+      "title": "Biological Hazards",
+      "matches": [
+        {
+          "id": "biohazards",
+          "title": "Biohazards From Sewage and Infectious Waste",
+          "sharedGroups": [
+            "biohazard"
+          ]
+        }
+      ]
+    },
+    {
+      "tbt": "TBT-131",
+      "title": "Sharps and Waste",
+      "matches": [
+        {
+          "id": "biohazards",
+          "title": "Biohazards From Sewage and Infectious Waste",
+          "sharedGroups": [
+            "biohazard"
+          ]
+        }
+      ]
+    },
+    {
+      "tbt": "TBT-132",
+      "title": "Needlestick Prevention",
+      "matches": [
+        {
+          "id": "biohazards",
+          "title": "Biohazards From Sewage and Infectious Waste",
+          "sharedGroups": [
+            "biohazard"
+          ]
+        }
+      ]
+    },
+    {
+      "tbt": "TBT-134",
+      "title": "Heat Stress",
+      "matches": [
+        {
+          "id": "hot-environments",
+          "title": "Preventing Heat Illness in Hot Environments",
+          "sharedGroups": [
+            "heat"
+          ]
+        }
+      ]
+    },
+    {
+      "tbt": "TBT-135",
+      "title": "Cold Stress",
+      "matches": [
+        {
+          "id": "cold-environments",
+          "title": "Working Safely in Cold Environments",
+          "sharedGroups": [
+            "cold"
+          ]
+        }
+      ]
+    },
+    {
+      "tbt": "TBT-136",
+      "title": "Sun Protection",
+      "matches": [
+        {
+          "id": "hot-environments",
+          "title": "Preventing Heat Illness in Hot Environments",
+          "sharedGroups": [
+            "heat"
+          ]
+        }
+      ]
+    },
+    {
+      "tbt": "TBT-137",
+      "title": "Dehydration",
+      "matches": [
+        {
+          "id": "hot-environments",
+          "title": "Preventing Heat Illness in Hot Environments",
+          "sharedGroups": [
+            "heat"
+          ]
+        }
+      ]
+    },
+    {
+      "tbt": "TBT-138",
+      "title": "Working in Extreme Weather",
+      "matches": [
+        {
+          "id": "hot-environments",
+          "title": "Preventing Heat Illness in Hot Environments",
+          "sharedGroups": [
+            "heat"
+          ]
+        }
+      ]
+    },
+    {
+      "tbt": "TBT-249",
+      "title": "Workshop Housekeeping",
+      "matches": [
+        {
+          "id": "housekeeping",
+          "title": "Jobsite Housekeeping",
+          "sharedGroups": [
+            "housekeeping"
+          ]
+        }
+      ]
+    },
+    {
+      "tbt": "TBT-258",
+      "title": "Nail Guns and Powder Tools",
+      "matches": [
+        {
+          "id": "nail-gun-safety",
+          "title": "Nail Gun Safety",
+          "sharedGroups": [
+            "nail-gun"
+          ]
+        }
+      ]
+    },
+    {
+      "tbt": "TBT-282",
+      "title": "Plant Room Housekeeping",
+      "matches": [
+        {
+          "id": "housekeeping",
+          "title": "Jobsite Housekeeping",
+          "sharedGroups": [
+            "housekeeping"
+          ]
+        }
+      ]
+    }
+  ],
+  "withinImport": [
+    {
+      "group": "fall-protection",
+      "members": [
+        "TBT-003 Working at Height",
+        "TBT-043 Slip, Trip and Fall Prevention",
+        "TBT-050 Working from Roofs",
+        "TBT-051 Fragile Roofs",
+        "TBT-052 Roof Edge Protection",
+        "TBT-053 Roof Access",
+        "TBT-054 Fall Arrest Equipment",
+        "TBT-055 Harness Inspection"
+      ]
+    },
+    {
+      "group": "scaffold",
+      "members": [
+        "TBT-005 Mobile Towers and Scaffolds",
+        "TBT-049 Scaffolding Inspection"
+      ]
+    },
+    {
+      "group": "forklift",
+      "members": [
+        "TBT-007 Forklift Truck Safety",
+        "TBT-008 Reach Truck Safety"
+      ]
+    },
+    {
+      "group": "power-saw-tools",
+      "members": [
+        "TBT-010 Safe Use of Hand Tools",
+        "TBT-011 Power Tools"
+      ]
+    },
+    {
+      "group": "electrical-cords-equipment",
+      "members": [
+        "TBT-012 Portable Electrical Equipment",
+        "TBT-015 Working Near Live Electrical Equipment",
+        "TBT-016 Electrical Inspection and Defect Reporting"
+      ]
+    },
+    {
+      "group": "lockout-isolation",
+      "members": [
+        "TBT-013 Electrical Isolation",
+        "TBT-014 Lockout/Tagout",
+        "TBT-036 Stored Energy",
+        "TBT-037 Safe Isolation Verification"
+      ]
+    },
+    {
+      "group": "electrical-live",
+      "members": [
+        "TBT-013 Electrical Isolation",
+        "TBT-015 Working Near Live Electrical Equipment"
+      ]
+    },
+    {
+      "group": "hot-work-welding",
+      "members": [
+        "TBT-017 Hot Work",
+        "TBT-018 Brazing and Soldering",
+        "TBT-019 Welding Safety",
+        "TBT-081 Hot Work Fire Watch",
+        "TBT-098 Permit to Work: Hot Work",
+        "TBT-126 Welding Fumes",
+        "TBT-127 Fume Extraction"
+      ]
+    },
+    {
+      "group": "housekeeping",
+      "members": [
+        "TBT-042 Housekeeping",
+        "TBT-249 Workshop Housekeeping",
+        "TBT-282 Plant Room Housekeeping"
+      ]
+    },
+    {
+      "group": "excavation",
+      "members": [
+        "TBT-047 Excavation Awareness",
+        "TBT-048 Underground Services"
+      ]
+    },
+    {
+      "group": "falling-objects",
+      "members": [
+        "TBT-056 Dropped Objects",
+        "TBT-057 Tools at Height"
+      ]
+    },
+    {
+      "group": "crane",
+      "members": [
+        "TBT-059 Safe Lifting Operations",
+        "TBT-060 Lifting Accessories",
+        "TBT-063 Mobile Cranes Awareness",
+        "TBT-064 Working Near Cranes",
+        "TBT-065 Banksman and Slinger Duties"
+      ]
+    },
+    {
+      "group": "cold",
+      "members": [
+        "TBT-078 Winter Driving",
+        "TBT-135 Cold Stress"
+      ]
+    },
+    {
+      "group": "confined-space",
+      "members": [
+        "TBT-099 Permit to Work: Confined Spaces",
+        "TBT-100 Confined Space Awareness",
+        "TBT-101 Gas Testing",
+        "TBT-102 Working in Poorly Ventilated Areas",
+        "TBT-103 Oxygen Deficiency"
+      ]
+    },
+    {
+      "group": "repetitive-motion",
+      "members": [
+        "TBT-124 Hand-Arm Vibration",
+        "TBT-125 Whole-Body Vibration"
+      ]
+    },
+    {
+      "group": "biohazard",
+      "members": [
+        "TBT-130 Biological Hazards",
+        "TBT-131 Sharps and Waste",
+        "TBT-132 Needlestick Prevention"
+      ]
+    },
+    {
+      "group": "heat",
+      "members": [
+        "TBT-134 Heat Stress",
+        "TBT-136 Sun Protection",
+        "TBT-137 Dehydration",
+        "TBT-138 Working in Extreme Weather"
+      ]
+    }
+  ],
+  "identicalBodies": [
+    {
+      "hash": "7ebb98b68b7817cac959c59e849cf817",
+      "members": [
+        "TBT-001",
+        "TBT-235"
+      ]
+    },
+    {
+      "hash": "2b030fd0cdf8674b237fa13e5364af31",
+      "members": [
+        "TBT-003",
+        "TBT-004",
+        "TBT-005",
+        "TBT-006",
+        "TBT-049",
+        "TBT-050",
+        "TBT-051",
+        "TBT-052",
+        "TBT-053",
+        "TBT-054",
+        "TBT-055",
+        "TBT-056",
+        "TBT-057"
+      ]
+    },
+    {
+      "hash": "56d227fbfbd82feaaed4f0a4a18ea36b",
+      "members": [
+        "TBT-007",
+        "TBT-008",
+        "TBT-009",
+        "TBT-066",
+        "TBT-067",
+        "TBT-068"
+      ]
+    },
+    {
+      "hash": "cd96049e9fbd70ee1bb9f79186f54c66",
+      "members": [
+        "TBT-010",
+        "TBT-011",
+        "TBT-256",
+        "TBT-257",
+        "TBT-258"
+      ]
+    },
+    {
+      "hash": "a706d516ae8cd40e8bba7739df9d85fa",
+      "members": [
+        "TBT-012",
+        "TBT-013",
+        "TBT-014",
+        "TBT-015",
+        "TBT-016",
+        "TBT-288"
+      ]
+    },
+    {
+      "hash": "25cfac4ae985566c6caefc859eed028a",
+      "members": [
+        "TBT-017",
+        "TBT-018",
+        "TBT-019",
+        "TBT-081",
+        "TBT-098",
+        "TBT-126"
+      ]
+    },
+    {
+      "hash": "1874169e4afc1d54feea73e922e11105",
+      "members": [
+        "TBT-020",
+        "TBT-105",
+        "TBT-106",
+        "TBT-248"
+      ]
+    },
+    {
+      "hash": "4efad28c58ad8ce9c3bb04a20a3402c5",
+      "members": [
+        "TBT-021",
+        "TBT-022",
+        "TBT-023",
+        "TBT-024",
+        "TBT-025",
+        "TBT-114",
+        "TBT-173",
+        "TBT-174"
+      ]
+    },
+    {
+      "hash": "f7ffc1e13c9015f5452a695deccd634c",
+      "members": [
+        "TBT-026",
+        "TBT-027",
+        "TBT-265",
+        "TBT-266",
+        "TBT-267",
+        "TBT-268"
+      ]
+    },
+    {
+      "hash": "1db3b0b5310542dae1f31bd7a0c4471e",
+      "members": [
+        "TBT-029",
+        "TBT-030"
+      ]
+    },
+    {
+      "hash": "402590601962d4e99a11bdb32e3a87bc",
+      "members": [
+        "TBT-031",
+        "TBT-032",
+        "TBT-033",
+        "TBT-034",
+        "TBT-035",
+        "TBT-036",
+        "TBT-250",
+        "TBT-251",
+        "TBT-276",
+        "TBT-277"
+      ]
+    },
+    {
+      "hash": "ee95917f91859551adc4c218377b9c4f",
+      "members": [
+        "TBT-038",
+        "TBT-039",
+        "TBT-040",
+        "TBT-041",
+        "TBT-159",
+        "TBT-160",
+        "TBT-162",
+        "TBT-207",
+        "TBT-299",
+        "TBT-300"
+      ]
+    },
+    {
+      "hash": "cc68234bb6e28d5f9d13669f1b069484",
+      "members": [
+        "TBT-042",
+        "TBT-043",
+        "TBT-044",
+        "TBT-045",
+        "TBT-058",
+        "TBT-249",
+        "TBT-282"
+      ]
+    },
+    {
+      "hash": "6f4ad5c231180e556931d09d9269b770",
+      "members": [
+        "TBT-046",
+        "TBT-047",
+        "TBT-048"
+      ]
+    },
+    {
+      "hash": "39daff8d91bddbf05f4db7ee6c5a5b0a",
+      "members": [
+        "TBT-059",
+        "TBT-060",
+        "TBT-061",
+        "TBT-062",
+        "TBT-063",
+        "TBT-064",
+        "TBT-065"
+      ]
+    },
+    {
+      "hash": "d6c7b2adda3d8cad95dbd29dab807ac1",
+      "members": [
+        "TBT-069",
+        "TBT-070",
+        "TBT-071",
+        "TBT-072",
+        "TBT-073",
+        "TBT-074",
+        "TBT-075",
+        "TBT-076",
+        "TBT-077",
+        "TBT-078"
+      ]
+    },
+    {
+      "hash": "3292cec4d76948aace0edd1f5a830345",
+      "members": [
+        "TBT-079",
+        "TBT-080",
+        "TBT-082"
+      ]
+    },
+    {
+      "hash": "b6ee26fe9ae1ea0db5b76103eab1ebb2",
+      "members": [
+        "TBT-083",
+        "TBT-283",
+        "TBT-284",
+        "TBT-285",
+        "TBT-286",
+        "TBT-287",
+        "TBT-289"
+      ]
+    },
+    {
+      "hash": "ef8e63e6372ca7d9bd00c160ae86364e",
+      "members": [
+        "TBT-084",
+        "TBT-085",
+        "TBT-086",
+        "TBT-087",
+        "TBT-088",
+        "TBT-089",
+        "TBT-090"
+      ]
+    },
+    {
+      "hash": "4d1bda165668d0c2111343738556bf7c",
+      "members": [
+        "TBT-091",
+        "TBT-092",
+        "TBT-093",
+        "TBT-094",
+        "TBT-095",
+        "TBT-096",
+        "TBT-097"
+      ]
+    },
+    {
+      "hash": "3d430e88042729ae1a0bdf069ea8b0af",
+      "members": [
+        "TBT-099",
+        "TBT-100",
+        "TBT-101",
+        "TBT-102",
+        "TBT-103",
+        "TBT-104"
+      ]
+    },
+    {
+      "hash": "cc573c9f4ec2fcdb2256b8968e4df6d0",
+      "members": [
+        "TBT-107",
+        "TBT-109",
+        "TBT-110",
+        "TBT-111",
+        "TBT-112",
+        "TBT-113",
+        "TBT-115",
+        "TBT-116",
+        "TBT-117",
+        "TBT-118",
+        "TBT-211",
+        "TBT-234"
+      ]
+    },
+    {
+      "hash": "e2413028c8cdb705c3d6a53e1e41480f",
+      "members": [
+        "TBT-119",
+        "TBT-120",
+        "TBT-121",
+        "TBT-122",
+        "TBT-123",
+        "TBT-124",
+        "TBT-125",
+        "TBT-127",
+        "TBT-182"
+      ]
+    },
+    {
+      "hash": "910544426753be269cb91c5da56ebccf",
+      "members": [
+        "TBT-128",
+        "TBT-129",
+        "TBT-130",
+        "TBT-131",
+        "TBT-132",
+        "TBT-133"
+      ]
+    },
+    {
+      "hash": "32e6ca9ff3dbf1c137c8b820ccb36163",
+      "members": [
+        "TBT-134",
+        "TBT-135",
+        "TBT-136",
+        "TBT-137",
+        "TBT-138",
+        "TBT-139",
+        "TBT-140",
+        "TBT-141",
+        "TBT-142",
+        "TBT-143",
+        "TBT-144",
+        "TBT-145"
+      ]
+    },
+    {
+      "hash": "f5d29078566673430eef31f05f6e796c",
+      "members": [
+        "TBT-146",
+        "TBT-147",
+        "TBT-148",
+        "TBT-149",
+        "TBT-150",
+        "TBT-151",
+        "TBT-152",
+        "TBT-153",
+        "TBT-154",
+        "TBT-155",
+        "TBT-156",
+        "TBT-157",
+        "TBT-158"
+      ]
+    },
+    {
+      "hash": "510ea7a9bd063c6a3168d322dca09c61",
+      "members": [
+        "TBT-161",
+        "TBT-163",
+        "TBT-164",
+        "TBT-165",
+        "TBT-166",
+        "TBT-167",
+        "TBT-168"
+      ]
+    },
+    {
+      "hash": "dfccac78396258007791a831e402e40b",
+      "members": [
+        "TBT-169",
+        "TBT-170",
+        "TBT-171",
+        "TBT-172",
+        "TBT-175",
+        "TBT-176",
+        "TBT-177",
+        "TBT-178",
+        "TBT-179",
+        "TBT-180",
+        "TBT-181",
+        "TBT-183"
+      ]
+    },
+    {
+      "hash": "b350a47cef1e9c615f1f3235aed9d7de",
+      "members": [
+        "TBT-184",
+        "TBT-185",
+        "TBT-186",
+        "TBT-187",
+        "TBT-188",
+        "TBT-189",
+        "TBT-190",
+        "TBT-191",
+        "TBT-192",
+        "TBT-193",
+        "TBT-194",
+        "TBT-195",
+        "TBT-196",
+        "TBT-197",
+        "TBT-198",
+        "TBT-199",
+        "TBT-200",
+        "TBT-201",
+        "TBT-202",
+        "TBT-203",
+        "TBT-204",
+        "TBT-205",
+        "TBT-206",
+        "TBT-208",
+        "TBT-209",
+        "TBT-210",
+        "TBT-212",
+        "TBT-213",
+        "TBT-262",
+        "TBT-291",
+        "TBT-292"
+      ]
+    },
+    {
+      "hash": "787dd38c25f050a1ea864475e9173110",
+      "members": [
+        "TBT-214",
+        "TBT-215",
+        "TBT-216",
+        "TBT-217",
+        "TBT-218",
+        "TBT-219",
+        "TBT-220",
+        "TBT-221",
+        "TBT-222",
+        "TBT-223"
+      ]
+    },
+    {
+      "hash": "8d1c7f14c169dde252fca3c6ae6b6745",
+      "members": [
+        "TBT-224",
+        "TBT-225",
+        "TBT-226",
+        "TBT-227",
+        "TBT-228",
+        "TBT-229",
+        "TBT-230",
+        "TBT-231",
+        "TBT-232",
+        "TBT-233",
+        "TBT-236",
+        "TBT-237"
+      ]
+    },
+    {
+      "hash": "a8d40c90e94152a1bc9ef56a698b9a94",
+      "members": [
+        "TBT-238",
+        "TBT-239",
+        "TBT-240",
+        "TBT-241",
+        "TBT-242",
+        "TBT-243"
+      ]
+    },
+    {
+      "hash": "4d2670d49e99842c07f9a6f441058017",
+      "members": [
+        "TBT-244",
+        "TBT-245",
+        "TBT-246"
+      ]
+    },
+    {
+      "hash": "07b374468d45b9eab40e155d1dbf6d9d",
+      "members": [
+        "TBT-247",
+        "TBT-252",
+        "TBT-253",
+        "TBT-254",
+        "TBT-255"
+      ]
+    },
+    {
+      "hash": "8cfe066f91417f7c7f53df9854669763",
+      "members": [
+        "TBT-259",
+        "TBT-260",
+        "TBT-261",
+        "TBT-263",
+        "TBT-264"
+      ]
+    },
+    {
+      "hash": "b8451166012e3eb860de60151b31b069",
+      "members": [
+        "TBT-269",
+        "TBT-270",
+        "TBT-271",
+        "TBT-272",
+        "TBT-273"
+      ]
+    },
+    {
+      "hash": "55f8675036ba3aebb1c2ab5852d397c9",
+      "members": [
+        "TBT-274",
+        "TBT-275",
+        "TBT-278",
+        "TBT-279",
+        "TBT-280",
+        "TBT-281"
+      ]
+    },
+    {
+      "hash": "ff83202cc42b5dfd271048c9e7a37dcb",
+      "members": [
+        "TBT-290",
+        "TBT-293",
+        "TBT-294"
+      ]
+    },
+    {
+      "hash": "92a78964f5b9cf5bf199eb64abd2a2fc",
+      "members": [
+        "TBT-295",
+        "TBT-296",
+        "TBT-297",
+        "TBT-298"
+      ]
+    }
+  ]
+}

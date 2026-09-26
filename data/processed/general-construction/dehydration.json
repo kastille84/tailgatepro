@@ -1,0 +1,55 @@
+{
+  "id": "dehydration",
+  "title": "Dehydration",
+  "primary_trade": "General Construction",
+  "trade_tags": [
+    "General Construction"
+  ],
+  "osha_standards": [
+    "OSH Act Section 5(a)(1) General Duty Clause"
+  ],
+  "estimated_minutes": 5,
+  "summary": "Hot conditions make you lose water and salt through sweat, and heat illness can lead to death. Drink small amounts of water often, rest in the shade, and know the signs of heat stroke and heat exhaustion.",
+  "talking_points": [
+    "Heat illness can happen when your body cannot keep a normal temperature. It can result in death.",
+    "Drink small amounts of water often, before you get thirsty. In moderate activity in moderately hot conditions, drink about 1 cup every 15 to 20 minutes. Your urine should be clear or lightly colored.",
+    "Do not drink extreme amounts. Generally, do not drink more than 12 quarts (48 cups) in 24 hours.",
+    "Eat regular meals and snacks. They give enough salt and electrolytes if you drink enough water. Avoid salt tablets.",
+    "Heat exhaustion signs are headache, nausea, dizziness, weakness, irritability, thirst, heavy sweating, and decreased urine output. Move to a cooler place, drink liquids, and get medical evaluation.",
+    "Heat stroke is a life-threatening emergency. Signs include confusion, loss of consciousness, seizures, and very high body temperature. Call 911, and cool the person with cool water, wet cloths, or ice until help arrives.",
+    "Use a buddy system, or check on workers several times an hour to make sure they are using water and shade. Do not leave a sick worker alone.",
+    "Newer workers, or those away for more than a week, should ease into the workload or take more breaks the first week. Take rest breaks with water in shade or air conditioning."
+  ],
+  "site_hazards_to_check": [
+    "Cool drinking water not close to the work area, or not easy to see",
+    "No shade or air-conditioned area for rest breaks",
+    "High heat and humidity, direct sun, or little breeze",
+    "Heavy PPE or clothing, or heavy physical work in the heat",
+    "New or returning workers going straight into full workloads"
+  ],
+  "discussion_questions": [
+    "How much water should each of us drink while working in this heat, and how often?",
+    "What are the signs of heat exhaustion and heat stroke, and what do we do for each?",
+    "Who is checking on whom today, and where is our shade and water?"
+  ],
+  "attribution": {
+    "source": "NIOSH",
+    "publisher": "National Institute for Occupational Safety and Health (NIOSH)",
+    "copyright": "U.S. Government work — public domain.",
+    "license": "public-domain",
+    "source_url": "https://www.cdc.gov/niosh/docs/2011-174/pdfs/2011-174.pdf",
+    "source_ref": "TBT-137",
+    "notice": "Adapted from a NIOSH publication (U.S. Government work; OSHA-NIOSH joint InfoSheet). Reproduced with attribution for jobsite safety training; not an endorsement by CPWR or NIOSH."
+  },
+  "audit": {
+    "status": "approved",
+    "audited_at": "2026-09-25T18:10:19Z",
+    "osha_accuracy_verified": true,
+    "flags": [
+      "Every number (1 cup every 15-20 min, urine clear/light, 12 quarts/48 cups per 24 h, avoid salt tablets, buddy check several times an hour, ease-in for workers away over a week) is in the OSHA-NIOSH InfoSheet 2011-174. Public domain, on cdc.gov/niosh; notice preserved.",
+      "Fit with title: the InfoSheet is a heat-illness sheet, but the hydration content (how much, how often, what not to do, over-hydration limit) plus heat exhaustion/stroke recognition genuinely covers Dehydration. Adapted from an employer-directed sheet into worker/foreman points; acceptable.",
+      "OSHA mapping: no 1926 heat standard exists; General Duty Clause 5(a)(1) (quoted in the InfoSheet disclaimer) is appropriate. Non-blocking suggestion: 29 CFR 1926.51(a) (potable drinking water) could be added.",
+      "Heat stroke first-aid points are consistent with source (call 911, cool with water/wet cloths/ice). No UK wording."
+    ]
+  }
+}

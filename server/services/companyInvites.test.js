@@ -1,5 +1,6 @@
 // Plain CommonJS — see requireAuth.test.js for why (nested require() sharing).
 const { supabase } = require("../utility/supabaseClient");
+const seatsService = require("./seats");
 const {
   createInvite,
   previewInvite,
@@ -28,6 +29,7 @@ const mappedInvite = {
 };
 
 const fromSpy = vi.spyOn(supabase, "from");
+const assertSeatSpy = vi.spyOn(seatsService, "assertSeatAvailable");
 
 describe("companyInvites service: createInvite", () => {
   let single;
@@ -44,6 +46,32 @@ describe("companyInvites service: createInvite", () => {
       if (table === "company_invites") return { upsert };
       throw new Error(`Unexpected table: ${table}`);
     });
+    assertSeatSpy.mockReset().mockResolvedValue(undefined);
+  });
+
+  it("should check the plan's seats (including pending invites) before writing", async () => {
+    // Act
+    await createInvite("company-1", "newhire@example.com", "foreman");
+
+    // Assert
+    expect(assertSeatSpy).toHaveBeenCalledWith({
+      companyId: "company-1",
+      role: "foreman",
+      email: "newhire@example.com",
+      includePending: true,
+    });
+  });
+
+  it("should not write an invite when the plan's seats are full", async () => {
+    // Arrange
+    const { AppError } = require("../utility/AppError");
+    assertSeatSpy.mockRejectedValue(new AppError("limit", 403, { data: { code: "PLAN_LIMIT" } }));
+
+    // Act & Assert
+    await expect(
+      createInvite("company-1", "newhire@example.com", "foreman"),
+    ).rejects.toMatchObject({ statusCode: 403 });
+    expect(upsert).not.toHaveBeenCalled();
   });
 
   it("should upsert a new invite row keyed on (company_id, email) and return the mapped result", async () => {

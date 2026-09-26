@@ -2,6 +2,7 @@ import React from "react";
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { render, screen, fireEvent } from "@testing-library/react";
 import { ThemeProvider } from "styled-components";
+import { MemoryRouter } from "react-router-dom";
 
 import { ContentLibrary } from "../../../src/pages/ContentLibrary/ContentLibrary";
 import theme from "../../../src/styles/theme";
@@ -9,12 +10,16 @@ import theme from "../../../src/styles/theme";
 const mockUseAuth = vi.fn();
 const mockUseTalks = vi.fn();
 const mockUseFavorites = vi.fn();
+const mockUseCurrentUser = vi.fn();
 
 vi.mock("../../../src/context/auth", () => ({
   useAuth: () => mockUseAuth(),
 }));
 vi.mock("../../../src/hooks/useTalks", () => ({
   useTalks: (...args: unknown[]) => mockUseTalks(...args),
+}));
+vi.mock("../../../src/hooks/useCurrentUser", () => ({
+  useCurrentUser: () => mockUseCurrentUser(),
 }));
 vi.mock("../../../src/hooks/useFavorites", () => ({
   useFavorites: (...args: unknown[]) => mockUseFavorites(...args),
@@ -106,9 +111,11 @@ const tradeOptions = [
 
 const renderPage = () =>
   render(
-    <ThemeProvider theme={theme}>
-      <ContentLibrary />
-    </ThemeProvider>,
+    <MemoryRouter>
+      <ThemeProvider theme={theme}>
+        <ContentLibrary />
+      </ThemeProvider>
+    </MemoryRouter>,
   );
 
 describe("ContentLibrary page", () => {
@@ -122,6 +129,24 @@ describe("ContentLibrary page", () => {
       isError: false,
     });
     mockUseFavorites.mockReturnValue({ favoriteIds: new Set() });
+    mockUseCurrentUser.mockReturnValue({ limits: { libraryAccess: "full" } });
+  });
+
+  it("shows an upgrade banner for a core-only (Trade Free) plan", () => {
+    mockUseCurrentUser.mockReturnValue({ limits: { libraryAccess: "core" } });
+    renderPage();
+    expect(screen.getByText(/30 core talks/i)).toBeDefined();
+    expect(
+      screen.getByRole("link", { name: /upgrade to trade pro/i }),
+    ).toBeDefined();
+  });
+
+  it("hides the upgrade banner on the full library and while limits load", () => {
+    renderPage();
+    expect(screen.queryByText(/30 core talks/i)).toBeNull();
+    mockUseCurrentUser.mockReturnValue({ limits: null });
+    renderPage();
+    expect(screen.queryByText(/30 core talks/i)).toBeNull();
   });
 
   it("shows a loading status while auth resolves", () => {

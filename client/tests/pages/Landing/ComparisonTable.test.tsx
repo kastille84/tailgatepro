@@ -33,10 +33,14 @@ describe("ComparisonTable", () => {
     expect(screen.getByText("Getting started")).toBeTruthy();
     expect(screen.getByText("Languages")).toBeTruthy();
     expect(
-      screen.getByText("Open a URL or scan a QR code — nothing to install"),
+      screen.getByText("Open a link — nothing to install"),
     ).toBeTruthy();
     expect(
       screen.getByText("Native App Store download on every phone"),
+    ).toBeTruthy();
+
+    expect(
+      screen.getByText("1-click OSHA Defense Bundle (indexed ZIP) — coming soon"),
     ).toBeTruthy();
 
     // 9 feature rows + 1 header row

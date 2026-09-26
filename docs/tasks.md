@@ -2163,7 +2163,209 @@ from the dashboard, so run the 8d-g backfill first.
 - [x] GC links a sub company to a project (`project_subcontractors`) — done: slim version (GC join code)
       shipped in Phase 6b–6d, superseded by 8d above
 
+## Phase 9 — Pricing-promise gaps · status: audited 2026-09-24; 9a (copy fixes) and 9b (entitlement foundation) done, 9c done (seat caps, history window, library split, archive, PDF-link re-issue), 9d–9g not started
+
+Audit of the pricing page (`client/src/data/plans.ts`, `Pricing.tsx` FAQ/callout) and landing page copy against
+the code. Full evidence table, statuses and per-gap resolution live in `docs/pricing-promise-gaps.md` — every
+item below refers to it. Key fact: the only tier gates today are translation and PDF branding
+(`server/utility/entitlements.js`); there is no billing and no quantity limit of any kind. Items already
+tracked elsewhere are linked, not duplicated (Defense Bundle ~1158, tier-gating deferral ~1296/~1664, AI Talk
+Builder ~1736-1741, 500+ library licensing ~1749-1754, crew-photo retention ~762-768).
+
+Do 9a first: it is cheap, and it stops the public site over-promising while the rest is built.
+
+### 9a — Honest-copy fixes · status: code complete, 100% coverage (1118 tests passing)
+
+Done: `Plan` gained `comingSoon?: string[]` (a subset of `features`); `Pricing.tsx` and `PricingTeaser.tsx` render a
+"Coming soon" `StyledSoonTag` for those, and `plans.ts` flags every unbuilt paid feature. Unbuilt claims elsewhere
+were reworded to what exists: "GPS-verified"/"tamper-evident" → "signed, timestamped, locked once completed" (mock
+PDF seal now "Signed & Locked"), QR → link, "AI topic generator"/"500+"/"30 templates"/"10+ languages" → what's real,
+SMS and Defense Bundle stay on the landing page (GC bullets tagged "Coming soon", comparison "Audit export" row
+marked "— coming soon") — remove those markers when 9e ships them, "$0 for every sub" → "no seat fee" with
+sponsorship marked coming soon, "PDFs forever" → 30-day link wording. New `tests/data/plans.test.ts` guards that
+every `comingSoon` string exists in `features`. **Follow-up:** when a feature ships (9c–9e), delete its `comingSoon`
+entry (and restore/upgrade the copy where it was softened). Plan-definition limits (foremen/jobsite/site caps) were
+left as written — enforcement is 9c/9d.
+
+- [x] Reword or mark "coming soon" every unbuilt claim: "500+ OSHA library" and "30 core templates" (34 exist, no
+      free/paid split), "AI Talk Builder" / "AI topic generator" / "generate a custom hazard talk", "AI multi-language
+      audio (10+ languages)" (actually Google Translate on custom talks + device TTS), "Auto-SMS nudges", "GPS-verified"
+      seal (`CompliancePdfCard.tsx:74`), "tamper-evident", "Emailed PDFs stay in your inbox forever" (the link expires
+      after 30 days), QR-code claims, GC "inbox", "30-second field start" / "rollout 1-4 weeks" (unmeasured). Files:
+      `plans.ts`, `Pricing.tsx`, `ComparisonTable`, `GcSection`, `HowItWorks`, `LandingFaq`, `CompliancePdfCard`,
+      `PricingTeaser`. Update the client tests that assert this copy; keep 100% coverage. Never use the "45 seconds"
+      claim (it exists only in `pricing-and-positioning-strategy_V2.md`).
+- [x] Verify "can't be back-dated": `resolveHeldAt` (`server/utility/heldAt.js`) accepts a client time up to 7 days
+      in the past, so the claim was inaccurate — reworded to "a server timestamp is recorded and the meeting locks
+      once completed".
+
+### 9b — Entitlement foundation (prerequisite for 9c / 9d) · status: code complete; run the `jobsites.plan` ALTER in Supabase
+
+Decision: keep the `subscription_tier` enum and resolve the plan from `companies.tier` + `company_type`
+(sub: basic/premium/enterprise = Trade Free/Pro/Enterprise; GC: basic = GC Free, premium = Portfolio up to 10
+sites, enterprise = Portfolio unlimited). GC Site Pro is per jobsite (`jobsites.plan` = `free`|`site_pro`), not a
+company tier. `PLAN_LIMITS`, `getLimits`, `getPlanId`, `effectiveJobsiteLimit` live in
+`server/utility/entitlements.js`; `GET /api/users/me` returns `plan` + `limits`, and `useCurrentUser` exposes
+them (no client-side mirror of the table). Nothing is enforced yet — that is 9c/9d.
+
+- [x] Reconcile `companies.tier` (`basic|premium|enterprise`) with the six plan names; decide the GC site-tier
+      model (per-site entitlement, paid-site count). Shares the decision with the Stripe deferral below.
+- [x] Extend `server/utility/entitlements.js` and its client mirror `client/src/hooks/useCurrentUser.ts` with the
+      new limits; keep the server the authority.
+
+### 9c — Trade-side limits · status: seat caps, history window, library split, history/archive page, lockout banner, inline invite upgrade prompt and PDF-link re-issue flow code complete (run the `is_core` ALTER + re-seed; paste the updated `docs/mailgun-templates/meeting-log-report.html` into Mailgun)
+
+Done: `server/services/seats.js` `assertSeatAvailable` runs on invite creation (counts pending invites) and again on
+invite acceptance. Free = one person total (every role counts, so the signup admin fills the seat); Pro/Enterprise
+count foreman-role users only (`seatRoleFor` in `entitlements.js`). Over the cap the server returns 403 with
+`data: { code: "PLAN_LIMIT", limit }`; the client shows the server message as a toast (`useInviteTeammate`). The join
+code is GC-only, so it needs no seat check. History: `meetingLogs.listForCompany` and the user-facing `getMeeting` hide
+rows older than `historyDays` (rows are never deleted; internal callers such as PDF generation are not gated).
+Pricing copy: Free is now "1 user account (you)" / "Solo foremen"; the FAQ states the 30-day window as live.
+The invite form now shows an inline upgrade prompt (`PlanLimitError` in `client/src/utils/PlanLimitError.ts`, thrown
+by `apiCompanies.inviteTeammate` on a `PLAN_LIMIT` 403; `useInviteTeammate` exposes `planLimitError` and skips the
+toast for it) with a `/pricing` link.
+
+- [x] Foreman seat caps (1 Free / 8 Pro / unlimited Enterprise) enforced on invites and invite acceptance
+      (`server/services/seats.js`) — server enforcement done; inline upgrade prompt on the invite form done.
+- [x] 30-day in-app history window for Free (`meetingLogs.listForCompany`, `getMeeting`); emailed PDFs unaffected.
+- [x] Lockout banner + upgrade prompt UI for the history window — `client/src/pages/MeetingHistory/` at `/meetings`
+      (Navbar "History", subcontractors only). `GET /api/meetings` now returns `meta: { hiddenCount, historyDays }`
+      (`meetingLogs.countHiddenForCompany`); the page shows a banner with a `/pricing` link for every Free account ("viewable for 30 days"), switching to "N older meetings are hidden" once older logs exist.
+      `GET /api/meetings/:id/pdf-url` is now gated by the history window too (403 `PLAN_LIMIT`).
+      **Month-grouped archive:** the page shows one card per month ("September 2026 · 23 talks"); a card
+      (`?month=YYYY-MM`) loads only that month via `GET /api/meetings?from&to` (held-at range). Cards come from
+      `GET /api/meetings/months?tzOffset` (`meetingLogs.listMonthSummaries`, bucketed in the viewer's timezone) which
+      also carries the banner's `hiddenCount`/`historyDays`. The summary pages through rows in 1,000-row chunks because
+      PostgREST caps a single response at 1,000 rows. Note the unfiltered `listForCompany` is still uncapped-by-design
+      but subject to that same 1,000-row limit; the UI no longer uses it without a month range.
+- [x] Free vs paid library split — Trade Free sees only the 30 core talks (`toolbox_talks.is_core`, set by the seed from
+      `CORE_TALK_SLUGS` in `scripts/lib/talkRow.js`) plus its own custom talks; every other global talk is hidden (404 on
+      `getById`, absent from the list). Paid trades and all GCs see everything (`hasFullLibrary` in `entitlements.js`,
+      `libraryAccess` in `PLAN_LIMITS`). Also enforced on meeting-log create and favorites add. `ContentLibrary` shows an
+      upgrade banner linking to `/pricing`. **To ship:** run `ALTER TABLE toolbox_talks ADD COLUMN IF NOT EXISTS is_core BOOLEAN
+      NOT NULL DEFAULT false;` in Supabase, then re-run `scripts/seed-talks.js`. Known gap: the offline talks cache merges and
+      never clears, so a downgraded company can still read previously cached non-core talks offline.
+- [x] 5-year legal archive for Pro: the `/meetings` page is the archive view and shows "kept for 5 years" when
+      `limits.archiveYears > 0`; the "coming soon" tag is removed from Trade Pro. **Retention policy (decided):**
+      completed meeting logs, PDFs and signatures are kept at least `archiveYears` (5) for Pro/Enterprise; crew photos
+      follow the same lifetime as their meeting log (resolves the PRD §7 / ~762-768 question). Nothing is purged today
+      and there is no deletion job — retention is a policy guarantee, so any future purge job must honor it. Free
+      rows are retained but only viewable for 30 days. No export/ZIP (that overlaps the 9e Defense Bundle).
+- [x] PDF-email link lifetime (decided: keep the 30-day signed link, add a re-issue flow). The email now also carries
+      `reportUrl` (`/gc/meetings/:id/report`, `GcMeetingReport` page behind `RequireAuth` + `RequireGc`), which mints a
+      fresh signed URL via `useGcMeetingPdfUrl`. `RequireAuth` now passes `state.from` so Login returns the user to
+      that page (email/password login; the Google OAuth redirect still lands on the dashboard). The Pricing FAQ says
+      the link lasts 30 days and a GC can sign in for a fresh one. **To ship:** paste the updated
+      `docs/mailgun-templates/meeting-log-report.html` (new `{{reportUrl}}` variable) into the Mailgun template.
+      Recipients with only `gc_contact_email` and no GC account still cannot re-issue.
+
+### 9d — GC-side limits and paywall
+
+- [ ] GC Free 1-active-jobsite cap (`server/services/jobsites.js` `create`) and the 10-site vs unlimited Portfolio cap.
+- [ ] GC Free "1 subcontractor unlocked, others blurred": server-side masking + client blur (today only the landing
+      mockup `GcDashboardMockup.tsx` shows it).
+- [ ] Sponsorship entitlement: a paid GC site lifts a linked sub's access ("every sub gets full access for $0");
+      accept-invite currently never touches the sub's tier.
+- [ ] Superintendent vs Safety Director roles for GC Portfolio (only `admin`/`safety_manager`/`foreman` exist,
+      `server/constants/roles.js`; the two manager roles are identical) + per-site scoping.
+
+### 9e — Feature builds (each needs its own design doc first)
+
+- [ ] Automated SMS nudges, Monday 7:00 AM (provider, phone-number storage + consent, scheduler; the only cron in
+      `server.js` is a leftover).
+- [ ] 1-click OSHA Defense Bundle ZIP (see ~1158; `pdfFilename.js` has the filename groundwork).
+- [ ] Cross-project sub safety scorecards (today: single-day compliance view only).
+- [ ] Top-down corporate policy push across all sites.
+- [ ] Company safety form and manual builder (GC Portfolio; the strategy doc also lists it for Trade Pro).
+- [ ] Custom safety manual upload (Trade Enterprise).
+- [ ] QR-code generation for jobsite invite / join-code links (no generator exists), or drop the QR claims.
+- [ ] Tamper-evidence: a content hash/seal on the PDF + audit log, and GPS capture if the "GPS-verified" claim
+      stays; otherwise remove both claims in 9a.
+- [ ] AI Talk Builder and cloud AI voice (see ~1736-1741).
+- [ ] Grow the library toward 500+ (see ~1749-1754; currently 34).
+- [ ] Multi-crew scheduling and equipment check-ins (no tables or code).
+
+### 9f — Integrations (blocked on billing; deferred)
+
+- [-] Procore, Autodesk ACC (Site Pro), JobTread, QuickBooks (Enterprise) sync.
+
+### 9g — Strategy-doc extras
+
+- [ ] Conversion-trigger modals from strategy doc §6 (2nd foreman, 30-day lockout, watermark, non-English audio,
+      sub #2 blur, SMS, 4th-site "$447 vs $499", policy push, scorecard). Only the non-English upsell note and the
+      watermark exist today.
+- [ ] PDF footer CTA "Claim Your Free GC Portal" (§7); the shipped watermark has no CTA.
+- [ ] Smart tagging / natural-language search, SOC-2, cryptographic timestamping (§2).
+- [ ] `plans.ts` listing gaps vs strategy doc §5 (permanent GC history, Trade Pro form builder, Procore/ACC add-on,
+      Portfolio-wide search) — decide whether to list or drop.
+
+## Phase 10 — Word-library import (300 toolbox talks) · status: 112 talks approved and seeded to non-prod and prod (34 original + 55 agency + 20 authored + 3 Word); the other 126 Word talks dropped
+
+Source `data/300_Toolbox_Talks_Library.docx` (300 one-page talks). Results, skip lists and the near-overlap list are
+in `docs/toolbox-library-import-report.md` (regenerated by the build script). Key fact: the 300 talks contain only
+43 distinct bodies (boilerplate per theme, title swapped in), so most are flagged `generic-body` and are **not**
+seeded until they get topic-specific content. Feeds the "grow the library" item in 9e.
+
+- [x] Parser `scripts/parse-toolbox-docx.js` + `scripts/lib/parseToolboxDocx.js` (no new dependency; reads the docx zip
+      with Node built-ins) → `data/raw/tbt-NNN-*.md` + `data/raw/_dedupe-candidates.json`, with tests
+- [x] New agent `.claude/agents/talks/safety-docx-importer.md`; `safety-structurer.md`, `safety-auditor.md` and
+      `.claude/skills/content-library/SKILL.md` updated for Word-library talks (section mapping, US-ization, owner-provided
+      attribution, generic-body / title-body-mismatch / UK-term audit checks)
+- [x] `scripts/lib/tbtCatalog.js` (classification: 17 duplicates of existing talks, 1 within-import duplicate,
+      62 non-safety topics skipped; trade, OSHA cites and US titles for the 220 kept),
+      `scripts/lib/usEnglish.js` (UK→US glossary), `scripts/build-tbt-talks.js` (writes `data/processed/**` + index)
+- [x] Two new trades introduced: `hvac-refrigeration` ("HVAC & Refrigeration"), `driving-transportation`
+      ("Driving & Transportation"); trade filter options are derived from data, no client change needed
+- [x] OSHA citations independently checked by `safety-auditor`; general-industry 1910 cites replaced with 1926
+      counterparts (1910.1030 and 1910.1200 kept as HazCom / bloodborne-pathogen references)
+- [ ] Confirm who authored/licensed the Word library (`attribution.license` is `owner-provided-unverified`; the
+      docx has no author or source) before any of it is published
+- [x] Agency-source pass (government + CPWR only, per user): `@safety-collector` TBT replacement mode found sources for 67
+      talks, `@safety-structurer` rebuilt 63 (4 rejected as unfit), `@safety-auditor` approved 50 and sent 13 back;
+      16 more turned out to duplicate original talks. Ledger: `data/raw/_tbt-source-matches.json`
+- [x] The 13 talks the auditor sent back were resolved: 5 retitled to what their source covers and re-approved
+      (045 Accident Prevention Signs and Tags, 065 Crane Signals and Signal Persons, 145 Suicide Prevention in
+      Construction, 025 Ammonia Refrigeration Hazards, 183 Site Dust Suppression for Air Quality); 129 Legionella
+      rebuilt from OSHA's worker Q&A and approved; 022, 271, 043, 105, 132, 172 fell back to the Word-library version
+      (no better source on allowed domains); 106 rebuilt but held (see next item)
+- [x] Harwood license check: OSHA's own page says Susan Harwood grantee materials are copyrighted by the grantee and
+      reusable only non-commercially, with no fee and no modification. TBT-106 and TBT-251 (and the earlier 043 source)
+      were built on such materials, so they were reverted to Word-library content and the source files deleted; the
+      collector rules now exclude Harwood materials
+- [ ] Approved talks worth a second look before publishing: 105-style thin sources were dropped, but 009 (source covers
+      vehicle awareness, not physical segregation), 142 (title broader than lifting-only content) and 095 ("Work Plans"
+      in the title, JHA-only content) carry non-blocking auditor flags
+- [x] Original content (option 2, core subset), chosen by the owner with the rule "no overlap with approved talks":
+      `docs/toolbox-authoring-selection.md` screened the 146 gap talks (29 proposed); 20 were written from fetched
+      OSHA/NIOSH/EPA pages (`data/authored/NNN.json`, built by `scripts/build-authored-talks.js` +
+      `scripts/lib/authoredBuild.js`, 9 tests) and all 20 audited `approved` claim-by-claim by two `safety-auditor` runs
+      (corrections made to 018, 066, 105, 111, 133, 152, 157, 159, 170, 172, 278; unsupported lines converted to
+      "Good practice:"). 9 of the 29 were dropped for lack of a readable source (125, 161, 251, 256, 156, 163) or
+      overlap/source reuse (089, 097); 071 merged into 066 and 077 into 078
+- [x] Seeded 2026-09-25 to non-prod and prod (`npm run seed:talks`; `NODE_ENV=production` for prod): 112 global talks in
+      each (20 added to the 92), verified row-by-row, the 92 existing rows unchanged. Rollback: delete `toolbox_talks`
+      rows where `is_global` and `slug` is one of the 20 authored slugs (`attribution.license = 'original-work'`)
+- [x] Decision 2026-09-25: the remaining 126 Word talks (HVAC/refrigeration plant, HR-style, warehouse, weak-fit,
+      overlaps, no readable source) are dropped, not written. Placeholder files deleted; `build-tbt-talks.js` no longer
+      writes unverified Word talks and lists them under "Dropped by decision" in the import report. Nothing in Supabase
+      changes (none was seeded). Revisit only if an HVAC installer pack (259, 260, 021) is wanted, as a new sourced effort
+- [ ] Check CPWR reuse terms: several CPWR PDFs say "All rights reserved" / "verify reuse terms" (talks 010, 122, 139,
+      142, 144 were flagged); confirm they fall under the free-use-with-attribution basis in `docs/content-attribution.md`
+- [ ] Decide whether environmental-compliance talks 177 (pollution prevention) and 180 (drain protection) belong in a
+      worker-safety library (their legal basis is Clean Water Act / EPA, not OSHA)
+- [ ] (superseded by the two items above) Write topic-specific content for the 217 `needs_revision` talks (start with trades customers use most:
+      general-construction, electrical, carpentry), then re-run `@safety-auditor` per trade
+- [ ] Decide the "imported but overlapping an existing talk" list in the report (delete the JSON to drop one)
+- [x] Seeded 2026-09-25 to both the non-prod and prod Supabase projects (`npm run seed:talks`, `NODE_ENV=production` for
+      prod): 92 global talks in each (58 added to the 34 already there), verified row-by-row; the 34 originals were
+      unchanged. Rollback if ever needed: delete `toolbox_talks` rows where `is_global` and `slug` is one of the 58
+      new slugs (the 34 originals excluded). `docs/content-attribution.md` counts updated
+- [ ] Update marketing/pricing copy that quotes the library size (was 34; now 112 seeded, see `docs/pricing-promise-gaps.md`)
+- [ ] Decide whether the 62 out-of-scope talks (quality, IT security, ethics, procurement) belong in a separate
+      non-safety library
+
 ## Deferred
 
-- [-] Stripe billing (needs multi-user/site concepts; reconcile `companies.tier` enum first)
-- [-] Procore integration
+- [-] Stripe billing (needs multi-user/site concepts; `companies.tier` enum reconciled in 9b) — see Phase 9b
+- [-] Procore integration — also JobTread, QuickBooks, Autodesk ACC (see Phase 9f)

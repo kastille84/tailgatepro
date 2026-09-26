@@ -201,6 +201,7 @@ describe("pdfGenerationQueue: enqueue", () => {
       projectName: project.name,
       companyName: company.name,
       pdfUrl: "https://signed.example/report.pdf",
+      reportUrl: expect.stringMatching(/\/gc\/meetings\/meeting-1\/report$/),
       meetingDate: meetingLog.heldAt,
     });
     expect(consoleErrorSpy).not.toHaveBeenCalled();

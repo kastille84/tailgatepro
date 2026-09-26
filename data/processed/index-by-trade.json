@@ -1,8 +1,57 @@
 {
-  "last_updated": "2026-09-10T23:12:57Z",
-  "total_talks": 34,
+  "last_updated": "2026-09-25T20:53:47Z",
+  "total_talks": 112,
   "trades": {
     "Carpentry": [
+      {
+        "id": "abrasive-wheels",
+        "title": "Abrasive Wheels",
+        "file_path": "data/processed/general-construction/abrasive-wheels.json",
+        "osha_standards": [
+          "29 CFR 1926.303",
+          "29 CFR 1910.215"
+        ],
+        "source": "OSHA"
+      },
+      {
+        "id": "bench-grinder-safety",
+        "title": "Bench Grinder Safety",
+        "file_path": "data/processed/general-construction/bench-grinder-safety.json",
+        "osha_standards": [
+          "29 CFR 1926.303",
+          "29 CFR 1926.102",
+          "29 CFR 1910.215"
+        ],
+        "source": "OSHA"
+      },
+      {
+        "id": "compressed-air",
+        "title": "Compressed Air",
+        "file_path": "data/processed/general-construction/compressed-air.json",
+        "osha_standards": [
+          "29 CFR 1926.302"
+        ],
+        "source": "TailgatePro"
+      },
+      {
+        "id": "flammable-liquid-storage",
+        "title": "Flammable Liquid Storage",
+        "file_path": "data/processed/general-construction/flammable-liquid-storage.json",
+        "osha_standards": [
+          "29 CFR 1926.152",
+          "29 CFR 1926.150"
+        ],
+        "source": "TailgatePro"
+      },
+      {
+        "id": "hand-arm-vibration",
+        "title": "Hand-Arm Vibration",
+        "file_path": "data/processed/general-construction/hand-arm-vibration.json",
+        "osha_standards": [
+          "OSH Act Section 5(a)(1) General Duty Clause"
+        ],
+        "source": "CPWR"
+      },
       {
         "id": "housekeeping",
         "title": "Jobsite Housekeeping",
@@ -31,9 +80,88 @@
           "29 CFR 1926.304"
         ],
         "source": "CPWR"
+      },
+      {
+        "id": "power-tools",
+        "title": "Power Tools",
+        "file_path": "data/processed/carpentry/power-tools.json",
+        "osha_standards": [
+          "29 CFR 1926.300",
+          "29 CFR 1926.301",
+          "29 CFR 1926.302",
+          "29 CFR 1926.303",
+          "29 CFR 1926.404(b)(1)"
+        ],
+        "source": "OSHA"
+      },
+      {
+        "id": "safe-use-of-hand-tools",
+        "title": "Safe Use of Hand Tools",
+        "file_path": "data/processed/carpentry/safe-use-of-hand-tools.json",
+        "osha_standards": [
+          "29 CFR 1926.301"
+        ],
+        "source": "CPWR"
+      },
+      {
+        "id": "slip-trip-and-fall-prevention",
+        "title": "Slip, Trip and Fall Prevention",
+        "file_path": "data/processed/general-construction/slip-trip-and-fall-prevention.json",
+        "osha_standards": [
+          "29 CFR 1926.25",
+          "29 CFR 1926.1052"
+        ],
+        "source": "TailgatePro"
+      }
+    ],
+    "Driving & Transportation": [
+      {
+        "id": "cell-phones-and-driving",
+        "title": "Cell Phones and Driving",
+        "file_path": "data/processed/driving-transportation/cell-phones-and-driving.json",
+        "osha_standards": [
+          "OSH Act Section 5(a)(1) General Duty Clause"
+        ],
+        "source": "NIOSH"
+      },
+      {
+        "id": "driving-for-work",
+        "title": "Driving for Work",
+        "file_path": "data/processed/driving-transportation/driving-for-work.json",
+        "osha_standards": [
+          "OSH Act Section 5(a)(1) General Duty Clause"
+        ],
+        "source": "OSHA"
+      },
+      {
+        "id": "loading-and-unloading",
+        "title": "Loading and Unloading",
+        "file_path": "data/processed/heavy-equipment/loading-and-unloading.json",
+        "osha_standards": [
+          "29 CFR 1926.601",
+          "29 CFR 1926.600"
+        ],
+        "source": "TailgatePro"
+      },
+      {
+        "id": "winter-driving",
+        "title": "Winter Driving",
+        "file_path": "data/processed/driving-transportation/winter-driving.json",
+        "osha_standards": [],
+        "source": "TailgatePro"
       }
     ],
     "Drywall": [
+      {
+        "id": "construction-dust-control",
+        "title": "Construction Dust Control",
+        "file_path": "data/processed/general-construction/construction-dust-control.json",
+        "osha_standards": [
+          "29 CFR 1926.1153",
+          "29 CFR 1926.103"
+        ],
+        "source": "OSHA"
+      },
       {
         "id": "materials-handling-drywall",
         "title": "Safe Drywall Handling and Lifting",
@@ -46,6 +174,15 @@
       }
     ],
     "Electrical": [
+      {
+        "id": "battery-charging",
+        "title": "Battery Charging",
+        "file_path": "data/processed/electrical/battery-charging.json",
+        "osha_standards": [
+          "29 CFR 1926.441"
+        ],
+        "source": "OSHA"
+      },
       {
         "id": "buried-utilities-and-safety",
         "title": "Digging Safely Around Buried Utilities",
@@ -88,6 +225,39 @@
         "source": "NIOSH"
       },
       {
+        "id": "power-tools",
+        "title": "Power Tools",
+        "file_path": "data/processed/carpentry/power-tools.json",
+        "osha_standards": [
+          "29 CFR 1926.300",
+          "29 CFR 1926.301",
+          "29 CFR 1926.302",
+          "29 CFR 1926.303",
+          "29 CFR 1926.404(b)(1)"
+        ],
+        "source": "OSHA"
+      },
+      {
+        "id": "safe-isolation-verification",
+        "title": "Safe Isolation Verification",
+        "file_path": "data/processed/electrical/safe-isolation-verification.json",
+        "osha_standards": [
+          "29 CFR 1926.417",
+          "29 CFR 1926.416"
+        ],
+        "source": "TailgatePro Library"
+      },
+      {
+        "id": "stored-energy",
+        "title": "Stored Energy",
+        "file_path": "data/processed/general-construction/stored-energy.json",
+        "osha_standards": [
+          "29 CFR 1926.417",
+          "29 CFR 1910.147"
+        ],
+        "source": "OSHA"
+      },
+      {
         "id": "overhead-power-line-safety",
         "title": "Working Safely Near Overhead Power Lines",
         "file_path": "data/processed/electrical/overhead-power-line-safety.json",
@@ -114,6 +284,15 @@
         "source": "NIOSH"
       },
       {
+        "id": "drain-protection",
+        "title": "Drain Protection",
+        "file_path": "data/processed/general-construction/drain-protection.json",
+        "osha_standards": [
+          "OSH Act Section 5(a)(1) General Duty Clause"
+        ],
+        "source": "EPA"
+      },
+      {
         "id": "skid-steer-loader-safety",
         "title": "Skid Steer Loader Safety",
         "file_path": "data/processed/heavy-equipment/skid-steer-loader-safety.json",
@@ -132,9 +311,48 @@
           "29 CFR 1926.652"
         ],
         "source": "CPWR"
+      },
+      {
+        "id": "working-near-roads",
+        "title": "Working Near Roads",
+        "file_path": "data/processed/general-construction/working-near-roads.json",
+        "osha_standards": [
+          "29 CFR 1926.200",
+          "29 CFR 1926.201",
+          "29 CFR 1926.56"
+        ],
+        "source": "OSHA"
       }
     ],
     "General Construction": [
+      {
+        "id": "abrasive-wheels",
+        "title": "Abrasive Wheels",
+        "file_path": "data/processed/general-construction/abrasive-wheels.json",
+        "osha_standards": [
+          "29 CFR 1926.303",
+          "29 CFR 1910.215"
+        ],
+        "source": "OSHA"
+      },
+      {
+        "id": "accident-prevention-signs-and-tags",
+        "title": "Accident Prevention Signs and Tags",
+        "file_path": "data/processed/general-construction/accident-prevention-signs-and-tags.json",
+        "osha_standards": [
+          "29 CFR 1926.200"
+        ],
+        "source": "OSHA"
+      },
+      {
+        "id": "accident-reporting",
+        "title": "Accident Reporting",
+        "file_path": "data/processed/general-construction/accident-reporting.json",
+        "osha_standards": [
+          "29 CFR 1904.39"
+        ],
+        "source": "OSHA"
+      },
       {
         "id": "aerial-lifts-safety",
         "title": "Aerial Lift Safety: Fall Protection, Stability, and Power Lines",
@@ -156,6 +374,15 @@
         "source": "NIOSH"
       },
       {
+        "id": "asbestos-awareness",
+        "title": "Asbestos Awareness",
+        "file_path": "data/processed/general-construction/asbestos-awareness.json",
+        "osha_standards": [
+          "29 CFR 1926.1101"
+        ],
+        "source": "OSHA"
+      },
+      {
         "id": "asphalt-fumes-roofing-operations",
         "title": "Asphalt Fumes During Roofing Operations",
         "file_path": "data/processed/roofing/asphalt-fumes-roofing-operations.json",
@@ -164,6 +391,26 @@
           "29 CFR 1926.55"
         ],
         "source": "NIOSH"
+      },
+      {
+        "id": "battery-charging",
+        "title": "Battery Charging",
+        "file_path": "data/processed/electrical/battery-charging.json",
+        "osha_standards": [
+          "29 CFR 1926.441"
+        ],
+        "source": "OSHA"
+      },
+      {
+        "id": "bench-grinder-safety",
+        "title": "Bench Grinder Safety",
+        "file_path": "data/processed/general-construction/bench-grinder-safety.json",
+        "osha_standards": [
+          "29 CFR 1926.303",
+          "29 CFR 1926.102",
+          "29 CFR 1910.215"
+        ],
+        "source": "OSHA"
       },
       {
         "id": "biohazards",
@@ -186,6 +433,53 @@
         "source": "NIOSH"
       },
       {
+        "id": "chemical-labelling",
+        "title": "Chemical Labelling",
+        "file_path": "data/processed/general-construction/chemical-labelling.json",
+        "osha_standards": [
+          "29 CFR 1926.59",
+          "29 CFR 1910.1200"
+        ],
+        "source": "OSHA"
+      },
+      {
+        "id": "chemical-safety",
+        "title": "Chemical Safety",
+        "file_path": "data/processed/general-construction/chemical-safety.json",
+        "osha_standards": [
+          "29 CFR 1926.59",
+          "29 CFR 1910.1200"
+        ],
+        "source": "OSHA"
+      },
+      {
+        "id": "chemical-spill-response",
+        "title": "Chemical Spill Response",
+        "file_path": "data/processed/general-construction/chemical-spill-response.json",
+        "osha_standards": [
+          "29 CFR 1926.65"
+        ],
+        "source": "TailgatePro"
+      },
+      {
+        "id": "compressed-air",
+        "title": "Compressed Air",
+        "file_path": "data/processed/general-construction/compressed-air.json",
+        "osha_standards": [
+          "29 CFR 1926.302"
+        ],
+        "source": "TailgatePro"
+      },
+      {
+        "id": "compressed-gas-storage",
+        "title": "Compressed Gas Storage",
+        "file_path": "data/processed/general-construction/compressed-gas-storage.json",
+        "osha_standards": [
+          "29 CFR 1926.350"
+        ],
+        "source": "OSHA"
+      },
+      {
         "id": "confined-spaces-and-safety",
         "title": "Confined Space Entry Safety",
         "file_path": "data/processed/general-construction/confined-spaces-and-safety.json",
@@ -194,6 +488,16 @@
           "29 CFR 1926.1204"
         ],
         "source": "NIOSH"
+      },
+      {
+        "id": "construction-dust-control",
+        "title": "Construction Dust Control",
+        "file_path": "data/processed/general-construction/construction-dust-control.json",
+        "osha_standards": [
+          "29 CFR 1926.1153",
+          "29 CFR 1926.103"
+        ],
+        "source": "OSHA"
       },
       {
         "id": "silica",
@@ -205,12 +509,51 @@
         "source": "CPWR"
       },
       {
+        "id": "crane-signals-and-signal-persons",
+        "title": "Crane Signals and Signal Persons",
+        "file_path": "data/processed/heavy-equipment/crane-signals-and-signal-persons.json",
+        "osha_standards": [
+          "29 CFR 1926.1419"
+        ],
+        "source": "OSHA"
+      },
+      {
         "id": "crane-safety-stability-and-tipping",
         "title": "Crane Stability and Tip-Over Prevention",
         "file_path": "data/processed/heavy-equipment/crane-safety-stability-and-tipping.json",
         "osha_standards": [
           "29 CFR 1926.1402",
           "29 CFR 1926.1417"
+        ],
+        "source": "NIOSH"
+      },
+      {
+        "id": "debris-and-waste-disposal",
+        "title": "Debris and Waste Disposal",
+        "file_path": "data/processed/general-construction/debris-and-waste-disposal.json",
+        "osha_standards": [
+          "29 CFR 1926.252",
+          "29 CFR 1926.25"
+        ],
+        "source": "TailgatePro"
+      },
+      {
+        "id": "defective-equipment",
+        "title": "Defective Equipment",
+        "file_path": "data/processed/general-construction/defective-equipment.json",
+        "osha_standards": [
+          "29 CFR 1926.302",
+          "29 CFR 1926.300(a)",
+          "29 CFR 1926.20(b)(3)"
+        ],
+        "source": "OSHA"
+      },
+      {
+        "id": "dehydration",
+        "title": "Dehydration",
+        "file_path": "data/processed/general-construction/dehydration.json",
+        "osha_standards": [
+          "OSH Act Section 5(a)(1) General Duty Clause"
         ],
         "source": "NIOSH"
       },
@@ -224,6 +567,45 @@
           "29 CFR 1926.416(a)(1)"
         ],
         "source": "NIOSH"
+      },
+      {
+        "id": "drain-protection",
+        "title": "Drain Protection",
+        "file_path": "data/processed/general-construction/drain-protection.json",
+        "osha_standards": [
+          "OSH Act Section 5(a)(1) General Duty Clause"
+        ],
+        "source": "EPA"
+      },
+      {
+        "id": "emergency-evacuation",
+        "title": "Emergency Evacuation",
+        "file_path": "data/processed/general-construction/emergency-evacuation.json",
+        "osha_standards": [
+          "29 CFR 1926.35",
+          "29 CFR 1926.34",
+          "29 CFR 1926.159"
+        ],
+        "source": "OSHA"
+      },
+      {
+        "id": "equipment-pre-use-checks",
+        "title": "Equipment Pre-Use Checks",
+        "file_path": "data/processed/general-construction/equipment-pre-use-checks.json",
+        "osha_standards": [
+          "29 CFR 1926.20(a)(1)",
+          "29 CFR 1926.20(b)"
+        ],
+        "source": "OSHA"
+      },
+      {
+        "id": "ergonomics",
+        "title": "Ergonomics",
+        "file_path": "data/processed/general-construction/ergonomics.json",
+        "osha_standards": [
+          "OSH Act Section 5(a)(1) General Duty Clause"
+        ],
+        "source": "CPWR"
       },
       {
         "id": "electrical-safety-extension-cords",
@@ -255,6 +637,56 @@
         "source": "NIOSH"
       },
       {
+        "id": "fatigue-management",
+        "title": "Fatigue Management",
+        "file_path": "data/processed/general-construction/fatigue-management.json",
+        "osha_standards": [
+          "OSH Act Section 5(a)(1) General Duty Clause"
+        ],
+        "source": "CPWR"
+      },
+      {
+        "id": "fire-extinguishers",
+        "title": "Fire Extinguishers",
+        "file_path": "data/processed/general-construction/fire-extinguishers.json",
+        "osha_standards": [
+          "29 CFR 1926.150",
+          "29 CFR 1910.157"
+        ],
+        "source": "OSHA"
+      },
+      {
+        "id": "fire-safety",
+        "title": "Fire Safety",
+        "file_path": "data/processed/general-construction/fire-safety.json",
+        "osha_standards": [
+          "29 CFR 1926 Subpart C",
+          "29 CFR 1926 Subpart F",
+          "29 CFR 1926.34"
+        ],
+        "source": "OSHA"
+      },
+      {
+        "id": "first-aid-arrangements",
+        "title": "First Aid Arrangements",
+        "file_path": "data/processed/general-construction/first-aid-arrangements.json",
+        "osha_standards": [
+          "29 CFR 1926.50",
+          "29 CFR 1910.1030"
+        ],
+        "source": "OSHA"
+      },
+      {
+        "id": "flammable-liquid-storage",
+        "title": "Flammable Liquid Storage",
+        "file_path": "data/processed/general-construction/flammable-liquid-storage.json",
+        "osha_standards": [
+          "29 CFR 1926.152",
+          "29 CFR 1926.150"
+        ],
+        "source": "TailgatePro"
+      },
+      {
         "id": "equipment-safety-forklifts",
         "title": "Forklift Safety on Construction Sites",
         "file_path": "data/processed/heavy-equipment/equipment-safety-forklifts.json",
@@ -276,6 +708,53 @@
         "source": "NIOSH"
       },
       {
+        "id": "hand-arm-vibration",
+        "title": "Hand-Arm Vibration",
+        "file_path": "data/processed/general-construction/hand-arm-vibration.json",
+        "osha_standards": [
+          "OSH Act Section 5(a)(1) General Duty Clause"
+        ],
+        "source": "CPWR"
+      },
+      {
+        "id": "harness-inspection",
+        "title": "Harness Inspection",
+        "file_path": "data/processed/general-construction/harness-inspection.json",
+        "osha_standards": [
+          "29 CFR 1926.502"
+        ],
+        "source": "TailgatePro"
+      },
+      {
+        "id": "hazardous-waste-on-the-jobsite",
+        "title": "Hazardous Waste on the Jobsite",
+        "file_path": "data/processed/general-construction/hazardous-waste-on-the-jobsite.json",
+        "osha_standards": [
+          "29 CFR 1926.252",
+          "29 CFR 1926.25"
+        ],
+        "source": "TailgatePro"
+      },
+      {
+        "id": "hearing-protection",
+        "title": "Hearing Protection",
+        "file_path": "data/processed/general-construction/hearing-protection.json",
+        "osha_standards": [
+          "29 CFR 1926.52",
+          "29 CFR 1926.101"
+        ],
+        "source": "OSHA"
+      },
+      {
+        "id": "job-hazard-analysis-and-work-plans",
+        "title": "Job Hazard Analysis and Work Plans",
+        "file_path": "data/processed/general-construction/job-hazard-analysis-and-work-plans.json",
+        "osha_standards": [
+          "OSH Act Section 5(a)(1) General Duty Clause"
+        ],
+        "source": "OSHA"
+      },
+      {
         "id": "housekeeping",
         "title": "Jobsite Housekeeping",
         "file_path": "data/processed/general-construction/housekeeping.json",
@@ -283,6 +762,43 @@
           "29 CFR 1926.25"
         ],
         "source": "CPWR"
+      },
+      {
+        "id": "lifting-accessories",
+        "title": "Lifting Accessories",
+        "file_path": "data/processed/heavy-equipment/lifting-accessories.json",
+        "osha_standards": [
+          "29 CFR 1926.251"
+        ],
+        "source": "OSHA"
+      },
+      {
+        "id": "loading-and-unloading",
+        "title": "Loading and Unloading",
+        "file_path": "data/processed/heavy-equipment/loading-and-unloading.json",
+        "osha_standards": [
+          "29 CFR 1926.601",
+          "29 CFR 1926.600"
+        ],
+        "source": "TailgatePro"
+      },
+      {
+        "id": "manual-material-handling-and-lifting",
+        "title": "Manual Material Handling and Lifting",
+        "file_path": "data/processed/general-construction/manual-material-handling-and-lifting.json",
+        "osha_standards": [
+          "OSH Act Section 5(a)(1) General Duty Clause"
+        ],
+        "source": "TailgatePro Library"
+      },
+      {
+        "id": "material-storage",
+        "title": "Material Storage",
+        "file_path": "data/processed/general-construction/material-storage.json",
+        "osha_standards": [
+          "29 CFR 1926.250"
+        ],
+        "source": "OSHA"
       },
       {
         "id": "nail-gun-safety",
@@ -295,6 +811,63 @@
         "source": "CPWR"
       },
       {
+        "id": "near-miss-reporting",
+        "title": "Near-Miss Reporting",
+        "file_path": "data/processed/general-construction/near-miss-reporting.json",
+        "osha_standards": [
+          "OSH Act Section 5(a)(1) General Duty Clause"
+        ],
+        "source": "OSHA"
+      },
+      {
+        "id": "noise",
+        "title": "Noise",
+        "file_path": "data/processed/general-construction/noise.json",
+        "osha_standards": [
+          "29 CFR 1926.52"
+        ],
+        "source": "NIOSH"
+      },
+      {
+        "id": "overhead-hoists",
+        "title": "Overhead Hoists",
+        "file_path": "data/processed/heavy-equipment/overhead-hoists.json",
+        "osha_standards": [
+          "29 CFR 1926.554",
+          "29 CFR 1926.20"
+        ],
+        "source": "TailgatePro"
+      },
+      {
+        "id": "pedestrian-and-vehicle-segregation",
+        "title": "Pedestrian and Vehicle Segregation",
+        "file_path": "data/processed/heavy-equipment/pedestrian-and-vehicle-segregation.json",
+        "osha_standards": [
+          "29 CFR 1926.201",
+          "29 CFR 1926.602(a)(9)",
+          "29 CFR 1926.601(b)(4)"
+        ],
+        "source": "CPWR"
+      },
+      {
+        "id": "permit-required-confined-space-entry",
+        "title": "Permit-Required Confined Space Entry",
+        "file_path": "data/processed/general-construction/permit-required-confined-space-entry.json",
+        "osha_standards": [
+          "29 CFR 1926 Subpart AA"
+        ],
+        "source": "OSHA"
+      },
+      {
+        "id": "pollution-prevention",
+        "title": "Pollution Prevention",
+        "file_path": "data/processed/general-construction/pollution-prevention.json",
+        "osha_standards": [
+          "OSH Act Section 5(a)(1) General Duty Clause"
+        ],
+        "source": "EPA"
+      },
+      {
         "id": "power-saw-safety",
         "title": "Power Saw Safety",
         "file_path": "data/processed/carpentry/power-saw-safety.json",
@@ -303,6 +876,34 @@
           "29 CFR 1926.304"
         ],
         "source": "CPWR"
+      },
+      {
+        "id": "power-tools",
+        "title": "Power Tools",
+        "file_path": "data/processed/carpentry/power-tools.json",
+        "osha_standards": [
+          "29 CFR 1926.300",
+          "29 CFR 1926.301",
+          "29 CFR 1926.302",
+          "29 CFR 1926.303",
+          "29 CFR 1926.404(b)(1)"
+        ],
+        "source": "OSHA"
+      },
+      {
+        "id": "ppe-selection-use-and-care",
+        "title": "PPE: Selection, Use and Care",
+        "file_path": "data/processed/general-construction/ppe-selection-use-and-care.json",
+        "osha_standards": [
+          "29 CFR 1926.95",
+          "29 CFR 1926.96",
+          "29 CFR 1926.97",
+          "29 CFR 1926.100",
+          "29 CFR 1926.101",
+          "29 CFR 1926.102",
+          "29 CFR 1926.52"
+        ],
+        "source": "OSHA"
       },
       {
         "id": "carbon-monoxide-poisoning",
@@ -383,6 +984,16 @@
         "source": "NIOSH"
       },
       {
+        "id": "reporting-injuries-osha-recordkeeping",
+        "title": "Reporting Injuries: OSHA Recordkeeping",
+        "file_path": "data/processed/general-construction/reporting-injuries-osha-recordkeeping.json",
+        "osha_standards": [
+          "29 CFR 1904",
+          "29 CFR 1904.39"
+        ],
+        "source": "OSHA"
+      },
+      {
         "id": "respiratory-protection",
         "title": "Respiratory Protection Basics",
         "file_path": "data/processed/general-construction/respiratory-protection.json",
@@ -414,6 +1025,98 @@
         "source": "NIOSH"
       },
       {
+        "id": "safe-isolation-verification",
+        "title": "Safe Isolation Verification",
+        "file_path": "data/processed/electrical/safe-isolation-verification.json",
+        "osha_standards": [
+          "29 CFR 1926.417",
+          "29 CFR 1926.416"
+        ],
+        "source": "TailgatePro Library"
+      },
+      {
+        "id": "safe-lifting-operations",
+        "title": "Safe Lifting Operations",
+        "file_path": "data/processed/heavy-equipment/safe-lifting-operations.json",
+        "osha_standards": [
+          "29 CFR 1926.1408",
+          "29 CFR 1926.1417",
+          "29 CFR 1926.1419",
+          "29 CFR 1926.1424",
+          "29 CFR 1926.251",
+          "29 CFR 1926.1412",
+          "29 CFR 1926.1427"
+        ],
+        "source": "CPWR"
+      },
+      {
+        "id": "safe-use-of-hand-tools",
+        "title": "Safe Use of Hand Tools",
+        "file_path": "data/processed/carpentry/safe-use-of-hand-tools.json",
+        "osha_standards": [
+          "29 CFR 1926.301"
+        ],
+        "source": "CPWR"
+      },
+      {
+        "id": "safety-data-sheets",
+        "title": "Safety Data Sheets",
+        "file_path": "data/processed/general-construction/safety-data-sheets.json",
+        "osha_standards": [
+          "29 CFR 1926.59",
+          "29 CFR 1910.1200(g)"
+        ],
+        "source": "OSHA"
+      },
+      {
+        "id": "safety-leadership",
+        "title": "Safety Leadership",
+        "file_path": "data/processed/general-construction/safety-leadership.json",
+        "osha_standards": [
+          "OSH Act Section 5(a)(1) General Duty Clause",
+          "OSH Act Section 11(c)"
+        ],
+        "source": "OSHA"
+      },
+      {
+        "id": "sanitation-and-hygiene-on-the-jobsite",
+        "title": "Sanitation and Hygiene on the Jobsite",
+        "file_path": "data/processed/general-construction/sanitation-and-hygiene-on-the-jobsite.json",
+        "osha_standards": [
+          "29 CFR 1926.51"
+        ],
+        "source": "TailgatePro"
+      },
+      {
+        "id": "scaffolding-inspection",
+        "title": "Scaffolding Inspection",
+        "file_path": "data/processed/general-construction/scaffolding-inspection.json",
+        "osha_standards": [
+          "29 CFR 1926.451",
+          "29 CFR 1926.454"
+        ],
+        "source": "OSHA"
+      },
+      {
+        "id": "site-dust-suppression-for-air-quality",
+        "title": "Site Dust Suppression for Air Quality",
+        "file_path": "data/processed/general-construction/site-dust-suppression-for-air-quality.json",
+        "osha_standards": [
+          "OSH Act Section 5(a)(1) General Duty Clause"
+        ],
+        "source": "EPA"
+      },
+      {
+        "id": "site-induction",
+        "title": "Site Induction",
+        "file_path": "data/processed/general-construction/site-induction.json",
+        "osha_standards": [
+          "29 CFR 1926.21",
+          "29 CFR 1926.20"
+        ],
+        "source": "TailgatePro"
+      },
+      {
         "id": "skid-steer-loader-safety",
         "title": "Skid Steer Loader Safety",
         "file_path": "data/processed/heavy-equipment/skid-steer-loader-safety.json",
@@ -424,6 +1127,95 @@
         "source": "NIOSH"
       },
       {
+        "id": "slip-trip-and-fall-prevention",
+        "title": "Slip, Trip and Fall Prevention",
+        "file_path": "data/processed/general-construction/slip-trip-and-fall-prevention.json",
+        "osha_standards": [
+          "29 CFR 1926.25",
+          "29 CFR 1926.1052"
+        ],
+        "source": "TailgatePro"
+      },
+      {
+        "id": "solvents-and-degreasers",
+        "title": "Solvents and Degreasers",
+        "file_path": "data/processed/general-construction/solvents-and-degreasers.json",
+        "osha_standards": [
+          "29 CFR 1926.55",
+          "29 CFR 1926.57",
+          "29 CFR 1926.95",
+          "29 CFR 1910.1200"
+        ],
+        "source": "CPWR"
+      },
+      {
+        "id": "stop-work-authority",
+        "title": "Stop Work Authority",
+        "file_path": "data/processed/general-construction/stop-work-authority.json",
+        "osha_standards": [
+          "29 CFR 1926.20",
+          "29 CFR 1977.12"
+        ],
+        "source": "TailgatePro"
+      },
+      {
+        "id": "stored-energy",
+        "title": "Stored Energy",
+        "file_path": "data/processed/general-construction/stored-energy.json",
+        "osha_standards": [
+          "29 CFR 1926.417",
+          "29 CFR 1910.147"
+        ],
+        "source": "OSHA"
+      },
+      {
+        "id": "stress-awareness",
+        "title": "Stress Awareness",
+        "file_path": "data/processed/general-construction/stress-awareness.json",
+        "osha_standards": [
+          "OSH Act Section 5(a)(1) General Duty Clause"
+        ],
+        "source": "CPWR"
+      },
+      {
+        "id": "subcontractor-safety",
+        "title": "Subcontractor Safety",
+        "file_path": "data/processed/general-construction/subcontractor-safety.json",
+        "osha_standards": [
+          "29 CFR 1926.16"
+        ],
+        "source": "TailgatePro"
+      },
+      {
+        "id": "suicide-prevention-in-construction",
+        "title": "Suicide Prevention in Construction",
+        "file_path": "data/processed/general-construction/suicide-prevention-in-construction.json",
+        "osha_standards": [
+          "OSH Act Section 5(a)(1) General Duty Clause"
+        ],
+        "source": "CPWR"
+      },
+      {
+        "id": "sun-protection",
+        "title": "Sun Protection",
+        "file_path": "data/processed/general-construction/sun-protection.json",
+        "osha_standards": [
+          "OSH Act Section 5(a)(1) General Duty Clause",
+          "29 CFR 1926.102"
+        ],
+        "source": "CPWR"
+      },
+      {
+        "id": "temporary-and-staffing-agency-workers",
+        "title": "Temporary and Staffing Agency Workers",
+        "file_path": "data/processed/general-construction/temporary-and-staffing-agency-workers.json",
+        "osha_standards": [
+          "29 CFR 1926.503",
+          "29 CFR 1904.35(b)"
+        ],
+        "source": "OSHA"
+      },
+      {
         "id": "trench-safety",
         "title": "Trench Cave-In Prevention",
         "file_path": "data/processed/excavation/trench-safety.json",
@@ -432,6 +1224,111 @@
           "29 CFR 1926.652"
         ],
         "source": "CPWR"
+      },
+      {
+        "id": "welding-fumes",
+        "title": "Welding Fumes",
+        "file_path": "data/processed/welding/welding-fumes.json",
+        "osha_standards": [
+          "29 CFR 1926 Subpart J",
+          "29 CFR 1926.1126",
+          "29 CFR 1926.103"
+        ],
+        "source": "OSHA"
+      },
+      {
+        "id": "winter-driving",
+        "title": "Winter Driving",
+        "file_path": "data/processed/driving-transportation/winter-driving.json",
+        "osha_standards": [],
+        "source": "TailgatePro"
+      },
+      {
+        "id": "working-alone",
+        "title": "Working Alone",
+        "file_path": "data/processed/general-construction/working-alone.json",
+        "osha_standards": [],
+        "source": "TailgatePro"
+      },
+      {
+        "id": "working-around-fans",
+        "title": "Working Around Fans",
+        "file_path": "data/processed/general-construction/working-around-fans.json",
+        "osha_standards": [
+          "29 CFR 1926.300(b)(2)",
+          "29 CFR 1910.212(a)(5)"
+        ],
+        "source": "OSHA"
+      },
+      {
+        "id": "working-at-heights",
+        "title": "Working at Heights",
+        "file_path": "data/processed/general-construction/working-at-heights.json",
+        "osha_standards": [
+          "29 CFR 1926.500",
+          "29 CFR 1926.501",
+          "29 CFR 1926.502",
+          "29 CFR 1926.503"
+        ],
+        "source": "OSHA"
+      },
+      {
+        "id": "working-from-roofs",
+        "title": "Working from Roofs",
+        "file_path": "data/processed/roofing/working-from-roofs.json",
+        "osha_standards": [
+          "29 CFR 1926.501",
+          "29 CFR 1926.502"
+        ],
+        "source": "CPWR"
+      },
+      {
+        "id": "working-in-occupied-buildings",
+        "title": "Working in Occupied Buildings",
+        "file_path": "data/processed/general-construction/working-in-occupied-buildings.json",
+        "osha_standards": [
+          "29 CFR 1926.34",
+          "29 CFR 1926.150"
+        ],
+        "source": "TailgatePro"
+      },
+      {
+        "id": "working-near-conveyors",
+        "title": "Working Near Conveyors",
+        "file_path": "data/processed/general-construction/working-near-conveyors.json",
+        "osha_standards": [
+          "29 CFR 1926.555"
+        ],
+        "source": "TailgatePro"
+      },
+      {
+        "id": "working-near-roads",
+        "title": "Working Near Roads",
+        "file_path": "data/processed/general-construction/working-near-roads.json",
+        "osha_standards": [
+          "29 CFR 1926.200",
+          "29 CFR 1926.201",
+          "29 CFR 1926.56"
+        ],
+        "source": "OSHA"
+      },
+      {
+        "id": "working-over-or-near-water",
+        "title": "Working Over or Near Water",
+        "file_path": "data/processed/plumbing/working-over-or-near-water.json",
+        "osha_standards": [
+          "29 CFR 1926.106"
+        ],
+        "source": "TailgatePro"
+      },
+      {
+        "id": "cold-environments",
+        "title": "Working Safely in Cold Environments",
+        "file_path": "data/processed/general-construction/cold-environments.json",
+        "osha_standards": [
+          "OSH Act Section 5(a)(1) General Duty Clause"
+        ],
+        "source": "NIOSH"
       },
       {
         "id": "overhead-power-line-safety",
@@ -447,13 +1344,13 @@
         "source": "NIOSH"
       },
       {
-        "id": "cold-environments",
-        "title": "Working Safely in Cold Environments",
-        "file_path": "data/processed/general-construction/cold-environments.json",
+        "id": "young-and-new-workers",
+        "title": "Young and New Workers",
+        "file_path": "data/processed/general-construction/young-and-new-workers.json",
         "osha_standards": [
-          "OSH Act Section 5(a)(1) General Duty Clause"
+          "29 CFR 1926.21"
         ],
-        "source": "NIOSH"
+        "source": "TailgatePro"
       }
     ],
     "Heavy Equipment": [
@@ -476,6 +1373,15 @@
           "29 CFR 1926.1417"
         ],
         "source": "NIOSH"
+      },
+      {
+        "id": "crane-signals-and-signal-persons",
+        "title": "Crane Signals and Signal Persons",
+        "file_path": "data/processed/heavy-equipment/crane-signals-and-signal-persons.json",
+        "osha_standards": [
+          "29 CFR 1926.1419"
+        ],
+        "source": "OSHA"
       },
       {
         "id": "crane-safety-stability-and-tipping",
@@ -509,6 +1415,46 @@
         "source": "NIOSH"
       },
       {
+        "id": "lifting-accessories",
+        "title": "Lifting Accessories",
+        "file_path": "data/processed/heavy-equipment/lifting-accessories.json",
+        "osha_standards": [
+          "29 CFR 1926.251"
+        ],
+        "source": "OSHA"
+      },
+      {
+        "id": "loading-and-unloading",
+        "title": "Loading and Unloading",
+        "file_path": "data/processed/heavy-equipment/loading-and-unloading.json",
+        "osha_standards": [
+          "29 CFR 1926.601",
+          "29 CFR 1926.600"
+        ],
+        "source": "TailgatePro"
+      },
+      {
+        "id": "overhead-hoists",
+        "title": "Overhead Hoists",
+        "file_path": "data/processed/heavy-equipment/overhead-hoists.json",
+        "osha_standards": [
+          "29 CFR 1926.554",
+          "29 CFR 1926.20"
+        ],
+        "source": "TailgatePro"
+      },
+      {
+        "id": "pedestrian-and-vehicle-segregation",
+        "title": "Pedestrian and Vehicle Segregation",
+        "file_path": "data/processed/heavy-equipment/pedestrian-and-vehicle-segregation.json",
+        "osha_standards": [
+          "29 CFR 1926.201",
+          "29 CFR 1926.602(a)(9)",
+          "29 CFR 1926.601(b)(4)"
+        ],
+        "source": "CPWR"
+      },
+      {
         "id": "equipment-safety-maintenance",
         "title": "Safe Equipment Maintenance and Lockout/Tagout",
         "file_path": "data/processed/heavy-equipment/equipment-safety-maintenance.json",
@@ -520,6 +1466,21 @@
         "source": "NIOSH"
       },
       {
+        "id": "safe-lifting-operations",
+        "title": "Safe Lifting Operations",
+        "file_path": "data/processed/heavy-equipment/safe-lifting-operations.json",
+        "osha_standards": [
+          "29 CFR 1926.1408",
+          "29 CFR 1926.1417",
+          "29 CFR 1926.1419",
+          "29 CFR 1926.1424",
+          "29 CFR 1926.251",
+          "29 CFR 1926.1412",
+          "29 CFR 1926.1427"
+        ],
+        "source": "CPWR"
+      },
+      {
         "id": "skid-steer-loader-safety",
         "title": "Skid Steer Loader Safety",
         "file_path": "data/processed/heavy-equipment/skid-steer-loader-safety.json",
@@ -528,6 +1489,15 @@
           "29 CFR 1926.602"
         ],
         "source": "NIOSH"
+      },
+      {
+        "id": "working-near-conveyors",
+        "title": "Working Near Conveyors",
+        "file_path": "data/processed/general-construction/working-near-conveyors.json",
+        "osha_standards": [
+          "29 CFR 1926.555"
+        ],
+        "source": "TailgatePro"
       },
       {
         "id": "overhead-power-line-safety",
@@ -543,7 +1513,97 @@
         "source": "NIOSH"
       }
     ],
+    "HVAC & Refrigeration": [
+      {
+        "id": "ammonia-refrigeration-hazards",
+        "title": "Ammonia Refrigeration Hazards",
+        "file_path": "data/processed/hvac-refrigeration/ammonia-refrigeration-hazards.json",
+        "osha_standards": [
+          "29 CFR 1910.119",
+          "29 CFR 1926.64"
+        ],
+        "source": "OSHA"
+      },
+      {
+        "id": "brazing-and-soldering",
+        "title": "Brazing and Soldering",
+        "file_path": "data/processed/welding/brazing-and-soldering.json",
+        "osha_standards": [
+          "29 CFR 1926.350",
+          "29 CFR 1926.352",
+          "29 CFR 1926.353"
+        ],
+        "source": "TailgatePro"
+      },
+      {
+        "id": "compressed-gas-storage",
+        "title": "Compressed Gas Storage",
+        "file_path": "data/processed/general-construction/compressed-gas-storage.json",
+        "osha_standards": [
+          "29 CFR 1926.350"
+        ],
+        "source": "OSHA"
+      },
+      {
+        "id": "legionella-awareness",
+        "title": "Legionella Awareness",
+        "file_path": "data/processed/plumbing/legionella-awareness.json",
+        "osha_standards": [
+          "OSH Act Section 5(a)(1) General Duty Clause"
+        ],
+        "source": "OSHA"
+      },
+      {
+        "id": "safe-isolation-verification",
+        "title": "Safe Isolation Verification",
+        "file_path": "data/processed/electrical/safe-isolation-verification.json",
+        "osha_standards": [
+          "29 CFR 1926.417",
+          "29 CFR 1926.416"
+        ],
+        "source": "TailgatePro Library"
+      },
+      {
+        "id": "stored-energy",
+        "title": "Stored Energy",
+        "file_path": "data/processed/general-construction/stored-energy.json",
+        "osha_standards": [
+          "29 CFR 1926.417",
+          "29 CFR 1910.147"
+        ],
+        "source": "OSHA"
+      },
+      {
+        "id": "vacuum-pumps-and-evacuation",
+        "title": "Vacuum Pumps and Evacuation",
+        "file_path": "data/processed/hvac-refrigeration/vacuum-pumps-and-evacuation.json",
+        "osha_standards": [
+          "OSH Act Section 5(a)(1) General Duty Clause"
+        ],
+        "source": "TailgatePro Library"
+      },
+      {
+        "id": "working-around-fans",
+        "title": "Working Around Fans",
+        "file_path": "data/processed/general-construction/working-around-fans.json",
+        "osha_standards": [
+          "29 CFR 1926.300(b)(2)",
+          "29 CFR 1910.212(a)(5)"
+        ],
+        "source": "OSHA"
+      }
+    ],
     "Masonry": [
+      {
+        "id": "construction-dust-control",
+        "title": "Construction Dust Control",
+        "file_path": "data/processed/general-construction/construction-dust-control.json",
+        "osha_standards": [
+          "29 CFR 1926.1153",
+          "29 CFR 1926.103"
+        ],
+        "source": "OSHA"
+      },
       {
         "id": "silica",
         "title": "Controlling Silica Dust Exposure",
@@ -591,6 +1651,16 @@
           "29 CFR 1910.134"
         ],
         "source": "NIOSH"
+      },
+      {
+        "id": "scaffolding-inspection",
+        "title": "Scaffolding Inspection",
+        "file_path": "data/processed/general-construction/scaffolding-inspection.json",
+        "osha_standards": [
+          "29 CFR 1926.451",
+          "29 CFR 1926.454"
+        ],
+        "source": "OSHA"
       }
     ],
     "Plumbing": [
@@ -605,6 +1675,26 @@
         "source": "NIOSH"
       },
       {
+        "id": "brazing-and-soldering",
+        "title": "Brazing and Soldering",
+        "file_path": "data/processed/welding/brazing-and-soldering.json",
+        "osha_standards": [
+          "29 CFR 1926.350",
+          "29 CFR 1926.352",
+          "29 CFR 1926.353"
+        ],
+        "source": "TailgatePro"
+      },
+      {
+        "id": "chemical-spill-response",
+        "title": "Chemical Spill Response",
+        "file_path": "data/processed/general-construction/chemical-spill-response.json",
+        "osha_standards": [
+          "29 CFR 1926.65"
+        ],
+        "source": "TailgatePro"
+      },
+      {
         "id": "confined-spaces-and-safety",
         "title": "Confined Space Entry Safety",
         "file_path": "data/processed/general-construction/confined-spaces-and-safety.json",
@@ -613,6 +1703,43 @@
           "29 CFR 1926.1204"
         ],
         "source": "NIOSH"
+      },
+      {
+        "id": "flammable-liquid-storage",
+        "title": "Flammable Liquid Storage",
+        "file_path": "data/processed/general-construction/flammable-liquid-storage.json",
+        "osha_standards": [
+          "29 CFR 1926.152",
+          "29 CFR 1926.150"
+        ],
+        "source": "TailgatePro"
+      },
+      {
+        "id": "legionella-awareness",
+        "title": "Legionella Awareness",
+        "file_path": "data/processed/plumbing/legionella-awareness.json",
+        "osha_standards": [
+          "OSH Act Section 5(a)(1) General Duty Clause"
+        ],
+        "source": "OSHA"
+      },
+      {
+        "id": "permit-required-confined-space-entry",
+        "title": "Permit-Required Confined Space Entry",
+        "file_path": "data/processed/general-construction/permit-required-confined-space-entry.json",
+        "osha_standards": [
+          "29 CFR 1926 Subpart AA"
+        ],
+        "source": "OSHA"
+      },
+      {
+        "id": "working-over-or-near-water",
+        "title": "Working Over or Near Water",
+        "file_path": "data/processed/plumbing/working-over-or-near-water.json",
+        "osha_standards": [
+          "29 CFR 1926.106"
+        ],
+        "source": "TailgatePro"
       }
     ],
     "Roofing": [
@@ -635,6 +1762,15 @@
           "29 CFR 1926.1060"
         ],
         "source": "CPWR"
+      },
+      {
+        "id": "harness-inspection",
+        "title": "Harness Inspection",
+        "file_path": "data/processed/general-construction/harness-inspection.json",
+        "osha_standards": [
+          "29 CFR 1926.502"
+        ],
+        "source": "TailgatePro"
       },
       {
         "id": "nail-gun-safety",
@@ -666,9 +1802,51 @@
           "29 CFR 1926.503"
         ],
         "source": "NIOSH"
+      },
+      {
+        "id": "sun-protection",
+        "title": "Sun Protection",
+        "file_path": "data/processed/general-construction/sun-protection.json",
+        "osha_standards": [
+          "OSH Act Section 5(a)(1) General Duty Clause",
+          "29 CFR 1926.102"
+        ],
+        "source": "CPWR"
+      },
+      {
+        "id": "working-at-heights",
+        "title": "Working at Heights",
+        "file_path": "data/processed/general-construction/working-at-heights.json",
+        "osha_standards": [
+          "29 CFR 1926.500",
+          "29 CFR 1926.501",
+          "29 CFR 1926.502",
+          "29 CFR 1926.503"
+        ],
+        "source": "OSHA"
+      },
+      {
+        "id": "working-from-roofs",
+        "title": "Working from Roofs",
+        "file_path": "data/processed/roofing/working-from-roofs.json",
+        "osha_standards": [
+          "29 CFR 1926.501",
+          "29 CFR 1926.502"
+        ],
+        "source": "CPWR"
       }
     ],
     "Welding": [
+      {
+        "id": "abrasive-wheels",
+        "title": "Abrasive Wheels",
+        "file_path": "data/processed/general-construction/abrasive-wheels.json",
+        "osha_standards": [
+          "29 CFR 1926.303",
+          "29 CFR 1910.215"
+        ],
+        "source": "OSHA"
+      },
       {
         "id": "arc-welding-and-fire-safety",
         "title": "Arc Welding and Fire Prevention",
@@ -680,6 +1858,26 @@
         "source": "NIOSH"
       },
       {
+        "id": "brazing-and-soldering",
+        "title": "Brazing and Soldering",
+        "file_path": "data/processed/welding/brazing-and-soldering.json",
+        "osha_standards": [
+          "29 CFR 1926.350",
+          "29 CFR 1926.352",
+          "29 CFR 1926.353"
+        ],
+        "source": "TailgatePro"
+      },
+      {
+        "id": "compressed-gas-storage",
+        "title": "Compressed Gas Storage",
+        "file_path": "data/processed/general-construction/compressed-gas-storage.json",
+        "osha_standards": [
+          "29 CFR 1926.350"
+        ],
+        "source": "OSHA"
+      },
+      {
         "id": "eye-protection",
         "title": "Eye Protection on the Jobsite",
         "file_path": "data/processed/general-construction/eye-protection.json",
@@ -687,6 +1885,17 @@
           "29 CFR 1926.102"
         ],
         "source": "NIOSH"
+      },
+      {
+        "id": "welding-fumes",
+        "title": "Welding Fumes",
+        "file_path": "data/processed/welding/welding-fumes.json",
+        "osha_standards": [
+          "29 CFR 1926 Subpart J",
+          "29 CFR 1926.1126",
+          "29 CFR 1926.103"
+        ],
+        "source": "OSHA"
       }
     ]
   }

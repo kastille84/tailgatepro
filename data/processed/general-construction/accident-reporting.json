@@ -1,0 +1,53 @@
+{
+  "id": "accident-reporting",
+  "title": "Accident Reporting",
+  "primary_trade": "General Construction",
+  "trade_tags": [
+    "General Construction"
+  ],
+  "osha_standards": [
+    "29 CFR 1904.39"
+  ],
+  "estimated_minutes": 5,
+  "summary": "Employers must report every work-related death to OSHA within 8 hours, and every in-patient hospitalization, amputation, or loss of an eye within 24 hours.",
+  "talking_points": [
+    "A work-related death must be reported to OSHA within 8 hours.",
+    "An in-patient hospitalization, amputation, or loss of an eye must be reported to OSHA within 24 hours.",
+    "Report by phone to the nearest OSHA Area Office, by phone to 1-800-321-OSHA (1-800-321-6742), or online at www.osha.gov.",
+    "If the Area Office is closed, use the 800 number or the online reporting application. Voicemail, fax, and email do not count.",
+    "Good practice, not an OSHA requirement: tell your supervisor right away after any serious injury so the employer can meet the report deadline.",
+    "OSHA needs the site name, incident location and time, type of event, number and names of employees hurt, a contact person and phone number, and a brief description.",
+    "A motor vehicle crash in a construction work zone must be reported. A hospital stay for observation or diagnostic testing only does not have to be reported.",
+    "A death only has to be reported if it occurs within 30 days of the incident. A hospitalization, amputation, or loss of an eye only has to be reported if it occurs within 24 hours of the incident."
+  ],
+  "site_hazards_to_check": [
+    "No posted contact number or person to make the OSHA report",
+    "Crew who do not know to tell the supervisor right away after a serious injury",
+    "Incident details (time, location, names) not written down quickly",
+    "Unclear who makes the report if the supervisor is away"
+  ],
+  "discussion_questions": [
+    "Who calls OSHA on this site, and what number do they use?",
+    "What counts as an amputation for reporting, and does a fingertip count?",
+    "What information do we need ready when we make the call?"
+  ],
+  "attribution": {
+    "source": "OSHA",
+    "publisher": "Occupational Safety and Health Administration (OSHA)",
+    "copyright": "U.S. Government work — public domain.",
+    "license": "public-domain",
+    "source_url": "https://www.osha.gov/laws-regs/regulations/standardnumber/1904/1904.39",
+    "source_ref": "TBT-086",
+    "notice": "Adapted from OSHA published material. Reproduced with attribution for jobsite safety training; not an endorsement by OSHA."
+  },
+  "audit": {
+    "status": "approved",
+    "audited_at": "2026-09-25T18:06:17Z",
+    "osha_accuracy_verified": true,
+    "flags": [
+      "Verified every point against 29 CFR 1904.39 text: 8 h death, 24 h in-patient hospitalization/amputation/loss of eye, three reporting methods, no voicemail/fax/email, required info list, construction work zone motor vehicle crash, observation-only stays, 30-day/24-hour limits. Part 1904 applies to construction.",
+      "FIX: 'Tell your supervisor right away' is not in the source; reworded as labelled good practice so it is not presented as an OSHA requirement. Same for the matching hazard/question wording (left as-is, generic).",
+      "Non-blocking: legal thresholds are stated as employer duties; the talk should be paired with the company's own reporting procedure."
+    ]
+  }
+}
