@@ -26,6 +26,11 @@ server accepts a client `held_at` up to 7 days in the past (`server/utility/held
 Bundle" pricing-card bullet and the landing comparison table now shows it without the suffix — see the GC
 Site Pro row below and `docs/osha-defense-bundle-design.md`.
 
+**Update (9e scorecards shipped):** the "coming soon" tag was dropped from GC Portfolio's "Cross-project
+subcontractor safety scorecards" pricing-card bullet (kept in `features`) and the matching Pricing FAQ line
+was reworded so only "top-down corporate policy push" is still flagged coming soon — see the Portfolio row
+below and `docs/sub-scorecard-design.md`.
+
 ## Tier-gating fact base
 
 - `server/utility/entitlements.js` has exactly two gates, `hasTranslationAccess` and `hasBrandingAccess`, both
@@ -75,7 +80,7 @@ Site Pro row below and `docs/osha-defense-bundle-design.md`.
 | Site Pro — SMS nudges, Mondays 7:00 AM | Missing | Only cron in `server.js` is a leftover 5am job | No SMS provider, phone storage or scheduler | Build (9e) |
 | Site Pro — Procore & Autodesk ACC sync | Missing | No code | Copy only | Defer (9f) |
 | Site Pro — 1-click OSHA Defense Bundle (ZIP) | Implemented (9e) | `services/gcDashboard.js` `getDefenseBundleEntries`, `services/zipBundle.js`, `GET /api/gc/jobsites/:id/defense-bundle` | Streams every completed log's PDF for one jobsite plus an `index.csv`, gated on `jobsites.plan === "site_pro"`; Portfolio's separate "Portfolio-Wide Search" version is unbuilt | — |
-| Portfolio — cross-project scorecards | Partial | `/api/gc/overview`, `utility/compliance.js` | Single-day compliance view; no scoring or history | Build (9e) |
+| Portfolio — cross-project scorecards | Implemented (9e) | `services/scorecards.js`, `utility/subScorecard.js`, `utility/rollingWindow.js`, `GET /api/gc/subcontractors[/:companyId/scorecard]` | Rolling 30-day daily-compliance-rate score per sub, averaged across every jobsite that sub has with the GC, with a per-jobsite breakdown; archived jobsites excluded from scoring (see `docs/sub-scorecard-design.md`) | — |
 | Portfolio — top-down policy push | Missing | No code or schema | — | Build (9e) |
 | Portfolio — Superintendent vs Safety Director roles | Implemented (9d-2) | `server/constants/roles.js` (`superintendent`, `SITE_MANAGER_ROLES`), `services/siteScope.js`, `services/jobsiteMembers.js`, `JobsiteMembersModal.tsx` | `superintendent` is scoped to its assigned jobsites via `jobsite_members` (dashboard/meetings/PDF/roster all 404 outside scope); `safety_manager` relabeled "Safety Director"; Portfolio-only, 403 `PLAN_LIMIT` otherwise. Run the `Supabase_SQL.sql` ALTERs before relying on this in prod | — |
 | Portfolio — custom company safety form/manual builder | Missing | No code | — | Build (9e) |

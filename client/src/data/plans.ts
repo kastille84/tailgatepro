@@ -114,7 +114,6 @@ export const GC_PLANS: Plan[] = [
       "Custom company safety form & manual builder",
     ],
     comingSoon: [
-      "Cross-project subcontractor safety scorecards",
       "Top-down corporate policy push across all sites",
       "Custom company safety form & manual builder",
     ],

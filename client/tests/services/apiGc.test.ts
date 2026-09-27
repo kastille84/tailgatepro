@@ -6,6 +6,8 @@ import {
   getGcMeetingById,
   getGcMeetingPdfUrl,
   getDefenseBundle,
+  getGcSubcontractorScorecards,
+  getGcSubcontractorScorecard,
 } from "../../src/services/apiGc";
 import { PlanLimitError } from "../../src/utils/PlanLimitError";
 
@@ -269,6 +271,211 @@ describe("apiGc", () => {
       );
       await expect(
         getGcMeetingPdfUrl("token-123", "meeting-1"),
+      ).rejects.toThrow(GENERIC);
+    });
+  });
+
+  describe("getGcSubcontractorScorecards", () => {
+    const scorecards = [
+      { companyId: "sub-1", companyName: "Rivera Electric", overallScore: 87 },
+    ];
+
+    it("GETs /api/gc/subcontractors with the date and tzOffset query params", async () => {
+      const fetchMock = vi.fn().mockResolvedValue({
+        ok: true,
+        status: 200,
+        json: async () => ({ success: true, data: scorecards }),
+      });
+      vi.stubGlobal("fetch", fetchMock);
+
+      await expect(
+        getGcSubcontractorScorecards("token-123", "2026-09-21", 300),
+      ).resolves.toEqual(scorecards);
+      expect(fetchMock).toHaveBeenCalledWith(
+        "/api/gc/subcontractors?date=2026-09-21&tzOffset=300",
+        expect.objectContaining({
+          method: "GET",
+          headers: expect.objectContaining({ Authorization: "Bearer token-123" }),
+        }),
+      );
+    });
+
+    it("rejects with a PlanLimitError on a 403 PLAN_LIMIT (not GC Portfolio)", async () => {
+      vi.stubGlobal(
+        "fetch",
+        vi.fn().mockResolvedValue({
+          ok: false,
+          status: 403,
+          json: async () => ({
+            success: false,
+            error: "Cross-project subcontractor scorecards are part of GC Portfolio. Upgrade to use them.",
+            data: { code: "PLAN_LIMIT" },
+          }),
+        }),
+      );
+
+      const error = await getGcSubcontractorScorecards("token-123", "2026-09-21", 300).catch(
+        (e) => e,
+      );
+      expect(error).toBeInstanceOf(PlanLimitError);
+      expect(error.message).toBe(
+        "Cross-project subcontractor scorecards are part of GC Portfolio. Upgrade to use them.",
+      );
+      expect(error.limit).toBeNull();
+    });
+
+    it("carries a limit when a PLAN_LIMIT response has one", async () => {
+      vi.stubGlobal(
+        "fetch",
+        vi.fn().mockResolvedValue({
+          ok: false,
+          status: 403,
+          json: async () => ({ success: false, data: { code: "PLAN_LIMIT", limit: 1 } }),
+        }),
+      );
+
+      const error = await getGcSubcontractorScorecards("token-123", "2026-09-21", 300).catch(
+        (e) => e,
+      );
+      expect(error).toBeInstanceOf(PlanLimitError);
+      expect(error.limit).toBe(1);
+    });
+
+    it("rejects with the backend error message on a non-PLAN_LIMIT failure", async () => {
+      vi.stubGlobal(
+        "fetch",
+        vi.fn().mockResolvedValue({
+          ok: false,
+          status: 403,
+          json: async () => ({
+            success: false,
+            error: "This is only available to general contractor accounts",
+          }),
+        }),
+      );
+      await expect(
+        getGcSubcontractorScorecards("token-123", "2026-09-21", 300),
+      ).rejects.toThrow("This is only available to general contractor accounts");
+    });
+
+    it("rejects with the generic message when JSON parsing fails", async () => {
+      vi.stubGlobal(
+        "fetch",
+        vi.fn().mockResolvedValue({
+          ok: true,
+          status: 200,
+          json: async () => {
+            throw new Error("bad json");
+          },
+        }),
+      );
+      await expect(
+        getGcSubcontractorScorecards("token-123", "2026-09-21", 300),
+      ).rejects.toThrow(GENERIC);
+    });
+  });
+
+  describe("getGcSubcontractorScorecard", () => {
+    const detail = {
+      companyId: "sub-1",
+      companyName: "Rivera Electric",
+      overallScore: 87,
+      jobsites: [
+        {
+          jobsiteId: "jobsite-1",
+          jobsiteName: "Downtown Tower",
+          expectedDays: 30,
+          loggedDays: 26,
+          score: 87,
+        },
+      ],
+    };
+
+    it("GETs /api/gc/subcontractors/:companyId/scorecard with the date and tzOffset query params", async () => {
+      const fetchMock = vi.fn().mockResolvedValue({
+        ok: true,
+        status: 200,
+        json: async () => ({ success: true, data: detail }),
+      });
+      vi.stubGlobal("fetch", fetchMock);
+
+      await expect(
+        getGcSubcontractorScorecard("token-123", "sub-1", "2026-09-21", 300),
+      ).resolves.toEqual(detail);
+      expect(fetchMock).toHaveBeenCalledWith(
+        "/api/gc/subcontractors/sub-1/scorecard?date=2026-09-21&tzOffset=300",
+        expect.objectContaining({ method: "GET" }),
+      );
+    });
+
+    it("rejects with a PlanLimitError on a 403 PLAN_LIMIT (not GC Portfolio)", async () => {
+      vi.stubGlobal(
+        "fetch",
+        vi.fn().mockResolvedValue({
+          ok: false,
+          status: 403,
+          json: async () => ({
+            success: false,
+            error: "Cross-project subcontractor scorecards are part of GC Portfolio. Upgrade to use them.",
+            data: { code: "PLAN_LIMIT" },
+          }),
+        }),
+      );
+
+      const error = await getGcSubcontractorScorecard(
+        "token-123",
+        "sub-1",
+        "2026-09-21",
+        300,
+      ).catch((e) => e);
+      expect(error).toBeInstanceOf(PlanLimitError);
+      expect(error.message).toBe(
+        "Cross-project subcontractor scorecards are part of GC Portfolio. Upgrade to use them.",
+      );
+      expect(error.limit).toBeNull();
+    });
+
+    it("carries a limit when a PLAN_LIMIT response has one", async () => {
+      vi.stubGlobal(
+        "fetch",
+        vi.fn().mockResolvedValue({
+          ok: false,
+          status: 403,
+          json: async () => ({ success: false, data: { code: "PLAN_LIMIT", limit: 1 } }),
+        }),
+      );
+
+      const error = await getGcSubcontractorScorecard(
+        "token-123",
+        "sub-1",
+        "2026-09-21",
+        300,
+      ).catch((e) => e);
+      expect(error).toBeInstanceOf(PlanLimitError);
+      expect(error.limit).toBe(1);
+    });
+
+    it("rejects with the backend error message on a 404 (not a current roster member)", async () => {
+      vi.stubGlobal(
+        "fetch",
+        vi.fn().mockResolvedValue({
+          ok: false,
+          status: 404,
+          json: async () => ({ success: false, error: "Subcontractor not found" }),
+        }),
+      );
+      await expect(
+        getGcSubcontractorScorecard("token-123", "sub-9", "2026-09-21", 300),
+      ).rejects.toThrow("Subcontractor not found");
+    });
+
+    it("rejects with the generic message when the response is unsuccessful without a body", async () => {
+      vi.stubGlobal(
+        "fetch",
+        vi.fn().mockResolvedValue({ ok: false, status: 500, json: async () => null }),
+      );
+      await expect(
+        getGcSubcontractorScorecard("token-123", "sub-1", "2026-09-21", 300),
       ).rejects.toThrow(GENERIC);
     });
   });

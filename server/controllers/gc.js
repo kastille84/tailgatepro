@@ -1,4 +1,5 @@
 const gcDashboardService = require("../services/gcDashboard");
+const scorecardsService = require("../services/scorecards");
 const siteScopeService = require("../services/siteScope");
 const zipBundleService = require("../services/zipBundle");
 const { slugify } = require("../utility/pdfFilename");
@@ -63,6 +64,42 @@ exports.getMeetingPdfUrl = async (req, res, next) => {
       allowedJobsiteIds,
     );
     return res.status(200).json({ success: true, data: { url } });
+  } catch (error) {
+    return next(error);
+  }
+};
+
+// GET /api/gc/subcontractors?date&tzOffset — every distinct sub across the
+// caller's active portfolio jobsites with a rolling 30-day compliance score
+// (Phase 9e, docs/sub-scorecard-design.md). GC Portfolio only; the service
+// throws a 403 PLAN_LIMIT otherwise.
+exports.listSubcontractorScorecards = async (req, res, next) => {
+  try {
+    const { date, tzOffset } = req.query;
+    const allowedJobsiteIds = await siteScopeService.getAllowedJobsiteIds(req.user);
+    const data = await scorecardsService.listSubcontractorScorecards(req.user.companyId, {
+      date,
+      tzOffset: Number(tzOffset),
+      allowedJobsiteIds,
+    });
+    return res.status(200).json({ success: true, data });
+  } catch (error) {
+    return next(error);
+  }
+};
+
+// GET /api/gc/subcontractors/:companyId/scorecard?date&tzOffset — one sub's
+// score plus its per-jobsite breakdown.
+exports.getSubcontractorScorecard = async (req, res, next) => {
+  try {
+    const { date, tzOffset } = req.query;
+    const allowedJobsiteIds = await siteScopeService.getAllowedJobsiteIds(req.user);
+    const data = await scorecardsService.getSubcontractorScorecard(
+      req.params.companyId,
+      req.user.companyId,
+      { date, tzOffset: Number(tzOffset), allowedJobsiteIds },
+    );
+    return res.status(200).json({ success: true, data });
   } catch (error) {
     return next(error);
   }

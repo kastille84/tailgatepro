@@ -117,7 +117,7 @@ describe("Navbar", () => {
     });
   });
 
-  it("hides the Toolbox Talks link for a GC company", () => {
+  it("hides the Toolbox Talks link for a GC company and shows Subcontractors instead", () => {
     mockUseAuth.mockReturnValue({
       user: { id: "user-1" },
       loading: false,
@@ -132,6 +132,23 @@ describe("Navbar", () => {
     expect(
       screen.getByRole("link", { name: /dashboard/i }).getAttribute("href"),
     ).toBe("/dashboard");
+    // Always visible for every GC regardless of plan tier -- the page itself
+    // shows an upgrade banner to a non-Portfolio GC (Phase 9e).
+    expect(
+      screen.getByRole("link", { name: /subcontractors/i }).getAttribute("href"),
+    ).toBe("/gc/subcontractors");
+  });
+
+  it("hides the Subcontractors link for a non-GC company", () => {
+    mockUseAuth.mockReturnValue({
+      user: { id: "user-1" },
+      loading: false,
+      logout: vi.fn(),
+    });
+
+    renderNavbar();
+
+    expect(screen.queryByRole("link", { name: /subcontractors/i })).toBeNull();
   });
 
   it("closes the collapsed menu when a nav link inside it is clicked", () => {

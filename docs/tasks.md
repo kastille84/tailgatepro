@@ -2159,7 +2159,7 @@ from the dashboard, so run the 8d-g backfill first.
 - [x] GC links a sub company to a project (`project_subcontractors`) — done: slim version (GC join code)
       shipped in Phase 6b–6d, superseded by 8d above
 
-## Phase 9 — Pricing-promise gaps · status: audited 2026-09-24; 9a (copy fixes) and 9b (entitlement foundation) done, 9c done (seat caps, history window, library split, archive, PDF-link re-issue), 9d code complete (including 9d-2 roles/scoping — run the `Supabase_SQL.sql` ALTERs), 9e in progress (both the GC per-jobsite and the subcontractor's own OSHA Defense Bundle ZIPs shipped), 9f–9g not started
+## Phase 9 — Pricing-promise gaps · status: audited 2026-09-24; 9a (copy fixes) and 9b (entitlement foundation) done, 9c done (seat caps, history window, library split, archive, PDF-link re-issue), 9d code complete (including 9d-2 roles/scoping — run the `Supabase_SQL.sql` ALTERs), 9e in progress (the GC per-jobsite and subcontractor's own OSHA Defense Bundle ZIPs, plus cross-project sub safety scorecards, shipped; code complete, manual verify pending; other 9e items not started), 9f–9g not started
 
 Audit of the pricing page (`client/src/data/plans.ts`, `Pricing.tsx` FAQ/callout) and landing page copy against
 the code. Full evidence table, statuses and per-gap resolution live in `docs/pricing-promise-gaps.md` — every
@@ -2316,8 +2316,7 @@ Costs one extra query per request for Free subs (`resolveEffectiveTier`) and per
       `server.js` is a leftover). Provider decided: Twilio, Toll-Free Verified number (cheaper than 10DLC at this
       volume — no campaign fee; ~$2-3/mo per Site Pro customer at typical volume). Deferred until Stripe billing
       ships — see Deferred section below.
-- [x] 1-click OSHA Defense Bundle ZIP · status: code complete; manual smoke pending (needs a real session and a
-      jobsite flipped to `plan='site_pro'` by hand in Supabase, same caveat 9d's sponsorship item has)
+- [x] 1-click OSHA Defense Bundle ZIP · status: shipped, manually verified
 
   Design doc: `docs/osha-defense-bundle-design.md`. Scope decided: one jobsite, every completed log, no date
   filter — the GC Site Pro promise ("Download indexed ZIP of all site logs instantly"). GC Portfolio's promised
@@ -2380,11 +2379,11 @@ Costs one extra query per request for Free subs (`resolveEffectiveTier`) and per
     PostgREST 1000-row chunking like `listMonthSummaries` has; a mid-stream failure can't produce a normal JSON
     error body.
   - Verify: boot the server, confirm the new route 401s without a token (proves routing/mounting) — done. Full
-    manual pass still owed: flip a jobsite to Site Pro, complete at least one meeting log with a generated PDF,
-    click "Defense Bundle" on `/projects`, confirm a `.zip` downloads with `index.csv` + one PDF per completed
-    log; confirm a `free`-plan jobsite shows the upgrade link instead; confirm a locked sub's logs are absent.
-- [x] Subcontractor's own OSHA Defense Bundle (download every one of my own logs as one ZIP) · status: code
-      complete; manual smoke pending
+    manual pass done: flipped a jobsite to Site Pro, completed a meeting log with a generated PDF, clicked
+    "Defense Bundle" on `/projects`, confirmed the `.zip` downloaded with `index.csv` + one PDF per completed
+    log; confirmed a `free`-plan jobsite shows the upgrade link instead; confirmed a locked sub's logs are absent.
+- [x] Subcontractor's own OSHA Defense Bundle (download every one of my own logs as one ZIP) · status: shipped,
+      manually verified
 
   Design doc: `docs/sub-defense-bundle-design.md`. The GC-side bundle above is per-jobsite; a sub isn't organized
   by jobsite at all (Meeting History is already one flat list across every project/GC), so this is a flat export
@@ -2428,11 +2427,56 @@ Costs one extra query per request for Free subs (`resolveEffectiveTier`) and per
   - Known v1 limitations (see the design doc): same sequential-download and no-1000-row-chunking notes as the GC
     bundle; no jobsite-equivalent narrowing (a sub can't download "just this client" or "just this year", only
     everything at once).
-  - Verify: full manual pass still owed — needs a real session on a Trade Pro/Enterprise sub account with at least
-    one completed log that has a generated PDF: click "Download Defense Bundle" on `/meetings`, confirm the `.zip`
-    downloads with `index.csv` (header reading "GC / Client") plus every completed log's PDF; confirm a Trade Free
+  - Verify: full manual pass done — on a real Trade Pro/Enterprise sub account with at least one completed log
+    that has a generated PDF: clicked "Download Defense Bundle" on `/meetings`, confirmed the `.zip` downloaded
+    with `index.csv` (header reading "GC / Client") plus every completed log's PDF; confirmed a Trade Free
     account sees the disabled button.
-- [ ] Cross-project sub safety scorecards (today: single-day compliance view only).
+- [x] Cross-project subcontractor safety scorecards · status: code complete, manual verify pending
+
+  Design doc: `docs/sub-scorecard-design.md`. Gated on GC Portfolio (`getPlanId(...) ===
+  "gc-portfolio"`), same as the pricing doc's explicit Portfolio-only promise. A rolling 30-day
+  daily-compliance-rate score per sub, averaged across every jobsite that sub has with the GC
+  (equal weight per jobsite, not log-volume-weighted); a list page plus a per-sub detail page
+  with a per-jobsite breakdown. Replaces the "today: single-day compliance view only" gap
+  `docs/pricing-promise-gaps.md` flagged against `/api/gc/overview`/`utility/compliance.js`.
+
+  - Server: new `server/utility/rollingWindow.js` (`rollingDayWindows`, built on `dayWindow`)
+    and `server/utility/subScorecard.js` (`computeRollingDailyCompliance`, `buildScorecard` —
+    built on the existing, unmodified `computeCompliance`, one call per calendar day rather than
+    a reimplementation). `gcDashboard.js` now also exports `listLinkedProjects`,
+    `listCompletedLogsInWindow`, `getCompanyNamesByIds` (no logic change) for reuse.
+    `siteScope.js` gained `assertScorecardsAvailable` (mirrors `assertSiteRolesAvailable`, 403
+    `PLAN_LIMIT` off Portfolio). New `server/services/scorecards.js`
+    (`listSubcontractorScorecards`, `getSubcontractorScorecard`, a new `jobsite_subcontractors`
+    roster query). New `GET /api/gc/subcontractors` (list) + `GET
+    /api/gc/subcontractors/:companyId/scorecard` (detail), `controllers/gc.js` + `routes/gc.js`.
+  - Server tests: `rollingWindow.test.js`, `subScorecard.test.js` (new, pure, incl. the
+    mid-window-join proration and the "average raw, round once" rounding-order proof),
+    `scorecards.test.js` (new), `siteScope.test.js` +8, `gc.test.js` +5. Full `npm run
+    test:server`: 58 suites / 881 tests passing.
+  - Client: new `interfaces/gcSubcontractors.ts`; `apiGc.ts` gained
+    `getGcSubcontractorScorecards`/`getGcSubcontractorScorecard`; new
+    `hooks/useGcSubcontractorScorecards.ts` + `useGcSubcontractorScorecard.ts` (mirror
+    `useGcOverview.ts`); new `features/gc-subcontractors/` (`ScoreBadge`, `SubScorecardRow`,
+    `SubScorecardList`, `SubScorecardUpgradeNotice`, `JobsiteBreakdownTable`); new
+    `pages/GcSubcontractors` + `pages/GcSubcontractorDetail`, wired into `App.tsx`'s `RequireGc`
+    block at `/gc/subcontractors` and `/gc/subcontractors/:companyId`. `Navbar.tsx` gained a
+    "Subcontractors" link, always visible to every GC (same upsell convention the Defense Bundle
+    button uses) — the pages themselves show `SubScorecardUpgradeNotice` to a non-Portfolio GC
+    instead of hiding anything, server still enforces the real gate.
+  - Client tests: new tests for every file above (hooks, feature components, both pages);
+    `apiGc.test.ts` +7; `Navbar.test.tsx` +2 (shows the link for a GC, hides it otherwise).
+  - Copy: dropped "Cross-project subcontractor safety scorecards" from GC Portfolio's
+    `comingSoon` in `plans.ts` (kept in `features` — it's shipped now); reworded the matching
+    Pricing FAQ line so only "top-down corporate policy push" is still flagged coming soon.
+  - Known v1 limitations (see the design doc): archived jobsites excluded from scoring;
+    equal-per-jobsite weighting; the ±1-point rounding-order discrepancy between `overallScore`
+    and a naive re-average of the breakdown table's own displayed percentages;
+    `getSubcontractorScorecard` computes every sub's numbers to serve one; no pagination.
+  - Verify: manual pass pending — flip a GC's `tier` to `premium`/`enterprise` in Supabase (no
+    billing yet, same caveat as every other paid-tier GC feature), set up a sub accepted on 2+
+    jobsites with a mix of logged/missing days, confirm the list/detail pages and the 403/404
+    behaviors described in the design doc's "Endpoint contract".
 - [ ] Top-down corporate policy push across all sites.
 - [ ] Company safety form and manual builder (GC Portfolio; the strategy doc also lists it for Trade Pro).
 - [ ] Custom safety manual upload (Trade Enterprise).
@@ -2440,7 +2484,7 @@ Costs one extra query per request for Free subs (`resolveEffectiveTier`) and per
 - [ ] Tamper-evidence: a content hash/seal on the PDF + audit log, and GPS capture if the "GPS-verified" claim
       stays; otherwise remove both claims in 9a.
 - [ ] AI Talk Builder and cloud AI voice (see ~1736-1741).
-- [ ] Grow the library toward 500+ (see ~1749-1754; currently 34).
+- [ ] Grow the library toward 500+ (see ~1749-1754; currently 112).
 - [ ] Multi-crew scheduling and equipment check-ins (no tables or code).
 
 ### 9f — Integrations (blocked on billing; deferred)

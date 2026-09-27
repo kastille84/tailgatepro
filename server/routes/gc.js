@@ -11,6 +11,8 @@ const {
   getMeeting,
   getMeetingPdfUrl,
   getDefenseBundle,
+  listSubcontractorScorecards,
+  getSubcontractorScorecard,
 } = require("../controllers/gc");
 
 const router = express.Router();
@@ -75,6 +77,42 @@ router.get(
   [param("id").isUUID().withMessage("A valid meeting id is required")],
   validate,
   getMeetingPdfUrl,
+);
+
+// GET /api/gc/subcontractors?date&tzOffset — every distinct sub across the
+// caller's active portfolio jobsites with a rolling 30-day compliance score
+// (Phase 9e, docs/sub-scorecard-design.md). GC Portfolio only; 403 PLAN_LIMIT
+// otherwise.
+router.get(
+  "/subcontractors",
+  [
+    query("date")
+      .matches(/^\d{4}-\d{2}-\d{2}$/)
+      .withMessage("date must be in YYYY-MM-DD format"),
+    query("tzOffset")
+      .isInt({ min: -840, max: 840 })
+      .withMessage("tzOffset must be minutes between -840 and 840"),
+  ],
+  validate,
+  listSubcontractorScorecards,
+);
+
+// GET /api/gc/subcontractors/:companyId/scorecard?date&tzOffset — one sub's
+// score plus its per-jobsite breakdown. 404 if the company isn't a current
+// accepted roster member anywhere in the caller's (allowed) portfolio.
+router.get(
+  "/subcontractors/:companyId/scorecard",
+  [
+    param("companyId").isUUID().withMessage("A valid company id is required"),
+    query("date")
+      .matches(/^\d{4}-\d{2}-\d{2}$/)
+      .withMessage("date must be in YYYY-MM-DD format"),
+    query("tzOffset")
+      .isInt({ min: -840, max: 840 })
+      .withMessage("tzOffset must be minutes between -840 and 840"),
+  ],
+  validate,
+  getSubcontractorScorecard,
 );
 
 // GET /api/gc/jobsites/:id/defense-bundle — streams a ZIP of every completed

@@ -5,6 +5,10 @@ import type {
   GcMeetingSummary,
   GcMeetingDetail,
 } from "../interfaces/gcDashboard";
+import type {
+  GcSubScorecardSummary,
+  GcSubScorecardDetail,
+} from "../interfaces/gcSubcontractors";
 
 const GENERIC_ERROR = "Something went wrong. Please try again.";
 const DEFAULT_BUNDLE_FILENAME = "defense-bundle.zip";
@@ -122,6 +126,59 @@ export const getGcMeetingPdfUrl = async (
   }
 
   return body.data.url as string;
+};
+
+/** GET /api/gc/subcontractors — every distinct sub across the caller's active
+ *  portfolio jobsites with a rolling 30-day compliance score, worst-first
+ *  (Phase 9e, docs/sub-scorecard-design.md). GC Portfolio only; a 403
+ *  `PLAN_LIMIT` throws a `PlanLimitError` (defense in depth — the page should
+ *  already gate on `useCurrentUser().plan` before calling this). */
+export const getGcSubcontractorScorecards = async (
+  accessToken: string,
+  date: string,
+  tzOffset: number,
+): Promise<GcSubScorecardSummary[]> => {
+  const res = await fetchWithTimeout(
+    `/api/gc/subcontractors?date=${date}&tzOffset=${tzOffset}`,
+    { method: "GET", headers: authHeaders(accessToken) },
+  );
+
+  const body = await res.json().catch(() => null);
+
+  if (!res.ok || !body?.success) {
+    if (body?.data?.code === "PLAN_LIMIT") {
+      throw new PlanLimitError(body.error ?? GENERIC_ERROR, body.data.limit ?? null);
+    }
+    throw new Error(body?.error ?? GENERIC_ERROR);
+  }
+
+  return body.data as GcSubScorecardSummary[];
+};
+
+/** GET /api/gc/subcontractors/:companyId/scorecard — one sub's overall score
+ *  plus its per-jobsite breakdown. 404s if the company isn't a current
+ *  accepted roster member anywhere in the caller's portfolio. */
+export const getGcSubcontractorScorecard = async (
+  accessToken: string,
+  companyId: string,
+  date: string,
+  tzOffset: number,
+): Promise<GcSubScorecardDetail> => {
+  const res = await fetchWithTimeout(
+    `/api/gc/subcontractors/${companyId}/scorecard?date=${date}&tzOffset=${tzOffset}`,
+    { method: "GET", headers: authHeaders(accessToken) },
+  );
+
+  const body = await res.json().catch(() => null);
+
+  if (!res.ok || !body?.success) {
+    if (body?.data?.code === "PLAN_LIMIT") {
+      throw new PlanLimitError(body.error ?? GENERIC_ERROR, body.data.limit ?? null);
+    }
+    throw new Error(body?.error ?? GENERIC_ERROR);
+  }
+
+  return body.data as GcSubScorecardDetail;
 };
 
 /** GET /api/gc/jobsites/:id/defense-bundle — a streamed ZIP body, not the

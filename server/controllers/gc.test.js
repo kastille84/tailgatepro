@@ -1,5 +1,6 @@
 // Plain CommonJS — see requireAuth.test.js for why (nested require() sharing).
 const gcDashboardService = require("../services/gcDashboard");
+const scorecardsService = require("../services/scorecards");
 const siteScopeService = require("../services/siteScope");
 const zipBundleService = require("../services/zipBundle");
 const {
@@ -8,6 +9,8 @@ const {
   getMeeting,
   getMeetingPdfUrl,
   getDefenseBundle,
+  listSubcontractorScorecards,
+  getSubcontractorScorecard,
 } = require("./gc");
 
 const getOverviewSpy = vi.spyOn(gcDashboardService, "getOverview");
@@ -16,6 +19,8 @@ const getMeetingSpy = vi.spyOn(gcDashboardService, "getMeeting");
 const getMeetingPdfUrlSpy = vi.spyOn(gcDashboardService, "getMeetingPdfUrl");
 const getDefenseBundleEntriesSpy = vi.spyOn(gcDashboardService, "getDefenseBundleEntries");
 const streamJobsiteBundleSpy = vi.spyOn(zipBundleService, "streamBundle");
+const listSubcontractorScorecardsSpy = vi.spyOn(scorecardsService, "listSubcontractorScorecards");
+const getSubcontractorScorecardSpy = vi.spyOn(scorecardsService, "getSubcontractorScorecard");
 const getAllowedSpy = vi.spyOn(siteScopeService, "getAllowedJobsiteIds");
 
 describe("gc controller", () => {
@@ -30,6 +35,8 @@ describe("gc controller", () => {
     getMeetingPdfUrlSpy.mockReset();
     getDefenseBundleEntriesSpy.mockReset();
     streamJobsiteBundleSpy.mockReset();
+    listSubcontractorScorecardsSpy.mockReset();
+    getSubcontractorScorecardSpy.mockReset();
     // Real behavior by default: a req.user without the superintendent role is unscoped (null).
     getAllowedSpy.mockReset().mockResolvedValue(null);
 
@@ -190,6 +197,92 @@ describe("gc controller", () => {
 
       // Act
       await getMeetingPdfUrl(req, res, next);
+
+      // Assert
+      expect(next).toHaveBeenCalledWith(error);
+    });
+  });
+
+  describe("listSubcontractorScorecards", () => {
+    it("should pass date/tzOffset through and respond with the service's data", async () => {
+      // Arrange
+      req.query = { date: "2026-09-21", tzOffset: "240" };
+      const data = [{ companyId: "sub-1", companyName: "Acme Roofing", overallScore: 87 }];
+      listSubcontractorScorecardsSpy.mockResolvedValue(data);
+
+      // Act
+      await listSubcontractorScorecards(req, res, next);
+
+      // Assert
+      expect(listSubcontractorScorecardsSpy).toHaveBeenCalledWith("gc-1", {
+        date: "2026-09-21",
+        tzOffset: 240,
+        allowedJobsiteIds: null,
+      });
+      expect(res.status).toHaveBeenCalledWith(200);
+      expect(res.json).toHaveBeenCalledWith({ success: true, data });
+    });
+
+    it("should scope a superintendent to their assigned jobsites", async () => {
+      // Arrange
+      req.query = { date: "2026-09-21", tzOffset: "240" };
+      req.user = { ...req.user, role: "superintendent", tier: "premium" };
+      getAllowedSpy.mockResolvedValue(["site-a"]);
+      listSubcontractorScorecardsSpy.mockResolvedValue([]);
+
+      // Act
+      await listSubcontractorScorecards(req, res, next);
+
+      // Assert
+      expect(listSubcontractorScorecardsSpy).toHaveBeenCalledWith("gc-1", {
+        date: "2026-09-21",
+        tzOffset: 240,
+        allowedJobsiteIds: ["site-a"],
+      });
+    });
+
+    it("should forward a service error to next", async () => {
+      // Arrange
+      const error = new Error("boom");
+      listSubcontractorScorecardsSpy.mockRejectedValue(error);
+
+      // Act
+      await listSubcontractorScorecards(req, res, next);
+
+      // Assert
+      expect(next).toHaveBeenCalledWith(error);
+      expect(res.json).not.toHaveBeenCalled();
+    });
+  });
+
+  describe("getSubcontractorScorecard", () => {
+    it("should respond with one sub's scorecard from the service", async () => {
+      // Arrange
+      req.params.companyId = "sub-1";
+      req.query = { date: "2026-09-21", tzOffset: "240" };
+      const data = { companyId: "sub-1", companyName: "Acme Roofing", overallScore: 87, jobsites: [] };
+      getSubcontractorScorecardSpy.mockResolvedValue(data);
+
+      // Act
+      await getSubcontractorScorecard(req, res, next);
+
+      // Assert
+      expect(getSubcontractorScorecardSpy).toHaveBeenCalledWith("sub-1", "gc-1", {
+        date: "2026-09-21",
+        tzOffset: 240,
+        allowedJobsiteIds: null,
+      });
+      expect(res.status).toHaveBeenCalledWith(200);
+      expect(res.json).toHaveBeenCalledWith({ success: true, data });
+    });
+
+    it("should forward a service error to next", async () => {
+      // Arrange
+      const error = new Error("boom");
+      getSubcontractorScorecardSpy.mockRejectedValue(error);
+
+      // Act
+      await getSubcontractorScorecard(req, res, next);
 
       // Assert
       expect(next).toHaveBeenCalledWith(error);

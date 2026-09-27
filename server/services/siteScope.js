@@ -46,4 +46,24 @@ const assertSiteRolesAvailable = async (companyId) => {
   }
 };
 
-module.exports = { getAllowedJobsiteIds, isJobsiteAllowed, assertSiteRolesAvailable };
+// Cross-project subcontractor safety scorecards are also a GC Portfolio
+// feature (Phase 9e, docs/sub-scorecard-design.md) -- same shape and
+// reasoning as assertSiteRolesAvailable. `companyId` is always the caller's
+// verified company (loadUserContext).
+const assertScorecardsAvailable = async (companyId) => {
+  const company = await companiesService.getById(companyId);
+  if (getPlanId(company.companyType, company.tier) !== "gc-portfolio") {
+    throw new AppError(
+      "Cross-project subcontractor scorecards are part of GC Portfolio. Upgrade to use them.",
+      403,
+      { data: { code: "PLAN_LIMIT" } },
+    );
+  }
+};
+
+module.exports = {
+  getAllowedJobsiteIds,
+  isJobsiteAllowed,
+  assertSiteRolesAvailable,
+  assertScorecardsAvailable,
+};
