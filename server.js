@@ -73,10 +73,10 @@ app.use("/api/gc", gcRoutes);
 /****  C R O N   J O B S *****/
 // cron jobs - delete flagged flyers
 // cron.schedule("* * * * *", () => {
-cron.schedule("0 5 * * *", () => {
-  console.log("running delete Flagged Flyers task at 5am every day");
-  deleteFlaggedFlyers();
-});
+// cron.schedule("0 5 * * *", () => {
+//   console.log("running delete Flagged Flyers task at 5am every day");
+//   deleteFlaggedFlyers();
+// });
 
 // TODO: turn this OFF when Leaflit is operational in 3 communities
 // cron jobs - delete old flyers

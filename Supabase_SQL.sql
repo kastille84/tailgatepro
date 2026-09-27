@@ -1,7 +1,9 @@
 -- Create Enums
 CREATE TYPE company_type AS ENUM ('gc', 'subcontractor');
 CREATE TYPE subscription_tier AS ENUM ('basic', 'premium', 'enterprise');
-CREATE TYPE user_role AS ENUM ('admin', 'safety_manager', 'foreman');
+CREATE TYPE user_role AS ENUM ('admin', 'safety_manager', 'foreman', 'superintendent');
+-- Existing database (Phase 9d-2): run on its own, NOT inside a transaction block:
+-- ALTER TYPE user_role ADD VALUE IF NOT EXISTS 'superintendent';
 CREATE TYPE project_status AS ENUM ('active', 'completed');
 
 -- 1. Companies
@@ -361,3 +363,22 @@ ALTER TABLE jobsite_subcontractors ENABLE ROW LEVEL SECURITY;
 -- it references jobsites, which doesn't exist yet at that point in this file.
 ALTER TABLE projects ADD COLUMN IF NOT EXISTS jobsite_id UUID REFERENCES jobsites(id) ON DELETE SET NULL;
 CREATE INDEX IF NOT EXISTS idx_projects_jobsite ON projects (jobsite_id);
+
+-- 14. Jobsite Members (Phase 9d-2) — which jobsites a site-scoped user (role
+-- 'superintendent', GC Portfolio only) may see. admin/safety_manager are
+-- company-wide and need no rows. A permanent user-to-site link, distinct from
+-- company_invites (a temporary, email-keyed "may join at this role" row). The
+-- composite key needs no client-generated UUID: assignment is an online,
+-- authenticated GC action, never an offline write. See docs/gc-roles-design.md.
+CREATE TABLE IF NOT EXISTS jobsite_members (
+  jobsite_id UUID NOT NULL REFERENCES jobsites(id) ON DELETE CASCADE,
+  user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  created_at TIMESTAMPTZ DEFAULT NOW(),
+  PRIMARY KEY (jobsite_id, user_id)
+);
+
+-- Server-only table: enable RLS with NO policies so the public anon key is
+-- denied all access. The server's service-role key bypasses RLS and still works.
+ALTER TABLE jobsite_members ENABLE ROW LEVEL SECURITY;
+
+CREATE INDEX IF NOT EXISTS idx_jobsite_members_user ON jobsite_members (user_id);

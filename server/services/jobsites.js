@@ -8,6 +8,7 @@ const projectsService = require("./projects");
 const { isSubLocked } = require("../utility/subLocking");
 const companiesService = require("./companies");
 const subAccessService = require("./subAccess");
+const { isJobsiteAllowed } = require("./siteScope");
 
 // The columns every jobsites query selects, and the snake_case -> camelCase
 // mapper applied to each row before it leaves the service. Services never
@@ -108,15 +109,20 @@ const create = async ({ gcCompanyId, name }) => {
 // projects.listForCompany uses — each with its roster (pending invites and
 // accepted subs) embedded. Includes archived jobsites; nothing consumes this
 // list yet (8d-e), so there's no includeArchived toggle to wire up.
-const listForGc = async (gcCompanyId) => {
+const listForGc = async (gcCompanyId, allowedJobsiteIds = null) => {
+  // A site-scoped user (Phase 9d-2) only lists their assigned jobsites.
+  if (allowedJobsiteIds !== null && allowedJobsiteIds.length === 0) return [];
+
+  let query = supabase
+    .from("jobsites")
+    .select(
+      `${JOBSITE_COLUMNS}, jobsite_subcontractors(id, sub_company_id, invited_email, accepted_at, companies(name))`,
+    )
+    .eq("gc_company_id", gcCompanyId);
+  if (allowedJobsiteIds !== null) query = query.in("id", allowedJobsiteIds);
+
   const [{ data, error }, unlocked] = await Promise.all([
-    supabase
-      .from("jobsites")
-      .select(
-        `${JOBSITE_COLUMNS}, jobsite_subcontractors(id, sub_company_id, invited_email, accepted_at, companies(name))`,
-      )
-      .eq("gc_company_id", gcCompanyId)
-      .order("created_at", { ascending: false }),
+    query.order("created_at", { ascending: false }),
     subAccessService.getUnlockedSubIds(gcCompanyId),
   ]);
 
@@ -179,8 +185,13 @@ const update = async ({ id, gcCompanyId, patch }) => {
 
 // A jobsite the caller's GC company owns, with the GC's registered name for
 // invite emails. Another GC's jobsite is indistinguishable from a missing one
-// (404), same as update.
-const getOwnedJobsite = async (id, gcCompanyId) => {
+// (404), same as update -- and so is a jobsite outside a site-scoped user's
+// assigned sites (Phase 9d-2; null `allowedJobsiteIds` = company-wide).
+const getOwnedJobsite = async (id, gcCompanyId, allowedJobsiteIds = null) => {
+  if (!isJobsiteAllowed(allowedJobsiteIds, id)) {
+    throw new AppError("Jobsite not found", 404);
+  }
+
   const { data, error } = await supabase
     .from("jobsites")
     .select(`${JOBSITE_COLUMNS}, companies(name)`)
@@ -203,8 +214,8 @@ const getOwnedJobsite = async (id, gcCompanyId) => {
 // sub is a 409 — the row's whole point is to persist as the membership. Returns
 // the token so the controller can build the emailed link; it must never be
 // echoed to the browser.
-const createInvite = async ({ jobsiteId, gcCompanyId, email }) => {
-  const jobsite = await getOwnedJobsite(jobsiteId, gcCompanyId);
+const createInvite = async ({ jobsiteId, gcCompanyId, email, allowedJobsiteIds = null }) => {
+  const jobsite = await getOwnedJobsite(jobsiteId, gcCompanyId, allowedJobsiteIds);
 
   const { data: existing, error: readError } = await supabase
     .from("jobsite_subcontractors")
@@ -381,8 +392,13 @@ const acceptInvite = async ({ token, email, companyId }) => {
 // loses dashboard access to them, same as an unlink) BEFORE the roster row is
 // deleted, so a failure between the two leaves a retryable roster row rather
 // than a project still granting GC access with no membership behind it.
-const removeSubcontractor = async ({ jobsiteId, subId, gcCompanyId }) => {
-  await getOwnedJobsite(jobsiteId, gcCompanyId);
+const removeSubcontractor = async ({
+  jobsiteId,
+  subId,
+  gcCompanyId,
+  allowedJobsiteIds = null,
+}) => {
+  await getOwnedJobsite(jobsiteId, gcCompanyId, allowedJobsiteIds);
 
   const { data: sub, error: readError } = await supabase
     .from("jobsite_subcontractors")
@@ -430,4 +446,5 @@ module.exports = {
   previewInvite,
   acceptInvite,
   removeSubcontractor,
+  getOwnedJobsite,
 };

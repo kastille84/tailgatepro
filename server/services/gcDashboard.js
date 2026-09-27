@@ -17,6 +17,7 @@ const { buildPdfFilename } = require("../utility/pdfFilename");
 const { isSubLocked } = require("../utility/subLocking");
 const companiesService = require("./companies");
 const subAccessService = require("./subAccess");
+const { isJobsiteAllowed } = require("./siteScope");
 const storageService = require("./storage");
 const { PDF_BUCKET, PDF_URL_TTL_SECONDS } = require("./meetingLogs");
 
@@ -38,13 +39,19 @@ const toProject = (row) => ({
 });
 
 // Every project currently linked to this GC, oldest first (getOverview relies
-// on that order to pick a sub's earliest project per jobsite).
-const listLinkedProjects = async (gcCompanyId) => {
-  const { data, error } = await supabase
+// on that order to pick a sub's earliest project per jobsite). `allowedJobsiteIds`
+// (Phase 9d-2, services/siteScope.js) is null for a company-wide role, else the
+// site-scoped user's assigned jobsites: only projects inside them come back.
+const listLinkedProjects = async (gcCompanyId, allowedJobsiteIds = null) => {
+  if (allowedJobsiteIds !== null && allowedJobsiteIds.length === 0) return [];
+
+  let query = supabase
     .from("projects")
     .select(PROJECT_COLUMNS)
-    .eq("gc_company_id", gcCompanyId)
-    .order("created_at", { ascending: true });
+    .eq("gc_company_id", gcCompanyId);
+  if (allowedJobsiteIds !== null) query = query.in("jobsite_id", allowedJobsiteIds);
+
+  const { data, error } = await query.order("created_at", { ascending: true });
 
   if (error) {
     throw new AppError("Could not load linked projects", 502, { cause: error });
@@ -82,10 +89,11 @@ const SUB_LOCKED_ERROR = () =>
 // Confirms `projectId` is currently linked to this GC — anything else
 // (unknown id, a different GC's project, an unlinked one) is a 404. A project
 // whose sub is locked on the GC's plan (Phase 9d) is a 403 PLAN_LIMIT, so the
-// blur can't be bypassed by calling the API directly. Returns the mapped
+// blur can't be bypassed by calling the API directly. A project outside a
+// site-scoped user's assigned jobsites (Phase 9d-2) is a 404 too. Returns the mapped
 // project so callers that need its name next (getMeeting, getMeetingPdfUrl)
 // don't have to look it up twice.
-const assertGcLinkedProject = async (projectId, gcCompanyId) => {
+const assertGcLinkedProject = async (projectId, gcCompanyId, allowedJobsiteIds = null) => {
   const { data, error } = await supabase
     .from("projects")
     .select(PROJECT_COLUMNS)
@@ -98,6 +106,10 @@ const assertGcLinkedProject = async (projectId, gcCompanyId) => {
       throw new AppError("Project not found", 404, { cause: error });
     }
     throw new AppError("Could not verify the project", 502, { cause: error });
+  }
+
+  if (!isJobsiteAllowed(allowedJobsiteIds, data.jobsite_id)) {
+    throw new AppError("Project not found", 404);
   }
 
   const unlocked = await subAccessService.getUnlockedSubIds(gcCompanyId);
@@ -131,8 +143,10 @@ const listCompletedLogsInWindow = async (projectIds, window) => {
 // The GC's live jobsites (active, not archived) with their accepted roster
 // embedded. A pending invite has no sub_company_id yet and is not a roster
 // member — it can't be "missing" a log until it's accepted.
-const listActiveJobsites = async (gcCompanyId) => {
-  const { data, error } = await supabase
+const listActiveJobsites = async (gcCompanyId, allowedJobsiteIds = null) => {
+  if (allowedJobsiteIds !== null && allowedJobsiteIds.length === 0) return [];
+
+  let query = supabase
     .from("jobsites")
     .select(
       "id, name, origin, jobsite_subcontractors(sub_company_id, accepted_at)",
@@ -140,6 +154,9 @@ const listActiveJobsites = async (gcCompanyId) => {
     .eq("gc_company_id", gcCompanyId)
     .eq("status", "active")
     .is("archived_at", null);
+  if (allowedJobsiteIds !== null) query = query.in("id", allowedJobsiteIds);
+
+  const { data, error } = await query;
 
   if (error) {
     throw new AppError("Could not load jobsites", 502, { cause: error });
@@ -158,12 +175,12 @@ const listActiveJobsites = async (gcCompanyId) => {
 // GET /api/gc/overview — the GC's real jobsites, each with a per-sub
 // compliance status for the given day. The roster is the accepted members, so
 // an accepted sub that never logged shows `missing`.
-const getOverview = async (gcCompanyId, { date, tzOffset }) => {
+const getOverview = async (gcCompanyId, { date, tzOffset, allowedJobsiteIds = null }) => {
   const window = dayWindow({ date, tzOffset });
 
   const [jobsiteRows, allProjects, unlocked] = await Promise.all([
-    listActiveJobsites(gcCompanyId),
-    listLinkedProjects(gcCompanyId),
+    listActiveJobsites(gcCompanyId, allowedJobsiteIds),
+    listLinkedProjects(gcCompanyId, allowedJobsiteIds),
     subAccessService.getUnlockedSubIds(gcCompanyId),
   ]);
   const projects = allProjects.filter(
@@ -274,17 +291,20 @@ const toMeetingSummary = (row, { projectName, companyName }) => ({
 
 // GET /api/gc/meetings?projectId&from&to — completed logs for the GC's
 // linked projects (optionally narrowed to one), newest-held first.
-const listMeetings = async (gcCompanyId, { projectId, from, to } = {}) => {
+const listMeetings = async (
+  gcCompanyId,
+  { projectId, from, to, allowedJobsiteIds = null } = {},
+) => {
   let projectIds;
   let projectNameById;
 
   if (projectId) {
-    const project = await assertGcLinkedProject(projectId, gcCompanyId);
+    const project = await assertGcLinkedProject(projectId, gcCompanyId, allowedJobsiteIds);
     projectIds = [project.id];
     projectNameById = new Map([[project.id, project.name]]);
   } else {
     const [allProjects, unlocked] = await Promise.all([
-      listLinkedProjects(gcCompanyId),
+      listLinkedProjects(gcCompanyId, allowedJobsiteIds),
       subAccessService.getUnlockedSubIds(gcCompanyId),
     ]);
     const projects = allProjects.filter(
@@ -331,7 +351,7 @@ const listMeetings = async (gcCompanyId, { projectId, from, to } = {}) => {
 // confirms it's both completed and linked to this GC. An in-progress meeting
 // 404s the same as a missing one — only completed logs are ever exposed to a
 // GC (design doc "Only completed logs exposed").
-const getCompletedLinkedMeeting = async (id, gcCompanyId) => {
+const getCompletedLinkedMeeting = async (id, gcCompanyId, allowedJobsiteIds) => {
   const { data, error } = await supabase
     .from("meeting_logs")
     .select(
@@ -351,15 +371,15 @@ const getCompletedLinkedMeeting = async (id, gcCompanyId) => {
     throw new AppError("Meeting not found", 404);
   }
 
-  const project = await assertGcLinkedProject(data.project_id, gcCompanyId);
+  const project = await assertGcLinkedProject(data.project_id, gcCompanyId, allowedJobsiteIds);
 
   return { row: data, project };
 };
 
 // GET /api/gc/meetings/:id — detail + signers, with both heldAt and
 // completedAt so the UI can show a "received later" cue when they differ.
-const getMeeting = async (id, gcCompanyId) => {
-  const { row, project } = await getCompletedLinkedMeeting(id, gcCompanyId);
+const getMeeting = async (id, gcCompanyId, allowedJobsiteIds = null) => {
+  const { row, project } = await getCompletedLinkedMeeting(id, gcCompanyId, allowedJobsiteIds);
 
   const [company, talkRow, signatures] = await Promise.all([
     companiesService.getById(row.company_id),
@@ -407,8 +427,8 @@ const getMeeting = async (id, gcCompanyId) => {
 // GET /api/gc/meetings/:id/pdf-url — a short-lived signed URL, named from the
 // *meeting's* company (not the caller's GC) via the same buildPdfFilename
 // every other PDF-naming path uses.
-const getMeetingPdfUrl = async (id, gcCompanyId) => {
-  const { row, project } = await getCompletedLinkedMeeting(id, gcCompanyId);
+const getMeetingPdfUrl = async (id, gcCompanyId, allowedJobsiteIds = null) => {
+  const { row, project } = await getCompletedLinkedMeeting(id, gcCompanyId, allowedJobsiteIds);
 
   if (!row.final_pdf_url) {
     throw new AppError("No PDF has been generated for this meeting yet", 404);

@@ -6,7 +6,7 @@ const { loadUserContext } = require("../middlewares/loadUserContext");
 const { requireGcCompany } = require("../middlewares/requireGcCompany");
 const { requireRole } = require("../middlewares/requireRole");
 const { validate } = require("../middlewares/validate");
-const { MANAGER_ROLES } = require("../constants/roles");
+const { MANAGER_ROLES, SITE_MANAGER_ROLES } = require("../constants/roles");
 const {
   requireSubcontractorCompany,
 } = require("../middlewares/requireSubcontractorCompany");
@@ -18,6 +18,8 @@ const {
   previewInvite,
   acceptInvite,
   removeSubcontractor,
+  listMembers,
+  setMembers,
 } = require("../controllers/jobsites");
 
 const router = express.Router();
@@ -97,7 +99,7 @@ router.post(
   requireAuth,
   loadUserContext,
   requireGcCompany,
-  requireRole(...MANAGER_ROLES),
+  requireRole(...SITE_MANAGER_ROLES),
   [
     param("id").isUUID().withMessage("A valid jobsite id is required"),
     body("email")
@@ -138,13 +140,45 @@ router.delete(
   requireAuth,
   loadUserContext,
   requireGcCompany,
-  requireRole(...MANAGER_ROLES),
+  requireRole(...SITE_MANAGER_ROLES),
   [
     param("id").isUUID().withMessage("A valid jobsite id is required"),
     param("subId").isUUID().withMessage("A valid subcontractor id is required"),
   ],
   validate,
   removeSubcontractor,
+);
+
+// GET /api/jobsites/:id/members — the company's superintendents, each flagged
+// with whether they are assigned to this jobsite (Phase 9d-2). Manager-only.
+router.get(
+  "/:id/members",
+  requireAuth,
+  loadUserContext,
+  requireGcCompany,
+  requireRole(...MANAGER_ROLES),
+  [param("id").isUUID().withMessage("A valid jobsite id is required")],
+  validate,
+  listMembers,
+);
+
+// PUT /api/jobsites/:id/members — replace the set of superintendents assigned
+// to this jobsite. GC Portfolio only (403 PLAN_LIMIT otherwise).
+router.put(
+  "/:id/members",
+  requireAuth,
+  loadUserContext,
+  requireGcCompany,
+  requireRole(...MANAGER_ROLES),
+  [
+    param("id").isUUID().withMessage("A valid jobsite id is required"),
+    body("userIds")
+      .isArray({ max: 100 })
+      .withMessage("userIds must be a list"),
+    body("userIds.*").isUUID().withMessage("Each user id must be valid"),
+  ],
+  validate,
+  setMembers,
 );
 
 module.exports = router;

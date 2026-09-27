@@ -9,6 +9,7 @@ import { useJobsites } from "../../hooks/useJobsites";
 import type { Jobsite } from "../../interfaces/jobsite";
 import { JobsiteForm } from "./JobsiteForm";
 import { JobsiteList } from "./JobsiteList";
+import { JobsiteMembersModal } from "./JobsiteMembersModal";
 import { JobsiteRosterModal } from "./JobsiteRosterModal";
 import { StyledNote, StyledToolbar } from "./styles";
 
@@ -20,8 +21,10 @@ const MANAGER_ROLES = ["admin", "safety_manager"];
  *  per-jobsite subcontractor roster. Online-only (docs/jobsite-design.md). */
 export const JobsiteManager = () => {
   const { isOnline } = useOnlineStatus();
-  const { role } = useCurrentUser();
+  const { role, plan } = useCurrentUser();
   const canManage = role !== null && MANAGER_ROLES.includes(role);
+  // Superintendent roles/scoping are GC Portfolio only (Phase 9d-2).
+  const canManageMembers = canManage && plan === "gc-portfolio";
 
   const [showArchived, setShowArchived] = useState(false);
   const { jobsites, isLoading, isError } = useJobsites();
@@ -35,6 +38,8 @@ export const JobsiteManager = () => {
   // list after an invite/remove refetch instead of showing a stale snapshot.
   const [rosterId, setRosterId] = useState<string | undefined>(undefined);
   const rosterJobsite = jobsites.find((jobsite) => jobsite.id === rosterId);
+  const [membersId, setMembersId] = useState<string | undefined>(undefined);
+  const membersJobsite = jobsites.find((jobsite) => jobsite.id === membersId);
 
   const openCreate = () => {
     setEditing(undefined);
@@ -83,6 +88,7 @@ export const JobsiteManager = () => {
           jobsites={visibleJobsites}
           onEdit={canManage ? openEdit : undefined}
           onManageSubs={(jobsite) => setRosterId(jobsite.id)}
+          onManageMembers={canManageMembers ? (jobsite) => setMembersId(jobsite.id) : undefined}
         />
       )}
 
@@ -99,6 +105,10 @@ export const JobsiteManager = () => {
           canManage={canManage}
           onClose={() => setRosterId(undefined)}
         />
+      )}
+
+      {membersJobsite && (
+        <JobsiteMembersModal jobsite={membersJobsite} onClose={() => setMembersId(undefined)} />
       )}
     </>
   );

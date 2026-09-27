@@ -72,7 +72,7 @@ const FAQ: { q: string; a: string }[] = [
   },
   {
     q: "What's the difference between GC Site Pro and GC Portfolio?",
-    a: "GC Site Pro covers a single jobsite at $149/site/mo. GC Portfolio is flat-rate multi-site — $499/mo for up to 10 sites, $799/mo unlimited — and is planned to add cross-project subcontractor safety scorecards, top-down corporate policy push, and multi-manager roles (Superintendent vs Safety Director), all coming soon.",
+    a: "GC Site Pro covers a single jobsite at $149/site/mo. GC Portfolio is flat-rate multi-site — $499/mo for up to 10 sites, $799/mo unlimited — and adds multi-manager roles (assign Superintendents to specific job sites; Safety Directors and Admins still see every site). Cross-project subcontractor safety scorecards and top-down corporate policy push are planned, coming soon.",
   },
   {
     q: "When can I actually sign up?",

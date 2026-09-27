@@ -52,3 +52,16 @@ export interface JobsiteInvitePreview {
   jobsiteName: string | null;
   email: string;
 }
+
+/** One row of GET/PUT /api/jobsites/:id/members (Phase 9d-2) — one of the
+ *  company's superintendents, flagged with whether they're assigned to this
+ *  jobsite. `userId` is the users.id row, not a company id. */
+export interface JobsiteMember {
+  userId: string;
+  name: string;
+  assigned: boolean;
+}
+
+export interface JobsiteMembersResult {
+  members: JobsiteMember[];
+}

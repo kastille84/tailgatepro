@@ -102,6 +102,21 @@ export const StyledRosterStatus = styled.span<{ $accepted: boolean }>`
     $accepted ? theme.colors.green[100] : theme.colors.orange[100]};
 `;
 
+/** Checklist rows in JobsiteMembersModal — plainer than StyledRosterRow's
+ *  name+status+button layout, since a superintendent row is just a checkbox. */
+export const StyledMembersList = styled.ul`
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+`;
+
+export const StyledMembersRow = styled.li`
+  padding: 0.4rem 0;
+`;
+
 export const StyledToolbar = styled.div`
   display: flex;
   align-items: center;

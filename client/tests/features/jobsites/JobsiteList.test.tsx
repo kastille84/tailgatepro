@@ -84,4 +84,20 @@ describe("JobsiteList", () => {
     renderList();
     expect(screen.queryByRole("button", { name: /^edit/i })).toBeNull();
   });
+
+  it("omits Team when no onManageMembers is provided", () => {
+    renderList();
+    expect(screen.queryByRole("button", { name: /^superintendents/i })).toBeNull();
+  });
+
+  it("reports a Team click with the jobsite when onManageMembers is provided", () => {
+    const onManageMembers = vi.fn();
+    renderList({ onManageMembers });
+
+    fireEvent.click(
+      screen.getByRole("button", { name: "Superintendents for Riverside" }),
+    );
+
+    expect(onManageMembers).toHaveBeenCalledWith(base);
+  });
 });

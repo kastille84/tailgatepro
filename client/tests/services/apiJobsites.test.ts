@@ -5,8 +5,10 @@ import {
   createJobsite,
   getJobsiteInvitePreview,
   inviteSubcontractor,
+  listJobsiteMembers,
   listJobsites,
   removeSubcontractor,
+  setJobsiteMembers,
   updateJobsite,
 } from "../../src/services/apiJobsites";
 import { PlanLimitError } from "../../src/utils/PlanLimitError";
@@ -200,6 +202,77 @@ describe("apiJobsites", () => {
       );
       await expect(removeSubcontractor("t", "j1", "s1")).rejects.toThrow(
         "Not found",
+      );
+    });
+  });
+
+  describe("listJobsiteMembers", () => {
+    it("GETs /api/jobsites/:id/members with the bearer token", async () => {
+      const data = { members: [{ userId: "u-1", name: "Ann", assigned: true }] };
+      const fetchMock = vi.fn().mockResolvedValue(okResponse(data));
+      vi.stubGlobal("fetch", fetchMock);
+
+      await expect(listJobsiteMembers("token-123", "j1")).resolves.toEqual(data);
+      expect(fetchMock).toHaveBeenCalledWith(
+        "/api/jobsites/j1/members",
+        expect.objectContaining({
+          method: "GET",
+          headers: { Authorization: "Bearer token-123" },
+        }),
+      );
+    });
+
+    it("rejects with the backend error message", async () => {
+      vi.stubGlobal(
+        "fetch",
+        vi.fn().mockResolvedValue({
+          ok: false,
+          status: 404,
+          json: async () => ({ success: false, error: "Jobsite not found" }),
+        }),
+      );
+      await expect(listJobsiteMembers("t", "j1")).rejects.toThrow("Jobsite not found");
+    });
+  });
+
+  describe("setJobsiteMembers", () => {
+    it("PUTs userIds to /api/jobsites/:id/members and returns the fresh list", async () => {
+      const data = { members: [{ userId: "u-1", name: "Ann", assigned: true }] };
+      const fetchMock = vi.fn().mockResolvedValue(okResponse(data));
+      vi.stubGlobal("fetch", fetchMock);
+
+      await expect(setJobsiteMembers("token-123", "j1", ["u-1"])).resolves.toEqual(data);
+      expect(fetchMock).toHaveBeenCalledWith(
+        "/api/jobsites/j1/members",
+        expect.objectContaining({
+          method: "PUT",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: "Bearer token-123",
+          },
+          body: JSON.stringify({ userIds: ["u-1"] }),
+        }),
+      );
+    });
+
+    it("rejects with a PlanLimitError on a PLAN_LIMIT response", async () => {
+      vi.stubGlobal(
+        "fetch",
+        vi.fn().mockResolvedValue({
+          ok: false,
+          status: 403,
+          json: async () => ({
+            success: false,
+            error: "Superintendent roles are part of GC Portfolio. Upgrade to use them.",
+            data: { code: "PLAN_LIMIT" },
+          }),
+        }),
+      );
+
+      const error = await setJobsiteMembers("t", "j1", []).catch((e) => e);
+      expect(error).toBeInstanceOf(PlanLimitError);
+      expect(error.message).toBe(
+        "Superintendent roles are part of GC Portfolio. Upgrade to use them.",
       );
     });
   });

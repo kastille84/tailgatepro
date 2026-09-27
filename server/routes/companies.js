@@ -67,7 +67,7 @@ router.post(
       .withMessage("Enter a valid email address")
       .normalizeEmail({ gmail_remove_dots: false }),
     body("role")
-      .isIn(["admin", "safety_manager", "foreman"])
+      .isIn(["admin", "safety_manager", "foreman", "superintendent"])
       .withMessage("Invalid role"),
   ],
   validate,

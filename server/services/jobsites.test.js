@@ -235,6 +235,26 @@ describe("jobsites service: listForGc", () => {
     expect(result).toEqual([{ ...mappedJobsite, subcontractors: [] }]);
   });
 
+  it("should list only a site-scoped user's assigned jobsites", async () => {
+    // Arrange
+    eq.mockReturnValue({ in: vi.fn(() => ({ order })) });
+
+    // Act
+    await listForGc("gc-1", ["jobsite-1"]);
+
+    // Assert
+    expect(eq.mock.results[0].value.in).toHaveBeenCalledWith("id", ["jobsite-1"]);
+  });
+
+  it("should return no jobsites without querying when a site-scoped user has none assigned", async () => {
+    // Act
+    const result = await listForGc("gc-1", []);
+
+    // Assert
+    expect(result).toEqual([]);
+    expect(fromSpy).not.toHaveBeenCalled();
+  });
+
   it("should embed each jobsite's roster as pending/accepted subs and never expose a token", async () => {
     // Arrange
     order.mockResolvedValue({
@@ -542,6 +562,18 @@ describe("jobsites service: createInvite", () => {
       jobsiteName: "Riverside Tower",
       gcCompanyName: "Turner Construction",
     });
+  });
+
+  it("should throw a 404 AppError without any query when the jobsite is outside a site-scoped user's assigned sites", async () => {
+    // Arrange
+    fromSpy.mockReset();
+
+    // Act & Assert
+    await expect(createInvite({ ...args, allowedJobsiteIds: ["jobsite-2"] })).rejects.toMatchObject({
+      statusCode: 404,
+      message: "Jobsite not found",
+    });
+    expect(fromSpy).not.toHaveBeenCalled();
   });
 
   it("should regenerate the token on the existing pending row, guarded on accepted_at IS NULL", async () => {
@@ -920,6 +952,18 @@ describe("jobsites service: removeSubcontractor", () => {
     expect(del.eq).toHaveBeenCalledWith("id", "roster-1");
     expect(detach.update.mock.invocationCallOrder[0]).toBeLessThan(del.delete.mock.invocationCallOrder[0]);
     expect(result).toEqual({ id: "roster-1" });
+  });
+
+  it("should throw a 404 AppError without any query when the jobsite is outside a site-scoped user's assigned sites", async () => {
+    // Arrange
+    fromSpy.mockReset();
+
+    // Act & Assert
+    await expect(removeSubcontractor({ ...args, allowedJobsiteIds: [] })).rejects.toMatchObject({
+      statusCode: 404,
+      message: "Jobsite not found",
+    });
+    expect(fromSpy).not.toHaveBeenCalled();
   });
 
   it("should skip the project detach for a pending invite that has no company yet", async () => {

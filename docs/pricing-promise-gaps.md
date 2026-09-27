@@ -72,7 +72,7 @@ server accepts a client `held_at` up to 7 days in the past (`server/utility/held
 | Site Pro — 1-click OSHA Defense Bundle (ZIP) | Missing | Only a comment in `pdfFilename.js` | No zip dependency or route; see tasks.md 1158 | Build (9e) |
 | Portfolio — cross-project scorecards | Partial | `/api/gc/overview`, `utility/compliance.js` | Single-day compliance view; no scoring or history | Build (9e) |
 | Portfolio — top-down policy push | Missing | No code or schema | — | Build (9e) |
-| Portfolio — Superintendent vs Safety Director roles | Missing | `server/constants/roles.js`: `admin`, `safety_manager`, `foreman` | No "superintendent"; both manager roles have identical permissions; no per-site scoping | Build (9d-2) |
+| Portfolio — Superintendent vs Safety Director roles | Implemented (9d-2) | `server/constants/roles.js` (`superintendent`, `SITE_MANAGER_ROLES`), `services/siteScope.js`, `services/jobsiteMembers.js`, `JobsiteMembersModal.tsx` | `superintendent` is scoped to its assigned jobsites via `jobsite_members` (dashboard/meetings/PDF/roster all 404 outside scope); `safety_manager` relabeled "Safety Director"; Portfolio-only, 403 `PLAN_LIMIT` otherwise. Run the `Supabase_SQL.sql` ALTERs before relying on this in prod | — |
 | Portfolio — custom company safety form/manual builder | Missing | No code | — | Build (9e) |
 | Portfolio — 10 sites vs unlimited | Implemented (9d) | `effectiveJobsiteLimit` via `assertJobsiteAvailable` | Cap 10 (premium) / unlimited (enterprise); no billing sets the tier yet | — |
 

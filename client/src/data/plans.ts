@@ -116,7 +116,6 @@ export const GC_PLANS: Plan[] = [
     comingSoon: [
       "Cross-project subcontractor safety scorecards",
       "Top-down corporate policy push across all sites",
-      "Multi-manager roles — Superintendent vs Safety Director",
       "Custom company safety form & manual builder",
     ],
   },

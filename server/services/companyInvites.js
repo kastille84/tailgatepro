@@ -3,6 +3,8 @@ const { supabase } = require("../utility/supabaseClient");
 const { AppError } = require("../utility/AppError");
 const { generateInviteToken, getInviteExpiry } = require("../utility/inviteToken");
 const seatsService = require("./seats");
+const siteScopeService = require("./siteScope");
+const { SITE_SCOPED_ROLE } = require("../constants/roles");
 
 const INVITE_COLUMNS = "id, company_id, email, role, token, expires_at";
 
@@ -20,6 +22,8 @@ const toInvite = (row) => ({
 // constraint plus this upsert is the entire "re-invite regenerates the
 // token" mechanism — no separate duplicate-row cleanup exists anywhere else.
 const createInvite = async (companyId, email, role) => {
+  // Superintendent is a GC Portfolio-only role (Phase 9d-2).
+  if (role === SITE_SCOPED_ROLE) await siteScopeService.assertSiteRolesAvailable(companyId);
   await seatsService.assertSeatAvailable({ companyId, role, email, includePending: true });
 
   const { data, error } = await supabase

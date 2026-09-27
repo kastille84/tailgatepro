@@ -90,6 +90,35 @@ describe("gcDashboard service: assertGcLinkedProject", () => {
     });
   });
 
+  it("should 404 a project outside a site-scoped user's assigned jobsites, before any lock check", async () => {
+    // Arrange
+    single.mockResolvedValue({
+      data: { id: "project-1", owner_company_id: "sub-1", jobsite_id: "site-b", name: "Tower" },
+      error: null,
+    });
+
+    // Act & Assert
+    await expect(assertGcLinkedProject("project-1", "gc-1", ["site-a"])).rejects.toMatchObject({
+      statusCode: 404,
+      message: "Project not found",
+    });
+    expect(unlockedSpy).not.toHaveBeenCalled();
+  });
+
+  it("should return a project inside a site-scoped user's assigned jobsites", async () => {
+    // Arrange
+    single.mockResolvedValue({
+      data: { id: "project-1", owner_company_id: "sub-1", jobsite_id: "site-a", name: "Tower" },
+      error: null,
+    });
+
+    // Act
+    const result = await assertGcLinkedProject("project-1", "gc-1", ["site-a"]);
+
+    // Assert
+    expect(result.jobsiteId).toBe("site-a");
+  });
+
   it("should throw a 403 PLAN_LIMIT when the project's sub is locked on the GC's plan", async () => {
     // Arrange
     unlockedSpy.mockResolvedValue(new Set(["someone-else"]));
@@ -220,6 +249,26 @@ describe("gcDashboard service: getOverview", () => {
 
     // Assert
     expect(result.jobsites.map((j) => j.createdBySub)).toEqual([true, false]);
+  });
+
+  it("should restrict jobsites and projects to a site-scoped user's assigned jobsites", async () => {
+    // Act
+    await getOverview("gc-1", { ...overviewArgs, allowedJobsiteIds: ["jobsite-1"] });
+
+    // Assert
+    const builderFor = (table) =>
+      fromSpy.mock.results[fromSpy.mock.calls.findIndex(([name]) => name === table)].value;
+    expect(builderFor("jobsites").in).toHaveBeenCalledWith("id", ["jobsite-1"]);
+    expect(builderFor("projects").in).toHaveBeenCalledWith("jobsite_id", ["jobsite-1"]);
+  });
+
+  it("should return an empty overview without querying when a site-scoped user has no assigned jobsites", async () => {
+    // Act
+    const result = await getOverview("gc-1", { ...overviewArgs, allowedJobsiteIds: [] });
+
+    // Assert
+    expect(result).toEqual({ jobsites: [], totals: { subs: 0, logged: 0, missing: 0 } });
+    expect(fromSpy).not.toHaveBeenCalled();
   });
 
   it("should mark an accepted sub with no completed log in the window as missing", async () => {
@@ -589,6 +638,23 @@ describe("gcDashboard service: listMeetings", () => {
     });
   });
 
+  it("should return no meetings without querying when a site-scoped user has no assigned jobsites", async () => {
+    // Act
+    const result = await listMeetings("gc-1", { allowedJobsiteIds: [] });
+
+    // Assert
+    expect(result).toEqual([]);
+    expect(fromSpy).not.toHaveBeenCalled();
+  });
+
+  it("should 404 a projectId outside a site-scoped user's assigned jobsites", async () => {
+    // Act & Assert — the mocked project row carries no jobsite_id in scope.
+    await expect(
+      listMeetings("gc-1", { projectId: "project-1", allowedJobsiteIds: ["site-a"] }),
+    ).rejects.toMatchObject({ statusCode: 404 });
+    expect(meetingsSelect).not.toHaveBeenCalled();
+  });
+
   it("should apply from/to as a held_at range filter", async () => {
     // Act
     await listMeetings("gc-1", { from: "2026-09-01T00:00:00.000Z", to: "2026-09-08T00:00:00.000Z" });
@@ -743,6 +809,14 @@ describe("gcDashboard service: getMeeting / getMeetingPdfUrl", () => {
       });
     });
 
+    it("should 404 when the meeting's project is outside a site-scoped user's assigned jobsites", async () => {
+      // Act & Assert
+      await expect(getMeeting("meeting-1", "gc-1", ["site-a"])).rejects.toMatchObject({
+        statusCode: 404,
+        message: "Project not found",
+      });
+    });
+
     it("should 404 when the meeting id doesn't exist", async () => {
       // Arrange
       meetingSingle.mockResolvedValue({ data: null, error: { code: "PGRST116" } });
@@ -791,6 +865,15 @@ describe("gcDashboard service: getMeeting / getMeetingPdfUrl", () => {
         "acme-roofing-riverside-tower-2026-09-21-meeting1.pdf",
       );
       expect(url).toBe("https://signed.example/report.pdf");
+    });
+
+    it("should 404 when the meeting's project is outside a site-scoped user's assigned jobsites", async () => {
+      // Act & Assert
+      await expect(getMeetingPdfUrl("meeting-1", "gc-1", ["site-a"])).rejects.toMatchObject({
+        statusCode: 404,
+        message: "Project not found",
+      });
+      expect(storageService.getSignedUrl).not.toHaveBeenCalled();
     });
 
     it("should 404 when no PDF has been generated yet", async () => {

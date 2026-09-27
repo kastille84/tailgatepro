@@ -10,11 +10,15 @@ import { InviteTeammateForm } from "../../../src/features/company-settings/Invit
 import theme from "../../../src/styles/theme";
 
 const mockUseOnlineStatus = vi.fn();
+const mockUseCurrentUser = vi.fn();
 const mockUseInviteTeammate = vi.fn();
 const mockInvite = vi.fn();
 
 vi.mock("../../../src/context/online-status", () => ({
   useOnlineStatus: () => mockUseOnlineStatus(),
+}));
+vi.mock("../../../src/hooks/useCurrentUser", () => ({
+  useCurrentUser: () => mockUseCurrentUser(),
 }));
 vi.mock("../../../src/hooks/useInviteTeammate", () => ({
   useInviteTeammate: () => mockUseInviteTeammate(),
@@ -33,6 +37,7 @@ describe("InviteTeammateForm", () => {
   beforeEach(() => {
     vi.clearAllMocks();
     mockUseOnlineStatus.mockReturnValue({ isOnline: true });
+    mockUseCurrentUser.mockReturnValue({ isGc: false });
     mockInvite.mockResolvedValue(undefined);
     mockUseInviteTeammate.mockReturnValue({
       inviteTeammate: mockInvite,
@@ -48,6 +53,40 @@ describe("InviteTeammateForm", () => {
       "foreman",
     );
     expect(screen.getByRole("button", { name: /send invite/i })).toBeDefined();
+  });
+
+  it("labels safety_manager as Safety Director", () => {
+    renderForm();
+
+    const options = Array.from(
+      (screen.getByLabelText(/role/i) as HTMLSelectElement).options,
+    ).map((option) => [option.value, option.text]);
+    expect(options).toContainEqual(["safety_manager", "Safety Director"]);
+  });
+
+  it("does not offer Superintendent to a subcontractor company", () => {
+    renderForm();
+    expect(screen.queryByRole("option", { name: /superintendent/i })).toBeNull();
+  });
+
+  it("offers Superintendent to a GC company and submits it as the role", async () => {
+    mockUseCurrentUser.mockReturnValue({ isGc: true });
+    renderForm();
+
+    fireEvent.change(screen.getByLabelText(/email/i), {
+      target: { value: "super@example.com" },
+    });
+    fireEvent.change(screen.getByLabelText(/role/i), {
+      target: { value: "superintendent" },
+    });
+    fireEvent.click(screen.getByRole("button", { name: /send invite/i }));
+
+    await waitFor(() =>
+      expect(mockInvite).toHaveBeenCalledWith({
+        email: "super@example.com",
+        role: "superintendent",
+      }),
+    );
   });
 
   it("asks for an email instead of calling the server when the field is empty", async () => {

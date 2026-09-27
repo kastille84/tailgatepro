@@ -18,6 +18,9 @@ interface JobsiteListProps {
   /** Present ⇒ each card gets an Edit button (admin/safety_manager only). */
   onEdit?: (jobsite: Jobsite) => void;
   onManageSubs: (jobsite: Jobsite) => void;
+  /** Present ⇒ each card gets a Team button (GC Portfolio manager only —
+   *  Phase 9d-2, assigns superintendents to this job site). */
+  onManageMembers?: (jobsite: Jobsite) => void;
 }
 
 const describeRoster = (jobsite: Jobsite) => {
@@ -34,6 +37,7 @@ export const JobsiteList = ({
   jobsites,
   onEdit,
   onManageSubs,
+  onManageMembers,
 }: JobsiteListProps) => {
   if (jobsites.length === 0) {
     return (
@@ -70,6 +74,16 @@ export const JobsiteList = ({
             >
               Subs
             </Button>
+            {onManageMembers && (
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => onManageMembers(jobsite)}
+                aria-label={`Superintendents for ${jobsite.name}`}
+              >
+                Team
+              </Button>
+            )}
             {onEdit && (
               <Button
                 variant="outline"
