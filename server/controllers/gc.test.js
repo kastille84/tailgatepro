@@ -1,12 +1,21 @@
 // Plain CommonJS — see requireAuth.test.js for why (nested require() sharing).
 const gcDashboardService = require("../services/gcDashboard");
 const siteScopeService = require("../services/siteScope");
-const { getOverview, listMeetings, getMeeting, getMeetingPdfUrl } = require("./gc");
+const zipBundleService = require("../services/zipBundle");
+const {
+  getOverview,
+  listMeetings,
+  getMeeting,
+  getMeetingPdfUrl,
+  getDefenseBundle,
+} = require("./gc");
 
 const getOverviewSpy = vi.spyOn(gcDashboardService, "getOverview");
 const listMeetingsSpy = vi.spyOn(gcDashboardService, "listMeetings");
 const getMeetingSpy = vi.spyOn(gcDashboardService, "getMeeting");
 const getMeetingPdfUrlSpy = vi.spyOn(gcDashboardService, "getMeetingPdfUrl");
+const getDefenseBundleEntriesSpy = vi.spyOn(gcDashboardService, "getDefenseBundleEntries");
+const streamJobsiteBundleSpy = vi.spyOn(zipBundleService, "streamJobsiteBundle");
 const getAllowedSpy = vi.spyOn(siteScopeService, "getAllowedJobsiteIds");
 
 describe("gc controller", () => {
@@ -19,6 +28,8 @@ describe("gc controller", () => {
     listMeetingsSpy.mockReset();
     getMeetingSpy.mockReset();
     getMeetingPdfUrlSpy.mockReset();
+    getDefenseBundleEntriesSpy.mockReset();
+    streamJobsiteBundleSpy.mockReset();
     // Real behavior by default: a req.user without the superintendent role is unscoped (null).
     getAllowedSpy.mockReset().mockResolvedValue(null);
 
@@ -30,6 +41,9 @@ describe("gc controller", () => {
     res = {
       status: vi.fn().mockReturnThis(),
       json: vi.fn().mockReturnThis(),
+      setHeader: vi.fn(),
+      headersSent: false,
+      destroy: vi.fn(),
     };
     next = vi.fn();
   });
@@ -179,6 +193,82 @@ describe("gc controller", () => {
 
       // Assert
       expect(next).toHaveBeenCalledWith(error);
+    });
+  });
+
+  describe("getDefenseBundle", () => {
+    it("should set the zip headers and stream the bundle from the service's entries", async () => {
+      // Arrange
+      req.params.id = "jobsite-1";
+      getDefenseBundleEntriesSpy.mockResolvedValue({
+        jobsiteName: "Riverside Tower",
+        entries: [{ path: "meeting-1/report.pdf", filename: "acme-riverside-tower.pdf" }],
+        skippedCount: 1,
+      });
+      streamJobsiteBundleSpy.mockResolvedValue(undefined);
+
+      // Act
+      await getDefenseBundle(req, res, next);
+
+      // Assert
+      expect(getDefenseBundleEntriesSpy).toHaveBeenCalledWith("jobsite-1", "gc-1", null);
+      expect(res.setHeader).toHaveBeenCalledWith("Content-Type", "application/zip");
+      expect(res.setHeader).toHaveBeenCalledWith(
+        "Content-Disposition",
+        'attachment; filename="riverside-tower-defense-bundle.zip"',
+      );
+      expect(streamJobsiteBundleSpy).toHaveBeenCalledWith(
+        [{ path: "meeting-1/report.pdf", filename: "acme-riverside-tower.pdf" }],
+        res,
+        { skippedCount: 1 },
+      );
+      expect(next).not.toHaveBeenCalled();
+      expect(res.destroy).not.toHaveBeenCalled();
+    });
+
+    it("should scope a superintendent to their assigned jobsites", async () => {
+      // Arrange
+      req.params.id = "jobsite-1";
+      req.user = { ...req.user, role: "superintendent", tier: "enterprise" };
+      getAllowedSpy.mockResolvedValue(["jobsite-1"]);
+      getDefenseBundleEntriesSpy.mockResolvedValue({ jobsiteName: "Site", entries: [], skippedCount: 0 });
+      streamJobsiteBundleSpy.mockResolvedValue(undefined);
+
+      // Act
+      await getDefenseBundle(req, res, next);
+
+      // Assert
+      expect(getDefenseBundleEntriesSpy).toHaveBeenCalledWith("jobsite-1", "gc-1", ["jobsite-1"]);
+    });
+
+    it("should forward a service error to next when headers haven't been sent yet", async () => {
+      // Arrange
+      const error = Object.assign(new Error("Upgrade this job site to Site Pro"), { statusCode: 403 });
+      getDefenseBundleEntriesSpy.mockRejectedValue(error);
+
+      // Act
+      await getDefenseBundle(req, res, next);
+
+      // Assert
+      expect(next).toHaveBeenCalledWith(error);
+      expect(res.destroy).not.toHaveBeenCalled();
+      expect(res.setHeader).not.toHaveBeenCalled();
+    });
+
+    it("should destroy the response instead of calling next when a mid-stream failure happens after headers are sent", async () => {
+      // Arrange
+      req.params.id = "jobsite-1";
+      getDefenseBundleEntriesSpy.mockResolvedValue({ jobsiteName: "Site", entries: [], skippedCount: 0 });
+      const streamError = new Error("Could not download the file");
+      streamJobsiteBundleSpy.mockRejectedValue(streamError);
+      res.headersSent = true;
+
+      // Act
+      await getDefenseBundle(req, res, next);
+
+      // Assert
+      expect(res.destroy).toHaveBeenCalledWith(streamError);
+      expect(next).not.toHaveBeenCalled();
     });
   });
 });

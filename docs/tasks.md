@@ -1155,13 +1155,9 @@ check on site`, `Discussion questions`, `Attendance & signatures`,
       would need to stop being a literal alias of `hasTranslationAccess`).
       Not needed today — flagging only because the two gates currently share
       one array on purpose (`server/utility/entitlements.js`).
-- [ ] **Not yet built** — GC "1-Click OSHA Defense Bundle" ZIP export
-      (`docs/pricing-and-positioning-strategy_V2.md`'s GC Site Pro tier:
-      "Download indexed ZIP of all site logs instantly"). When that gets
-      scoped, reuse `server/utility/pdfFilename.js`'s `buildPdfFilename` for
-      each entry's name rather than reinventing naming — same reason it was
-      written as a standalone pure helper instead of inlined into
-      `getPdfUrl`.
+- [x] GC "1-Click OSHA Defense Bundle" ZIP export — shipped in Phase 9e; see
+      that section for the full writeup. Design doc:
+      `docs/osha-defense-bundle-design.md`.
 
 ### 5f — Server: email delivery · status: code complete, all tests passing
 
@@ -2163,7 +2159,7 @@ from the dashboard, so run the 8d-g backfill first.
 - [x] GC links a sub company to a project (`project_subcontractors`) — done: slim version (GC join code)
       shipped in Phase 6b–6d, superseded by 8d above
 
-## Phase 9 — Pricing-promise gaps · status: audited 2026-09-24; 9a (copy fixes) and 9b (entitlement foundation) done, 9c done (seat caps, history window, library split, archive, PDF-link re-issue), 9d code complete (including 9d-2 roles/scoping — run the `Supabase_SQL.sql` ALTERs), 9e–9g not started
+## Phase 9 — Pricing-promise gaps · status: audited 2026-09-24; 9a (copy fixes) and 9b (entitlement foundation) done, 9c done (seat caps, history window, library split, archive, PDF-link re-issue), 9d code complete (including 9d-2 roles/scoping — run the `Supabase_SQL.sql` ALTERs), 9e in progress (Defense Bundle ZIP shipped), 9f–9g not started
 
 Audit of the pricing page (`client/src/data/plans.ts`, `Pricing.tsx` FAQ/callout) and landing page copy against
 the code. Full evidence table, statuses and per-gap resolution live in `docs/pricing-promise-gaps.md` — every
@@ -2320,7 +2316,72 @@ Costs one extra query per request for Free subs (`resolveEffectiveTier`) and per
       `server.js` is a leftover). Provider decided: Twilio, Toll-Free Verified number (cheaper than 10DLC at this
       volume — no campaign fee; ~$2-3/mo per Site Pro customer at typical volume). Deferred until Stripe billing
       ships — see Deferred section below.
-- [ ] 1-click OSHA Defense Bundle ZIP (see ~1158; `pdfFilename.js` has the filename groundwork).
+- [x] 1-click OSHA Defense Bundle ZIP · status: code complete; manual smoke pending (needs a real session and a
+      jobsite flipped to `plan='site_pro'` by hand in Supabase, same caveat 9d's sponsorship item has)
+
+  Design doc: `docs/osha-defense-bundle-design.md`. Scope decided: one jobsite, every completed log, no date
+  filter — the GC Site Pro promise ("Download indexed ZIP of all site logs instantly"). GC Portfolio's promised
+  version ("Portfolio-Wide Search," a multi-site export) is a separate, bigger, unscoped feature left untouched.
+  Gated on `jobsites.plan === "site_pro"` alone, not blended with the caller's company tier — no new
+  entitlements.js helper, same inline-field-check style `jobsites.js`/`subAccess.js`/`sponsorship.js` already use.
+
+  - Server: `jobsites.js`'s `JOBSITE_COLUMNS`/`toJobsite` now expose `plan` (needed for both the gate and the
+    client button — no schema change, the column already existed from 9b/9d). New `server/utility/buildBundleIndex.js`
+    (pure `buildBundleIndexCsv`, a skipped-count note line); `pdfFilename.js` now also exports `slugify` for the
+    zip's own top-level filename. New `gcDashboard.js` `getDefenseBundleEntries` (jobsite ownership + Site Pro gate
+    via `jobsitesService.getOwnedJobsite`, locked-sub exclusion reusing the `listMeetings` masking, no
+    `MEETINGS_LIST_LIMIT`/date range — a full legal export, not a dashboard page; a completed log with no PDF yet
+    is skipped and counted, not fatal; 404 if nothing has a PDF). New `server/services/zipBundle.js`
+    `streamJobsiteBundle` — pipes an `archiver` zip straight to a passed-in writable (touched only as a generic
+    stream, never as `req`/`res`, so the "services never touch req/res" rule still holds) as each PDF is fetched
+    one at a time via the existing `storageService.downloadBlob`. New `GET /api/gc/jobsites/:id/defense-bundle`
+    (`routes/gc.js` + `controllers/gc.js`'s `getDefenseBundle`) — sets zip headers then streams; a mid-stream
+    failure after headers are sent calls `res.destroy(error)` instead of `next(error)`, since a normal JSON error
+    body is no longer possible at that point. New root dependency: `archiver` (^7.0.1).
+  - Server tests: new `buildBundleIndex.test.js` (8), `zipBundle.test.js` (3, a real `archiver` piped into a
+    `PassThrough` standing in for `res`, mocking only `storageService.downloadBlob`); `gcDashboard.test.js` +9
+    (`getDefenseBundleEntries`: happy path, 403 on a non-Site-Pro jobsite, 404 propagation from
+    `getOwnedJobsite`, locked-sub exclusion, no-linked-projects/no-ready-PDF 404s, skip+count arithmetic, 502);
+    `gc.test.js` +4 (`getDefenseBundle`: headers + service wiring, superintendent scoping, both `headersSent`
+    branches of the error path); `jobsites.test.js` fixtures updated for the new `plan` column. Full
+    `npm run test:server`: 55 suites / 831 tests passing (dummy, non-secret `SUPABASE_URL`/`SUPABASE_SERVICE_ROLE_KEY`/
+    `SUPABASE_API_KEY` env vars are enough to run the whole suite locally — `supabaseClient.js` only needs a
+    URL-shaped string to construct the client, never a live connection, for every test in this repo since they all
+    mock `supabase.from`/the service layer).
+  - Client: `interfaces/jobsite.ts` gained `Jobsite.plan`. New `utils/triggerBrowserDownload.ts` — this repo's
+    first binary (non-signed-URL) download, since the zip is a streamed authenticated response body a new tab
+    can't fetch on its own; `services/apiGc.ts` gained `getDefenseBundle` (its own small unwrap — not the usual
+    `{ success, data }` envelope — a 403 `PLAN_LIMIT` still throws `PlanLimitError`, filename read from
+    `Content-Disposition`, a longer 60s timeout than `fetchWithTimeout`'s 10s default); new
+    `hooks/useDownloadDefenseBundle.ts` (mirrors `useGcMeetingPdfUrl`'s `useMutation` shape, toasts on error).
+    `features/jobsites/JobsiteList.tsx` gained a per-card "Defense Bundle" button on a `site_pro` jobsite, or a
+    `StyledUpgradeLink` to `/pricing` ("Defense Bundle · Upgrade to Site Pro") otherwise — always visible as a
+    selling point, same "Locked · Unlock on Site Pro" precedent `SubComplianceRow.tsx` set; `JobsiteManager.tsx`
+    wires the hook in.
+  - Client tests: new `triggerBrowserDownload.test.ts`, `useDownloadDefenseBundle.test.tsx` (4);
+    `apiGc.test.ts` +5, `JobsiteList.test.tsx` +4, `JobsiteManager.test.tsx` +1 (wiring); `ComparisonTable.test.tsx`
+    updated for the dropped "coming soon" suffix.
+  - Copy: dropped the "coming soon" tag from GC Site Pro's Defense Bundle bullet (`plans.ts` `comingSoon`) and the
+    " — coming soon" suffix on the landing comparison table (`ComparisonTable.tsx`); `docs/pricing-promise-gaps.md`
+    row flipped to Implemented.
+  - **To ship:** none — `jobsites.plan` already exists in Supabase from 9b/9d, no new column/migration needed.
+    Flip a jobsite's `plan` to `'site_pro'` by hand in Supabase to test it live (same as 9d's sponsorship caveat;
+    billing to actually purchase Site Pro is still 9f).
+  - **Update (progress modal):** the download can take a while on a site with a lot of history, and the button's
+    own inline spinner was easy to miss — added a non-dismissable `DefenseBundleProgressModal`
+    (`features/jobsites/DefenseBundleProgressModal.tsx`, reuses the existing `Modal`/`Spinner` primitives, no new
+    styled-components) shown for the duration of `useDownloadDefenseBundle`'s mutation. It's indeterminate, not a
+    percentage bar — the response never sets `Content-Length` (unknowable until `archive.finalize()` completes) and
+    `storageService` has no cheap size-without-downloading call, so a real determinate bar isn't possible without
+    re-architecting the transport (see the design doc's new "Client UX while assembling" section). New
+    `DefenseBundleProgressModal.test.tsx` (3); `JobsiteManager.test.tsx` +2 (shows/hides with `isPending`).
+  - Known v1 limitations (see the design doc): sequential per-PDF downloads (fine at expected site sizes); no
+    PostgREST 1000-row chunking like `listMonthSummaries` has; a mid-stream failure can't produce a normal JSON
+    error body.
+  - Verify: boot the server, confirm the new route 401s without a token (proves routing/mounting) — done. Full
+    manual pass still owed: flip a jobsite to Site Pro, complete at least one meeting log with a generated PDF,
+    click "Defense Bundle" on `/projects`, confirm a `.zip` downloads with `index.csv` + one PDF per completed
+    log; confirm a `free`-plan jobsite shows the upgrade link instead; confirm a locked sub's logs are absent.
 - [ ] Cross-project sub safety scorecards (today: single-day compliance view only).
 - [ ] Top-down corporate policy push across all sites.
 - [ ] Company safety form and manual builder (GC Portfolio; the strategy doc also lists it for Trade Pro).

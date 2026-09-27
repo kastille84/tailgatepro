@@ -52,7 +52,7 @@ const COMPARE_ROWS: CompareRow[] = [
   },
   {
     label: "Audit export",
-    us: "1-click OSHA Defense Bundle (indexed ZIP) — coming soon",
+    us: "1-click OSHA Defense Bundle (indexed ZIP)",
     them: "Manual cloud search, file by file",
   },
   {

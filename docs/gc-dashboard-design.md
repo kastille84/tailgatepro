@@ -252,6 +252,7 @@ All under `requireAuth → loadUserContext → requireGcCompany`, `{ success, da
 | `GET /api/gc/meetings?projectId&from&to` | Up to 200 completed logs (no pagination in v1) for the GC's linked projects, newest `held_at` first: `{ id, projectId, projectName, companyId, companyName, talkTitle, heldAt, completedAt, signerCount, pdfReady }` — `from`/`to` filter on `held_at` |
 | `GET /api/gc/meetings/:id` | Log detail (same fields as the list row) + `signers[]` (`workerName`, `quizPassed`), with both `heldAt` and `completedAt` |
 | `GET /api/gc/meetings/:id/pdf-url` | Signed URL (5-min TTL, filename from the *meeting's* company and `held_at` date); `404` if `!pdfReady` |
+| `GET /api/gc/jobsites/:id/defense-bundle` | A streamed ZIP of every completed log's PDF for one jobsite, plus an `index.csv` — Phase 9e, own contract/decisions in `docs/osha-defense-bundle-design.md` (not `{ success, data }`; gated on `jobsites.plan === "site_pro"`, not company tier) |
 
 `projectId`/`companyId`/`companyName` on meeting rows weren't in the original contract — added because a list
 spanning several subs and jobsites is unreadable without them. A jobsite that merges two of one sub's project

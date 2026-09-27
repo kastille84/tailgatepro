@@ -17,10 +17,14 @@ Resolution legend: **Build** (a Phase 9 item), **Reword** (fix the copy), **Defe
 
 **Update (9a shipped):** every **Reword** resolution below is done. Unbuilt paid features stay on the pricing
 cards with a "Coming soon" tag (`comingSoon` in `client/src/data/plans.ts`); landing/FAQ claims for GPS,
-tamper-evidence, QR, AI, 500+ and 10+ languages were reworded or removed. SMS nudges and the Defense Bundle stay
-as selling points, tagged "Coming soon" on the landing page and pricing cards. The **Build**
+tamper-evidence, QR, AI, 500+ and 10+ languages were reworded or removed. SMS nudges stay a selling point,
+tagged "Coming soon" on the landing page and pricing cards. The **Build**
 and **Defer** items are unchanged and remain open in Phase 9b–9g. "Can't be back-dated" was also removed: the
 server accepts a client `held_at` up to 7 days in the past (`server/utility/heldAt.js`).
+
+**Update (9e Defense Bundle shipped):** the "coming soon" tag was dropped from the "1-click OSHA Defense
+Bundle" pricing-card bullet and the landing comparison table now shows it without the suffix — see the GC
+Site Pro row below and `docs/osha-defense-bundle-design.md`.
 
 ## Tier-gating fact base
 
@@ -69,7 +73,7 @@ server accepts a client `held_at` up to 7 days in the past (`server/utility/held
 | Site Pro — sponsor unlimited subs on one site | Partial (9d) | `services/sponsorship.js`, `jobsites.plan` | A sub on a live `site_pro` jobsite resolves as Trade Pro; enforced, but no billing can set `jobsites.plan` yet, so still tagged "coming soon" | Defer (9f) |
 | Site Pro — SMS nudges, Mondays 7:00 AM | Missing | Only cron in `server.js` is a leftover 5am job | No SMS provider, phone storage or scheduler | Build (9e) |
 | Site Pro — Procore & Autodesk ACC sync | Missing | No code | Copy only | Defer (9f) |
-| Site Pro — 1-click OSHA Defense Bundle (ZIP) | Missing | Only a comment in `pdfFilename.js` | No zip dependency or route; see tasks.md 1158 | Build (9e) |
+| Site Pro — 1-click OSHA Defense Bundle (ZIP) | Implemented (9e) | `services/gcDashboard.js` `getDefenseBundleEntries`, `services/zipBundle.js`, `GET /api/gc/jobsites/:id/defense-bundle` | Streams every completed log's PDF for one jobsite plus an `index.csv`, gated on `jobsites.plan === "site_pro"`; Portfolio's separate "Portfolio-Wide Search" version is unbuilt | — |
 | Portfolio — cross-project scorecards | Partial | `/api/gc/overview`, `utility/compliance.js` | Single-day compliance view; no scoring or history | Build (9e) |
 | Portfolio — top-down policy push | Missing | No code or schema | — | Build (9e) |
 | Portfolio — Superintendent vs Safety Director roles | Implemented (9d-2) | `server/constants/roles.js` (`superintendent`, `SITE_MANAGER_ROLES`), `services/siteScope.js`, `services/jobsiteMembers.js`, `JobsiteMembersModal.tsx` | `superintendent` is scoped to its assigned jobsites via `jobsite_members` (dashboard/meetings/PDF/roster all 404 outside scope); `safety_manager` relabeled "Safety Director"; Portfolio-only, 403 `PLAN_LIMIT` otherwise. Run the `Supabase_SQL.sql` ALTERs before relying on this in prod | — |

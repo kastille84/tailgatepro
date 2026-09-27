@@ -5,8 +5,10 @@ import { Checkbox } from "../../ui_comps/checkbox";
 import { Spinner } from "../../ui_comps/spinner";
 import { useOnlineStatus } from "../../context/online-status";
 import { useCurrentUser } from "../../hooks/useCurrentUser";
+import { useDownloadDefenseBundle } from "../../hooks/useDownloadDefenseBundle";
 import { useJobsites } from "../../hooks/useJobsites";
 import type { Jobsite } from "../../interfaces/jobsite";
+import { DefenseBundleProgressModal } from "./DefenseBundleProgressModal";
 import { JobsiteForm } from "./JobsiteForm";
 import { JobsiteList } from "./JobsiteList";
 import { JobsiteMembersModal } from "./JobsiteMembersModal";
@@ -25,6 +27,8 @@ export const JobsiteManager = () => {
   const canManage = role !== null && MANAGER_ROLES.includes(role);
   // Superintendent roles/scoping are GC Portfolio only (Phase 9d-2).
   const canManageMembers = canManage && plan === "gc-portfolio";
+
+  const { downloadBundle, isPending: isDownloadingBundle } = useDownloadDefenseBundle();
 
   const [showArchived, setShowArchived] = useState(false);
   const { jobsites, isLoading, isError } = useJobsites();
@@ -89,6 +93,9 @@ export const JobsiteManager = () => {
           onEdit={canManage ? openEdit : undefined}
           onManageSubs={(jobsite) => setRosterId(jobsite.id)}
           onManageMembers={canManageMembers ? (jobsite) => setMembersId(jobsite.id) : undefined}
+          onDownloadBundle={downloadBundle}
+          isDownloadingBundle={isDownloadingBundle}
+          isOnline={isOnline}
         />
       )}
 
@@ -110,6 +117,8 @@ export const JobsiteManager = () => {
       {membersJobsite && (
         <JobsiteMembersModal jobsite={membersJobsite} onClose={() => setMembersId(undefined)} />
       )}
+
+      <DefenseBundleProgressModal isOpen={isDownloadingBundle} />
     </>
   );
 };

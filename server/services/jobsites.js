@@ -14,7 +14,7 @@ const { isJobsiteAllowed } = require("./siteScope");
 // mapper applied to each row before it leaves the service. Services never
 // leak DB column names to the controller layer.
 const JOBSITE_COLUMNS =
-  "id, gc_company_id, name, status, archived_at, origin, created_at";
+  "id, gc_company_id, name, status, archived_at, origin, plan, created_at";
 
 // A NULL origin (a jobsite that predates the column) maps to false: unknown is
 // never presented as sub-created.
@@ -25,6 +25,10 @@ const toJobsite = (row) => ({
   status: row.status,
   archivedAt: row.archived_at,
   createdBySub: row.origin === "subcontractor",
+  // 'free' | 'site_pro' (Phase 9b). Exposed so the client can gate/advertise
+  // per-jobsite paid features (e.g. the 9e Defense Bundle) without a second
+  // round trip; the server is still the actual authority on every such route.
+  plan: row.plan,
   createdAt: row.created_at,
 });
 

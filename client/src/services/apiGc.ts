@@ -1,4 +1,5 @@
 import { fetchWithTimeout } from "../utils/fetchWithTimeout";
+import { PlanLimitError } from "../utils/PlanLimitError";
 import type {
   GcOverview,
   GcMeetingSummary,
@@ -6,6 +7,11 @@ import type {
 } from "../interfaces/gcDashboard";
 
 const GENERIC_ERROR = "Something went wrong. Please try again.";
+const DEFAULT_BUNDLE_FILENAME = "defense-bundle.zip";
+// Longer than fetchWithTimeout's 10s default — assembling a ZIP means the
+// server downloads and compresses one PDF per completed log before the first
+// byte comes back, which can take a while on a site with many logs.
+const BUNDLE_FETCH_TIMEOUT_MS = 60_000;
 
 const authHeaders = (accessToken: string) => ({
   "Content-Type": "application/json",
@@ -116,4 +122,34 @@ export const getGcMeetingPdfUrl = async (
   }
 
   return body.data.url as string;
+};
+
+/** GET /api/gc/jobsites/:id/defense-bundle — a streamed ZIP body, not the
+ *  usual `{ success, data }` JSON envelope (docs/osha-defense-bundle-design.md),
+ *  so this can't reuse `unwrap`-style parsing on success. A 403 `PLAN_LIMIT`
+ *  (the jobsite isn't on Site Pro) throws a `PlanLimitError`, same as
+ *  `apiJobsites.ts`. The filename comes from the server's
+ *  `Content-Disposition` header so the saved file matches what it named. */
+export const getDefenseBundle = async (
+  accessToken: string,
+  jobsiteId: string,
+): Promise<{ blob: Blob; filename: string }> => {
+  const res = await fetchWithTimeout(
+    `/api/gc/jobsites/${jobsiteId}/defense-bundle`,
+    { method: "GET", headers: { Authorization: `Bearer ${accessToken}` } },
+    BUNDLE_FETCH_TIMEOUT_MS,
+  );
+
+  if (!res.ok) {
+    const body = await res.json().catch(() => null);
+    if (body?.data?.code === "PLAN_LIMIT") {
+      throw new PlanLimitError(body.error ?? GENERIC_ERROR, body.data.limit ?? null);
+    }
+    throw new Error(body?.error ?? GENERIC_ERROR);
+  }
+
+  const disposition = res.headers.get("Content-Disposition") ?? "";
+  const filename = disposition.match(/filename="([^"]+)"/)?.[1] ?? DEFAULT_BUNDLE_FILENAME;
+
+  return { blob: await res.blob(), filename };
 };

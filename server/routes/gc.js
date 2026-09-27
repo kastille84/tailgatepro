@@ -10,6 +10,7 @@ const {
   listMeetings,
   getMeeting,
   getMeetingPdfUrl,
+  getDefenseBundle,
 } = require("../controllers/gc");
 
 const router = express.Router();
@@ -74,6 +75,17 @@ router.get(
   [param("id").isUUID().withMessage("A valid meeting id is required")],
   validate,
   getMeetingPdfUrl,
+);
+
+// GET /api/gc/jobsites/:id/defense-bundle — streams a ZIP of every completed
+// log's PDF for the jobsite (Phase 9e, docs/osha-defense-bundle-design.md).
+// 403 PLAN_LIMIT unless the jobsite is on Site Pro; 404 if it's not owned/
+// allowed or has no PDF-ready completed log yet.
+router.get(
+  "/jobsites/:id/defense-bundle",
+  [param("id").isUUID().withMessage("A valid job site id is required")],
+  validate,
+  getDefenseBundle,
 );
 
 module.exports = router;
