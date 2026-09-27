@@ -5,10 +5,14 @@ import type { ProjectStatus } from "./project";
  *  the invite email. */
 export interface JobsiteSubcontractor {
   id: string;
-  email: string;
+  /** Null when `locked` (hidden by the GC's plan). */
+  email: string | null;
   status: "pending" | "accepted";
-  /** Null until the invitee has accepted and named/joined a company. */
+  /** Null until the invitee has accepted and named/joined a company, and
+   *  always null when `locked`. */
   companyName: string | null;
+  /** True when the GC's plan (GC Free: 1 unlocked sub) hides this sub. */
+  locked: boolean;
 }
 
 /** GET /api/jobsites row — a GC-owned jobsite with its roster embedded. */
@@ -18,11 +22,14 @@ export interface Jobsite {
   name: string;
   status: ProjectStatus;
   archivedAt: string | null;
+  /** True when a subcontractor's join-code link created this jobsite. False
+   *  for GC-created and for jobsites of unknown origin. */
+  createdBySub: boolean;
   createdAt: string;
   subcontractors: JobsiteSubcontractor[];
 }
 
-/** POST/PATCH response � the jobsite row without its roster (only the list
+/** POST/PATCH response � the jobsite row without its roster (only the list
  *  endpoint embeds it). */
 export type JobsiteSummary = Omit<Jobsite, "subcontractors">;
 
@@ -44,4 +51,17 @@ export interface JobsiteInvitePreview {
   gcCompanyName: string | null;
   jobsiteName: string | null;
   email: string;
+}
+
+/** One row of GET/PUT /api/jobsites/:id/members (Phase 9d-2) — one of the
+ *  company's superintendents, flagged with whether they're assigned to this
+ *  jobsite. `userId` is the users.id row, not a company id. */
+export interface JobsiteMember {
+  userId: string;
+  name: string;
+  assigned: boolean;
+}
+
+export interface JobsiteMembersResult {
+  members: JobsiteMember[];
 }

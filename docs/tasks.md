@@ -2049,7 +2049,7 @@ sub_company_id IS NOT NULL`) in `Supabase_SQL.sql` (sections 11–12) + `Supabas
       longer required on the route when `jobsiteId` is present. `projects.jobsite_id` now flows through
       `PROJECT_COLUMNS`/`toProject` (`jobsiteId`)
 - [x] Added beyond the original bullets (confirmed with the user): `DELETE
-  /api/jobsites/:id/subcontractors/:subId` (GC-side removal / cancel a pending invite; detaches the
+/api/jobsites/:id/subcontractors/:subId` (GC-side removal / cancel a pending invite; detaches the
       sub's projects _before_ deleting the roster row so a partial failure never leaves GC access with
       no membership behind it), and `GET /api/jobsites` now embeds each jobsite's roster
       (`subcontractors: [{ id, email, status: "pending"|"accepted", companyName }]`, never the token)
@@ -2163,7 +2163,7 @@ from the dashboard, so run the 8d-g backfill first.
 - [x] GC links a sub company to a project (`project_subcontractors`) — done: slim version (GC join code)
       shipped in Phase 6b–6d, superseded by 8d above
 
-## Phase 9 — Pricing-promise gaps · status: audited 2026-09-24; 9a (copy fixes) and 9b (entitlement foundation) done, 9c done (seat caps, history window, library split, archive, PDF-link re-issue), 9d–9g not started
+## Phase 9 — Pricing-promise gaps · status: audited 2026-09-24; 9a (copy fixes) and 9b (entitlement foundation) done, 9c done (seat caps, history window, library split, archive, PDF-link re-issue), 9d code complete (including 9d-2 roles/scoping — run the `Supabase_SQL.sql` ALTERs), 9e–9g not started
 
 Audit of the pricing page (`client/src/data/plans.ts`, `Pricing.tsx` FAQ/callout) and landing page copy against
 the code. Full evidence table, statuses and per-gap resolution live in `docs/pricing-promise-gaps.md` — every
@@ -2244,7 +2244,7 @@ toast for it) with a `/pricing` link.
       `getById`, absent from the list). Paid trades and all GCs see everything (`hasFullLibrary` in `entitlements.js`,
       `libraryAccess` in `PLAN_LIMITS`). Also enforced on meeting-log create and favorites add. `ContentLibrary` shows an
       upgrade banner linking to `/pricing`. **To ship:** run `ALTER TABLE toolbox_talks ADD COLUMN IF NOT EXISTS is_core BOOLEAN
-      NOT NULL DEFAULT false;` in Supabase, then re-run `scripts/seed-talks.js`. Known gap: the offline talks cache merges and
+  NOT NULL DEFAULT false;` in Supabase, then re-run `scripts/seed-talks.js`. Known gap: the offline talks cache merges and
       never clears, so a downgraded company can still read previously cached non-core talks offline.
 - [x] 5-year legal archive for Pro: the `/meetings` page is the archive view and shows "kept for 5 years" when
       `limits.archiveYears > 0`; the "coming soon" tag is removed from Trade Pro. **Retention policy (decided):**
@@ -2260,20 +2260,66 @@ toast for it) with a `/pricing` link.
       `docs/mailgun-templates/meeting-log-report.html` (new `{{reportUrl}}` variable) into the Mailgun template.
       Recipients with only `gc_contact_email` and no GC account still cannot re-issue.
 
-### 9d — GC-side limits and paywall
+### 9d — GC-side limits and paywall · status: caps, sub masking, sponsorship, and 9d-2 roles/scoping code complete
 
-- [ ] GC Free 1-active-jobsite cap (`server/services/jobsites.js` `create`) and the 10-site vs unlimited Portfolio cap.
-- [ ] GC Free "1 subcontractor unlocked, others blurred": server-side masking + client blur (today only the landing
-      mockup `GcDashboardMockup.tsx` shows it).
-- [ ] Sponsorship entitlement: a paid GC site lifts a linked sub's access ("every sub gets full access for $0");
-      accept-invite currently never touches the sub's tier.
-- [ ] Superintendent vs Safety Director roles for GC Portfolio (only `admin`/`safety_manager`/`foreman` exist,
-      `server/constants/roles.js`; the two manager roles are identical) + per-site scoping.
+Done: `jobsites.create` (and `update` when it re-activates an archived/completed site, so archive → create → restore
+can't dodge the cap) calls `assertJobsiteAvailable`: it counts live (`status='active'`, not archived) sites against
+`effectiveJobsiteLimit` — GC Free 1 + one per live `jobsites.plan='site_pro'` site, Portfolio 10 / unlimited — and
+returns 403 `PLAN_LIMIT` (`data.limit`). The client maps that to `PlanLimitError` in `apiJobsites`; `JobsiteForm` shows
+the inline `/pricing` upgrade prompt (create and restore). Masking: `utility/subLocking.js` (pure) +
+`services/subAccess.js` `getUnlockedSubIds` pick the unlocked subs for a GC Free account — the earliest-accepted one
+(`limits.unlockedSubs`), plus every sub on a Site Pro site; `getOverview` returns a placeholder (`locked: true`, no
+name/status/projectId) but still counts locked subs in `totals`; `assertGcLinkedProject` (used by `listMeetings` with a
+`projectId`, `getMeeting`, `getMeetingPdfUrl`) 403s `PLAN_LIMIT` for a locked sub's project and the unfiltered
+`listMeetings` leaves it out; `jobsites.listForGc` nulls a locked sub's email/company name. `SubComplianceRow` renders a
+blurred placeholder + "Unlock on Site Pro" link; the roster modal labels it "Locked subcontractor" (removal still works).
+Sponsorship: `services/sponsorship.js` `resolveEffectiveTier` lifts a Free **subcontractor** with an accepted row on a
+live `site_pro` jobsite to `premium` (Trade Pro) — applied in `users.getUserContext` (so `req.user.tier`, `/api/users/me`
+and every gate) and `companies.getById` (seats, history window, PDF branding); `companies.tier` is never written, so it
+ends by itself when the site is unpaid/archived or the sub is removed. **Caveat:** nothing can set
+`jobsites.plan='site_pro'` until billing exists (9f), so it is flipped by hand in Supabase; the "Sponsor unlimited
+subcontractors" pricing tag and FAQ copy therefore stay "coming soon" (only the GC Free "others blurred" tag was removed).
+Costs one extra query per request for Free subs (`resolveEffectiveTier`) and per GC dashboard call (`getUnlockedSubIds`).
+
+- [x] GC Free 1-active-jobsite cap (`server/services/jobsites.js` `create`) and the 10-site vs unlimited Portfolio cap.
+- [x] GC Free "1 subcontractor unlocked, others blurred": server-side masking + client blur.
+- [x] Sponsorship entitlement: a Site Pro jobsite lifts a linked sub to Trade Pro ("every sub gets full access for $0").
+      Enforced; purchasable only once billing (9f) can set `jobsites.plan`.
+- [ ] **9d-2** — Superintendent vs Safety Director roles for GC Portfolio (only `admin`/`safety_manager`/`foreman` exist,
+      `server/constants/roles.js`; the two manager roles are identical) + per-site scoping. Design: `docs/gc-roles-design.md`.
+  - [x] Design doc (`docs/gc-roles-design.md`) signed off: no seat cost; lapsed Portfolio keeps rows but denies access.
+  - [x] SQL (`user_role` value + `jobsite_members`, in `Supabase_SQL.sql`), `roles.js` (`SITE_MANAGER_ROLES`, labels),
+        `services/siteScope.js` + tests. **To ship:** run `ALTER TYPE user_role ADD VALUE IF NOT EXISTS 'superintendent';`
+        (on its own, outside a transaction) and the `jobsite_members` CREATE in Supabase. The Portfolio-lapse check is
+        added to `getAllowedJobsiteIds` in the next step, when the services are wired.
+  - [x] Scope `gcDashboard.js` and `jobsites.js` services to allowed jobsites (404 out of scope) + tests. Controllers
+        (`gc.js`, `jobsites.js`) resolve `getAllowedJobsiteIds(req.user)` and pass it down (null = company-wide);
+        invite/remove-sub routes now use `SITE_MANAGER_ROLES`. A superintendent on a non-Portfolio company gets no sites
+        (lapsed-Portfolio rule), read from `req.user.tier`, so no extra query.
+  - [x] `GET/PUT /api/jobsites/:id/members` (`services/jobsiteMembers.js`; GET lists the company's superintendents flagged
+        `assigned`, PUT replaces the set with a diff and 400s on any id that isn't one of the company's superintendents)
+        and the Portfolio-only gate (403 `PLAN_LIMIT`, `siteScope.assertSiteRolesAvailable`) on inviting a superintendent
+        (`POST /api/companies/invite` now accepts `role: "superintendent"`) and on PUT members.
+  - [x] Client: `InviteTeammateForm` offers "Superintendent" (labeled; GC companies only — the Portfolio gate itself is
+        server-enforced and surfaces as the existing inline `/pricing` prompt on rejection); `safety_manager` now
+        labeled "Safety Director" everywhere. New `JobsiteMembersModal` (+ `useJobsiteMembers`/`useSetJobsiteMembers`
+        hooks, `apiJobsites.listJobsiteMembers`/`setJobsiteMembers`) is a manager+Portfolio-gated "Team" button on each
+        `JobsiteList` row — a checklist of the company's superintendents, saved as the full replacement set. Pricing
+        copy: dropped "coming soon" from the Superintendent/Safety Director roles bullet (`plans.ts`, `Pricing.tsx` FAQ).
+- [x] "Created by subcontractor" badge: nullable `jobsites.origin` (`gc` | `subcontractor`; `NULL` = pre-existing, unknown,
+      never guessed) set by `jobsites.create` and by `findOrCreateJobsite` (join-code link); exposed as `createdBySub` on
+      `GET /api/gc/overview` and `GET /api/jobsites`; badge on the GC dashboard and the `/projects` jobsite list. Run
+      `ALTER TABLE jobsites ADD COLUMN IF NOT EXISTS origin ...` (see `Supabase_SQL.sql`) in Supabase before deploying.
+- [ ] Reconcile duplicate jobsites (e.g. "Project*A" vs "Project_A*" created by a sub's join-code link): a GC-side merge
+      that re-points `projects.jobsite_id` and roster rows (meeting logs are keyed to the sub's project, so none move).
+      Not decided — subs may legitimately keep their own project rows; the badge above is the interim.
 
 ### 9e — Feature builds (each needs its own design doc first)
 
-- [ ] Automated SMS nudges, Monday 7:00 AM (provider, phone-number storage + consent, scheduler; the only cron in
-      `server.js` is a leftover).
+- [-] Automated SMS nudges, Monday 7:00 AM (provider, phone-number storage + consent, scheduler; the only cron in
+      `server.js` is a leftover). Provider decided: Twilio, Toll-Free Verified number (cheaper than 10DLC at this
+      volume — no campaign fee; ~$2-3/mo per Site Pro customer at typical volume). Deferred until Stripe billing
+      ships — see Deferred section below.
 - [ ] 1-click OSHA Defense Bundle ZIP (see ~1158; `pdfFilename.js` has the filename groundwork).
 - [ ] Cross-project sub safety scorecards (today: single-day compliance view only).
 - [ ] Top-down corporate policy push across all sites.
@@ -2369,3 +2415,4 @@ seeded until they get topic-specific content. Feeds the "grow the library" item 
 
 - [-] Stripe billing (needs multi-user/site concepts; `companies.tier` enum reconciled in 9b) — see Phase 9b
 - [-] Procore integration — also JobTread, QuickBooks, Autodesk ACC (see Phase 9f)
+- [-] SMS nudges (9e) — provider decided (Twilio, Toll-Free Verified number); waiting on Stripe billing first

@@ -402,6 +402,12 @@ and empty rather than prefilled, never disclosing the admin's address). A GC ren
 attached project's `projects.name` retroactively — a known, accepted drift: the dashboard shows the jobsite's
 own name, while the sub's project keeps the name it took at attach time. Unlinking (which nulls `gc_company_id`) frees these fields again.
 
+**Jobsite origin.** `jobsites.origin` (`gc` | `subcontractor`, nullable) records who created the row: `gc` from
+`POST /api/jobsites`, `subcontractor` when a join-code link's find-or-create made a new one. It is server-written only
+and surfaces as `createdBySub` (a "Created by subcontractor" badge) so a GC can tell a sub's near-duplicate name
+("Project_A_") from the jobsite it created. `NULL` means the row predates the column: origin is unknown, shown as no
+badge, never inferred. It does not merge anything — a real duplicate-merge is still undecided (`docs/tasks.md`).
+
 **Multiple project rows per sub per jobsite.** The roster's `UNIQUE (jobsite_id, sub_company_id)`
 enforces one *membership* per sub per jobsite, but nothing stops a sub from holding several
 `projects` rows with the same `jobsite_id` (e.g. separate crews or phases) — `gcDashboard`'s

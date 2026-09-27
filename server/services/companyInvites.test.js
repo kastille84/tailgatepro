@@ -1,6 +1,7 @@
 // Plain CommonJS — see requireAuth.test.js for why (nested require() sharing).
 const { supabase } = require("../utility/supabaseClient");
 const seatsService = require("./seats");
+const siteScopeService = require("./siteScope");
 const {
   createInvite,
   previewInvite,
@@ -30,6 +31,7 @@ const mappedInvite = {
 
 const fromSpy = vi.spyOn(supabase, "from");
 const assertSeatSpy = vi.spyOn(seatsService, "assertSeatAvailable");
+const siteRolesSpy = vi.spyOn(siteScopeService, "assertSiteRolesAvailable");
 
 describe("companyInvites service: createInvite", () => {
   let single;
@@ -47,6 +49,7 @@ describe("companyInvites service: createInvite", () => {
       throw new Error(`Unexpected table: ${table}`);
     });
     assertSeatSpy.mockReset().mockResolvedValue(undefined);
+    siteRolesSpy.mockReset().mockResolvedValue(undefined);
   });
 
   it("should check the plan's seats (including pending invites) before writing", async () => {
@@ -60,6 +63,36 @@ describe("companyInvites service: createInvite", () => {
       email: "newhire@example.com",
       includePending: true,
     });
+  });
+
+  it("should require GC Portfolio before inviting a superintendent, and not write when it isn't", async () => {
+    // Arrange
+    const { AppError } = require("../utility/AppError");
+    siteRolesSpy.mockRejectedValue(new AppError("upgrade", 403, { data: { code: "PLAN_LIMIT" } }));
+
+    // Act & Assert
+    await expect(
+      createInvite("company-1", "super@example.com", "superintendent"),
+    ).rejects.toMatchObject({ statusCode: 403, data: { code: "PLAN_LIMIT" } });
+    expect(siteRolesSpy).toHaveBeenCalledWith("company-1");
+    expect(upsert).not.toHaveBeenCalled();
+  });
+
+  it("should invite a superintendent once the Portfolio gate passes", async () => {
+    // Act
+    await createInvite("company-1", "super@example.com", "superintendent");
+
+    // Assert
+    expect(siteRolesSpy).toHaveBeenCalledWith("company-1");
+    expect(upsert.mock.calls[0][0].role).toBe("superintendent");
+  });
+
+  it("should not apply the Portfolio gate to other roles", async () => {
+    // Act
+    await createInvite("company-1", "newhire@example.com", "foreman");
+
+    // Assert
+    expect(siteRolesSpy).not.toHaveBeenCalled();
   });
 
   it("should not write an invite when the plan's seats are full", async () => {

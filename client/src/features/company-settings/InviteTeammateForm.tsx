@@ -6,6 +6,7 @@ import { Button } from "../../ui_comps/button";
 import { Form, FormField, TextInput } from "../../ui_comps/form";
 import { Select, type SelectOption } from "../../ui_comps/select";
 import { useOnlineStatus } from "../../context/online-status";
+import { useCurrentUser } from "../../hooks/useCurrentUser";
 import { useInviteTeammate } from "../../hooks/useInviteTeammate";
 import type { InviteRole } from "../../interfaces/companyInvite";
 import {
@@ -19,9 +20,18 @@ import {
 
 const ROLE_OPTIONS: SelectOption[] = [
   { value: "foreman", label: "Foreman" },
-  { value: "safety_manager", label: "Safety Manager" },
+  { value: "safety_manager", label: "Safety Director" },
   { value: "admin", label: "Admin" },
 ];
+
+// Superintendent (Phase 9d-2) is a GC-only, GC-Portfolio-only role: it makes
+// no sense for a subcontractor company, and the server 403 PLAN_LIMIT on any
+// other GC plan. Appended rather than merged into ROLE_OPTIONS so a
+// subcontractor's dropdown, and a non-Portfolio GC's, never offer it.
+const SUPERINTENDENT_OPTION: SelectOption = {
+  value: "superintendent",
+  label: "Superintendent",
+};
 
 // Mirrors the validator in server/routes/companies.js's POST /invite chain.
 const inviteSchema = z.object({
@@ -30,7 +40,7 @@ const inviteSchema = z.object({
     .trim()
     .min(1, "Email is required")
     .email("Enter a valid email address"),
-  role: z.enum(["admin", "safety_manager", "foreman"]),
+  role: z.enum(["admin", "safety_manager", "foreman", "superintendent"]),
 });
 
 type InviteValues = z.infer<typeof inviteSchema>;
@@ -47,7 +57,13 @@ type InviteValues = z.infer<typeof inviteSchema>;
  */
 export const InviteTeammateForm = () => {
   const { isOnline } = useOnlineStatus();
+  const { isGc } = useCurrentUser();
   const { inviteTeammate, isInviting, planLimitError } = useInviteTeammate();
+  // Offered on every GC plan, not just Portfolio: picking it on GC Free/Site
+  // Pro still submits, and the server's 403 PLAN_LIMIT surfaces below as the
+  // same inline upgrade prompt a jobsite-cap rejection uses — no need to
+  // pre-filter the option by plan here.
+  const roleOptions = isGc ? [...ROLE_OPTIONS, SUPERINTENDENT_OPTION] : ROLE_OPTIONS;
 
   const {
     register,
@@ -110,7 +126,7 @@ export const InviteTeammateForm = () => {
               valid defaultValue ("foreman"), so the Zod enum check can never
               actually fail from this UI. */}
           <FormField id={roleId} label="Role">
-            <Select id={roleId} options={ROLE_OPTIONS} disabled={!isOnline} {...register("role")} />
+            <Select id={roleId} options={roleOptions} disabled={!isOnline} {...register("role")} />
           </FormField>
         </StyledInviteFields>
 

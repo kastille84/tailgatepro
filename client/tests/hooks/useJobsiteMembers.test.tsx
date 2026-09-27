@@ -3,9 +3,8 @@ import { describe, it, expect, vi, beforeEach } from "vitest";
 import { renderHook, waitFor } from "@testing-library/react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 
-import { useJobsites } from "../../src/hooks/useJobsites";
+import { useJobsiteMembers } from "../../src/hooks/useJobsiteMembers";
 import * as apiJobsites from "../../src/services/apiJobsites";
-import type { Jobsite } from "../../src/interfaces/jobsite";
 
 vi.mock("../../src/services/apiJobsites");
 
@@ -14,18 +13,7 @@ vi.mock("../../src/context/auth", () => ({
   useAuth: () => mockUseAuth(),
 }));
 
-const jobsite: Jobsite = {
-  id: "j1",
-  gcCompanyId: "gc-1",
-  name: "Riverside",
-  status: "active",
-  archivedAt: null,
-  createdBySub: false,
-  createdAt: "2026-09-01T00:00:00.000Z",
-  subcontractors: [],
-};
-
-describe("useJobsites", () => {
+describe("useJobsiteMembers", () => {
   let queryClient: QueryClient;
 
   beforeEach(() => {
@@ -40,32 +28,40 @@ describe("useJobsites", () => {
     <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
   );
 
-  it("fetches the GC's jobsites with the session token", async () => {
-    vi.mocked(apiJobsites.listJobsites).mockResolvedValue([jobsite]);
+  it("fetches a jobsite's members with the session token", async () => {
+    vi.mocked(apiJobsites.listJobsiteMembers).mockResolvedValue({
+      members: [{ userId: "u-1", name: "Ann", assigned: true }],
+    });
 
-    const { result } = renderHook(() => useJobsites(), { wrapper });
+    const { result } = renderHook(() => useJobsiteMembers("j1"), { wrapper });
 
     await waitFor(() => expect(result.current.isLoading).toBe(false));
-    expect(apiJobsites.listJobsites).toHaveBeenCalledWith("token-123");
-    expect(result.current.jobsites).toEqual([jobsite]);
+    expect(apiJobsites.listJobsiteMembers).toHaveBeenCalledWith("token-123", "j1");
+    expect(result.current.members).toEqual([{ userId: "u-1", name: "Ann", assigned: true }]);
     expect(result.current.isError).toBe(false);
   });
 
   it("returns an empty list and does not fetch without a session", () => {
     mockUseAuth.mockReturnValue({ session: null });
 
-    const { result } = renderHook(() => useJobsites(), { wrapper });
+    const { result } = renderHook(() => useJobsiteMembers("j1"), { wrapper });
 
-    expect(result.current.jobsites).toEqual([]);
-    expect(apiJobsites.listJobsites).not.toHaveBeenCalled();
+    expect(result.current.members).toEqual([]);
+    expect(apiJobsites.listJobsiteMembers).not.toHaveBeenCalled();
+  });
+
+  it("does not fetch without a jobsiteId", () => {
+    renderHook(() => useJobsiteMembers(""), { wrapper });
+
+    expect(apiJobsites.listJobsiteMembers).not.toHaveBeenCalled();
   });
 
   it("reports an error when the fetch fails", async () => {
-    vi.mocked(apiJobsites.listJobsites).mockRejectedValue(new Error("boom"));
+    vi.mocked(apiJobsites.listJobsiteMembers).mockRejectedValue(new Error("boom"));
 
-    const { result } = renderHook(() => useJobsites(), { wrapper });
+    const { result } = renderHook(() => useJobsiteMembers("j1"), { wrapper });
 
     await waitFor(() => expect(result.current.isError).toBe(true));
-    expect(result.current.jobsites).toEqual([]);
+    expect(result.current.members).toEqual([]);
   });
 });

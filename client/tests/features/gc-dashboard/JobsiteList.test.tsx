@@ -12,6 +12,7 @@ const jobsites: GcJobsite[] = [
   {
     id: "jobsite-1",
     name: "Downtown Tower",
+    createdBySub: false,
     subs: [
       {
         companyId: "sub-1",
@@ -20,6 +21,7 @@ const jobsites: GcJobsite[] = [
         status: "logged",
         lastLoggedAt: "2026-09-21T13:00:00.000Z",
         count: 1,
+        locked: false,
       },
       {
         companyId: "sub-2",
@@ -28,6 +30,7 @@ const jobsites: GcJobsite[] = [
         status: "missing",
         lastLoggedAt: null,
         count: 0,
+        locked: false,
       },
     ],
   },
@@ -45,6 +48,15 @@ const renderList = (
   );
 
 describe("JobsiteList", () => {
+  it("shows a Created by subcontractor badge only for a sub-originated jobsite", () => {
+    const { unmount } = renderList();
+    expect(screen.queryByText("Created by subcontractor")).toBeNull();
+    unmount();
+
+    renderList({ jobsites: [{ ...jobsites[0], createdBySub: true }] });
+    expect(screen.getByText("Created by subcontractor")).toBeDefined();
+  });
+
   it("renders an empty state when there are no linked jobsites", () => {
     renderList({ jobsites: [] });
     expect(screen.getByText(/no linked job sites yet/i)).toBeDefined();
@@ -54,7 +66,7 @@ describe("JobsiteList", () => {
   });
 
   it("explains a jobsite with no subs and links to /projects to invite some", () => {
-    renderList({ jobsites: [{ id: "jobsite-2", name: "Empty Site", subs: [] }] });
+    renderList({ jobsites: [{ id: "jobsite-2", name: "Empty Site", createdBySub: false, subs: [] }] });
 
     expect(screen.getByText("Empty Site")).toBeDefined();
     expect(screen.getByText(/no subcontractors on this job site yet/i)).toBeDefined();
@@ -69,6 +81,39 @@ describe("JobsiteList", () => {
     expect(screen.getByText("Downtown Tower")).toBeDefined();
     expect(screen.getByText("Rivera Electric")).toBeDefined();
     expect(screen.getByText("Apex Plumbing")).toBeDefined();
+  });
+
+  it("renders a locked sub as a placeholder with an upgrade link", () => {
+    renderList({
+      jobsites: [
+        {
+          id: "jobsite-3",
+          name: "Locked Site",
+          subs: [
+            {
+              companyId: null,
+              companyName: null,
+              projectId: null,
+              status: null,
+              lastLoggedAt: null,
+              count: null,
+              locked: true,
+            },
+            {
+              companyId: null,
+              companyName: null,
+              projectId: null,
+              status: null,
+              lastLoggedAt: null,
+              count: null,
+              locked: true,
+            },
+          ],
+        },
+      ],
+    });
+
+    expect(screen.getAllByRole("link", { name: /unlock on site pro/i })).toHaveLength(2);
   });
 
   it("calls onSelectSub with the clicked sub", () => {

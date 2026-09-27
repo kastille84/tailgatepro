@@ -2,6 +2,7 @@ import React from "react";
 import { describe, it, expect, vi } from "vitest";
 import { render, screen, fireEvent } from "@testing-library/react";
 import { ThemeProvider } from "styled-components";
+import { MemoryRouter } from "react-router-dom";
 
 import { SubComplianceRow } from "../../../src/features/gc-dashboard/SubComplianceRow";
 import theme from "../../../src/styles/theme";
@@ -14,6 +15,7 @@ const sub: GcSubCompliance = {
   status: "logged",
   lastLoggedAt: "2026-09-21T13:00:00.000Z",
   count: 1,
+  locked: false,
 };
 
 const renderRow = (
@@ -21,11 +23,13 @@ const renderRow = (
   onSelect = vi.fn(),
 ) =>
   render(
-    <ThemeProvider theme={theme}>
-      <ul>
-        <SubComplianceRow sub={{ ...sub, ...overrides }} onSelect={onSelect} />
-      </ul>
-    </ThemeProvider>,
+    <MemoryRouter>
+      <ThemeProvider theme={theme}>
+        <ul>
+          <SubComplianceRow sub={{ ...sub, ...overrides }} onSelect={onSelect} />
+        </ul>
+      </ThemeProvider>
+    </MemoryRouter>,
   );
 
 describe("SubComplianceRow", () => {
@@ -48,6 +52,29 @@ describe("SubComplianceRow", () => {
     renderRow({ companyName: null });
 
     expect(screen.getByText("Unknown company")).toBeDefined();
+  });
+
+  it("renders a locked sub as a non-clickable placeholder with an upgrade link", () => {
+    const onSelect = vi.fn();
+    renderRow(
+      {
+        locked: true,
+        companyId: null,
+        companyName: null,
+        projectId: null,
+        status: null,
+        lastLoggedAt: null,
+        count: null,
+      },
+      onSelect,
+    );
+
+    expect(screen.queryByRole("button")).toBeNull();
+    expect(screen.queryByText("Logged")).toBeNull();
+    expect(screen.queryByText("Missing")).toBeNull();
+    const link = screen.getByRole("link", { name: /unlock on site pro/i });
+    expect(link.getAttribute("href")).toBe("/pricing");
+    expect(onSelect).not.toHaveBeenCalled();
   });
 
   it("calls onSelect with the sub when clicked", () => {

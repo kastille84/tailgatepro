@@ -151,6 +151,7 @@ still its own row, now optionally pointed at one of these via `jobsite_id` (see 
 | `status` | Enum | Default `active` | `active`, `completed` — reuses `project_status` |
 | `archived_at` | Timestamptz | Nullable | `NULL` = live; a timestamp = archived |
 | `plan` | Text | Not Null, Default `'free'`, CHECK in (`free`, `site_pro`) | Phase 9b: per-site GC plan. `site_pro` = a paid GC Site Pro site (see `server/utility/entitlements.js`). Not yet enforced or written (9d) |
+| `origin` | Text | Nullable, CHECK in (`gc`, `subcontractor`) | Who created the jobsite: `gc` via `POST /api/jobsites`, `subcontractor` when a join-code link find-or-created it. `NULL` = created before this column existed (origin unknown, never guessed). Server-written only; drives the "Created by subcontractor" badge |
 | `created_at` | Timestamptz | Default `now()` | |
 
 > RLS: enabled with no policies (server-brokered, deny-all) — see `docs/data-access.md`.

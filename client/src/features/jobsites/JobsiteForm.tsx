@@ -9,7 +9,12 @@ import { Select } from "../../ui_comps/select";
 import { useCreateJobsite } from "../../hooks/useCreateJobsite";
 import { useUpdateJobsite } from "../../hooks/useUpdateJobsite";
 import type { Jobsite } from "../../interfaces/jobsite";
-import { StyledActions } from "./styles";
+import {
+  StyledActions,
+  StyledUpgradeLink,
+  StyledUpgradePrompt,
+  StyledUpgradeText,
+} from "./styles";
 
 // Mirrors the express-validator chains in server/routes/jobsites.js.
 const jobsiteSchema = z.object({
@@ -36,8 +41,9 @@ interface JobsiteFormProps {
 export const JobsiteForm = ({ isOpen, onClose, jobsite }: JobsiteFormProps) => {
   const isEdit = Boolean(jobsite);
   const isArchived = Boolean(jobsite?.archivedAt);
-  const { createJobsite, isCreating } = useCreateJobsite();
-  const { updateJobsite, isUpdating } = useUpdateJobsite();
+  const { createJobsite, isCreating, planLimitError: createLimitError } = useCreateJobsite();
+  const { updateJobsite, isUpdating, planLimitError: updateLimitError } = useUpdateJobsite();
+  const planLimitError = createLimitError ?? updateLimitError;
 
   const {
     register,
@@ -90,6 +96,13 @@ export const JobsiteForm = ({ isOpen, onClose, jobsite }: JobsiteFormProps) => {
       onClose={onClose}
       title={isEdit ? "Edit job site" : "New job site"}
     >
+      {planLimitError && (
+        <StyledUpgradePrompt role="alert">
+          <StyledUpgradeText>{planLimitError.message}</StyledUpgradeText>
+          <StyledUpgradeLink to="/pricing">See plans</StyledUpgradeLink>
+        </StyledUpgradePrompt>
+      )}
+
       <Form onSubmit={handleSubmit(onSubmit)} noValidate>
         <FormField id={nameId} label="Job site name" error={errors.name?.message}>
           <TextInput

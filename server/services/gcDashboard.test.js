@@ -2,6 +2,7 @@
 const { supabase } = require("../utility/supabaseClient");
 const companiesService = require("./companies");
 const storageService = require("./storage");
+const subAccessService = require("./subAccess");
 const {
   assertGcLinkedProject,
   getOverview,
@@ -14,6 +15,12 @@ const PROJECT_COLUMNS =
   "id, owner_company_id, jobsite_id, name, status, archived_at, created_at";
 
 const fromSpy = vi.spyOn(supabase, "from");
+
+// Phase 9d: null = nothing locked (a paid GC plan). Locking has its own describe.
+const unlockedSpy = vi.spyOn(subAccessService, "getUnlockedSubIds");
+beforeEach(() => {
+  unlockedSpy.mockReset().mockResolvedValue(null);
+});
 
 describe("gcDashboard service: assertGcLinkedProject", () => {
   let single;
@@ -82,6 +89,46 @@ describe("gcDashboard service: assertGcLinkedProject", () => {
       statusCode: 502,
     });
   });
+
+  it("should 404 a project outside a site-scoped user's assigned jobsites, before any lock check", async () => {
+    // Arrange
+    single.mockResolvedValue({
+      data: { id: "project-1", owner_company_id: "sub-1", jobsite_id: "site-b", name: "Tower" },
+      error: null,
+    });
+
+    // Act & Assert
+    await expect(assertGcLinkedProject("project-1", "gc-1", ["site-a"])).rejects.toMatchObject({
+      statusCode: 404,
+      message: "Project not found",
+    });
+    expect(unlockedSpy).not.toHaveBeenCalled();
+  });
+
+  it("should return a project inside a site-scoped user's assigned jobsites", async () => {
+    // Arrange
+    single.mockResolvedValue({
+      data: { id: "project-1", owner_company_id: "sub-1", jobsite_id: "site-a", name: "Tower" },
+      error: null,
+    });
+
+    // Act
+    const result = await assertGcLinkedProject("project-1", "gc-1", ["site-a"]);
+
+    // Assert
+    expect(result.jobsiteId).toBe("site-a");
+  });
+
+  it("should throw a 403 PLAN_LIMIT when the project's sub is locked on the GC's plan", async () => {
+    // Arrange
+    unlockedSpy.mockResolvedValue(new Set(["someone-else"]));
+
+    // Act & Assert
+    await expect(assertGcLinkedProject("project-1", "gc-1")).rejects.toMatchObject({
+      statusCode: 403,
+      data: { code: "PLAN_LIMIT" },
+    });
+  });
 });
 
 describe("gcDashboard service: getOverview", () => {
@@ -122,6 +169,7 @@ describe("gcDashboard service: getOverview", () => {
   const jobsite = (overrides) => ({
     id: "jobsite-1",
     name: "Riverside Tower",
+    origin: "gc",
     jobsite_subcontractors: [
       { sub_company_id: "sub-1", accepted_at: "2026-09-01T00:00:00.000Z" },
     ],
@@ -171,6 +219,7 @@ describe("gcDashboard service: getOverview", () => {
         {
           id: "jobsite-1",
           name: "Riverside Tower",
+          createdBySub: false,
           subs: [
             {
               companyId: "sub-1",
@@ -179,12 +228,47 @@ describe("gcDashboard service: getOverview", () => {
               status: "logged",
               lastLoggedAt: "2026-09-21T14:00:00.000Z",
               count: 1,
+              locked: false,
             },
           ],
         },
       ],
       totals: { subs: 1, logged: 1, missing: 0 },
     });
+  });
+
+  it("should flag a subcontractor-originated jobsite as createdBySub and treat a legacy null origin as false", async () => {
+    // Arrange
+    jobsitesResult.data = [
+      jobsite({ id: "jobsite-1", name: "A Site", origin: "subcontractor" }),
+      jobsite({ id: "jobsite-2", name: "B Site", origin: null }),
+    ];
+
+    // Act
+    const result = await getOverview("gc-1", overviewArgs);
+
+    // Assert
+    expect(result.jobsites.map((j) => j.createdBySub)).toEqual([true, false]);
+  });
+
+  it("should restrict jobsites and projects to a site-scoped user's assigned jobsites", async () => {
+    // Act
+    await getOverview("gc-1", { ...overviewArgs, allowedJobsiteIds: ["jobsite-1"] });
+
+    // Assert
+    const builderFor = (table) =>
+      fromSpy.mock.results[fromSpy.mock.calls.findIndex(([name]) => name === table)].value;
+    expect(builderFor("jobsites").in).toHaveBeenCalledWith("id", ["jobsite-1"]);
+    expect(builderFor("projects").in).toHaveBeenCalledWith("jobsite_id", ["jobsite-1"]);
+  });
+
+  it("should return an empty overview without querying when a site-scoped user has no assigned jobsites", async () => {
+    // Act
+    const result = await getOverview("gc-1", { ...overviewArgs, allowedJobsiteIds: [] });
+
+    // Assert
+    expect(result).toEqual({ jobsites: [], totals: { subs: 0, logged: 0, missing: 0 } });
+    expect(fromSpy).not.toHaveBeenCalled();
   });
 
   it("should mark an accepted sub with no completed log in the window as missing", async () => {
@@ -227,7 +311,7 @@ describe("gcDashboard service: getOverview", () => {
 
     // Assert
     expect(result.jobsites).toEqual([
-      { id: "jobsite-1", name: "Riverside Tower", subs: [] },
+      { id: "jobsite-1", name: "Riverside Tower", createdBySub: false, subs: [] },
     ]);
     expect(result.totals).toEqual({ subs: 0, logged: 0, missing: 0 });
   });
@@ -280,6 +364,7 @@ describe("gcDashboard service: getOverview", () => {
         status: "logged",
         lastLoggedAt: "2026-09-21T14:00:00.000Z",
         count: 1,
+        locked: false,
       },
     ]);
   });
@@ -346,6 +431,43 @@ describe("gcDashboard service: getOverview", () => {
     // Act & Assert
     await expect(getOverview("gc-1", overviewArgs)).rejects.toMatchObject({
       statusCode: 502,
+    });
+  });
+
+  it("should mask a locked sub down to a placeholder but still count it in the totals", async () => {
+    // Arrange
+    unlockedSpy.mockResolvedValue(new Set(["someone-else"]));
+
+    // Act
+    const result = await getOverview("gc-1", overviewArgs);
+
+    // Assert
+    expect(result.jobsites[0].subs).toEqual([
+      {
+        companyId: null,
+        companyName: null,
+        projectId: null,
+        status: null,
+        lastLoggedAt: null,
+        count: null,
+        locked: true,
+      },
+    ]);
+    expect(result.totals).toEqual({ subs: 1, logged: 0, missing: 1 });
+  });
+
+  it("should leave an unlocked sub fully visible when others are locked", async () => {
+    // Arrange
+    unlockedSpy.mockResolvedValue(new Set(["sub-1"]));
+
+    // Act
+    const result = await getOverview("gc-1", overviewArgs);
+
+    // Assert
+    expect(result.jobsites[0].subs[0]).toMatchObject({
+      companyId: "sub-1",
+      companyName: "Acme Roofing",
+      locked: false,
     });
   });
 });
@@ -435,6 +557,18 @@ describe("gcDashboard service: listMeetings", () => {
     });
   });
 
+  it("should leave a locked sub's projects out of the unfiltered list", async () => {
+    // Arrange
+    unlockedSpy.mockResolvedValue(new Set(["someone-else"]));
+
+    // Act
+    const result = await listMeetings("gc-1");
+
+    // Assert
+    expect(result).toEqual([]);
+    expect(meetingsSelect).not.toHaveBeenCalled();
+  });
+
   it("should list completed meetings across every linked project, mapped without any file paths", async () => {
     // Act
     const result = await listMeetings("gc-1");
@@ -502,6 +636,23 @@ describe("gcDashboard service: listMeetings", () => {
     await expect(listMeetings("gc-1", { projectId: "project-9" })).rejects.toMatchObject({
       statusCode: 404,
     });
+  });
+
+  it("should return no meetings without querying when a site-scoped user has no assigned jobsites", async () => {
+    // Act
+    const result = await listMeetings("gc-1", { allowedJobsiteIds: [] });
+
+    // Assert
+    expect(result).toEqual([]);
+    expect(fromSpy).not.toHaveBeenCalled();
+  });
+
+  it("should 404 a projectId outside a site-scoped user's assigned jobsites", async () => {
+    // Act & Assert — the mocked project row carries no jobsite_id in scope.
+    await expect(
+      listMeetings("gc-1", { projectId: "project-1", allowedJobsiteIds: ["site-a"] }),
+    ).rejects.toMatchObject({ statusCode: 404 });
+    expect(meetingsSelect).not.toHaveBeenCalled();
   });
 
   it("should apply from/to as a held_at range filter", async () => {
@@ -658,6 +809,14 @@ describe("gcDashboard service: getMeeting / getMeetingPdfUrl", () => {
       });
     });
 
+    it("should 404 when the meeting's project is outside a site-scoped user's assigned jobsites", async () => {
+      // Act & Assert
+      await expect(getMeeting("meeting-1", "gc-1", ["site-a"])).rejects.toMatchObject({
+        statusCode: 404,
+        message: "Project not found",
+      });
+    });
+
     it("should 404 when the meeting id doesn't exist", async () => {
       // Arrange
       meetingSingle.mockResolvedValue({ data: null, error: { code: "PGRST116" } });
@@ -706,6 +865,15 @@ describe("gcDashboard service: getMeeting / getMeetingPdfUrl", () => {
         "acme-roofing-riverside-tower-2026-09-21-meeting1.pdf",
       );
       expect(url).toBe("https://signed.example/report.pdf");
+    });
+
+    it("should 404 when the meeting's project is outside a site-scoped user's assigned jobsites", async () => {
+      // Act & Assert
+      await expect(getMeetingPdfUrl("meeting-1", "gc-1", ["site-a"])).rejects.toMatchObject({
+        statusCode: 404,
+        message: "Project not found",
+      });
+      expect(storageService.getSignedUrl).not.toHaveBeenCalled();
     });
 
     it("should 404 when no PDF has been generated yet", async () => {

@@ -28,10 +28,12 @@ vi.mock("../../../src/features/jobsites/JobsiteList", () => ({
     jobsites,
     onEdit,
     onManageSubs,
+    onManageMembers,
   }: {
     jobsites: Jobsite[];
     onEdit?: (j: Jobsite) => void;
     onManageSubs: (j: Jobsite) => void;
+    onManageMembers?: (j: Jobsite) => void;
   }) => (
     <div data-testid="list">
       {jobsites.map((j) => j.name).join(",")}
@@ -43,6 +45,11 @@ vi.mock("../../../src/features/jobsites/JobsiteList", () => ({
       {jobsites[0] && onEdit && (
         <button type="button" onClick={() => onEdit(jobsites[0])}>
           stub-edit
+        </button>
+      )}
+      {jobsites[0] && onManageMembers && (
+        <button type="button" onClick={() => onManageMembers(jobsites[0])}>
+          stub-members
         </button>
       )}
     </div>
@@ -85,6 +92,22 @@ vi.mock("../../../src/features/jobsites/JobsiteRosterModal", () => ({
     </div>
   ),
 }));
+vi.mock("../../../src/features/jobsites/JobsiteMembersModal", () => ({
+  JobsiteMembersModal: ({
+    jobsite,
+    onClose,
+  }: {
+    jobsite: Jobsite;
+    onClose: () => void;
+  }) => (
+    <div role="dialog">
+      members {jobsite.id}
+      <button type="button" onClick={onClose}>
+        stub-members-close
+      </button>
+    </div>
+  ),
+}));
 
 const jobsite = (over: Partial<Jobsite>): Jobsite => ({
   id: "j1",
@@ -92,6 +115,7 @@ const jobsite = (over: Partial<Jobsite>): Jobsite => ({
   name: "Riverside",
   status: "active",
   archivedAt: null,
+  createdBySub: false,
   createdAt: "x",
   subcontractors: [],
   ...over,
@@ -108,7 +132,7 @@ describe("JobsiteManager", () => {
   beforeEach(() => {
     vi.clearAllMocks();
     mockUseOnlineStatus.mockReturnValue({ isOnline: true });
-    mockUseCurrentUser.mockReturnValue({ role: "admin" });
+    mockUseCurrentUser.mockReturnValue({ role: "admin", plan: "gc-portfolio" });
     mockUseJobsites.mockReturnValue({
       jobsites: [jobsite({})],
       isLoading: false,
@@ -186,12 +210,36 @@ describe("JobsiteManager", () => {
   });
 
   it("gives a safety_manager manage rights too", () => {
-    mockUseCurrentUser.mockReturnValue({ role: "safety_manager" });
+    mockUseCurrentUser.mockReturnValue({ role: "safety_manager", plan: "gc-portfolio" });
     renderManager();
 
     expect(
       screen.getByRole("button", { name: /new job site/i }),
     ).toBeDefined();
+  });
+
+  it("opens and closes the members modal from a row on GC Portfolio", () => {
+    renderManager();
+
+    fireEvent.click(screen.getByRole("button", { name: /stub-members/i }));
+    expect(screen.getByRole("dialog").textContent).toContain("members j1");
+
+    fireEvent.click(screen.getByRole("button", { name: /stub-members-close/i }));
+    expect(screen.queryByRole("dialog")).toBeNull();
+  });
+
+  it("hides the Team button on a GC plan below Portfolio", () => {
+    mockUseCurrentUser.mockReturnValue({ role: "admin", plan: "gc-free" });
+    renderManager();
+
+    expect(screen.queryByRole("button", { name: /stub-members/i })).toBeNull();
+  });
+
+  it("hides the Team button for a foreman even on Portfolio", () => {
+    mockUseCurrentUser.mockReturnValue({ role: "foreman", plan: "gc-portfolio" });
+    renderManager();
+
+    expect(screen.queryByRole("button", { name: /stub-members/i })).toBeNull();
   });
 
   it("makes the view read-only for a foreman", () => {

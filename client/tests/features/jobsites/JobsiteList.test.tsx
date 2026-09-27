@@ -13,6 +13,7 @@ const base: Jobsite = {
   name: "Riverside",
   status: "active",
   archivedAt: null,
+  createdBySub: false,
   createdAt: "x",
   subcontractors: [
     { id: "s1", email: "a@a.com", status: "accepted", companyName: "A Co" },
@@ -56,6 +57,15 @@ describe("JobsiteList", () => {
     expect(screen.queryByText("active")).toBeNull();
   });
 
+  it("shows a Created by subcontractor badge only for a sub-originated jobsite", () => {
+    const { unmount } = renderList();
+    expect(screen.queryByText("Created by subcontractor")).toBeNull();
+    unmount();
+
+    renderList({ jobsites: [{ ...base, createdBySub: true }] });
+    expect(screen.getByText("Created by subcontractor")).toBeDefined();
+  });
+
   it("reports Subs and Edit clicks with the jobsite", () => {
     const onManageSubs = vi.fn();
     const onEdit = vi.fn();
@@ -73,5 +83,21 @@ describe("JobsiteList", () => {
   it("omits Edit when no onEdit is provided", () => {
     renderList();
     expect(screen.queryByRole("button", { name: /^edit/i })).toBeNull();
+  });
+
+  it("omits Team when no onManageMembers is provided", () => {
+    renderList();
+    expect(screen.queryByRole("button", { name: /^superintendents/i })).toBeNull();
+  });
+
+  it("reports a Team click with the jobsite when onManageMembers is provided", () => {
+    const onManageMembers = vi.fn();
+    renderList({ onManageMembers });
+
+    fireEvent.click(
+      screen.getByRole("button", { name: "Superintendents for Riverside" }),
+    );
+
+    expect(onManageMembers).toHaveBeenCalledWith(base);
   });
 });

@@ -1,4 +1,5 @@
 import type { GcJobsite, GcSubCompliance } from "../../interfaces/gcDashboard";
+import { StyledOriginBadge } from "../projects/styles";
 import { SubComplianceRow } from "./SubComplianceRow";
 import {
   StyledEmpty,
@@ -34,6 +35,9 @@ export const JobsiteList = ({ jobsites, onSelectSub }: JobsiteListProps) => {
         <StyledJobsiteSection key={jobsite.id}>
           <StyledJobsiteLabel>Project</StyledJobsiteLabel>
           <StyledJobsiteHeading>{jobsite.name}</StyledJobsiteHeading>
+          {jobsite.createdBySub && (
+            <StyledOriginBadge>Created by subcontractor</StyledOriginBadge>
+          )}
           {jobsite.subs.length === 0 ? (
             <>
               <StyledJobsiteEmpty>
@@ -45,9 +49,9 @@ export const JobsiteList = ({ jobsites, onSelectSub }: JobsiteListProps) => {
             </>
           ) : (
             <StyledSubList>
-              {jobsite.subs.map((sub) => (
+              {jobsite.subs.map((sub, index) => (
                 <SubComplianceRow
-                  key={sub.companyId}
+                  key={sub.companyId ?? `locked-${index}`}
                   sub={sub}
                   onSelect={onSelectSub}
                 />

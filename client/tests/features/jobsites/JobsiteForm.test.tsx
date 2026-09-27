@@ -2,6 +2,7 @@ import React from "react";
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { render, screen, fireEvent, waitFor } from "@testing-library/react";
 import { ThemeProvider } from "styled-components";
+import { MemoryRouter } from "react-router-dom";
 
 import { JobsiteForm } from "../../../src/features/jobsites/JobsiteForm";
 import theme from "../../../src/styles/theme";
@@ -9,12 +10,22 @@ import type { Jobsite } from "../../../src/interfaces/jobsite";
 
 const mockCreate = vi.fn();
 const mockUpdate = vi.fn();
+let createLimitError: Error | null = null;
+let updateLimitError: Error | null = null;
 
 vi.mock("../../../src/hooks/useCreateJobsite", () => ({
-  useCreateJobsite: () => ({ createJobsite: mockCreate, isCreating: false }),
+  useCreateJobsite: () => ({
+    createJobsite: mockCreate,
+    isCreating: false,
+    planLimitError: createLimitError,
+  }),
 }));
 vi.mock("../../../src/hooks/useUpdateJobsite", () => ({
-  useUpdateJobsite: () => ({ updateJobsite: mockUpdate, isUpdating: false }),
+  useUpdateJobsite: () => ({
+    updateJobsite: mockUpdate,
+    isUpdating: false,
+    planLimitError: updateLimitError,
+  }),
 }));
 
 const jobsite: Jobsite = {
@@ -23,6 +34,7 @@ const jobsite: Jobsite = {
   name: "Riverside",
   status: "active",
   archivedAt: null,
+  createdBySub: false,
   createdAt: "x",
   subcontractors: [],
 };
@@ -31,14 +43,18 @@ const renderForm = (
   props: Partial<React.ComponentProps<typeof JobsiteForm>> = {},
 ) =>
   render(
-    <ThemeProvider theme={theme}>
-      <JobsiteForm isOpen onClose={vi.fn()} {...props} />
-    </ThemeProvider>,
+    <MemoryRouter>
+      <ThemeProvider theme={theme}>
+        <JobsiteForm isOpen onClose={vi.fn()} {...props} />
+      </ThemeProvider>
+    </MemoryRouter>,
   );
 
 describe("JobsiteForm", () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    createLimitError = null;
+    updateLimitError = null;
     mockCreate.mockResolvedValue(undefined);
     mockUpdate.mockResolvedValue(undefined);
   });
@@ -161,6 +177,28 @@ describe("JobsiteForm", () => {
 
     await waitFor(() => expect(mockUpdate).toHaveBeenCalled());
     expect(onClose).not.toHaveBeenCalled();
+  });
+
+  it("shows an upgrade prompt when creating hits the plan's job site cap", () => {
+    createLimitError = new Error("Your plan's job site limit is reached.");
+    renderForm();
+
+    expect(screen.getByRole("alert").textContent).toMatch(/job site limit is reached/i);
+    expect(
+      screen.getByRole("link", { name: /see plans/i }).getAttribute("href"),
+    ).toBe("/pricing");
+  });
+
+  it("shows the same upgrade prompt when restoring hits the cap", () => {
+    updateLimitError = new Error("Your plan's job site limit is reached.");
+    renderForm({ jobsite: { ...jobsite, archivedAt: "2026-09-02" } });
+
+    expect(screen.getByRole("alert")).toBeDefined();
+  });
+
+  it("shows no upgrade prompt by default", () => {
+    renderForm();
+    expect(screen.queryByRole("alert")).toBeNull();
   });
 
   it("closes from Cancel", () => {

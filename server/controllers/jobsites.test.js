@@ -2,6 +2,7 @@
 const jobsitesService = require("../services/jobsites");
 const emailService = require("../services/email");
 const envUtils = require("../utility/envUtils");
+const siteScopeService = require("../services/siteScope");
 const {
   listJobsites,
   createJobsite,
@@ -10,7 +11,12 @@ const {
   previewInvite,
   acceptInvite,
   removeSubcontractor,
+  listMembers,
+  setMembers,
 } = require("./jobsites");
+const jobsiteMembersService = require("../services/jobsiteMembers");
+const listMembersSpy = vi.spyOn(jobsiteMembersService, "listForJobsite");
+const setMembersSpy = vi.spyOn(jobsiteMembersService, "setMembers");
 
 const listForGcSpy = vi.spyOn(jobsitesService, "listForGc");
 const createSpy = vi.spyOn(jobsitesService, "create");
@@ -21,6 +27,8 @@ const acceptInviteSpy = vi.spyOn(jobsitesService, "acceptInvite");
 const removeSubcontractorSpy = vi.spyOn(jobsitesService, "removeSubcontractor");
 const sendJobsiteInviteEmailSpy = vi.spyOn(emailService, "sendJobsiteInviteEmail");
 const keysSpy = vi.spyOn(envUtils, "keysBasedOnEnv");
+// The test users below are admins, so real behavior is "unscoped" (null).
+const getAllowedSpy = vi.spyOn(siteScopeService, "getAllowedJobsiteIds");
 
 const jobsite = {
   id: "jobsite-1",
@@ -37,6 +45,7 @@ describe("jobsites controller", () => {
   let next;
 
   beforeEach(() => {
+    getAllowedSpy.mockReset().mockResolvedValue(null);
     listForGcSpy.mockReset();
     createSpy.mockReset();
     updateSpy.mockReset();
@@ -61,10 +70,24 @@ describe("jobsites controller", () => {
       await listJobsites(req, res, next);
 
       // Assert
-      expect(listForGcSpy).toHaveBeenCalledWith("gc-1");
+      expect(listForGcSpy).toHaveBeenCalledWith("gc-1", null);
       expect(res.status).toHaveBeenCalledWith(200);
       expect(res.json).toHaveBeenCalledWith({ success: true, data: [jobsite] });
       expect(next).not.toHaveBeenCalled();
+    });
+
+    it("limits a superintendent to their assigned jobsites", async () => {
+      // Arrange
+      req.user = { ...req.user, role: "superintendent", companyType: "gc", tier: "premium" };
+      getAllowedSpy.mockResolvedValueOnce(["jobsite-1"]);
+      listForGcSpy.mockResolvedValue([jobsite]);
+
+      // Act
+      await listJobsites(req, res, next);
+
+      // Assert
+      expect(getAllowedSpy).toHaveBeenCalledWith(req.user);
+      expect(listForGcSpy).toHaveBeenCalledWith("gc-1", ["jobsite-1"]);
     });
 
     it("forwards a jobsitesService.listForGc failure to next", async () => {
@@ -153,6 +176,7 @@ describe("jobsites controller: invites (Phase 8d)", () => {
   let next;
 
   beforeEach(() => {
+    getAllowedSpy.mockReset().mockResolvedValue(null);
     createInviteSpy.mockReset();
     previewInviteSpy.mockReset();
     acceptInviteSpy.mockReset();
@@ -199,6 +223,7 @@ describe("jobsites controller: invites (Phase 8d)", () => {
         jobsiteId: "jobsite-1",
         gcCompanyId: "gc-1",
         email: "jane@acme.com",
+        allowedJobsiteIds: null,
       });
       expect(sendJobsiteInviteEmailSpy).toHaveBeenCalledWith({
         to: "jane@acme.com",
@@ -296,6 +321,72 @@ describe("jobsites controller: invites (Phase 8d)", () => {
     });
   });
 
+  describe("members (Phase 9d-2)", () => {
+    beforeEach(() => {
+      listMembersSpy.mockReset();
+      setMembersSpy.mockReset();
+      req.params = { id: "jobsite-1" };
+    });
+
+    it("listMembers responds 200 with the jobsite's superintendents for the caller's company", async () => {
+      // Arrange
+      const data = { members: [{ userId: "u-1", name: "Ann", assigned: true }] };
+      listMembersSpy.mockResolvedValue(data);
+
+      // Act
+      await listMembers(req, res, next);
+
+      // Assert
+      expect(listMembersSpy).toHaveBeenCalledWith({ jobsiteId: "jobsite-1", gcCompanyId: "gc-1" });
+      expect(res.status).toHaveBeenCalledWith(200);
+      expect(res.json).toHaveBeenCalledWith({ success: true, data });
+    });
+
+    it("listMembers forwards a failure to next", async () => {
+      // Arrange
+      const error = new Error("boom");
+      listMembersSpy.mockRejectedValue(error);
+
+      // Act
+      await listMembers(req, res, next);
+
+      // Assert
+      expect(next).toHaveBeenCalledWith(error);
+    });
+
+    it("setMembers assigns the given users scoped to the caller's company and responds 200", async () => {
+      // Arrange
+      req.body = { userIds: ["u-1"] };
+      const data = { members: [] };
+      setMembersSpy.mockResolvedValue(data);
+
+      // Act
+      await setMembers(req, res, next);
+
+      // Assert
+      expect(setMembersSpy).toHaveBeenCalledWith({
+        jobsiteId: "jobsite-1",
+        gcCompanyId: "gc-1",
+        userIds: ["u-1"],
+      });
+      expect(res.status).toHaveBeenCalledWith(200);
+      expect(res.json).toHaveBeenCalledWith({ success: true, data });
+    });
+
+    it("setMembers forwards a failure to next", async () => {
+      // Arrange
+      req.body = { userIds: [] };
+      const error = new Error("boom");
+      setMembersSpy.mockRejectedValue(error);
+
+      // Act
+      await setMembers(req, res, next);
+
+      // Assert
+      expect(next).toHaveBeenCalledWith(error);
+    });
+  });
+
   describe("removeSubcontractor", () => {
     beforeEach(() => {
       req.params = { id: "jobsite-1", subId: "roster-1" };
@@ -313,6 +404,7 @@ describe("jobsites controller: invites (Phase 8d)", () => {
         jobsiteId: "jobsite-1",
         subId: "roster-1",
         gcCompanyId: "gc-1",
+        allowedJobsiteIds: null,
       });
       expect(res.status).toHaveBeenCalledWith(200);
       expect(res.json).toHaveBeenCalledWith({ success: true, data: { id: "roster-1" } });

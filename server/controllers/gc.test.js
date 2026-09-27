@@ -1,11 +1,13 @@
 // Plain CommonJS — see requireAuth.test.js for why (nested require() sharing).
 const gcDashboardService = require("../services/gcDashboard");
+const siteScopeService = require("../services/siteScope");
 const { getOverview, listMeetings, getMeeting, getMeetingPdfUrl } = require("./gc");
 
 const getOverviewSpy = vi.spyOn(gcDashboardService, "getOverview");
 const listMeetingsSpy = vi.spyOn(gcDashboardService, "listMeetings");
 const getMeetingSpy = vi.spyOn(gcDashboardService, "getMeeting");
 const getMeetingPdfUrlSpy = vi.spyOn(gcDashboardService, "getMeetingPdfUrl");
+const getAllowedSpy = vi.spyOn(siteScopeService, "getAllowedJobsiteIds");
 
 describe("gc controller", () => {
   let req;
@@ -17,6 +19,8 @@ describe("gc controller", () => {
     listMeetingsSpy.mockReset();
     getMeetingSpy.mockReset();
     getMeetingPdfUrlSpy.mockReset();
+    // Real behavior by default: a req.user without the superintendent role is unscoped (null).
+    getAllowedSpy.mockReset().mockResolvedValue(null);
 
     req = {
       params: {},
@@ -41,10 +45,33 @@ describe("gc controller", () => {
       await getOverview(req, res, next);
 
       // Assert
-      expect(getOverviewSpy).toHaveBeenCalledWith("gc-1", { date: "2026-09-21", tzOffset: 240 });
+      expect(getOverviewSpy).toHaveBeenCalledWith("gc-1", {
+        date: "2026-09-21",
+        tzOffset: 240,
+        allowedJobsiteIds: null,
+      });
       expect(res.status).toHaveBeenCalledWith(200);
       expect(res.json).toHaveBeenCalledWith({ success: true, data });
       expect(next).not.toHaveBeenCalled();
+    });
+
+    it("should scope a superintendent to their assigned jobsites", async () => {
+      // Arrange
+      req.query = { date: "2026-09-21", tzOffset: "240" };
+      req.user = { ...req.user, role: "superintendent", tier: "premium" };
+      getAllowedSpy.mockResolvedValue(["site-a"]);
+      getOverviewSpy.mockResolvedValue({ jobsites: [], totals: {} });
+
+      // Act
+      await getOverview(req, res, next);
+
+      // Assert
+      expect(getAllowedSpy).toHaveBeenCalledWith(req.user);
+      expect(getOverviewSpy).toHaveBeenCalledWith("gc-1", {
+        date: "2026-09-21",
+        tzOffset: 240,
+        allowedJobsiteIds: ["site-a"],
+      });
     });
 
     it("should forward a service error to next", async () => {
@@ -76,6 +103,7 @@ describe("gc controller", () => {
         projectId: "project-1",
         from: "2026-09-01",
         to: "2026-09-08",
+        allowedJobsiteIds: null,
       });
       expect(res.status).toHaveBeenCalledWith(200);
       expect(res.json).toHaveBeenCalledWith({ success: true, data });
@@ -105,7 +133,7 @@ describe("gc controller", () => {
       await getMeeting(req, res, next);
 
       // Assert
-      expect(getMeetingSpy).toHaveBeenCalledWith("meeting-1", "gc-1");
+      expect(getMeetingSpy).toHaveBeenCalledWith("meeting-1", "gc-1", null);
       expect(res.status).toHaveBeenCalledWith(200);
       expect(res.json).toHaveBeenCalledWith({ success: true, data });
     });
@@ -133,7 +161,7 @@ describe("gc controller", () => {
       await getMeetingPdfUrl(req, res, next);
 
       // Assert
-      expect(getMeetingPdfUrlSpy).toHaveBeenCalledWith("meeting-1", "gc-1");
+      expect(getMeetingPdfUrlSpy).toHaveBeenCalledWith("meeting-1", "gc-1", null);
       expect(res.status).toHaveBeenCalledWith(200);
       expect(res.json).toHaveBeenCalledWith({
         success: true,

@@ -16,7 +16,12 @@ import {
   StyledRosterRow,
   StyledRosterSection,
   StyledRosterStatus,
+  StyledUpgradeLink,
 } from "./styles";
+
+/** What a roster row is called: a locked sub's identity is hidden by the plan. */
+const subLabel = (sub: JobsiteSubcontractor) =>
+  sub.locked ? "Locked subcontractor" : (sub.companyName ?? sub.email);
 
 interface JobsiteRosterModalProps {
   jobsite: Jobsite;
@@ -78,8 +83,15 @@ export const JobsiteRosterModal = ({
               return (
                 <StyledRosterRow key={sub.id}>
                   <StyledRosterMain>
-                    <StyledName>{sub.companyName ?? sub.email}</StyledName>
+                    <StyledName>{subLabel(sub)}</StyledName>
                     {sub.companyName && <StyledMeta>{sub.email}</StyledMeta>}
+                    {sub.locked && (
+                      <StyledMeta>
+                        <StyledUpgradeLink to="/pricing">
+                          Upgrade to unlock
+                        </StyledUpgradeLink>
+                      </StyledMeta>
+                    )}
                   </StyledRosterMain>
                   <StyledRosterStatus $accepted={isAccepted}>
                     {isAccepted ? "Accepted" : "Pending"}
@@ -90,7 +102,7 @@ export const JobsiteRosterModal = ({
                       size="sm"
                       disabled={!isOnline}
                       onClick={() => setRemoving(sub)}
-                      aria-label={`${isAccepted ? "Remove" : "Cancel invite for"} ${sub.email}`}
+                      aria-label={`${isAccepted ? "Remove" : "Cancel invite for"} ${sub.email ?? subLabel(sub)}`}
                     >
                       {isAccepted ? "Remove" : "Cancel invite"}
                     </Button>
@@ -114,7 +126,7 @@ export const JobsiteRosterModal = ({
         {removing &&
           (isRemovingAccepted ? (
             <>
-              Remove <strong>{removing.companyName ?? removing.email}</strong>{" "}
+              Remove <strong>{subLabel(removing)}</strong>{" "}
               from {jobsite.name}? You'll lose dashboard access to that
               subcontractor's project history here. PDFs you've already
               received aren't affected.

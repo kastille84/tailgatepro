@@ -78,7 +78,6 @@ export const GC_PLANS: Plan[] = [
       "Basic sub roster overview",
       "1 subcontractor unlocked — others blurred",
     ],
-    comingSoon: ["1 subcontractor unlocked — others blurred"],
   },
   {
     id: "gc-site-pro",
@@ -117,7 +116,6 @@ export const GC_PLANS: Plan[] = [
     comingSoon: [
       "Cross-project subcontractor safety scorecards",
       "Top-down corporate policy push across all sites",
-      "Multi-manager roles — Superintendent vs Safety Director",
       "Custom company safety form & manual builder",
     ],
   },

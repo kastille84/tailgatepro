@@ -1,4 +1,6 @@
 const jobsitesService = require("../services/jobsites");
+const siteScopeService = require("../services/siteScope");
+const jobsiteMembersService = require("../services/jobsiteMembers");
 const emailService = require("../services/email");
 const envUtils = require("../utility/envUtils");
 
@@ -7,7 +9,8 @@ const envUtils = require("../utility/envUtils");
 
 exports.listJobsites = async (req, res, next) => {
   try {
-    const data = await jobsitesService.listForGc(req.user.companyId);
+    const allowedJobsiteIds = await siteScopeService.getAllowedJobsiteIds(req.user);
+    const data = await jobsitesService.listForGc(req.user.companyId, allowedJobsiteIds);
     return res.status(200).json({ success: true, data });
   } catch (error) {
     return next(error);
@@ -50,6 +53,7 @@ exports.inviteSubcontractor = async (req, res, next) => {
       jobsiteId: req.params.id,
       gcCompanyId: req.user.companyId,
       email: req.body.email,
+      allowedJobsiteIds: await siteScopeService.getAllowedJobsiteIds(req.user),
     });
     const acceptUrl = `${envUtils.keysBasedOnEnv().clientUrl}/jobsite-invite/${invite.token}`;
 
@@ -100,6 +104,34 @@ exports.removeSubcontractor = async (req, res, next) => {
       jobsiteId: req.params.id,
       subId: req.params.subId,
       gcCompanyId: req.user.companyId,
+      allowedJobsiteIds: await siteScopeService.getAllowedJobsiteIds(req.user),
+    });
+    return res.status(200).json({ success: true, data });
+  } catch (error) {
+    return next(error);
+  }
+};
+
+// GET /api/jobsites/:id/members — manager only (route guards).
+exports.listMembers = async (req, res, next) => {
+  try {
+    const data = await jobsiteMembersService.listForJobsite({
+      jobsiteId: req.params.id,
+      gcCompanyId: req.user.companyId,
+    });
+    return res.status(200).json({ success: true, data });
+  } catch (error) {
+    return next(error);
+  }
+};
+
+// PUT /api/jobsites/:id/members — manager only, GC Portfolio only.
+exports.setMembers = async (req, res, next) => {
+  try {
+    const data = await jobsiteMembersService.setMembers({
+      jobsiteId: req.params.id,
+      gcCompanyId: req.user.companyId,
+      userIds: req.body.userIds,
     });
     return res.status(200).json({ success: true, data });
   } catch (error) {

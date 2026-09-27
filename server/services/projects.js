@@ -357,7 +357,7 @@ const findOrCreateJobsite = async (gcCompanyId, name) => {
   const id = uuidv4();
   const { error: insertError } = await supabase
     .from("jobsites")
-    .insert({ id, gc_company_id: gcCompanyId, name });
+    .insert({ id, gc_company_id: gcCompanyId, name, origin: "subcontractor" });
 
   if (insertError) {
     throw new AppError("Could not link the project", 502, {

@@ -1,8 +1,10 @@
 import { fetchWithTimeout } from "../utils/fetchWithTimeout";
+import { PlanLimitError } from "../utils/PlanLimitError";
 import type {
   InviteSubcontractorResult,
   Jobsite,
   JobsiteInvitePreview,
+  JobsiteMembersResult,
   JobsitePatch,
   JobsiteSummary,
 } from "../interfaces/jobsite";
@@ -15,11 +17,16 @@ const authHeaders = (accessToken: string) => ({
   Authorization: `Bearer ${accessToken}`,
 });
 
-/** Unwraps the server's `{ success, data }` envelope, throwing its message. */
+/** Unwraps the server's `{ success, data }` envelope, throwing its message.
+ *  A 403 `PLAN_LIMIT` (job site cap) throws a `PlanLimitError` so the UI can
+ *  show an upgrade prompt instead of a toast. */
 const unwrap = async <T>(res: Response): Promise<T> => {
   const body = await res.json().catch(() => null);
 
   if (!res.ok || !body?.success) {
+    if (body?.data?.code === "PLAN_LIMIT") {
+      throw new PlanLimitError(body.error ?? GENERIC_ERROR, body.data.limit ?? null);
+    }
     throw new Error(body?.error ?? GENERIC_ERROR);
   }
 
@@ -91,6 +98,35 @@ export const removeSubcontractor = async (
     },
   );
   await unwrap<unknown>(res);
+};
+
+/** GET /api/jobsites/:id/members — the company's superintendents, each
+ *  flagged with whether they're assigned to this jobsite (Phase 9d-2). */
+export const listJobsiteMembers = async (
+  accessToken: string,
+  jobsiteId: string,
+): Promise<JobsiteMembersResult> => {
+  const res = await fetchWithTimeout(`/api/jobsites/${jobsiteId}/members`, {
+    method: "GET",
+    headers: { Authorization: `Bearer ${accessToken}` },
+  });
+  return unwrap<JobsiteMembersResult>(res);
+};
+
+/** PUT /api/jobsites/:id/members — replaces the jobsite's assigned
+ *  superintendents with `userIds`. GC Portfolio only; a 403 PLAN_LIMIT throws
+ *  a `PlanLimitError`, same as create/update. */
+export const setJobsiteMembers = async (
+  accessToken: string,
+  jobsiteId: string,
+  userIds: string[],
+): Promise<JobsiteMembersResult> => {
+  const res = await fetchWithTimeout(`/api/jobsites/${jobsiteId}/members`, {
+    method: "PUT",
+    headers: authHeaders(accessToken),
+    body: JSON.stringify({ userIds }),
+  });
+  return unwrap<JobsiteMembersResult>(res);
 };
 
 /**

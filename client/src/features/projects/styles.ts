@@ -94,6 +94,18 @@ export const StyledLinkedBadge = styled.span`
   background-color: ${({ theme }) => theme.colors.orange[100]};
 `;
 
+export const StyledOriginBadge = styled.span`
+  flex-shrink: 0;
+  align-self: flex-start;
+  padding: 0.4rem 0.9rem;
+  border-radius: ${({ theme }) => theme.borderRadius.sm};
+  font-size: 1.2rem;
+  font-weight: 700;
+  color: ${({ theme }) => theme.colors.navy[700]};
+  background-color: ${({ theme }) => theme.colors.concrete[200]};
+  border: 0.1rem solid ${({ theme }) => theme.colors.navy[200]};
+`;
+
 export const StyledEmpty = styled.p`
   margin: 0;
   padding: 3.2rem 1.6rem;

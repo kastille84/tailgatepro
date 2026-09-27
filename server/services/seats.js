@@ -1,15 +1,8 @@
 const { supabase } = require("../utility/supabaseClient");
 const { AppError } = require("../utility/AppError");
 const { getLimits, seatRoleFor } = require("../utility/entitlements");
+const { countRows } = require("../utility/countRows");
 const companiesService = require("./companies");
-
-const countRows = async (query, failureMessage) => {
-  const { count, error } = await query;
-  if (error) {
-    throw new AppError(failureMessage, 502, { cause: error });
-  }
-  return count ?? 0;
-};
 
 // Throws a 403 PLAN_LIMIT when adding one more person at `role` would exceed the
 // company's plan seats (Phase 9c). Free counts every member (one person total);
