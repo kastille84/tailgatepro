@@ -13,6 +13,7 @@ const {
   uploadCrewPhoto,
   getCrewPhotoUrl,
   getPdfUrl,
+  getDefenseBundle,
 } = require("../controllers/meetingLogs");
 const signaturesRoutes = require("./signatures");
 
@@ -57,6 +58,17 @@ router.get(
   ],
   validate,
   listMeetingMonths,
+);
+
+// GET /api/meetings/defense-bundle — the sub's own OSHA Defense Bundle: every
+// completed meeting log the caller's company has ever logged, one ZIP
+// (docs/sub-defense-bundle-design.md). Registered before "/:id" so
+// "defense-bundle" isn't parsed as a meeting id, same reasoning as "/months".
+router.get(
+  "/defense-bundle",
+  requireAuth,
+  loadUserContext,
+  getDefenseBundle,
 );
 
 // GET /api/meetings/:id — scoped the same way as the list: a meeting log

@@ -2,13 +2,13 @@ import { useState } from "react";
 
 import { Button } from "../../ui_comps/button";
 import { Checkbox } from "../../ui_comps/checkbox";
+import { ProgressModal } from "../../ui_comps/progress-modal";
 import { Spinner } from "../../ui_comps/spinner";
 import { useOnlineStatus } from "../../context/online-status";
 import { useCurrentUser } from "../../hooks/useCurrentUser";
 import { useDownloadDefenseBundle } from "../../hooks/useDownloadDefenseBundle";
 import { useJobsites } from "../../hooks/useJobsites";
 import type { Jobsite } from "../../interfaces/jobsite";
-import { DefenseBundleProgressModal } from "./DefenseBundleProgressModal";
 import { JobsiteForm } from "./JobsiteForm";
 import { JobsiteList } from "./JobsiteList";
 import { JobsiteMembersModal } from "./JobsiteMembersModal";
@@ -118,7 +118,11 @@ export const JobsiteManager = () => {
         <JobsiteMembersModal jobsite={membersJobsite} onClose={() => setMembersId(undefined)} />
       )}
 
-      <DefenseBundleProgressModal isOpen={isDownloadingBundle} />
+      <ProgressModal
+        isOpen={isDownloadingBundle}
+        title="Preparing your Defense Bundle"
+        message="Zipping up this site's meeting logs and PDFs — this can take a minute or two for sites with a lot of history. Please don't close this tab."
+      />
     </>
   );
 };

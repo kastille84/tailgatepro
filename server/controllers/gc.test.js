@@ -15,7 +15,7 @@ const listMeetingsSpy = vi.spyOn(gcDashboardService, "listMeetings");
 const getMeetingSpy = vi.spyOn(gcDashboardService, "getMeeting");
 const getMeetingPdfUrlSpy = vi.spyOn(gcDashboardService, "getMeetingPdfUrl");
 const getDefenseBundleEntriesSpy = vi.spyOn(gcDashboardService, "getDefenseBundleEntries");
-const streamJobsiteBundleSpy = vi.spyOn(zipBundleService, "streamJobsiteBundle");
+const streamJobsiteBundleSpy = vi.spyOn(zipBundleService, "streamBundle");
 const getAllowedSpy = vi.spyOn(siteScopeService, "getAllowedJobsiteIds");
 
 describe("gc controller", () => {

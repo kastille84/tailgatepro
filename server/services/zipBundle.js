@@ -1,4 +1,7 @@
-// Streams a jobsite's Defense Bundle ZIP (Phase 9e, docs/osha-defense-bundle-design.md).
+// Streams a Defense Bundle ZIP — the GC's per-jobsite one (Phase 9e,
+// docs/osha-defense-bundle-design.md) and the sub's own all-my-logs one
+// (docs/sub-defense-bundle-design.md) both use this; it never actually
+// depended on "jobsite", just a list of entries and an output stream.
 // `outputStream` is only ever touched as a generic writable (`.pipe`, an
 // `"error"` listener) — no Express types, no header/status-code access — so
 // this still respects "services never touch req/res" even though the
@@ -8,13 +11,15 @@ const storageService = require("./storage");
 const { PDF_BUCKET } = require("./meetingLogs");
 const { buildBundleIndexCsv } = require("../utility/buildBundleIndex");
 
-// `entries` is `gcDashboard.js`'s getDefenseBundleEntries output:
+// `entries` is a getDefenseBundleEntries output:
 // { path, filename, companyName, projectName, talkTitle, heldAt }[]. PDFs are
 // downloaded one at a time via the existing storageService.downloadBlob, so
 // peak memory is one PDF's buffer plus archiver's own compression buffering,
 // not the whole archive (docs/osha-defense-bundle-design.md's known
-// limitations note the sequential-download trade-off).
-const streamJobsiteBundle = (entries, outputStream, { skippedCount = 0 } = {}) =>
+// limitations note the sequential-download trade-off). `header` is forwarded
+// to buildBundleIndexCsv unchanged — see its own comment for why the sub-side
+// caller overrides it.
+const streamBundle = (entries, outputStream, { skippedCount = 0, header } = {}) =>
   new Promise((resolve, reject) => {
     const archive = archiver("zip", { zlib: { level: 9 } });
 
@@ -35,7 +40,12 @@ const streamJobsiteBundle = (entries, outputStream, { skippedCount = 0 } = {}) =
     outputStream.on("finish", succeed);
 
     archive.pipe(outputStream);
-    archive.append(buildBundleIndexCsv(entries, { skippedCount }), { name: "index.csv" });
+    // `header` may be undefined here — buildBundleIndexCsv's own default
+    // parameter (`header = HEADER`) applies to an explicit undefined just as
+    // it would to an omitted key, so no conditional is needed.
+    archive.append(buildBundleIndexCsv(entries, { skippedCount, header }), {
+      name: "index.csv",
+    });
 
     (async () => {
       for (const entry of entries) {
@@ -46,4 +56,4 @@ const streamJobsiteBundle = (entries, outputStream, { skippedCount = 0 } = {}) =
     })().catch(fail);
   });
 
-module.exports = { streamJobsiteBundle };
+module.exports = { streamBundle };

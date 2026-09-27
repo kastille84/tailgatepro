@@ -1,7 +1,7 @@
 // Plain CommonJS — see requireAuth.test.js for why (nested require() sharing).
 const { PassThrough } = require("stream");
 const storageService = require("./storage");
-const { streamJobsiteBundle } = require("./zipBundle");
+const { streamBundle } = require("./zipBundle");
 
 const downloadSpy = vi.spyOn(storageService, "downloadBlob");
 
@@ -29,14 +29,14 @@ beforeEach(() => {
   downloadSpy.mockReset().mockResolvedValue(Buffer.from("%PDF-1.4 fake pdf bytes"));
 });
 
-describe("zipBundle service: streamJobsiteBundle", () => {
+describe("zipBundle service: streamBundle", () => {
   it("should pipe a valid, non-empty ZIP containing every entry's PDF and an index.csv", async () => {
     // Arrange
     const output = new PassThrough();
     const collected = collect(output);
 
     // Act
-    await streamJobsiteBundle([entry(), entry({ path: "meeting-2/report.pdf", filename: "meeting-2.pdf" })], output);
+    await streamBundle([entry(), entry({ path: "meeting-2/report.pdf", filename: "meeting-2.pdf" })], output);
     const buffer = await collected;
 
     // Assert — the ZIP local-file-header signature, and both PDFs downloaded.
@@ -53,7 +53,7 @@ describe("zipBundle service: streamJobsiteBundle", () => {
     const collected = collect(output);
 
     // Act
-    await streamJobsiteBundle([], output);
+    await streamBundle([], output);
     const buffer = await collected;
 
     // Assert
@@ -70,7 +70,26 @@ describe("zipBundle service: streamJobsiteBundle", () => {
 
     // Act & Assert
     await expect(
-      streamJobsiteBundle([entry(), entry({ path: "meeting-2/report.pdf" })], output),
+      streamBundle([entry(), entry({ path: "meeting-2/report.pdf" })], output),
     ).rejects.toBe(failure);
+  });
+
+  it("should accept a custom header option and still produce a valid ZIP", async () => {
+    // Arrange — buildBundleIndexCsv is destructured at require-time, so it
+    // can't be spied on the way storageService's methods are; what a given
+    // header actually produces is covered exhaustively in
+    // buildBundleIndex.test.js. This just confirms streamBundle passes the
+    // option through without erroring.
+    const output = new PassThrough();
+    const collected = collect(output);
+
+    // Act
+    await streamBundle([], output, {
+      header: ["GC / Client", "Project", "Talk", "Held At", "Filename"],
+    });
+    const buffer = await collected;
+
+    // Assert
+    expect(buffer.slice(0, 4)).toEqual(Buffer.from([0x50, 0x4b, 0x03, 0x04]));
   });
 });

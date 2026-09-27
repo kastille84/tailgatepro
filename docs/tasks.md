@@ -2159,7 +2159,7 @@ from the dashboard, so run the 8d-g backfill first.
 - [x] GC links a sub company to a project (`project_subcontractors`) — done: slim version (GC join code)
       shipped in Phase 6b–6d, superseded by 8d above
 
-## Phase 9 — Pricing-promise gaps · status: audited 2026-09-24; 9a (copy fixes) and 9b (entitlement foundation) done, 9c done (seat caps, history window, library split, archive, PDF-link re-issue), 9d code complete (including 9d-2 roles/scoping — run the `Supabase_SQL.sql` ALTERs), 9e in progress (Defense Bundle ZIP shipped), 9f–9g not started
+## Phase 9 — Pricing-promise gaps · status: audited 2026-09-24; 9a (copy fixes) and 9b (entitlement foundation) done, 9c done (seat caps, history window, library split, archive, PDF-link re-issue), 9d code complete (including 9d-2 roles/scoping — run the `Supabase_SQL.sql` ALTERs), 9e in progress (both the GC per-jobsite and the subcontractor's own OSHA Defense Bundle ZIPs shipped), 9f–9g not started
 
 Audit of the pricing page (`client/src/data/plans.ts`, `Pricing.tsx` FAQ/callout) and landing page copy against
 the code. Full evidence table, statuses and per-gap resolution live in `docs/pricing-promise-gaps.md` — every
@@ -2368,13 +2368,14 @@ Costs one extra query per request for Free subs (`resolveEffectiveTier`) and per
     Flip a jobsite's `plan` to `'site_pro'` by hand in Supabase to test it live (same as 9d's sponsorship caveat;
     billing to actually purchase Site Pro is still 9f).
   - **Update (progress modal):** the download can take a while on a site with a lot of history, and the button's
-    own inline spinner was easy to miss — added a non-dismissable `DefenseBundleProgressModal`
-    (`features/jobsites/DefenseBundleProgressModal.tsx`, reuses the existing `Modal`/`Spinner` primitives, no new
-    styled-components) shown for the duration of `useDownloadDefenseBundle`'s mutation. It's indeterminate, not a
-    percentage bar — the response never sets `Content-Length` (unknowable until `archive.finalize()` completes) and
-    `storageService` has no cheap size-without-downloading call, so a real determinate bar isn't possible without
-    re-architecting the transport (see the design doc's new "Client UX while assembling" section). New
-    `DefenseBundleProgressModal.test.tsx` (3); `JobsiteManager.test.tsx` +2 (shows/hides with `isPending`).
+    own inline spinner was easy to miss — added a non-dismissable progress modal (reuses the existing
+    `Modal`/`Spinner` primitives, no new styled-components) shown for the duration of
+    `useDownloadDefenseBundle`'s mutation. It's indeterminate, not a percentage bar — the response never sets
+    `Content-Length` (unknowable until `archive.finalize()` completes) and `storageService` has no cheap
+    size-without-downloading call, so a real determinate bar isn't possible without re-architecting the transport
+    (see the design doc's "Client UX while assembling" section). Originally built as a jobsites-only
+    `DefenseBundleProgressModal`, then generalized into `ui_comps/progress-modal/ProgressModal.tsx`
+    (`title`/`message` props) when the sub-side bundle below needed the identical modal — see that bullet.
   - Known v1 limitations (see the design doc): sequential per-PDF downloads (fine at expected site sizes); no
     PostgREST 1000-row chunking like `listMonthSummaries` has; a mid-stream failure can't produce a normal JSON
     error body.
@@ -2382,6 +2383,55 @@ Costs one extra query per request for Free subs (`resolveEffectiveTier`) and per
     manual pass still owed: flip a jobsite to Site Pro, complete at least one meeting log with a generated PDF,
     click "Defense Bundle" on `/projects`, confirm a `.zip` downloads with `index.csv` + one PDF per completed
     log; confirm a `free`-plan jobsite shows the upgrade link instead; confirm a locked sub's logs are absent.
+- [x] Subcontractor's own OSHA Defense Bundle (download every one of my own logs as one ZIP) · status: code
+      complete; manual smoke pending
+
+  Design doc: `docs/sub-defense-bundle-design.md`. The GC-side bundle above is per-jobsite; a sub isn't organized
+  by jobsite at all (Meeting History is already one flat list across every project/GC), so this is a flat export
+  of every completed log the caller's company has ever logged — no per-project split (confirmed with the user:
+  an independent sub protecting themselves, including one whose GC never touches TailgatePro, wants "all my
+  records" in one shot). Gated on `archiveYears > 0` (Trade Pro/Enterprise) — the same line Trade Pro's "5-year
+  legal archive for OSHA audits" pitch already draws — via `entitlements.getLimits(companyType, tier)`, read
+  straight off `req.user` rather than a second `companiesService.getById` call.
+
+  - Server: `services/zipBundle.js`'s `streamJobsiteBundle` renamed to `streamBundle` (it never actually depended
+    on "jobsite") and gained an optional `header` passthrough; `utility/buildBundleIndex.js`'s `buildBundleIndexCsv`
+    gained a matching optional `header` param (default unchanged). New `services/meetingLogs.js`
+    `getDefenseBundleEntries(companyId, { companyType, tier })` — queries every completed log for the caller's
+    company (embedding `toolbox_talks(title)` and `projects(name, gc_name_custom)`), same ready/skipped split as
+    the GC version. The index.csv's "Company" column is repurposed to hold the project's GC/client name
+    (`gc_name_custom`) instead of the caller's own company — every row would otherwise repeat the same value,
+    while which client each log belongs to is what a sub juggling several GCs actually needs; `gc_name_custom` is
+    populated whether or not that GC is on TailgatePro at all, which is exactly the case motivating this feature.
+    New `GET /api/meetings/defense-bundle` (registered before `/:id`, same reasoning as `/months`) +
+    `controllers/meetingLogs.js`'s `getDefenseBundle`, same headers/streaming/`headersSent` shape as the GC
+    controller. `controllers/gc.js` updated for the `streamBundle` rename.
+  - Server tests: `buildBundleIndex.test.js` +2 (header override); `zipBundle.test.js` renamed + 1 new case;
+    `meetingLogs.test.js` (service) +7 (`getDefenseBundleEntries`: happy path incl. the GC/client CSV field, 403 on
+    Trade Free, "Unknown client" fallback, skip+count arithmetic, both 404 cases, 502); `meetingLogs.test.js`
+    (controller) +3 (`getDefenseBundle`: headers/wiring, both `headersSent` branches); `gc.test.js` updated for the
+    rename. Full `npm run test:server`: 55 suites / 844 tests passing.
+  - Client: the GC-side `DefenseBundleProgressModal` was generalized into `ui_comps/progress-modal/ProgressModal.tsx`
+    (`title`/`message` props) rather than duplicated — both `JobsiteManager.tsx` and this feature use it. New
+    `services/apiMeetingLogs.ts` `getDefenseBundle` (mirrors `apiGc.ts`'s version, its own small unwrap, `PLAN_LIMIT`
+    → `PlanLimitError`); new `hooks/useDownloadOwnBundle.ts` (mirrors `useDownloadDefenseBundle`, but takes no
+    argument — there's no per-jobsite target). `pages/MeetingHistory/MeetingHistory.tsx` gained a "Download Defense
+    Bundle" button (live + online-gated when `limits.archiveYears > 0`, a disabled teaser otherwise, same
+    `Button`/`leftIcon` convention `JobsiteList.tsx` uses) and the `ProgressModal`.
+  - Client tests: new `ui_comps/progress-modal/ProgressModal.test.tsx` (3, replaces the deleted jobsites-only one);
+    `JobsiteManager.test.tsx` updated for the rename; `apiMeetingLogs.test.ts` +6; `useDownloadOwnBundle.test.tsx`
+    (new, 4); `MeetingHistory.test.tsx` +5 (live click, Free disabled, offline disabled, progress modal shows/hides).
+  - Copy: added "1-click OSHA Defense Bundle — download every log as one ZIP" to Trade Pro's `features` (shipping
+    immediately, no `comingSoon` entry) in `plans.ts` and the matching bullet in
+    `docs/pricing-and-positioning-strategy_V2.md`'s Trade Pro row; `docs/pricing-promise-gaps.md` gained a new row
+    (this wasn't a previously-audited promise — the copy and the build landed together).
+  - Known v1 limitations (see the design doc): same sequential-download and no-1000-row-chunking notes as the GC
+    bundle; no jobsite-equivalent narrowing (a sub can't download "just this client" or "just this year", only
+    everything at once).
+  - Verify: full manual pass still owed — needs a real session on a Trade Pro/Enterprise sub account with at least
+    one completed log that has a generated PDF: click "Download Defense Bundle" on `/meetings`, confirm the `.zip`
+    downloads with `index.csv` (header reading "GC / Client") plus every completed log's PDF; confirm a Trade Free
+    account sees the disabled button.
 - [ ] Cross-project sub safety scorecards (today: single-day compliance view only).
 - [ ] Top-down corporate policy push across all sites.
 - [ ] Company safety form and manual builder (GC Portfolio; the strategy doc also lists it for Trade Pro).

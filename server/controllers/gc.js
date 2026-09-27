@@ -87,7 +87,7 @@ exports.getDefenseBundle = async (req, res, next) => {
       "Content-Disposition",
       `attachment; filename="${slugify(jobsiteName)}-defense-bundle.zip"`,
     );
-    await zipBundleService.streamJobsiteBundle(entries, res, { skippedCount });
+    await zipBundleService.streamBundle(entries, res, { skippedCount });
   } catch (error) {
     if (res.headersSent) {
       res.destroy(error);

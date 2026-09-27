@@ -1,7 +1,9 @@
 const meetingLogsService = require("../services/meetingLogs");
 const companiesService = require("../services/companies");
 const talksService = require("../services/talks");
+const zipBundleService = require("../services/zipBundle");
 const { getLimits, hasFullLibrary } = require("../utility/entitlements");
+const { slugify } = require("../utility/pdfFilename");
 
 // req.user is set by loadUserContext (which runs after requireAuth) — the
 // caller's company and id always come from there, never from req.body/req.params.
@@ -139,6 +141,40 @@ exports.getPdfUrl = async (req, res, next) => {
     );
     return res.status(200).json({ success: true, data: { url } });
   } catch (error) {
+    return next(error);
+  }
+};
+
+// Streams a ZIP body, not the usual { success, data } JSON envelope — see
+// docs/sub-defense-bundle-design.md. companyType/tier come straight off
+// req.user (already resolved by loadUserContext), unlike getHistoryDays above
+// which re-fetches the company row — this gate needs no second DB read. A
+// failure once headers (and possibly some zip bytes) are already flushed can
+// no longer produce a normal JSON error response, so it destroys the
+// connection instead of calling next(error) — same shape as
+// controllers/gc.js's getDefenseBundle.
+exports.getDefenseBundle = async (req, res, next) => {
+  try {
+    const { companyName, entries, skippedCount } =
+      await meetingLogsService.getDefenseBundleEntries(req.user.companyId, {
+        companyType: req.user.companyType,
+        tier: req.user.tier,
+      });
+
+    res.setHeader("Content-Type", "application/zip");
+    res.setHeader(
+      "Content-Disposition",
+      `attachment; filename="${slugify(companyName)}-defense-bundle.zip"`,
+    );
+    await zipBundleService.streamBundle(entries, res, {
+      skippedCount,
+      header: ["GC / Client", "Project", "Talk", "Held At", "Filename"],
+    });
+  } catch (error) {
+    if (res.headersSent) {
+      res.destroy(error);
+      return;
+    }
     return next(error);
   }
 };

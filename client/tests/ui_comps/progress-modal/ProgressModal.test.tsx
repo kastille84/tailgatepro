@@ -3,24 +3,28 @@ import { describe, it, expect } from "vitest";
 import { render, screen, fireEvent } from "@testing-library/react";
 import { ThemeProvider } from "styled-components";
 
-import { DefenseBundleProgressModal } from "../../../src/features/jobsites/DefenseBundleProgressModal";
+import { ProgressModal } from "../../../src/ui_comps/progress-modal";
 import theme from "../../../src/styles/theme";
 
 const renderModal = (isOpen: boolean) =>
   render(
     <ThemeProvider theme={theme}>
-      <DefenseBundleProgressModal isOpen={isOpen} />
+      <ProgressModal
+        isOpen={isOpen}
+        title="Preparing your Defense Bundle"
+        message="This can take a minute or two. Please don't close this tab."
+      />
     </ThemeProvider>,
   );
 
-describe("DefenseBundleProgressModal", () => {
+describe("ProgressModal", () => {
   it("renders nothing when closed", () => {
     renderModal(false);
 
     expect(screen.queryByRole("dialog")).toBeNull();
   });
 
-  it("shows the title and an explanatory spinner message while open", () => {
+  it("shows the given title and message while open", () => {
     renderModal(true);
 
     expect(screen.getByRole("dialog").textContent).toContain("Preparing your Defense Bundle");

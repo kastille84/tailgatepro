@@ -8,17 +8,32 @@ import { MeetingHistory } from "../../../src/pages/MeetingHistory/MeetingHistory
 import theme from "../../../src/styles/theme";
 
 const mockUseAuth = vi.fn();
+const mockUseOnlineStatus = vi.fn();
 const mockUseCurrentUser = vi.fn();
 const mockUseMeetingMonths = vi.fn();
+const mockUseDownloadOwnBundle = vi.fn();
 
 vi.mock("../../../src/context/auth", () => ({
   useAuth: () => mockUseAuth(),
+}));
+vi.mock("../../../src/context/online-status", () => ({
+  useOnlineStatus: () => mockUseOnlineStatus(),
 }));
 vi.mock("../../../src/hooks/useCurrentUser", () => ({
   useCurrentUser: () => mockUseCurrentUser(),
 }));
 vi.mock("../../../src/hooks/useMeetingMonths", () => ({
   useMeetingMonths: () => mockUseMeetingMonths(),
+}));
+vi.mock("../../../src/hooks/useDownloadOwnBundle", () => ({
+  useDownloadOwnBundle: () => mockUseDownloadOwnBundle(),
+}));
+// Has its own tests (client/tests/ui_comps/progress-modal); stub it here so
+// this file stays focused on page wiring, matching the JobsiteManager.test.tsx
+// convention for the same component.
+vi.mock("../../../src/ui_comps/progress-modal", () => ({
+  ProgressModal: ({ isOpen }: { isOpen: boolean }) =>
+    isOpen ? <div data-testid="bundle-progress-modal" /> : null,
 }));
 
 // The feature components have their own tests; stub them so this test stays
@@ -85,8 +100,13 @@ describe("MeetingHistory page", () => {
   beforeEach(() => {
     vi.clearAllMocks();
     mockUseAuth.mockReturnValue({ user: { email: "a@b.com" }, loading: false });
+    mockUseOnlineStatus.mockReturnValue({ isOnline: true });
     mockUseCurrentUser.mockReturnValue({ limits: { archiveYears: 5 } });
     mockUseMeetingMonths.mockReturnValue(months());
+    mockUseDownloadOwnBundle.mockReturnValue({
+      downloadBundle: vi.fn(),
+      isPending: false,
+    });
   });
 
   it("shows a loading status while auth is loading", () => {
@@ -202,5 +222,52 @@ describe("MeetingHistory page", () => {
       /could not load your meetings/i,
     );
     expect(screen.queryByTestId("month-cards")).toBeNull();
+  });
+
+  it("lets a paid plan click the Defense Bundle button", () => {
+    const downloadBundle = vi.fn();
+    mockUseDownloadOwnBundle.mockReturnValue({ downloadBundle, isPending: false });
+    renderPage();
+
+    const button = screen.getByRole("button", {
+      name: /download your osha defense bundle/i,
+    }) as HTMLButtonElement;
+    expect(button.disabled).toBe(false);
+
+    fireEvent.click(button);
+    expect(downloadBundle).toHaveBeenCalled();
+  });
+
+  it("disables the Defense Bundle button on a Free plan", () => {
+    mockUseCurrentUser.mockReturnValue({ limits: { archiveYears: 0 } });
+    renderPage();
+
+    const button = screen.getByRole("button", {
+      name: /download your osha defense bundle/i,
+    }) as HTMLButtonElement;
+    expect(button.disabled).toBe(true);
+  });
+
+  it("disables the Defense Bundle button while offline", () => {
+    mockUseOnlineStatus.mockReturnValue({ isOnline: false });
+    renderPage();
+
+    const button = screen.getByRole("button", {
+      name: /download your osha defense bundle/i,
+    }) as HTMLButtonElement;
+    expect(button.disabled).toBe(true);
+  });
+
+  it("shows the Defense Bundle progress modal while a download is pending", () => {
+    mockUseDownloadOwnBundle.mockReturnValue({ downloadBundle: vi.fn(), isPending: true });
+    renderPage();
+
+    expect(screen.getByTestId("bundle-progress-modal")).toBeDefined();
+  });
+
+  it("hides the Defense Bundle progress modal when nothing is downloading", () => {
+    renderPage();
+
+    expect(screen.queryByTestId("bundle-progress-modal")).toBeNull();
   });
 });

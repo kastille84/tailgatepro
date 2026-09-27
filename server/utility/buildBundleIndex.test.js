@@ -82,4 +82,26 @@ describe("buildBundleIndexCsv", () => {
       "# 3 completed meeting logs excluded — no PDF has been generated for them yet.",
     );
   });
+
+  it("should use the default header when none is given", () => {
+    // Act
+    const csv = buildBundleIndexCsv([entry()]);
+
+    // Assert
+    expect(csv.split("\n")[0]).toBe('"Company","Project","Talk","Held At","Filename"');
+  });
+
+  it("should use a custom header when given, without changing what each row contains", () => {
+    // Act
+    const csv = buildBundleIndexCsv([entry()], {
+      header: ["GC / Client", "Project", "Talk", "Held At", "Filename"],
+    });
+
+    // Assert
+    const lines = csv.trimEnd().split("\n");
+    expect(lines[0]).toBe('"GC / Client","Project","Talk","Held At","Filename"');
+    expect(lines[1]).toBe(
+      '"Acme Roofing","Riverside Tower","Fall Protection","2026-09-21T14:00:00.000Z","acme-roofing-riverside-tower-2026-09-21-meeting1.pdf"',
+    );
+  });
 });

@@ -38,6 +38,7 @@ export const SUB_PLANS: Plan[] = [
       "Write and share your own custom talks",
       "Translate custom talks and read them aloud in multiple languages",
       "5-year legal archive for OSHA audits",
+      "1-click OSHA Defense Bundle — download every log as one ZIP",
       "Expanded OSHA talk library",
       "AI Talk Builder",
     ],

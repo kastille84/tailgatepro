@@ -3,12 +3,14 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import {
   completeMeeting,
   createMeetingLog,
+  getDefenseBundle,
   getMeetingLogs,
   getMeetingMonths,
   getMeetingPdfUrl,
   uploadCrewPhoto,
 } from "../../src/services/apiMeetingLogs";
 import { DEFAULT_FETCH_TIMEOUT_MS } from "../../src/utils/fetchWithTimeout";
+import { PlanLimitError } from "../../src/utils/PlanLimitError";
 
 const meetingLog = {
   id: "meeting-1",
@@ -495,6 +497,117 @@ describe("apiMeetingLogs", () => {
       await expect(getMeetingPdfUrl("token-123", "meeting-1")).rejects.toThrow(
         GENERIC,
       );
+    });
+  });
+
+  describe("getDefenseBundle", () => {
+    const zipResponse = (overrides: Partial<Response> = {}) => ({
+      ok: true,
+      status: 200,
+      headers: new Headers({
+        "Content-Disposition": 'attachment; filename="acme-roofing-defense-bundle.zip"',
+      }),
+      blob: async () => new Blob(["zip bytes"], { type: "application/zip" }),
+      ...overrides,
+    });
+
+    it("GETs /api/meetings/defense-bundle and resolves the blob with the server's filename", async () => {
+      const fetchMock = vi.fn().mockResolvedValue(zipResponse());
+      vi.stubGlobal("fetch", fetchMock);
+
+      const result = await getDefenseBundle("token-123");
+
+      expect(fetchMock).toHaveBeenCalledWith(
+        "/api/meetings/defense-bundle",
+        expect.objectContaining({
+          method: "GET",
+          headers: expect.objectContaining({ Authorization: "Bearer token-123" }),
+        }),
+      );
+      expect(result.filename).toBe("acme-roofing-defense-bundle.zip");
+      expect(result.blob).toBeInstanceOf(Blob);
+    });
+
+    it("falls back to a default filename when no Content-Disposition header is present", async () => {
+      vi.stubGlobal(
+        "fetch",
+        vi.fn().mockResolvedValue(zipResponse({ headers: new Headers() })),
+      );
+
+      const result = await getDefenseBundle("token-123");
+
+      expect(result.filename).toBe("defense-bundle.zip");
+    });
+
+    it("rejects with a PlanLimitError when the caller's plan has no legal archive", async () => {
+      vi.stubGlobal(
+        "fetch",
+        vi.fn().mockResolvedValue({
+          ok: false,
+          status: 403,
+          json: async () => ({
+            success: false,
+            error: "Upgrade to Trade Pro to download your OSHA Defense Bundle",
+            data: { code: "PLAN_LIMIT" },
+          }),
+        }),
+      );
+
+      const error = await getDefenseBundle("token-123").catch((e) => e);
+      expect(error).toBeInstanceOf(PlanLimitError);
+      expect(error.message).toBe(
+        "Upgrade to Trade Pro to download your OSHA Defense Bundle",
+      );
+      expect(error.limit).toBeNull();
+    });
+
+    it("falls back to the generic message and carries a limit when a bare PLAN_LIMIT response has one", async () => {
+      vi.stubGlobal(
+        "fetch",
+        vi.fn().mockResolvedValue({
+          ok: false,
+          status: 403,
+          json: async () => ({ success: false, data: { code: "PLAN_LIMIT", limit: 1 } }),
+        }),
+      );
+
+      const error = await getDefenseBundle("token-123").catch((e) => e);
+      expect(error).toBeInstanceOf(PlanLimitError);
+      expect(error.message).toBe(GENERIC);
+      expect(error.limit).toBe(1);
+    });
+
+    it("rejects with the backend error message on a 404 (nothing to bundle yet)", async () => {
+      vi.stubGlobal(
+        "fetch",
+        vi.fn().mockResolvedValue({
+          ok: false,
+          status: 404,
+          json: async () => ({
+            success: false,
+            error: "No completed meeting logs with a generated PDF are available yet.",
+          }),
+        }),
+      );
+
+      await expect(getDefenseBundle("token-123")).rejects.toThrow(
+        "No completed meeting logs with a generated PDF are available yet.",
+      );
+    });
+
+    it("rejects with the generic message when the error response has no JSON body", async () => {
+      vi.stubGlobal(
+        "fetch",
+        vi.fn().mockResolvedValue({
+          ok: false,
+          status: 500,
+          json: async () => {
+            throw new Error("bad json");
+          },
+        }),
+      );
+
+      await expect(getDefenseBundle("token-123")).rejects.toThrow(GENERIC);
     });
   });
 });

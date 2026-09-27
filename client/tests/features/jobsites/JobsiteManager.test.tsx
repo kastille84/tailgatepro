@@ -122,8 +122,8 @@ vi.mock("../../../src/features/jobsites/JobsiteMembersModal", () => ({
     </div>
   ),
 }));
-vi.mock("../../../src/features/jobsites/DefenseBundleProgressModal", () => ({
-  DefenseBundleProgressModal: ({ isOpen }: { isOpen: boolean }) =>
+vi.mock("../../../src/ui_comps/progress-modal", () => ({
+  ProgressModal: ({ isOpen }: { isOpen: boolean }) =>
     isOpen ? <div data-testid="bundle-progress-modal" /> : null,
 }));
 

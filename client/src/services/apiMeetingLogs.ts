@@ -1,7 +1,13 @@
 import { fetchWithTimeout } from "../utils/fetchWithTimeout";
+import { PlanLimitError } from "../utils/PlanLimitError";
 import type { MeetingLog } from "../interfaces/meetingLog";
 
 const GENERIC_ERROR = "Something went wrong. Please try again.";
+const DEFAULT_BUNDLE_FILENAME = "defense-bundle.zip";
+// Longer than fetchWithTimeout's 10s default — assembling a ZIP means the
+// server downloads and compresses one PDF per completed log before the first
+// byte comes back, which can take a while for a company with a lot of history.
+const BUNDLE_FETCH_TIMEOUT_MS = 60_000;
 
 const authHeaders = (accessToken: string) => ({
   "Content-Type": "application/json",
@@ -211,4 +217,35 @@ export const getMeetingPdfUrl = async (
   }
 
   return body.data.url as string;
+};
+
+/** GET /api/meetings/defense-bundle — the caller's own OSHA Defense Bundle: a
+ *  streamed ZIP of every completed log this company has ever logged, not the
+ *  usual `{ success, data }` JSON envelope (docs/sub-defense-bundle-design.md),
+ *  so this can't reuse the `body?.success` unwrap every other call in this
+ *  file uses. A 403 `PLAN_LIMIT` (Trade Free has no legal archive) throws a
+ *  `PlanLimitError`, same as `apiGc.ts`'s version. The filename comes from
+ *  the server's `Content-Disposition` header so the saved file matches what
+ *  it named. */
+export const getDefenseBundle = async (
+  accessToken: string,
+): Promise<{ blob: Blob; filename: string }> => {
+  const res = await fetchWithTimeout(
+    "/api/meetings/defense-bundle",
+    { method: "GET", headers: { Authorization: `Bearer ${accessToken}` } },
+    BUNDLE_FETCH_TIMEOUT_MS,
+  );
+
+  if (!res.ok) {
+    const body = await res.json().catch(() => null);
+    if (body?.data?.code === "PLAN_LIMIT") {
+      throw new PlanLimitError(body.error ?? GENERIC_ERROR, body.data.limit ?? null);
+    }
+    throw new Error(body?.error ?? GENERIC_ERROR);
+  }
+
+  const disposition = res.headers.get("Content-Disposition") ?? "";
+  const filename = disposition.match(/filename="([^"]+)"/)?.[1] ?? DEFAULT_BUNDLE_FILENAME;
+
+  return { blob: await res.blob(), filename };
 };
