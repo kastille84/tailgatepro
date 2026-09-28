@@ -127,4 +127,33 @@ describe("TalkList", () => {
     renderList();
     expect(screen.queryByText("Custom")).toBeNull();
   });
+
+  it("pins the GC's required talk to the front of the list and badges it (Phase 9e)", () => {
+    // t2 is second in `talks`, but should render first once required.
+    renderList({ requiredTalkId: "t2" });
+
+    const names = screen.getAllByRole("heading", { level: 3 }).map((el) => el.textContent);
+    expect(names).toEqual([
+      "Controlling Silica Dust Exposure",
+      "Eye Protection on the Jobsite",
+    ]);
+    expect(screen.getByText("Required by your GC")).toBeDefined();
+  });
+
+  it("shows no required badge when requiredTalkId is null (no policy push)", () => {
+    renderList({ requiredTalkId: null });
+    expect(screen.queryByText("Required by your GC")).toBeNull();
+  });
+
+  it("shows no required badge when requiredTalkId isn't in the (filtered) list", () => {
+    renderList({ requiredTalkId: "not-in-list" });
+
+    expect(screen.queryByText("Required by your GC")).toBeNull();
+    // Order is unaffected too.
+    const names = screen.getAllByRole("heading", { level: 3 }).map((el) => el.textContent);
+    expect(names).toEqual([
+      "Eye Protection on the Jobsite",
+      "Controlling Silica Dust Exposure",
+    ]);
+  });
 });

@@ -69,6 +69,27 @@ const listForCompany = async (companyId, { fullLibrary = true } = {}) => {
   return data.map(toTalk);
 };
 
+// Every talk in the shared global library, alphabetical by title -- the
+// picker source for the top-down policy push feature (Phase 9e,
+// docs/policy-push-design.md). Deliberately narrower than listForCompany's
+// visibility filter, which would also union in the caller's own company's
+// custom talks: a GC's custom talk would be invisible to the very subs a
+// push targets (a sub's own listForCompany only unions global talks with its
+// *own* company_id), so the picker must never offer one.
+const listGlobal = async () => {
+  const { data, error } = await supabase
+    .from("toolbox_talks")
+    .select(TALK_COLUMNS)
+    .eq("is_global", true)
+    .order("title", { ascending: true });
+
+  if (error) {
+    throw new AppError("Could not load toolbox talks", 502, { cause: error });
+  }
+
+  return data.map(toTalk);
+};
+
 // Scoped the same way as listForCompany: a talk is fetchable by id only if
 // it's global or belongs to the caller's own company. A talk belonging to
 // another company is indistinguishable from a missing one (404), by design —
@@ -278,4 +299,4 @@ const remove = async ({ id, companyId }) => {
   return { id: data.id };
 };
 
-module.exports = { listForCompany, getById, create, update, remove };
+module.exports = { listForCompany, listGlobal, getById, create, update, remove };

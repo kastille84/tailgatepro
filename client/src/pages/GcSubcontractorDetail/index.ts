@@ -1,0 +1,1 @@
+export { GcSubcontractorDetail } from "./GcSubcontractorDetail";

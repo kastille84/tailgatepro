@@ -2,6 +2,7 @@ const { supabase } = require("../utility/supabaseClient");
 const { AppError } = require("../utility/AppError");
 const { buildPdfFilename } = require("../utility/pdfFilename");
 const { resolveHeldAt } = require("../utility/heldAt");
+const entitlementsService = require("../utility/entitlements");
 const pdfGenerationQueue = require("./pdfGenerationQueue");
 const storageService = require("./storage");
 const projectsService = require("./projects");
@@ -432,6 +433,81 @@ const getPdfUrl = async (id, companyId, { historyDays = null } = {}) => {
   );
 };
 
+// The sub-side "Defense Bundle" (docs/sub-defense-bundle-design.md): every
+// completed meeting log the caller's own company has ever logged, across
+// every project/client, as one ZIP — there's no jobsite-equivalent grouping
+// to scope this to the way the GC bundle scopes to one jobsite
+// (getDefenseBundleEntries in gcDashboard.js), so this is a flat export of
+// everything, matching the Meeting History page it's downloaded from.
+//
+// Gated on a paid trade plan (Trade Pro/Enterprise, `archiveYears > 0`) —
+// Trade Free keeps today's one-at-a-time "Open PDF" flow.  `companyType`/
+// `tier` are passed in from `req.user` (already resolved by
+// loadUserContext), not re-fetched from the DB the way this file's
+// `getHistoryDays` controller helper does — no second row read needed for
+// this gate.
+const getDefenseBundleEntries = async (companyId, { companyType, tier }) => {
+  const { archiveYears } = entitlementsService.getLimits(companyType, tier);
+  if (archiveYears === 0) {
+    throw new AppError(
+      "Upgrade to Trade Pro to download your OSHA Defense Bundle",
+      403,
+      { data: { code: "PLAN_LIMIT" } },
+    );
+  }
+
+  const { data, error } = await supabase
+    .from("meeting_logs")
+    .select(
+      "id, held_at, completed_at, final_pdf_url, toolbox_talks(title), projects(name, gc_name_custom)",
+    )
+    .eq("company_id", companyId)
+    .not("completed_at", "is", null)
+    .order("held_at", { ascending: true });
+
+  if (error) {
+    throw new AppError("Could not load meeting logs", 502, { cause: error });
+  }
+
+  const ready = data.filter((row) => row.final_pdf_url);
+  const skippedCount = data.length - ready.length;
+  if (ready.length === 0) {
+    throw new AppError(
+      "No completed meeting logs with a generated PDF are available yet.",
+      404,
+    );
+  }
+
+  const company = await companiesService.getById(companyId);
+
+  const entries = ready.map((row) => {
+    const projectName = row.projects?.name ?? "project";
+    const heldAt = row.held_at ?? row.completed_at;
+    return {
+      path: row.final_pdf_url,
+      filename: buildPdfFilename({
+        companyName: company.name,
+        projectName,
+        meetingDate: heldAt,
+        meetingLogId: row.id,
+      }),
+      // The CSV's "Company" column holds the project's GC/client here, not
+      // the caller's own company — every row would otherwise repeat the same
+      // value, whereas which client each log belongs to is the signal a sub
+      // juggling several GCs actually needs. `gc_name_custom` is populated
+      // for every project, whether it's linked to a GC on TailgatePro or the
+      // sub just typed the GC's name in by hand — so this works even for a GC
+      // that doesn't use the app at all.
+      companyName: row.projects?.gc_name_custom ?? "Unknown client",
+      projectName,
+      talkTitle: row.toolbox_talks?.title ?? null,
+      heldAt,
+    };
+  });
+
+  return { companyName: company.name, entries, skippedCount };
+};
+
 module.exports = {
   create,
   listForCompany,
@@ -445,6 +521,7 @@ module.exports = {
   pdfPath,
   setFinalPdfUrl,
   getPdfUrl,
+  getDefenseBundleEntries,
   // Exposed so gcDashboard.js's own pdf-url lookup (built from the *meeting's*
   // company, not the caller's — see docs/gc-dashboard-design.md) can reuse
   // the same bucket/TTL instead of redeclaring them.

@@ -73,6 +73,22 @@ describe("requireAuth", () => {
     expect(error.message).toBe("Invalid or expired session");
   });
 
+  it("should call next with a 502 AppError carrying the original cause when Supabase throws", async () => {
+    // Arrange
+    req.headers.authorization = "Bearer good-token";
+    const networkError = new Error("network down");
+    getUserSpy.mockRejectedValue(networkError);
+
+    // Act
+    await requireAuth(req, res, next);
+
+    // Assert
+    expect(next).toHaveBeenCalledTimes(1);
+    const error = next.mock.calls[0][0];
+    expect(error.statusCode).toBe(502);
+    expect(error.cause).toBe(networkError);
+  });
+
   it("should attach req.userId, req.userMetadata and req.userEmail and call next() with no error when the token is valid", async () => {
     // Arrange
     req.headers.authorization = "Bearer good-token";

@@ -16,6 +16,7 @@ const {
   getCrewPhotoUrl,
   setFinalPdfUrl,
   getPdfUrl,
+  getDefenseBundleEntries,
 } = require("./meetingLogs");
 
 const MEETING_LOG_COLUMNS =
@@ -1187,6 +1188,141 @@ describe("meetingLogs service: getPdfUrl", () => {
     await expect(getPdfUrl("missing", "company-1")).rejects.toMatchObject({
       statusCode: 404,
       message: "Meeting not found",
+    });
+  });
+});
+
+describe("meetingLogs service: getDefenseBundleEntries", () => {
+  let order;
+  let notFn;
+  let eqFn;
+  let select;
+
+  const dbLog = (overrides) => ({
+    id: "meeting-1",
+    held_at: "2026-09-21T14:00:00.000Z",
+    completed_at: "2026-09-21T14:05:00.000Z",
+    final_pdf_url: "meeting-1/report.pdf",
+    toolbox_talks: { title: "Fall Protection" },
+    projects: { name: "Riverside Tower", gc_name_custom: "Acme GC" },
+    ...overrides,
+  });
+
+  beforeEach(() => {
+    order = vi.fn().mockResolvedValue({ data: [dbLog()], error: null });
+    notFn = vi.fn(() => ({ order }));
+    eqFn = vi.fn(() => ({ not: notFn }));
+    select = vi.fn(() => ({ eq: eqFn }));
+
+    fromSpy.mockReset();
+    fromSpy.mockImplementation((table) => {
+      if (table === "meeting_logs") return { select };
+      throw new Error(`Unexpected table: ${table}`);
+    });
+
+    vi.spyOn(companiesService, "getById").mockReset().mockResolvedValue({
+      id: "company-1",
+      name: "Acme Roofing",
+      companyType: "subcontractor",
+      tier: "premium",
+    });
+  });
+
+  const premium = { companyType: "subcontractor", tier: "premium" };
+
+  it("should return one entry per completed log with a PDF, oldest held first, using the GC/client name as the CSV company field", async () => {
+    // Act
+    const result = await getDefenseBundleEntries("company-1", premium);
+
+    // Assert
+    expect(select).toHaveBeenCalledWith(
+      "id, held_at, completed_at, final_pdf_url, toolbox_talks(title), projects(name, gc_name_custom)",
+    );
+    expect(eqFn).toHaveBeenCalledWith("company_id", "company-1");
+    expect(notFn).toHaveBeenCalledWith("completed_at", "is", null);
+    expect(order).toHaveBeenCalledWith("held_at", { ascending: true });
+    expect(result).toEqual({
+      companyName: "Acme Roofing",
+      skippedCount: 0,
+      entries: [
+        {
+          path: "meeting-1/report.pdf",
+          filename: "acme-roofing-riverside-tower-2026-09-21-meeting1.pdf",
+          companyName: "Acme GC",
+          projectName: "Riverside Tower",
+          talkTitle: "Fall Protection",
+          heldAt: "2026-09-21T14:00:00.000Z",
+        },
+      ],
+    });
+  });
+
+  it("should throw a 403 PLAN_LIMIT for a plan with no legal archive, without querying anything", async () => {
+    // Act & Assert
+    await expect(
+      getDefenseBundleEntries("company-1", { companyType: "subcontractor", tier: "basic" }),
+    ).rejects.toMatchObject({ statusCode: 403, data: { code: "PLAN_LIMIT" } });
+    expect(fromSpy).not.toHaveBeenCalled();
+  });
+
+  it('should fall back to "Unknown client" when a project has no GC/client name', async () => {
+    // Arrange
+    order.mockResolvedValue({
+      data: [dbLog({ projects: { name: "Riverside Tower", gc_name_custom: null } })],
+      error: null,
+    });
+
+    // Act
+    const result = await getDefenseBundleEntries("company-1", premium);
+
+    // Assert
+    expect(result.entries[0].companyName).toBe("Unknown client");
+  });
+
+  it("should skip a completed log with no PDF yet and report it in skippedCount", async () => {
+    // Arrange
+    order.mockResolvedValue({
+      data: [dbLog(), dbLog({ id: "meeting-2", final_pdf_url: null })],
+      error: null,
+    });
+
+    // Act
+    const result = await getDefenseBundleEntries("company-1", premium);
+
+    // Assert
+    expect(result.skippedCount).toBe(1);
+    expect(result.entries).toHaveLength(1);
+  });
+
+  it("should 404 when every completed log is missing a PDF", async () => {
+    // Arrange
+    order.mockResolvedValue({ data: [dbLog({ final_pdf_url: null })], error: null });
+
+    // Act & Assert
+    await expect(getDefenseBundleEntries("company-1", premium)).rejects.toMatchObject({
+      statusCode: 404,
+      message: "No completed meeting logs with a generated PDF are available yet.",
+    });
+  });
+
+  it("should 404 when there are no completed logs at all", async () => {
+    // Arrange
+    order.mockResolvedValue({ data: [], error: null });
+
+    // Act & Assert
+    await expect(getDefenseBundleEntries("company-1", premium)).rejects.toMatchObject({
+      statusCode: 404,
+    });
+  });
+
+  it("should throw a 502 AppError when the query fails", async () => {
+    // Arrange
+    order.mockResolvedValue({ data: null, error: new Error("db down") });
+
+    // Act & Assert
+    await expect(getDefenseBundleEntries("company-1", premium)).rejects.toMatchObject({
+      statusCode: 502,
+      message: "Could not load meeting logs",
     });
   });
 });

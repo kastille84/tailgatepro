@@ -94,6 +94,12 @@ export const StyledRetentionNote = styled.p`
   color: ${({ theme }) => theme.colors.navy[500]};
 `;
 
+/** Wraps the "Download Defense Bundle" button so it has its own row, same
+ *  spacing rhythm as the upgrade banner / retention note above it. */
+export const StyledBundleRow = styled.div`
+  margin-bottom: 1.6rem;
+`;
+
 /** Upgrade prompt shown when the plan's history window hides older logs. */
 export const StyledUpgradeBanner = styled.div`
   display: flex;

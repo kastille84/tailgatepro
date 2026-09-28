@@ -18,6 +18,7 @@ const { isSubLocked } = require("../utility/subLocking");
 const companiesService = require("./companies");
 const subAccessService = require("./subAccess");
 const { isJobsiteAllowed } = require("./siteScope");
+const jobsitesService = require("./jobsites");
 const storageService = require("./storage");
 const { PDF_BUCKET, PDF_URL_TTL_SECONDS } = require("./meetingLogs");
 
@@ -451,10 +452,91 @@ const getMeetingPdfUrl = async (id, gcCompanyId, allowedJobsiteIds = null) => {
   );
 };
 
+// GET /api/gc/jobsites/:id/defense-bundle (Phase 9e,
+// docs/osha-defense-bundle-design.md) — every completed log's PDF for one
+// jobsite, indexed. Gated per-jobsite on `jobsites.plan === "site_pro"`, not
+// blended with the caller's own company tier (see the design doc's "Gating"
+// section for why). Unlike listMeetings, this has no MEETINGS_LIST_LIMIT and
+// no from/to range — it's a full legal export, not a dashboard page.
+const getDefenseBundleEntries = async (jobsiteId, gcCompanyId, allowedJobsiteIds = null) => {
+  const jobsite = await jobsitesService.getOwnedJobsite(jobsiteId, gcCompanyId, allowedJobsiteIds);
+
+  if (jobsite.plan !== "site_pro") {
+    throw new AppError(
+      "Upgrade this job site to Site Pro to download its OSHA Defense Bundle",
+      403,
+      { data: { code: "PLAN_LIMIT" } },
+    );
+  }
+
+  const [allProjects, unlocked] = await Promise.all([
+    listLinkedProjects(gcCompanyId, allowedJobsiteIds),
+    subAccessService.getUnlockedSubIds(gcCompanyId),
+  ]);
+  const projects = allProjects.filter(
+    (project) => project.jobsiteId === jobsiteId && !isSubLocked(unlocked, project.ownerCompanyId),
+  );
+  const projectIds = projects.map((project) => project.id);
+
+  const NOTHING_TO_BUNDLE = "No completed meeting logs with a generated PDF are available yet for this job site.";
+  if (projectIds.length === 0) {
+    throw new AppError(NOTHING_TO_BUNDLE, 404);
+  }
+  const projectNameById = new Map(projects.map((project) => [project.id, project.name]));
+
+  const { data, error } = await supabase
+    .from("meeting_logs")
+    .select("id, project_id, company_id, held_at, completed_at, final_pdf_url, toolbox_talks(title)")
+    .in("project_id", projectIds)
+    .not("completed_at", "is", null)
+    .order("held_at", { ascending: true });
+
+  if (error) {
+    throw new AppError("Could not load meeting logs", 502, { cause: error });
+  }
+
+  const ready = data.filter((row) => row.final_pdf_url);
+  const skippedCount = data.length - ready.length;
+  if (ready.length === 0) {
+    throw new AppError(NOTHING_TO_BUNDLE, 404);
+  }
+
+  const companyNamesById = await getCompanyNamesByIds(ready.map((row) => row.company_id));
+
+  const entries = ready.map((row) => {
+    const companyName = companyNamesById.get(row.company_id) ?? "company";
+    const projectName = projectNameById.get(row.project_id) ?? "project";
+    const heldAt = row.held_at ?? row.completed_at;
+    return {
+      path: row.final_pdf_url,
+      filename: buildPdfFilename({
+        companyName,
+        projectName,
+        meetingDate: heldAt,
+        meetingLogId: row.id,
+      }),
+      companyName,
+      projectName,
+      talkTitle: row.toolbox_talks?.title ?? null,
+      heldAt,
+    };
+  });
+
+  return { jobsiteName: jobsite.name, entries, skippedCount };
+};
+
 module.exports = {
   assertGcLinkedProject,
   getOverview,
   listMeetings,
   getMeeting,
   getMeetingPdfUrl,
+  getDefenseBundleEntries,
+  // Exported for services/scorecards.js and services/policyPush.js (Phase 9e)
+  // to reuse rather than re-querying -- no logic change, just widening this
+  // module's surface.
+  listActiveJobsites,
+  listLinkedProjects,
+  listCompletedLogsInWindow,
+  getCompanyNamesByIds,
 };

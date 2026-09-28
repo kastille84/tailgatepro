@@ -10,6 +10,7 @@ import type { Jobsite } from "../../../src/interfaces/jobsite";
 const mockUseOnlineStatus = vi.fn();
 const mockUseCurrentUser = vi.fn();
 const mockUseJobsites = vi.fn();
+const mockUseDownloadDefenseBundle = vi.fn();
 
 vi.mock("../../../src/context/online-status", () => ({
   useOnlineStatus: () => mockUseOnlineStatus(),
@@ -20,6 +21,9 @@ vi.mock("../../../src/hooks/useCurrentUser", () => ({
 vi.mock("../../../src/hooks/useJobsites", () => ({
   useJobsites: () => mockUseJobsites(),
 }));
+vi.mock("../../../src/hooks/useDownloadDefenseBundle", () => ({
+  useDownloadDefenseBundle: () => mockUseDownloadDefenseBundle(),
+}));
 
 // The children have their own tests; stub them to keep this focused on
 // manager state (role gating, archived filter, opening/closing modals).
@@ -29,11 +33,16 @@ vi.mock("../../../src/features/jobsites/JobsiteList", () => ({
     onEdit,
     onManageSubs,
     onManageMembers,
+    onDownloadBundle,
+    isDownloadingBundle,
   }: {
     jobsites: Jobsite[];
     onEdit?: (j: Jobsite) => void;
     onManageSubs: (j: Jobsite) => void;
     onManageMembers?: (j: Jobsite) => void;
+    onDownloadBundle: (j: Jobsite) => void;
+    isDownloadingBundle?: boolean;
+    isOnline: boolean;
   }) => (
     <div data-testid="list">
       {jobsites.map((j) => j.name).join(",")}
@@ -50,6 +59,11 @@ vi.mock("../../../src/features/jobsites/JobsiteList", () => ({
       {jobsites[0] && onManageMembers && (
         <button type="button" onClick={() => onManageMembers(jobsites[0])}>
           stub-members
+        </button>
+      )}
+      {jobsites[0] && (
+        <button type="button" onClick={() => onDownloadBundle(jobsites[0])}>
+          stub-bundle {String(isDownloadingBundle)}
         </button>
       )}
     </div>
@@ -108,6 +122,10 @@ vi.mock("../../../src/features/jobsites/JobsiteMembersModal", () => ({
     </div>
   ),
 }));
+vi.mock("../../../src/ui_comps/progress-modal", () => ({
+  ProgressModal: ({ isOpen }: { isOpen: boolean }) =>
+    isOpen ? <div data-testid="bundle-progress-modal" /> : null,
+}));
 
 const jobsite = (over: Partial<Jobsite>): Jobsite => ({
   id: "j1",
@@ -116,6 +134,7 @@ const jobsite = (over: Partial<Jobsite>): Jobsite => ({
   status: "active",
   archivedAt: null,
   createdBySub: false,
+  plan: "free",
   createdAt: "x",
   subcontractors: [],
   ...over,
@@ -137,6 +156,10 @@ describe("JobsiteManager", () => {
       jobsites: [jobsite({})],
       isLoading: false,
       isError: false,
+    });
+    mockUseDownloadDefenseBundle.mockReturnValue({
+      downloadBundle: vi.fn(),
+      isPending: false,
     });
   });
 
@@ -258,6 +281,30 @@ describe("JobsiteManager", () => {
     renderManager();
 
     expect(screen.queryByRole("button", { name: /new job site/i })).toBeNull();
+  });
+
+  it("wires a Defense Bundle click through to useDownloadDefenseBundle's mutate function", () => {
+    const downloadBundle = vi.fn();
+    mockUseDownloadDefenseBundle.mockReturnValue({ downloadBundle, isPending: true });
+    renderManager();
+
+    expect(screen.getByRole("button", { name: /stub-bundle true/i })).toBeDefined();
+
+    fireEvent.click(screen.getByRole("button", { name: /stub-bundle/i }));
+    expect(downloadBundle).toHaveBeenCalledWith(jobsite({}));
+  });
+
+  it("shows the Defense Bundle progress modal while a bundle download is pending", () => {
+    mockUseDownloadDefenseBundle.mockReturnValue({ downloadBundle: vi.fn(), isPending: true });
+    renderManager();
+
+    expect(screen.getByTestId("bundle-progress-modal")).toBeDefined();
+  });
+
+  it("hides the Defense Bundle progress modal when nothing is downloading", () => {
+    renderManager();
+
+    expect(screen.queryByTestId("bundle-progress-modal")).toBeNull();
   });
 
   it("explains and disables creating while offline", () => {

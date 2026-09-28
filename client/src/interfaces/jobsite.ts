@@ -25,6 +25,9 @@ export interface Jobsite {
   /** True when a subcontractor's join-code link created this jobsite. False
    *  for GC-created and for jobsites of unknown origin. */
   createdBySub: boolean;
+  /** Per-jobsite GC plan (Phase 9b/9e) — `site_pro` unlocks the Defense
+   *  Bundle ZIP export. Not blended with the GC company's own tier. */
+  plan: "free" | "site_pro";
   createdAt: string;
   subcontractors: JobsiteSubcontractor[];
 }

@@ -330,7 +330,7 @@ describe("users service: getUserContext", () => {
 
     // Assert
     expect(usersSelect).toHaveBeenCalledWith(
-      "id, name, role, company_id, companies(tier, company_type)",
+      "id, name, role, company_id, companies!users_company_id_fkey(tier, company_type)",
     );
     expect(usersEq).toHaveBeenCalledWith("id", "auth-user-1");
     expect(result).toEqual({
@@ -404,6 +404,30 @@ describe("users service: getUserContext", () => {
     await expect(getUserContext("auth-user-1")).rejects.toMatchObject({
       statusCode: 404,
       message: "Profile not found",
+    });
+  });
+
+  it("should throw a 404 AppError when the query returns neither data nor an error", async () => {
+    // Arrange
+    usersSingle.mockResolvedValue({ data: null, error: null });
+
+    // Act & Assert
+    await expect(getUserContext("auth-user-1")).rejects.toMatchObject({
+      statusCode: 404,
+      message: "Profile not found",
+    });
+  });
+
+  it("should throw a 502 AppError carrying the original cause when the query fails for any reason other than no rows", async () => {
+    // Arrange
+    const queryError = { code: "PGRST201", message: "ambiguous embed" };
+    usersSingle.mockResolvedValue({ data: null, error: queryError });
+
+    // Act & Assert
+    await expect(getUserContext("auth-user-1")).rejects.toMatchObject({
+      statusCode: 502,
+      message: "Could not load your profile",
+      cause: queryError,
     });
   });
 });

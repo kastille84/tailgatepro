@@ -1,5 +1,6 @@
 // Plain CommonJS — see requireAuth.test.js for why (nested require() sharing).
 const projectsService = require("../services/projects");
+const policyPushService = require("../services/policyPush");
 const {
   listProjects,
   createProject,
@@ -7,6 +8,7 @@ const {
   deleteProject,
   linkGc,
   unlinkGc,
+  getRequiredTopic,
 } = require("./projects");
 
 const listForCompanySpy = vi.spyOn(projectsService, "listForCompany");
@@ -15,6 +17,7 @@ const updateSpy = vi.spyOn(projectsService, "update");
 const removeSpy = vi.spyOn(projectsService, "remove");
 const linkGcSpy = vi.spyOn(projectsService, "linkGc");
 const unlinkGcSpy = vi.spyOn(projectsService, "unlinkGc");
+const getRequiredTopicForProjectSpy = vi.spyOn(policyPushService, "getRequiredTopicForProject");
 
 const project = {
   id: "project-1",
@@ -39,6 +42,7 @@ describe("projects controller", () => {
     removeSpy.mockReset();
     linkGcSpy.mockReset();
     unlinkGcSpy.mockReset();
+    getRequiredTopicForProjectSpy.mockReset();
     req = {
       user: { id: "auth-user-1", companyId: "company-1", role: "foreman" },
       body: {},
@@ -356,6 +360,37 @@ describe("projects controller", () => {
 
       // Act
       await unlinkGc(req, res, next);
+
+      // Assert
+      expect(next).toHaveBeenCalledWith(error);
+      expect(res.status).not.toHaveBeenCalled();
+    });
+  });
+
+  describe("getRequiredTopic", () => {
+    it("should respond 200 with the project's required topic", async () => {
+      // Arrange
+      req.params = { id: "project-1" };
+      const data = { talkId: "talk-1", talkTitle: "Fall Protection", pushedAt: "2026-09-01T00:00:00.000Z" };
+      getRequiredTopicForProjectSpy.mockResolvedValue(data);
+
+      // Act
+      await getRequiredTopic(req, res, next);
+
+      // Assert
+      expect(getRequiredTopicForProjectSpy).toHaveBeenCalledWith("project-1", "company-1");
+      expect(res.status).toHaveBeenCalledWith(200);
+      expect(res.json).toHaveBeenCalledWith({ success: true, data });
+    });
+
+    it("should forward a service error to next()", async () => {
+      // Arrange
+      req.params = { id: "project-1" };
+      const error = new Error("Project not found");
+      getRequiredTopicForProjectSpy.mockRejectedValue(error);
+
+      // Act
+      await getRequiredTopic(req, res, next);
 
       // Assert
       expect(next).toHaveBeenCalledWith(error);

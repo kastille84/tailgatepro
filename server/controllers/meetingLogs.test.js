@@ -2,6 +2,7 @@
 const meetingLogsService = require("../services/meetingLogs");
 const companiesService = require("../services/companies");
 const talksService = require("../services/talks");
+const zipBundleService = require("../services/zipBundle");
 const {
   listMeetings,
   listMeetingMonths,
@@ -11,6 +12,7 @@ const {
   uploadCrewPhoto,
   getCrewPhotoUrl,
   getPdfUrl,
+  getDefenseBundle,
 } = require("./meetingLogs");
 
 const listForCompanySpy = vi.spyOn(meetingLogsService, "listForCompany");
@@ -22,6 +24,8 @@ const completeSpy = vi.spyOn(meetingLogsService, "complete");
 const uploadCrewPhotoSpy = vi.spyOn(meetingLogsService, "uploadCrewPhoto");
 const getCrewPhotoUrlSpy = vi.spyOn(meetingLogsService, "getCrewPhotoUrl");
 const getPdfUrlSpy = vi.spyOn(meetingLogsService, "getPdfUrl");
+const getDefenseBundleEntriesSpy = vi.spyOn(meetingLogsService, "getDefenseBundleEntries");
+const streamBundleSpy = vi.spyOn(zipBundleService, "streamBundle");
 const getCompanySpy = vi.spyOn(companiesService, "getById");
 const getTalkSpy = vi.spyOn(talksService, "getById");
 
@@ -54,6 +58,8 @@ describe("meetingLogs controller", () => {
     uploadCrewPhotoSpy.mockReset();
     getCrewPhotoUrlSpy.mockReset();
     getPdfUrlSpy.mockReset();
+    getDefenseBundleEntriesSpy.mockReset();
+    streamBundleSpy.mockReset();
     getTalkSpy.mockReset().mockResolvedValue({ id: "talk-1" });
     getCompanySpy
       .mockReset()
@@ -73,6 +79,9 @@ describe("meetingLogs controller", () => {
     res = {
       status: vi.fn().mockReturnThis(),
       json: vi.fn().mockReturnThis(),
+      setHeader: vi.fn(),
+      headersSent: false,
+      destroy: vi.fn(),
     };
     next = vi.fn();
   });
@@ -566,6 +575,75 @@ describe("meetingLogs controller", () => {
       // Assert
       expect(next).toHaveBeenCalledWith(error);
       expect(res.status).not.toHaveBeenCalled();
+    });
+  });
+
+  describe("getDefenseBundle", () => {
+    it("should set the zip headers and stream the bundle from the service's entries", async () => {
+      // Arrange
+      getDefenseBundleEntriesSpy.mockResolvedValue({
+        companyName: "Acme Roofing",
+        entries: [{ path: "meeting-1/report.pdf", filename: "acme-riverside-tower.pdf" }],
+        skippedCount: 1,
+      });
+      streamBundleSpy.mockResolvedValue(undefined);
+
+      // Act
+      await getDefenseBundle(req, res, next);
+
+      // Assert
+      expect(getDefenseBundleEntriesSpy).toHaveBeenCalledWith("company-1", {
+        companyType: "subcontractor",
+        tier: "premium",
+      });
+      expect(res.setHeader).toHaveBeenCalledWith("Content-Type", "application/zip");
+      expect(res.setHeader).toHaveBeenCalledWith(
+        "Content-Disposition",
+        'attachment; filename="acme-roofing-defense-bundle.zip"',
+      );
+      expect(streamBundleSpy).toHaveBeenCalledWith(
+        [{ path: "meeting-1/report.pdf", filename: "acme-riverside-tower.pdf" }],
+        res,
+        { skippedCount: 1, header: ["GC / Client", "Project", "Talk", "Held At", "Filename"] },
+      );
+      expect(next).not.toHaveBeenCalled();
+      expect(res.destroy).not.toHaveBeenCalled();
+    });
+
+    it("should forward a service error to next when headers haven't been sent yet", async () => {
+      // Arrange
+      const error = Object.assign(
+        new Error("Upgrade to Trade Pro to download your OSHA Defense Bundle"),
+        { statusCode: 403 },
+      );
+      getDefenseBundleEntriesSpy.mockRejectedValue(error);
+
+      // Act
+      await getDefenseBundle(req, res, next);
+
+      // Assert
+      expect(next).toHaveBeenCalledWith(error);
+      expect(res.destroy).not.toHaveBeenCalled();
+      expect(res.setHeader).not.toHaveBeenCalled();
+    });
+
+    it("should destroy the response instead of calling next when a mid-stream failure happens after headers are sent", async () => {
+      // Arrange
+      getDefenseBundleEntriesSpy.mockResolvedValue({
+        companyName: "Acme Roofing",
+        entries: [],
+        skippedCount: 0,
+      });
+      const streamError = new Error("Could not download the file");
+      streamBundleSpy.mockRejectedValue(streamError);
+      res.headersSent = true;
+
+      // Act
+      await getDefenseBundle(req, res, next);
+
+      // Assert
+      expect(res.destroy).toHaveBeenCalledWith(streamError);
+      expect(next).not.toHaveBeenCalled();
     });
   });
 });

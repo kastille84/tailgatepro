@@ -1,10 +1,9 @@
 // Pure, I/O-free filename formatting — no Express, no Supabase. Same category
 // as composeTalkMarkdown.js: written once so it can be reused by every
 // caller that needs a human-friendly name for a meeting log's generated PDF,
-// not just the single-file signed-URL endpoint that uses it today. The
-// planned "OSHA Defense Bundle" ZIP export (docs/pricing-and-positioning-strategy_V2.md,
-// not built yet) should reuse this for each entry's name rather than
-// reinventing naming.
+// not just the single-file signed-URL endpoint that uses it today. Also
+// reused by the 9e "OSHA Defense Bundle" ZIP export (docs/osha-defense-bundle-design.md)
+// for each entry's name, rather than reinventing naming.
 
 const slugify = (text) =>
   (text ?? "")
@@ -36,4 +35,7 @@ const buildPdfFilename = ({ companyName, projectName, meetingDate, meetingLogId 
   return `${companySlug}-${projectSlug}-${date}-${shortId}.pdf`;
 };
 
-module.exports = { buildPdfFilename };
+// Exported alongside buildPdfFilename so the 9e Defense Bundle ZIP can reuse
+// it for the archive's own top-level filename (a slug of the jobsite name),
+// not just for each entry inside it.
+module.exports = { buildPdfFilename, slugify };

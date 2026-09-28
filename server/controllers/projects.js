@@ -1,4 +1,5 @@
 const projectsService = require("../services/projects");
+const policyPushService = require("../services/policyPush");
 
 // req.user is set by loadUserContext (which runs after requireAuth) — the
 // caller's company always comes from there, never from req.body / req.params.
@@ -82,6 +83,24 @@ exports.deleteProject = async (req, res, next) => {
       companyId: req.user.companyId,
       role: req.user.role,
     });
+    return res.status(200).json({ success: true, data });
+  } catch (error) {
+    return next(error);
+  }
+};
+
+// GET /api/projects/:id/required-topic — the caller's own project's current
+// top-down policy push, if any (Phase 9e, docs/policy-push-design.md). Any
+// authenticated member of the owning company (including a foreman) may read
+// this — it's what the meeting wizard nudges from. No plan gate: it reflects
+// whatever the linked GC currently has pushed, regardless of the GC's own
+// plan (see the design doc's "Known v1 limitations").
+exports.getRequiredTopic = async (req, res, next) => {
+  try {
+    const data = await policyPushService.getRequiredTopicForProject(
+      req.params.id,
+      req.user.companyId,
+    );
     return res.status(200).json({ success: true, data });
   } catch (error) {
     return next(error);

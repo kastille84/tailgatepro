@@ -17,10 +17,24 @@ Resolution legend: **Build** (a Phase 9 item), **Reword** (fix the copy), **Defe
 
 **Update (9a shipped):** every **Reword** resolution below is done. Unbuilt paid features stay on the pricing
 cards with a "Coming soon" tag (`comingSoon` in `client/src/data/plans.ts`); landing/FAQ claims for GPS,
-tamper-evidence, QR, AI, 500+ and 10+ languages were reworded or removed. SMS nudges and the Defense Bundle stay
-as selling points, tagged "Coming soon" on the landing page and pricing cards. The **Build**
+tamper-evidence, QR, AI, 500+ and 10+ languages were reworded or removed. SMS nudges stay a selling point,
+tagged "Coming soon" on the landing page and pricing cards. The **Build**
 and **Defer** items are unchanged and remain open in Phase 9b–9g. "Can't be back-dated" was also removed: the
 server accepts a client `held_at` up to 7 days in the past (`server/utility/heldAt.js`).
+
+**Update (9e Defense Bundle shipped):** the "coming soon" tag was dropped from the "1-click OSHA Defense
+Bundle" pricing-card bullet and the landing comparison table now shows it without the suffix — see the GC
+Site Pro row below and `docs/osha-defense-bundle-design.md`.
+
+**Update (9e scorecards shipped):** the "coming soon" tag was dropped from GC Portfolio's "Cross-project
+subcontractor safety scorecards" pricing-card bullet (kept in `features`) and the matching Pricing FAQ line
+was reworded so only "top-down corporate policy push" is still flagged coming soon — see the Portfolio row
+below and `docs/sub-scorecard-design.md`.
+
+**Update (9e policy push shipped):** the "coming soon" tag was dropped from GC Portfolio's "Top-down
+corporate policy push across all sites" pricing-card bullet (kept in `features`) and the Pricing FAQ line
+was reworded to describe the shipped feature instead of flagging it coming soon — see the Portfolio row
+below and `docs/policy-push-design.md`.
 
 ## Tier-gating fact base
 
@@ -48,7 +62,8 @@ server accepts a client `held_at` up to 7 days in the past (`server/utility/held
 | Trade Free — 30-day in-app history | Implemented (9c) | `meetingLogs.listForCompany` / `getMeeting` / `getPdfUrl` apply `historyDays`; `MeetingHistory.tsx` shows the hidden-count banner | — | — |
 | Trade Free — app watermark | Implemented | `pdfGeneration.js` (footer line for non-premium tiers) | A text footer, not an overlay; no "Claim your free GC portal" CTA (strategy doc §7) | 9g |
 | Trade Pro — up to 8 foremen | Implemented (9c) | as above | Counts foreman-role users + pending foreman invites; admins/safety managers are free | — |
-| Trade Pro — 5-year legal archive | Implemented (9c) | `MeetingHistory.tsx` (`/meetings`), `archiveYears` in `PLAN_LIMITS`; nothing is ever purged | Retention is a policy guarantee (5 yrs, crew photos follow their meeting), not a purge job; no export | — |
+| Trade Pro — 5-year legal archive | Implemented (9c) | `MeetingHistory.tsx` (`/meetings`), `archiveYears` in `PLAN_LIMITS`; nothing is ever purged | Retention is a policy guarantee (5 yrs, crew photos follow their meeting), not a purge job | — |
+| Trade Pro — 1-click OSHA Defense Bundle (ZIP) | Implemented | `services/meetingLogs.js` `getDefenseBundleEntries`, `services/zipBundle.js`, `GET /api/meetings/defense-bundle` | Every completed log the company has ever logged, across every project/GC, plus an `index.csv` (labeled by GC/client, not by the caller's own company); gated on `archiveYears > 0` (Trade Pro/Enterprise). Landed alongside this row rather than being audited as a pre-existing gap — see `docs/sub-defense-bundle-design.md` | — |
 | Trade Pro — custom logo, no watermark | Implemented | `companies.js` controller, `pdfGeneration.js`, `LogoUpload.tsx` | — | — |
 | Trade Pro — 500+ OSHA library | Missing | 34 global talks | ~7% of the claim; licensing question at tasks.md 1749-1754 | Reword (9a) + Build (9e) |
 | Trade Pro — AI Talk Builder | Missing | Only manual authoring (`TalkForm.tsx`) | No LLM code; see tasks.md 1736-1741 | Reword (9a) + Build (9e) |
@@ -69,9 +84,9 @@ server accepts a client `held_at` up to 7 days in the past (`server/utility/held
 | Site Pro — sponsor unlimited subs on one site | Partial (9d) | `services/sponsorship.js`, `jobsites.plan` | A sub on a live `site_pro` jobsite resolves as Trade Pro; enforced, but no billing can set `jobsites.plan` yet, so still tagged "coming soon" | Defer (9f) |
 | Site Pro — SMS nudges, Mondays 7:00 AM | Missing | Only cron in `server.js` is a leftover 5am job | No SMS provider, phone storage or scheduler | Build (9e) |
 | Site Pro — Procore & Autodesk ACC sync | Missing | No code | Copy only | Defer (9f) |
-| Site Pro — 1-click OSHA Defense Bundle (ZIP) | Missing | Only a comment in `pdfFilename.js` | No zip dependency or route; see tasks.md 1158 | Build (9e) |
-| Portfolio — cross-project scorecards | Partial | `/api/gc/overview`, `utility/compliance.js` | Single-day compliance view; no scoring or history | Build (9e) |
-| Portfolio — top-down policy push | Missing | No code or schema | — | Build (9e) |
+| Site Pro — 1-click OSHA Defense Bundle (ZIP) | Implemented (9e) | `services/gcDashboard.js` `getDefenseBundleEntries`, `services/zipBundle.js`, `GET /api/gc/jobsites/:id/defense-bundle` | Streams every completed log's PDF for one jobsite plus an `index.csv`, gated on `jobsites.plan === "site_pro"`; Portfolio's separate "Portfolio-Wide Search" version is unbuilt | — |
+| Portfolio — cross-project scorecards | Implemented (9e) | `services/scorecards.js`, `utility/subScorecard.js`, `utility/rollingWindow.js`, `GET /api/gc/subcontractors[/:companyId/scorecard]` | Rolling 30-day daily-compliance-rate score per sub, averaged across every jobsite that sub has with the GC, with a per-jobsite breakdown; archived jobsites excluded from scoring (see `docs/sub-scorecard-design.md`) | — |
+| Portfolio — top-down policy push | Implemented (9e) | `services/policyPush.js`, three new `companies` columns (`required_talk_id`/`required_talk_pushed_at`/`required_talk_pushed_by`), `GET/POST/DELETE /api/gc/policy-push`, `GET /api/projects/:id/required-topic` | One current required topic per GC, pushed live across every active jobsite; a soft nudge in the meeting wizard (never blocks logging a different talk); manual clear/replace only, no auto-expiry (see `docs/policy-push-design.md`) | — |
 | Portfolio — Superintendent vs Safety Director roles | Implemented (9d-2) | `server/constants/roles.js` (`superintendent`, `SITE_MANAGER_ROLES`), `services/siteScope.js`, `services/jobsiteMembers.js`, `JobsiteMembersModal.tsx` | `superintendent` is scoped to its assigned jobsites via `jobsite_members` (dashboard/meetings/PDF/roster all 404 outside scope); `safety_manager` relabeled "Safety Director"; Portfolio-only, 403 `PLAN_LIMIT` otherwise. Run the `Supabase_SQL.sql` ALTERs before relying on this in prod | — |
 | Portfolio — custom company safety form/manual builder | Missing | No code | — | Build (9e) |
 | Portfolio — 10 sites vs unlimited | Implemented (9d) | `effectiveJobsiteLimit` via `assertJobsiteAvailable` | Cap 10 (premium) / unlimited (enterprise); no billing sets the tier yet | — |

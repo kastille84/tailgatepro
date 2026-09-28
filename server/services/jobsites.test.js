@@ -14,7 +14,7 @@ const {
 } = require("./jobsites");
 
 const JOBSITE_COLUMNS =
-  "id, gc_company_id, name, status, archived_at, origin, created_at";
+  "id, gc_company_id, name, status, archived_at, origin, plan, created_at";
 const LIST_SELECT = `${JOBSITE_COLUMNS}, jobsite_subcontractors(id, sub_company_id, invited_email, accepted_at, companies(name))`;
 const ROSTER_COLUMNS =
   "id, jobsite_id, sub_company_id, invited_email, token, expires_at, accepted_at";
@@ -26,6 +26,7 @@ const dbRow = {
   status: "active",
   archived_at: null,
   origin: "gc",
+  plan: "free",
   created_at: "2026-01-01T00:00:00.000Z",
 };
 
@@ -36,6 +37,7 @@ const mappedJobsite = {
   status: "active",
   archivedAt: null,
   createdBySub: false,
+  plan: "free",
   createdAt: "2026-01-01T00:00:00.000Z",
 };
 

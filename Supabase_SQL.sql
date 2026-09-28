@@ -382,3 +382,15 @@ CREATE TABLE IF NOT EXISTS jobsite_members (
 ALTER TABLE jobsite_members ENABLE ROW LEVEL SECURITY;
 
 CREATE INDEX IF NOT EXISTS idx_jobsite_members_user ON jobsite_members (user_id);
+
+-- 15. Companies: top-down corporate policy push (Phase 9e, GC Portfolio only,
+-- docs/policy-push-design.md) — the GC's current required safety topic, one
+-- row's worth of "current state," not a history. Cleared/replaced by the GC,
+-- never auto-expired; NULL required_talk_id means no push is currently
+-- active. Declared here (after tables 5 and 2) rather than in table 1's
+-- CREATE TABLE above because it references toolbox_talks and users, neither
+-- of which exists yet at that point in this file (same reasoning as
+-- projects.jobsite_id above).
+ALTER TABLE companies ADD COLUMN IF NOT EXISTS required_talk_id UUID REFERENCES toolbox_talks(id) ON DELETE SET NULL;
+ALTER TABLE companies ADD COLUMN IF NOT EXISTS required_talk_pushed_at TIMESTAMPTZ;
+ALTER TABLE companies ADD COLUMN IF NOT EXISTS required_talk_pushed_by UUID REFERENCES users(id) ON DELETE SET NULL;

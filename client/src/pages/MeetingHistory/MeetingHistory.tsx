@@ -1,16 +1,22 @@
+import { HiOutlineDownload } from "react-icons/hi";
 import { Link, useSearchParams } from "react-router-dom";
 
 import { useAuth } from "../../context/auth";
+import { useOnlineStatus } from "../../context/online-status";
 import { useCurrentUser } from "../../hooks/useCurrentUser";
+import { useDownloadOwnBundle } from "../../hooks/useDownloadOwnBundle";
 import { useMeetingMonths } from "../../hooks/useMeetingMonths";
 import {
   isValidMonth,
   MonthCards,
   MonthMeetings,
 } from "../../features/meeting-history";
+import { Button } from "../../ui_comps/button";
 import { Footer } from "../../ui_comps/footer";
+import { ProgressModal } from "../../ui_comps/progress-modal";
 import { Spinner } from "../../ui_comps/spinner";
 import {
+  StyledBundleRow,
   StyledContainer,
   StyledError,
   StyledEyebrow,
@@ -32,12 +38,16 @@ import {
  *  browser Back button returns to the cards) lists that month's completed
  *  talks with a signed-PDF button each. Free plans only see the last 30 days
  *  and get an upgrade banner (with a hidden-count once older logs exist); paid
- *  plans see a retention note instead. */
+ *  plans see a retention note instead and a live "Download Defense Bundle"
+ *  button — every completed log as one indexed ZIP
+ *  (docs/sub-defense-bundle-design.md); Free sees the same button disabled. */
 export const MeetingHistory = () => {
   const { user, loading } = useAuth();
+  const { isOnline } = useOnlineStatus();
   const { limits } = useCurrentUser();
   const { months, hiddenCount, historyDays, isLoading, isError } =
     useMeetingMonths();
+  const { downloadBundle, isPending: isDownloadingBundle } = useDownloadOwnBundle();
   const [searchParams, setSearchParams] = useSearchParams();
 
   if (loading) {
@@ -101,6 +111,33 @@ export const MeetingHistory = () => {
             </StyledRetentionNote>
           )}
 
+          <StyledBundleRow>
+            {archiveYears > 0 ? (
+              <Button
+                variant="outline"
+                size="sm"
+                disabled={!isOnline}
+                loading={isDownloadingBundle}
+                leftIcon={<HiOutlineDownload />}
+                onClick={() => downloadBundle()}
+                aria-label="Download your OSHA Defense Bundle"
+                title="Download your OSHA Defense Bundle"
+              >
+                Download Defense Bundle
+              </Button>
+            ) : (
+              <Button
+                variant="primary"
+                size="sm"
+                leftIcon={<HiOutlineDownload />}
+                disabled={true}
+                aria-label="Download your OSHA Defense Bundle"
+              >
+                Download Defense Bundle
+              </Button>
+            )}
+          </StyledBundleRow>
+
           {selectedMonth ? (
             <MonthMeetings
               month={selectedMonth}
@@ -126,6 +163,12 @@ export const MeetingHistory = () => {
       </StyledSection>
 
       <Footer />
+
+      <ProgressModal
+        isOpen={isDownloadingBundle}
+        title="Preparing your Defense Bundle"
+        message="Zipping up your meeting logs and PDFs — this can take a minute or two if you have a lot of history. Please don't close this tab."
+      />
     </StyledPage>
   );
 };

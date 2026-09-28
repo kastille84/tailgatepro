@@ -2,6 +2,7 @@ import React from "react";
 import { describe, it, expect, vi } from "vitest";
 import { render, screen, fireEvent } from "@testing-library/react";
 import { ThemeProvider } from "styled-components";
+import { MemoryRouter } from "react-router-dom";
 
 import { JobsiteList } from "../../../src/features/jobsites/JobsiteList";
 import theme from "../../../src/styles/theme";
@@ -14,6 +15,7 @@ const base: Jobsite = {
   status: "active",
   archivedAt: null,
   createdBySub: false,
+  plan: "free",
   createdAt: "x",
   subcontractors: [
     { id: "s1", email: "a@a.com", status: "accepted", companyName: "A Co" },
@@ -26,9 +28,17 @@ const renderList = (
   props: Partial<React.ComponentProps<typeof JobsiteList>> = {},
 ) =>
   render(
-    <ThemeProvider theme={theme}>
-      <JobsiteList jobsites={[base]} onManageSubs={vi.fn()} {...props} />
-    </ThemeProvider>,
+    <MemoryRouter>
+      <ThemeProvider theme={theme}>
+        <JobsiteList
+          jobsites={[base]}
+          onManageSubs={vi.fn()}
+          onDownloadBundle={vi.fn()}
+          isOnline
+          {...props}
+        />
+      </ThemeProvider>
+    </MemoryRouter>,
   );
 
 describe("JobsiteList", () => {
@@ -87,7 +97,9 @@ describe("JobsiteList", () => {
 
   it("omits Team when no onManageMembers is provided", () => {
     renderList();
-    expect(screen.queryByRole("button", { name: /^superintendents/i })).toBeNull();
+    expect(
+      screen.queryByRole("button", { name: /^superintendents/i }),
+    ).toBeNull();
   });
 
   it("reports a Team click with the jobsite when onManageMembers is provided", () => {
@@ -99,5 +111,61 @@ describe("JobsiteList", () => {
     );
 
     expect(onManageMembers).toHaveBeenCalledWith(base);
+  });
+
+  it("shows a disabled Defense Bundle button on a non-Site-Pro jobsite", () => {
+    renderList({ jobsites: [{ ...base, plan: "free" }] });
+
+    expect(
+      (
+        screen.getByRole("button", {
+          name: "Download OSHA Defense Bundle for Riverside",
+        }) as HTMLButtonElement
+      ).disabled,
+    ).toBe(true);
+    expect(screen.queryByRole("link", { name: /defense bundle/i })).toBeNull();
+  });
+
+  it("reports a Defense Bundle click with the jobsite on a Site Pro jobsite", () => {
+    const onDownloadBundle = vi.fn();
+    renderList({ jobsites: [{ ...base, plan: "site_pro" }], onDownloadBundle });
+
+    fireEvent.click(
+      screen.getByRole("button", {
+        name: "Download OSHA Defense Bundle for Riverside",
+      }),
+    );
+
+    expect(onDownloadBundle).toHaveBeenCalledWith({
+      ...base,
+      plan: "site_pro",
+    });
+  });
+
+  it("disables the Defense Bundle button while offline", () => {
+    renderList({ jobsites: [{ ...base, plan: "site_pro" }], isOnline: false });
+
+    expect(
+      (
+        screen.getByRole("button", {
+          name: "Download OSHA Defense Bundle for Riverside",
+        }) as HTMLButtonElement
+      ).disabled,
+    ).toBe(true);
+  });
+
+  it("disables the Defense Bundle button while a download is in flight", () => {
+    renderList({
+      jobsites: [{ ...base, plan: "site_pro" }],
+      isDownloadingBundle: true,
+    });
+
+    expect(
+      (
+        screen.getByRole("button", {
+          name: "Download OSHA Defense Bundle for Riverside",
+        }) as HTMLButtonElement
+      ).disabled,
+    ).toBe(true);
   });
 });

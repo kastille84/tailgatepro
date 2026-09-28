@@ -6,6 +6,7 @@ import {
   LogoPro,
   NavLinks,
   NavAnchor,
+  ButtonAnchor,
   MenuButton,
 } from "./styles";
 import { Button } from "../button";
@@ -61,7 +62,13 @@ export const Navbar: React.FC = () => {
             <NavAnchor to="/dashboard">Dashboard</NavAnchor>
             <NavAnchor to="/projects">{isGc ? "Job Sites" : "Projects"}</NavAnchor>
             {!isGc && <NavAnchor to="/talks">Toolbox Talks</NavAnchor>}
-            {!isGc && <NavAnchor to="/meetings">History</NavAnchor>}
+            {!isGc && (
+              <NavAnchor to="/meetings" end>
+                History
+              </NavAnchor>
+            )}
+            {isGc && <NavAnchor to="/gc/subcontractors">Subcontractors</NavAnchor>}
+            {isGc && <NavAnchor to="/gc/policy-push">Policy Push</NavAnchor>}
             <NavAnchor to="/settings">Settings</NavAnchor>
             <Button
               size="sm"
@@ -76,14 +83,14 @@ export const Navbar: React.FC = () => {
 
         {!loading && !user && (
           <>
-            <NavAnchor to="/login">
+            <ButtonAnchor to="/login">
               <Button size="sm" variant="outline">
                 Login
               </Button>
-            </NavAnchor>
-            <NavAnchor to="/signup">
+            </ButtonAnchor>
+            <ButtonAnchor to="/signup">
               <Button size="sm">Sign Up</Button>
-            </NavAnchor>
+            </ButtonAnchor>
           </>
         )}
 

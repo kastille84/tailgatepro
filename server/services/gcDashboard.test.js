@@ -3,12 +3,14 @@ const { supabase } = require("../utility/supabaseClient");
 const companiesService = require("./companies");
 const storageService = require("./storage");
 const subAccessService = require("./subAccess");
+const jobsitesService = require("./jobsites");
 const {
   assertGcLinkedProject,
   getOverview,
   listMeetings,
   getMeeting,
   getMeetingPdfUrl,
+  getDefenseBundleEntries,
 } = require("./gcDashboard");
 
 const PROJECT_COLUMNS =
@@ -898,6 +900,179 @@ describe("gcDashboard service: getMeeting / getMeetingPdfUrl", () => {
       await expect(getMeetingPdfUrl("meeting-1", "gc-1")).rejects.toMatchObject({
         statusCode: 404,
       });
+    });
+  });
+});
+
+describe("gcDashboard service: getDefenseBundleEntries", () => {
+  let getOwnedJobsiteSpy;
+  let projectsOrder;
+  let projectsEq;
+  let projectsSelect;
+  let logsOrder;
+  let logsNot;
+  let logsIn;
+  let logsSelect;
+  let companiesIn;
+  let companiesSelect;
+
+  const linkedProject = (overrides) => ({
+    id: "project-1",
+    owner_company_id: "sub-1",
+    jobsite_id: "jobsite-1",
+    name: "Riverside Tower",
+    status: "active",
+    archived_at: null,
+    created_at: "2026-09-01T00:00:00.000Z",
+    ...overrides,
+  });
+
+  const dbLog = (overrides) => ({
+    id: "meeting-1",
+    project_id: "project-1",
+    company_id: "sub-1",
+    held_at: "2026-09-21T14:00:00.000Z",
+    completed_at: "2026-09-21T14:05:00.000Z",
+    final_pdf_url: "meeting-1/report.pdf",
+    toolbox_talks: { title: "Fall Protection" },
+    ...overrides,
+  });
+
+  beforeEach(() => {
+    getOwnedJobsiteSpy = vi
+      .spyOn(jobsitesService, "getOwnedJobsite")
+      .mockReset()
+      .mockResolvedValue({ id: "jobsite-1", name: "Riverside Tower", plan: "site_pro" });
+
+    projectsOrder = vi.fn().mockResolvedValue({ data: [linkedProject()], error: null });
+    projectsEq = vi.fn(() => ({ order: projectsOrder }));
+    projectsSelect = vi.fn(() => ({ eq: projectsEq }));
+
+    logsOrder = vi.fn().mockResolvedValue({ data: [dbLog()], error: null });
+    logsNot = vi.fn(() => ({ order: logsOrder }));
+    logsIn = vi.fn(() => ({ not: logsNot }));
+    logsSelect = vi.fn(() => ({ in: logsIn }));
+
+    companiesIn = vi.fn().mockResolvedValue({
+      data: [{ id: "sub-1", name: "Acme Roofing" }],
+      error: null,
+    });
+    companiesSelect = vi.fn(() => ({ in: companiesIn }));
+
+    fromSpy.mockReset();
+    fromSpy.mockImplementation((table) => {
+      if (table === "projects") return { select: projectsSelect };
+      if (table === "meeting_logs") return { select: logsSelect };
+      if (table === "companies") return { select: companiesSelect };
+      throw new Error(`Unexpected table: ${table}`);
+    });
+  });
+
+  it("should return the jobsite name and one entry per completed log with a PDF, oldest held first", async () => {
+    // Act
+    const result = await getDefenseBundleEntries("jobsite-1", "gc-1");
+
+    // Assert
+    expect(getOwnedJobsiteSpy).toHaveBeenCalledWith("jobsite-1", "gc-1", null);
+    expect(logsIn).toHaveBeenCalledWith("project_id", ["project-1"]);
+    expect(logsNot).toHaveBeenCalledWith("completed_at", "is", null);
+    expect(logsOrder).toHaveBeenCalledWith("held_at", { ascending: true });
+    expect(result).toEqual({
+      jobsiteName: "Riverside Tower",
+      skippedCount: 0,
+      entries: [
+        {
+          path: "meeting-1/report.pdf",
+          filename: "acme-roofing-riverside-tower-2026-09-21-meeting1.pdf",
+          companyName: "Acme Roofing",
+          projectName: "Riverside Tower",
+          talkTitle: "Fall Protection",
+          heldAt: "2026-09-21T14:00:00.000Z",
+        },
+      ],
+    });
+  });
+
+  it("should throw a 403 PLAN_LIMIT when the jobsite isn't on Site Pro, without querying anything else", async () => {
+    // Arrange
+    getOwnedJobsiteSpy.mockResolvedValue({ id: "jobsite-1", name: "Riverside Tower", plan: "free" });
+
+    // Act & Assert
+    await expect(getDefenseBundleEntries("jobsite-1", "gc-1")).rejects.toMatchObject({
+      statusCode: 403,
+      data: { code: "PLAN_LIMIT" },
+    });
+    expect(fromSpy).not.toHaveBeenCalled();
+  });
+
+  it("should propagate a 404 when the jobsite isn't owned/allowed", async () => {
+    // Arrange
+    const notFound = Object.assign(new Error("Jobsite not found"), { statusCode: 404 });
+    getOwnedJobsiteSpy.mockRejectedValue(notFound);
+
+    // Act & Assert
+    await expect(getDefenseBundleEntries("jobsite-1", "gc-1")).rejects.toBe(notFound);
+  });
+
+  it("should exclude a locked sub's projects and 404 when nothing is left to bundle", async () => {
+    // Arrange
+    unlockedSpy.mockResolvedValue(new Set(["someone-else"]));
+
+    // Act & Assert
+    await expect(getDefenseBundleEntries("jobsite-1", "gc-1")).rejects.toMatchObject({
+      statusCode: 404,
+      message:
+        "No completed meeting logs with a generated PDF are available yet for this job site.",
+    });
+    expect(logsSelect).not.toHaveBeenCalled();
+  });
+
+  it("should 404 when the jobsite has no linked projects at all", async () => {
+    // Arrange
+    projectsOrder.mockResolvedValue({ data: [], error: null });
+
+    // Act & Assert
+    await expect(getDefenseBundleEntries("jobsite-1", "gc-1")).rejects.toMatchObject({
+      statusCode: 404,
+    });
+    expect(logsSelect).not.toHaveBeenCalled();
+  });
+
+  it("should skip a completed log with no PDF yet and report it in skippedCount", async () => {
+    // Arrange
+    logsOrder.mockResolvedValue({
+      data: [dbLog(), dbLog({ id: "meeting-2", final_pdf_url: null })],
+      error: null,
+    });
+
+    // Act
+    const result = await getDefenseBundleEntries("jobsite-1", "gc-1");
+
+    // Assert
+    expect(result.skippedCount).toBe(1);
+    expect(result.entries).toHaveLength(1);
+  });
+
+  it("should 404 when every completed log is missing a PDF", async () => {
+    // Arrange
+    logsOrder.mockResolvedValue({ data: [dbLog({ final_pdf_url: null })], error: null });
+
+    // Act & Assert
+    await expect(getDefenseBundleEntries("jobsite-1", "gc-1")).rejects.toMatchObject({
+      statusCode: 404,
+      message:
+        "No completed meeting logs with a generated PDF are available yet for this job site.",
+    });
+  });
+
+  it("should throw a 502 when the meeting_logs query fails", async () => {
+    // Arrange
+    logsOrder.mockResolvedValue({ data: null, error: new Error("db down") });
+
+    // Act & Assert
+    await expect(getDefenseBundleEntries("jobsite-1", "gc-1")).rejects.toMatchObject({
+      statusCode: 502,
+      message: "Could not load meeting logs",
     });
   });
 });

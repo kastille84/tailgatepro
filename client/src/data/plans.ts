@@ -38,6 +38,7 @@ export const SUB_PLANS: Plan[] = [
       "Write and share your own custom talks",
       "Translate custom talks and read them aloud in multiple languages",
       "5-year legal archive for OSHA audits",
+      "1-click OSHA Defense Bundle — download every log as one ZIP",
       "Expanded OSHA talk library",
       "AI Talk Builder",
     ],
@@ -96,7 +97,6 @@ export const GC_PLANS: Plan[] = [
       "Sponsor unlimited subcontractors on one site",
       "Automated SMS nudges — 7:00 AM every Monday (single site)",
       "Procore & Autodesk ACC sync — single project",
-      "1-click OSHA Defense Bundle for the site (indexed ZIP)",
     ],
   },
   {
@@ -113,10 +113,6 @@ export const GC_PLANS: Plan[] = [
       "Multi-manager roles — Superintendent vs Safety Director",
       "Custom company safety form & manual builder",
     ],
-    comingSoon: [
-      "Cross-project subcontractor safety scorecards",
-      "Top-down corporate policy push across all sites",
-      "Custom company safety form & manual builder",
-    ],
+    comingSoon: ["Custom company safety form & manual builder"],
   },
 ];

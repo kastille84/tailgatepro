@@ -1,8 +1,16 @@
 // Plain CommonJS — see requireAuth.test.js for why (nested require() sharing).
 const { supabase } = require("../utility/supabaseClient");
+const companiesService = require("./companies");
 const { getAllowedJobsiteIds, isJobsiteAllowed } = require("./siteScope");
 
 const fromSpy = vi.spyOn(supabase, "from");
+// Shared by assertSiteRolesAvailable and assertScorecardsAvailable below --
+// vi.spyOn on the same method a second time wraps the first spy instead of
+// replacing it, so a second, independently-configured spy would leave the
+// first one's mockResolvedValue never actually reached (a real regression
+// hit while adding assertScorecardsAvailable's tests: they'd silently fall
+// through to the real, unmocked companiesService.getById).
+const getCompanySpy = vi.spyOn(companiesService, "getById");
 
 const membersQuery = (result) => {
   const query = {
@@ -85,9 +93,7 @@ describe("siteScope service: isJobsiteAllowed", () => {
 });
 
 describe("siteScope service: assertSiteRolesAvailable", () => {
-  const companiesService = require("./companies");
   const { assertSiteRolesAvailable } = require("./siteScope");
-  const getCompanySpy = vi.spyOn(companiesService, "getById");
 
   it.each(["premium", "enterprise"])("passes for a GC Portfolio company (tier %s)", async (tier) => {
     getCompanySpy.mockReset().mockResolvedValue({ id: "gc-1", companyType: "gc", tier });
@@ -105,5 +111,55 @@ describe("siteScope service: assertSiteRolesAvailable", () => {
       statusCode: 403,
       data: { code: "PLAN_LIMIT" },
     });
+  });
+});
+
+describe("siteScope service: assertScorecardsAvailable", () => {
+  const { assertScorecardsAvailable } = require("./siteScope");
+
+  it.each(["premium", "enterprise"])("passes for a GC Portfolio company (tier %s)", async (tier) => {
+    getCompanySpy.mockReset().mockResolvedValue({ id: "gc-1", companyType: "gc", tier });
+
+    await expect(assertScorecardsAvailable("gc-1")).resolves.toBeUndefined();
+  });
+
+  it.each([
+    ["gc", "basic"],
+    ["subcontractor", "premium"],
+  ])("throws a 403 PLAN_LIMIT for a %s company on tier %s", async (companyType, tier) => {
+    getCompanySpy.mockReset().mockResolvedValue({ id: "c-1", companyType, tier });
+
+    await expect(assertScorecardsAvailable("c-1")).rejects.toMatchObject({
+      statusCode: 403,
+      data: { code: "PLAN_LIMIT" },
+    });
+  });
+});
+
+describe("siteScope service: assertPolicyPushAvailable", () => {
+  const { assertPolicyPushAvailable } = require("./siteScope");
+
+  it.each(["premium", "enterprise"])("passes for a GC Portfolio company (tier %s)", async (tier) => {
+    getCompanySpy.mockReset().mockResolvedValue({ id: "gc-1", companyType: "gc", tier });
+
+    await expect(assertPolicyPushAvailable("gc-1")).resolves.toBeUndefined();
+  });
+
+  it.each([
+    ["gc", "basic"],
+    ["subcontractor", "premium"],
+  ])("throws a 403 PLAN_LIMIT for a %s company on tier %s", async (companyType, tier) => {
+    getCompanySpy.mockReset().mockResolvedValue({ id: "c-1", companyType, tier });
+
+    await expect(assertPolicyPushAvailable("c-1")).rejects.toMatchObject({
+      statusCode: 403,
+      data: { code: "PLAN_LIMIT" },
+    });
+  });
+
+  it("propagates a 502 from the company lookup", async () => {
+    getCompanySpy.mockReset().mockRejectedValue({ statusCode: 502, message: "Could not load the company" });
+
+    await expect(assertPolicyPushAvailable("c-1")).rejects.toMatchObject({ statusCode: 502 });
   });
 });

@@ -47,6 +47,9 @@ import { MeetingHistory } from "./pages/MeetingHistory";
 import { Settings } from "./pages/Settings";
 import { GcDashboard } from "./pages/GcDashboard";
 import { GcMeetingReport } from "./pages/GcMeetingReport";
+import { GcSubcontractors } from "./pages/GcSubcontractors";
+import { GcSubcontractorDetail } from "./pages/GcSubcontractorDetail";
+import { GcPolicyPush } from "./pages/GcPolicyPush";
 
 // Pins Navbar + SyncStatusBanner together as one scroll-fixed block, so the
 // banner never scrolls away from the nav it sits under.
@@ -123,6 +126,18 @@ function App() {
                         <Route
                           path="/gc/meetings/:id/report"
                           element={<GcMeetingReport />}
+                        ></Route>
+                        <Route
+                          path="/gc/subcontractors"
+                          element={<GcSubcontractors />}
+                        ></Route>
+                        <Route
+                          path="/gc/subcontractors/:companyId"
+                          element={<GcSubcontractorDetail />}
+                        ></Route>
+                        <Route
+                          path="/gc/policy-push"
+                          element={<GcPolicyPush />}
                         ></Route>
                       </Route>
                     </Route>
