@@ -61,7 +61,7 @@ describe("PricingTeaser", () => {
       </MemoryRouter>,
     );
 
-    const unbuilt = screen.getByText("Custom safety manual upload");
+    const unbuilt = screen.getByText("Procore, JobTread & QuickBooks sync");
     expect(within(unbuilt).getByText("Coming soon")).toBeDefined();
 
     const built = screen.getByText("Full offline PWA capabilities");

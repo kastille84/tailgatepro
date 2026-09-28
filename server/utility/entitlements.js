@@ -97,8 +97,8 @@ const hasFullLibrary = (companyType, tier) =>
   getLimits(companyType, tier).libraryAccess === "full";
 
 // Authoring company talks is open to every subcontractor plan (unchanged); a GC
-// needs GC Portfolio (premium/enterprise) -- "Custom company safety form &
-// manual builder" (client/src/data/plans.ts). A GC's talks are shown to every
+// needs GC Portfolio (premium/enterprise) -- "Custom company safety talks
+// shared with every sub" (client/src/data/plans.ts). A GC's talks are shown to every
 // sub on its active jobsites (docs/company-talks-design.md).
 const canAuthorCompanyTalks = (companyType, tier) =>
   companyType !== "gc" || getLimits(companyType, tier).planId === "gc-portfolio";

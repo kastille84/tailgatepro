@@ -11,10 +11,11 @@ A GC on **GC Portfolio** authors *company talks* — ordinary toolbox talks (sam
 as a subcontractor's custom talk) that are visible to, and loggable by, every subcontractor working
 for that GC. Policy push can push one of them as the required topic.
 
-**Out of scope for v1** (still open in `docs/tasks.md`): a free-form form builder (arbitrary fields,
-checklists, incident/near-miss forms) and a structured manual builder. Both need a new schema, a
-renderer and PDF support. The pricing copy still says "form & manual builder", so its `comingSoon`
-tag stays until those ship or the wording is changed.
+**Not built — deferred**: a free-form form builder (arbitrary fields, checklists, incident/near-miss
+forms) and a structured manual builder. Both need a new schema, a renderer and PDF support, and overlap
+heavily with Procore/SafetyCulture. The pricing bullet was reworded to "Custom company safety talks
+shared with every sub" and its `comingSoon` tag removed, so nothing is promised. The parked design is at
+the bottom of this doc ("Deferred: form builder").
 
 ## Why it needs no new tables
 
@@ -39,7 +40,7 @@ invite grants nothing. The GC branch is **not** narrowed by `is_core` (that flag
 global library), so Trade Free subs see GC talks too.
 
 `services/talkVisibility.resolveTalkVisibility(user)` bundles `{ fullLibrary, gcCompanyIds }` for the
-controllers (`talks`, and `meetingLogs.createMeeting`'s Trade Free check). A GC gets
+controllers (`talks`, and `meetingLogs.createMeeting`'s talk check, which runs on every plan). A GC gets
 `gcCompanyIds: []` — its own talks are already covered by rule 2.
 
 PostgREST `or` filters can't hold a subquery, so the ids are resolved first and interpolated. They
@@ -93,8 +94,44 @@ guard stays the authority.
   after the sub is removed from the jobsite.
 - A GC that downgrades off Portfolio keeps its existing talks visible to subs; only authoring is gated.
 - Deleting a pushed company talk (never logged) silently clears the push (`ON DELETE SET NULL`).
-- `meetingLogs.createMeeting` only checks talk visibility for Trade Free callers (Phase 9c); a paid
-  sub can still log any talk id that exists. Pre-existing — not widened here, but company talks make
-  it more relevant.
+- `meetingLogs.createMeeting` checks talk visibility for every plan (it used to check only Trade Free, so
+  a paid sub could log any talk id that existed). A log created offline for a GC talk therefore 404s on
+  flush if the sub's access ended in between (jobsite archived, sub removed) — same as Trade Free always did.
 - Client `talkOwnership` is deliberately permissive while the caller's company id is unknown
   (loading/offline) so editing your own talks offline keeps working; the server is the authority.
+
+## Deferred: form builder
+
+Decided 2026-09-28: **not built, not promised.** Reasons: Procore (Forms, Inspections, Incidents,
+Observations) and SafetyCulture already cover generic safety forms, a GC on Procore is unlikely to rebuild
+its forms here, and a competing form engine muddies the planned Procore integration (Phase 9f). The
+product's edge is sub-first toolbox talks (vetted library, quiz, signed and locked PDF, offline PWA). Revisit
+after 9f or on real customer demand. If revisited, a cheaper option is 2-3 fixed-shape templates
+(pre-task plan/JHA, near-miss, equipment checklist) with light customization instead of an arbitrary builder.
+
+Design already worked out, so it isn't re-derived:
+
+- **Storage:** a new `form_templates` table (`id` client UUID, `company_id`, `title`, `description`,
+  `fields` JSONB, `requires_crew_signoff`, `version`). A filled-out form is a `meeting_logs` row with
+  `kind = 'form'` (default `'talk'`), `form_template_id` (FK, `ON DELETE SET NULL`), `form_snapshot` JSONB
+  and `responses` JSONB. Signatures, photos, the offline outbox, the PDF queue, the GC dashboard and the
+  defense bundle are reused.
+- **Snapshot:** the client sends the snapshot it actually rendered, and the server validates its shape and
+  the responses against it. That is the audit record when a template is edited while a foreman is offline,
+  and it removes the "logged = immutable" lock for forms (templates stay freely editable/deletable).
+- **Fields:** `{ id (client UUID, stable across edits), type, label, helpText?, required, options? }`;
+  types short/long text, number, date/time, single/multi-select, yes/no/N-A, section heading. Cap fields
+  and options per template.
+- **Gating:** GC Portfolio only, `admin`/`safety_manager` to author (same as company talks); every sub linked
+  to the GC (`subAccess.listAcceptedGcIds`) can fill. Check form visibility for every plan, not just Trade Free.
+- **Fill model:** one filer plus optional crew sign-off per template. The filer's signature satisfies
+  `meetingLogs.complete()`'s at-least-one-signature rule.
+- **Sync:** no new `SyncEntity`; the payload rides the existing `meeting_log` create, which fires at the end
+  of the wizard. Template authoring online-only, with a Dexie cache for offline filling.
+- **Compliance:** form logs must not count toward daily toolbox-talk compliance or scorecards (filter
+  `kind = 'talk'` in `gcDashboard.listCompletedLogsInWindow`). Policy push is already `talk_id` based.
+- **Consumers needing title fallbacks:** `gcDashboard.toMeetingSummary`/`getMeeting`,
+  `getDefenseBundleEntries` and `utility/buildBundleIndex.js`, the sub-side bundle in
+  `services/meetingLogs.js`, client `MonthMeetings.tsx` and `SubMeetingsModal.tsx` (otherwise "Untitled talk").
+- **Wizard:** the talk step becomes a Talks | Forms pick, a `fill` step replaces `TalkPresenter`, the hard-coded
+  "Step N of 6" eyebrows become derived, and `SignaturesStep` caps at one signer when crew sign-off isn't required.

@@ -308,15 +308,31 @@ describe("meetingLogs controller", () => {
       expect(next).not.toHaveBeenCalled();
     });
 
-    it("should not check talk visibility for a plan with the full library", async () => {
+    it("should check talk visibility for a plan with the full library too", async () => {
       // Arrange
+      const visibility = { fullLibrary: true, gcCompanyIds: [] };
+      resolveVisibilitySpy.mockResolvedValue(visibility);
       createSpy.mockResolvedValue(meeting);
 
       // Act
       await createMeeting(req, res, next);
 
       // Assert
-      expect(getTalkSpy).not.toHaveBeenCalled();
+      expect(getTalkSpy).toHaveBeenCalledWith("talk-1", "company-1", visibility);
+      expect(res.status).toHaveBeenCalledWith(201);
+    });
+
+    it("should reject a paid caller logging another company's private talk", async () => {
+      // Arrange
+      const error = new Error("Talk not found");
+      getTalkSpy.mockRejectedValue(error);
+
+      // Act
+      await createMeeting(req, res, next);
+
+      // Assert
+      expect(createSpy).not.toHaveBeenCalled();
+      expect(next).toHaveBeenCalledWith(error);
     });
 
     it("should check a Trade Free caller's talk against core talks plus its GCs' company talks", async () => {

@@ -55,12 +55,10 @@ export const SUB_PLANS: Plan[] = [
     annualSub: "$65/mo billed annually — save 20%",
     features: [
       "Unlimited foremen & crews",
-      "Custom safety manual upload",
       "Procore, JobTread & QuickBooks sync",
       "Multi-crew scheduling & equipment check-ins",
     ],
     comingSoon: [
-      "Custom safety manual upload",
       "Procore, JobTread & QuickBooks sync",
       "Multi-crew scheduling & equipment check-ins",
     ],
@@ -111,8 +109,7 @@ export const GC_PLANS: Plan[] = [
       "Cross-project subcontractor safety scorecards",
       "Top-down corporate policy push across all sites",
       "Multi-manager roles — Superintendent vs Safety Director",
-      "Custom company safety form & manual builder",
+      "Custom company safety talks shared with every sub",
     ],
-    comingSoon: ["Custom company safety form & manual builder"],
   },
 ];
