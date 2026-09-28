@@ -14,7 +14,18 @@ const requireAuth = async (req, res, next) => {
     return next(new AppError("Authentication required", 401));
   }
 
-  const { data, error } = await supabase.auth.getUser(token);
+  // Express 4 doesn't catch async rejections, and Node exits on an unhandled
+  // one — so a throw from Supabase (e.g. a network failure) would take the
+  // whole dev server down instead of producing an error response.
+  let data;
+  let error;
+  try {
+    ({ data, error } = await supabase.auth.getUser(token));
+  } catch (thrown) {
+    return next(
+      new AppError("Could not verify your session", 502, { cause: thrown }),
+    );
+  }
 
   if (error || !data?.user) {
     return next(new AppError("Invalid or expired session", 401));

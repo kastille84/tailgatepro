@@ -156,18 +156,32 @@ const createProfileFromInvite = async ({ id, email, name, inviteToken }) => {
 // downstream authorization needs. `requireAuth` only proves *who* the caller is
 // (the auth UID); anything that authorizes by company or role calls this — via
 // the `loadUserContext` middleware — to get `companyId` / `role`. Throws a 404
-// when the auth user has no profile row yet (deferred first-login path).
+// when the auth user has no profile row yet (deferred first-login path), and a
+// 502 when the lookup itself fails.
 const getUserContext = async (id) => {
   const { data, error } = await supabase
     .from("users")
-    .select("id, name, role, company_id, companies(tier, company_type)")
+    // `!users_company_id_fkey` disambiguates the embed: companies also holds
+    // `required_talk_pushed_by -> users(id)`, so a bare `companies(...)` is
+    // ambiguous to PostgREST (PGRST201) and would surface as a 404 here.
+    .select(
+      "id, name, role, company_id, companies!users_company_id_fkey(tier, company_type)",
+    )
     .eq("id", id)
     .single();
 
-  if (error || !data) {
-    throw new AppError("Profile not found", 404, {
-      cause: error ?? undefined,
-    });
+  if (error) {
+    // PGRST116 = `.single()` matched no rows -- the genuine "no profile yet"
+    // case. Anything else is a real query failure (e.g. a schema/embed
+    // problem) and must not masquerade as a missing profile.
+    if (error.code === "PGRST116") {
+      throw new AppError("Profile not found", 404, { cause: error });
+    }
+    throw new AppError("Could not load your profile", 502, { cause: error });
+  }
+
+  if (!data) {
+    throw new AppError("Profile not found", 404);
   }
 
   return {
