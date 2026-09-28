@@ -7,6 +7,7 @@ const {
   getLimits,
   getPlanId,
   hasFullLibrary,
+  canAuthorCompanyTalks,
   seatRoleFor,
   effectiveJobsiteLimit,
 } = require("./entitlements");
@@ -83,6 +84,20 @@ describe("entitlements: hasFullLibrary", () => {
     [null, null, false],
   ])("%s + %s -> %s", (companyType, tier, expected) => {
     expect(hasFullLibrary(companyType, tier)).toBe(expected);
+  });
+});
+
+describe("entitlements: canAuthorCompanyTalks", () => {
+  it.each([
+    ["subcontractor", "basic", true],
+    ["subcontractor", "premium", true],
+    ["subcontractor", "enterprise", true],
+    ["gc", "basic", false],
+    ["gc", "premium", true],
+    ["gc", "enterprise", true],
+    ["gc", "platinum", false],
+  ])("%s + %s -> %s", (companyType, tier, expected) => {
+    expect(canAuthorCompanyTalks(companyType, tier)).toBe(expected);
   });
 });
 

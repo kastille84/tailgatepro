@@ -2,6 +2,7 @@
 const meetingLogsService = require("../services/meetingLogs");
 const companiesService = require("../services/companies");
 const talksService = require("../services/talks");
+const talkVisibilityService = require("../services/talkVisibility");
 const zipBundleService = require("../services/zipBundle");
 const {
   listMeetings,
@@ -28,6 +29,7 @@ const getDefenseBundleEntriesSpy = vi.spyOn(meetingLogsService, "getDefenseBundl
 const streamBundleSpy = vi.spyOn(zipBundleService, "streamBundle");
 const getCompanySpy = vi.spyOn(companiesService, "getById");
 const getTalkSpy = vi.spyOn(talksService, "getById");
+const resolveVisibilitySpy = vi.spyOn(talkVisibilityService, "resolveTalkVisibility");
 
 const meeting = {
   id: "meeting-1",
@@ -61,6 +63,9 @@ describe("meetingLogs controller", () => {
     getDefenseBundleEntriesSpy.mockReset();
     streamBundleSpy.mockReset();
     getTalkSpy.mockReset().mockResolvedValue({ id: "talk-1" });
+    resolveVisibilitySpy
+      .mockReset()
+      .mockResolvedValue({ fullLibrary: false, gcCompanyIds: [] });
     getCompanySpy
       .mockReset()
       .mockResolvedValue({ id: "company-1", companyType: "subcontractor", tier: "premium" });
@@ -314,18 +319,19 @@ describe("meetingLogs controller", () => {
       expect(getTalkSpy).not.toHaveBeenCalled();
     });
 
-    it("should let a Trade Free caller run a core talk", async () => {
+    it("should check a Trade Free caller's talk against core talks plus its GCs' company talks", async () => {
       // Arrange
       req.user.tier = "basic";
+      const visibility = { fullLibrary: false, gcCompanyIds: ["gc-1"] };
+      resolveVisibilitySpy.mockResolvedValue(visibility);
       createSpy.mockResolvedValue(meeting);
 
       // Act
       await createMeeting(req, res, next);
 
       // Assert
-      expect(getTalkSpy).toHaveBeenCalledWith("talk-1", "company-1", {
-        fullLibrary: false,
-      });
+      expect(resolveVisibilitySpy).toHaveBeenCalledWith(req.user);
+      expect(getTalkSpy).toHaveBeenCalledWith("talk-1", "company-1", visibility);
       expect(res.status).toHaveBeenCalledWith(201);
     });
 

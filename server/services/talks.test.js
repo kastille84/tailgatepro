@@ -2,7 +2,7 @@
 // `supabase.from` is looked up fresh at call time (not destructured), so a
 // single module-scope spy reconfigured per test is enough — no re-spying.
 const { supabase } = require("../utility/supabaseClient");
-const { listForCompany, listGlobal, getById, create, update, remove } = require("./talks");
+const { listForCompany, getById, create, update, remove } = require("./talks");
 const translation = require("./translation");
 
 const TALK_COLUMNS =
@@ -45,10 +45,28 @@ const mappedTalk = {
   isGlobal: true,
   isCore: false,
   companyId: null,
+  isLocked: false,
   createdAt: "2026-09-09T00:00:00.000Z",
 };
 
 const fromSpy = vi.spyOn(supabase, "from");
+
+const GC_A = "11111111-1111-4111-8111-111111111111";
+const GC_B = "22222222-2222-4222-8222-222222222222";
+
+// Routes `supabase.from` to the given toolbox_talks builder plus a stubbed
+// meeting_logs `select().in()` (the isLocked lookup); returns the `in` spy.
+const stubTalksAndLogs = (talksBuilder, logsResult) => {
+  const inSpy = vi.fn().mockResolvedValue(logsResult);
+  fromSpy.mockImplementation((table) => {
+    if (table === "toolbox_talks") return talksBuilder;
+    if (table === "meeting_logs") return { select: vi.fn(() => ({ in: inSpy })) };
+    throw new Error(`Unexpected table: ${table}`);
+  });
+  return inSpy;
+};
+
+const ownRow = (id) => ({ ...dbRow, id, is_global: false, company_id: "company-1" });
 
 describe("talks service: listForCompany", () => {
   let order;
@@ -88,6 +106,83 @@ describe("talks service: listForCompany", () => {
     );
   });
 
+  it("should union in the talks of the GCs the caller works for", async () => {
+    // Act
+    await listForCompany("company-1", { gcCompanyIds: [GC_A, GC_B] });
+
+    // Assert
+    expect(or).toHaveBeenCalledWith(
+      `is_global.eq.true,company_id.eq.company-1,company_id.in.(${GC_A},${GC_B})`,
+    );
+  });
+
+  it("should not narrow GC talks to core when the plan lacks the full library", async () => {
+    // Act
+    await listForCompany("company-1", { fullLibrary: false, gcCompanyIds: [GC_A] });
+
+    // Assert
+    expect(or).toHaveBeenCalledWith(
+      `and(is_global.eq.true,is_core.eq.true),company_id.eq.company-1,company_id.in.(${GC_A})`,
+    );
+  });
+
+  it("should never interpolate a GC id that is not uuid-shaped", async () => {
+    // Act
+    await listForCompany("company-1", {
+      gcCompanyIds: ["x),is_global.eq.true", GC_A],
+    });
+
+    // Assert
+    expect(or).toHaveBeenCalledWith(
+      `is_global.eq.true,company_id.eq.company-1,company_id.in.(${GC_A})`,
+    );
+  });
+
+  it("should omit the GC branch when every GC id is invalid", async () => {
+    // Act
+    await listForCompany("company-1", { gcCompanyIds: ["not-a-uuid"] });
+
+    // Assert
+    expect(or).toHaveBeenCalledWith("is_global.eq.true,company_id.eq.company-1");
+  });
+
+  it("should flag only the caller's own logged talks as locked, and never query logs for global/GC-shared talks", async () => {
+    // Arrange
+    const gcRow = { ...dbRow, id: "gc-talk", is_global: false, company_id: GC_A };
+    order.mockResolvedValue({
+      data: [dbRow, gcRow, ownRow("own-logged"), ownRow("own-free")],
+      error: null,
+    });
+    const inSpy = stubTalksAndLogs({ select }, {
+      data: [{ talk_id: "own-logged" }],
+      error: null,
+    });
+
+    // Act
+    const result = await listForCompany("company-1");
+
+    // Assert
+    expect(inSpy).toHaveBeenCalledWith("talk_id", ["own-logged", "own-free"]);
+    expect(result.map((talk) => [talk.id, talk.isLocked])).toEqual([
+      ["talk-1", false],
+      ["gc-talk", false],
+      ["own-logged", true],
+      ["own-free", false],
+    ]);
+  });
+
+  it("should throw a 502 AppError when the in-use lookup fails", async () => {
+    // Arrange
+    order.mockResolvedValue({ data: [ownRow("own-1")], error: null });
+    stubTalksAndLogs({ select }, { data: null, error: new Error("db down") });
+
+    // Act & Assert
+    await expect(listForCompany("company-1")).rejects.toMatchObject({
+      statusCode: 502,
+      message: "Could not verify which talks are in use",
+    });
+  });
+
   it("should default missing structured/attribution/quiz/trade_tags to []/null", async () => {
     // Arrange
     order.mockResolvedValue({
@@ -113,46 +208,6 @@ describe("talks service: listForCompany", () => {
 
     // Act & Assert
     await expect(listForCompany("company-1")).rejects.toMatchObject({
-      statusCode: 502,
-      message: "Could not load toolbox talks",
-    });
-  });
-});
-
-describe("talks service: listGlobal", () => {
-  let order;
-  let eqGlobal;
-  let select;
-
-  beforeEach(() => {
-    order = vi.fn().mockResolvedValue({ data: [dbRow], error: null });
-    eqGlobal = vi.fn(() => ({ order }));
-    select = vi.fn(() => ({ eq: eqGlobal }));
-
-    fromSpy.mockReset();
-    fromSpy.mockImplementation((table) => {
-      if (table === "toolbox_talks") return { select };
-      throw new Error(`Unexpected table: ${table}`);
-    });
-  });
-
-  it("should query only global talks, alphabetically, and map rows to camelCase", async () => {
-    // Act
-    const result = await listGlobal();
-
-    // Assert
-    expect(select).toHaveBeenCalledWith(TALK_COLUMNS);
-    expect(eqGlobal).toHaveBeenCalledWith("is_global", true);
-    expect(order).toHaveBeenCalledWith("title", { ascending: true });
-    expect(result).toEqual([mappedTalk]);
-  });
-
-  it("should throw a 502 AppError on a query failure", async () => {
-    // Arrange
-    order.mockResolvedValue({ data: null, error: { code: "OTHER" } });
-
-    // Act & Assert
-    await expect(listGlobal()).rejects.toMatchObject({
       statusCode: 502,
       message: "Could not load toolbox talks",
     });
@@ -196,6 +251,47 @@ describe("talks service: getById", () => {
     // Assert
     expect(or).toHaveBeenCalledWith(
       "and(is_global.eq.true,is_core.eq.true),company_id.eq.company-1",
+    );
+  });
+
+  it("should flag the caller's own talk as locked when a meeting log references it", async () => {
+    // Arrange
+    single.mockResolvedValue({ data: ownRow("own-1"), error: null });
+    const inSpy = stubTalksAndLogs({ select }, {
+      data: [{ talk_id: "own-1" }],
+      error: null,
+    });
+
+    // Act
+    const result = await getById("own-1", "company-1");
+
+    // Assert
+    expect(inSpy).toHaveBeenCalledWith("talk_id", ["own-1"]);
+    expect(result.isLocked).toBe(true);
+  });
+
+  it("should not flag the caller's own unlogged talk, nor query logs for a global talk", async () => {
+    // Arrange
+    single.mockResolvedValue({ data: ownRow("own-1"), error: null });
+    stubTalksAndLogs({ select }, { data: [], error: null });
+
+    // Act & Assert
+    await expect(getById("own-1", "company-1")).resolves.toMatchObject({ isLocked: false });
+    single.mockResolvedValue({ data: dbRow, error: null });
+    fromSpy.mockImplementation((table) => {
+      if (table === "toolbox_talks") return { select };
+      throw new Error(`Unexpected table: ${table}`);
+    });
+    await expect(getById("talk-1", "company-1")).resolves.toMatchObject({ isLocked: false });
+  });
+
+  it("should also admit a talk authored by a GC the caller works for", async () => {
+    // Act
+    await getById("talk-1", "company-1", { gcCompanyIds: [GC_A] });
+
+    // Assert
+    expect(or).toHaveBeenCalledWith(
+      `is_global.eq.true,company_id.eq.company-1,company_id.in.(${GC_A})`,
     );
   });
 
@@ -264,6 +360,7 @@ describe("talks service: create", () => {
     isGlobal: false,
     isCore: false,
     companyId: "company-1",
+    isLocked: false,
     createdAt: "2026-09-12T00:00:00.000Z",
   };
 

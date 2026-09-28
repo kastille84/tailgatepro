@@ -195,6 +195,17 @@ export const StyledDetailTitleRow = styled.div`
   width: 100%;
 `;
 
+/** Explains why an own talk has no Edit button: a meeting log already uses it. */
+export const StyledLockedNote = styled.p`
+  margin: 1.6rem 0 0;
+  padding: 1.2rem 1.6rem;
+  border-radius: ${({ theme }) => theme.borderRadius.md};
+  background: ${({ theme }) => theme.colors.concrete[100]};
+  font-size: 1.4rem;
+  line-height: 1.5;
+  color: ${({ theme }) => theme.colors.navy[600]};
+`;
+
 export const StyledActions = styled.div`
   display: flex;
   justify-content: flex-end;

@@ -78,6 +78,7 @@ export const useCreateTalk = () => {
         isGlobal: false,
         // Unknown until the write syncs — never read in the UI.
         companyId: "",
+        isLocked: false,
         createdAt: new Date().toISOString(),
       };
       upsertCachedTalk(queryClient, optimisticTalk);

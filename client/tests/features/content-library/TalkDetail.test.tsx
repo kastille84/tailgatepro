@@ -39,6 +39,7 @@ const fullTalk: Talk = {
   },
   isGlobal: true,
   companyId: null,
+  isLocked: false,
   createdAt: "2026-09-09T00:00:00.000Z",
 };
 
@@ -52,6 +53,8 @@ const renderDetail = (
         favoriteIds={new Set()}
         onClose={vi.fn()}
         onEdit={vi.fn()}
+        ownCompanyId="company-1"
+        canEdit
         {...props}
       />
     </ThemeProvider>,
@@ -148,6 +151,41 @@ describe("TalkDetail", () => {
 
     fireEvent.click(screen.getByRole("button", { name: /edit talk/i }));
     expect(onEdit).toHaveBeenCalledWith(customTalk);
+  });
+
+  it("replaces Edit with a read-only note for an own talk a meeting log already used", () => {
+    renderDetail({
+      talk: { ...fullTalk, isGlobal: false, companyId: "company-1", isLocked: true },
+    });
+
+    expect(screen.getByRole("note").textContent).toMatch(/read-only/i);
+    expect(screen.queryByRole("button", { name: /edit talk/i })).toBeNull();
+  });
+
+  it("hides Edit (without the locked note) when the caller may not write talks", () => {
+    renderDetail({
+      talk: { ...fullTalk, isGlobal: false, companyId: "company-1" },
+      canEdit: false,
+    });
+
+    expect(screen.queryByRole("button", { name: /edit talk/i })).toBeNull();
+    expect(screen.queryByRole("note")).toBeNull();
+  });
+
+  it("shows no locked note on a GC-shared talk even if flagged", () => {
+    renderDetail({
+      talk: { ...fullTalk, isGlobal: false, companyId: "gc-1", isLocked: true },
+    });
+
+    expect(screen.queryByRole("note")).toBeNull();
+  });
+
+  it("labels a GC-shared talk From your GC and hides its Edit button", () => {
+    renderDetail({ talk: { ...fullTalk, isGlobal: false, companyId: "gc-1" } });
+
+    expect(screen.getByText("From your GC")).toBeDefined();
+    expect(screen.queryByText("Custom")).toBeNull();
+    expect(screen.queryByRole("button", { name: /edit talk/i })).toBeNull();
   });
 
   it("hides the Edit button for a global talk", () => {

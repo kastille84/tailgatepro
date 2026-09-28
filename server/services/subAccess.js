@@ -34,4 +34,25 @@ const getUnlockedSubIds = async (gcCompanyId) => {
   });
 };
 
-module.exports = { getUnlockedSubIds };
+// The GCs a subcontractor currently works for: every distinct `gc_company_id`
+// across the sub's accepted memberships on non-archived jobsites. Feeds the
+// visibility of GC-authored company talks (docs/company-talks-design.md) --
+// access ends when the sub leaves a jobsite or the GC archives it. A pending
+// invite (`accepted_at` null) grants nothing. `subCompanyId` is always the
+// caller's verified company (loadUserContext).
+const listAcceptedGcIds = async (subCompanyId) => {
+  const { data, error } = await supabase
+    .from("jobsite_subcontractors")
+    .select("jobsites!inner(gc_company_id)")
+    .eq("sub_company_id", subCompanyId)
+    .not("accepted_at", "is", null)
+    .is("jobsites.archived_at", null);
+
+  if (error) {
+    throw new AppError("Could not check your jobsite memberships", 502, { cause: error });
+  }
+
+  return [...new Set(data.map((row) => row.jobsites.gc_company_id))];
+};
+
+module.exports = { getUnlockedSubIds, listAcceptedGcIds };

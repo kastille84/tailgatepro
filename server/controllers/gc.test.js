@@ -336,7 +336,7 @@ describe("gc controller", () => {
   });
 
   describe("listPolicyPushTalks", () => {
-    it("should respond with the picker's talk list", async () => {
+    it("should respond with the picker's talk list, scoped to the caller's company", async () => {
       // Arrange
       const data = [{ id: "talk-1", title: "Fall Protection" }];
       listPickerTalksSpy.mockResolvedValue(data);
@@ -345,6 +345,7 @@ describe("gc controller", () => {
       await listPolicyPushTalks(req, res, next);
 
       // Assert
+      expect(listPickerTalksSpy).toHaveBeenCalledWith("gc-1");
       expect(res.status).toHaveBeenCalledWith(200);
       expect(res.json).toHaveBeenCalledWith({ success: true, data });
     });

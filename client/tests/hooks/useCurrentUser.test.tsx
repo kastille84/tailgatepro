@@ -134,6 +134,68 @@ describe("useCurrentUser", () => {
     expect(result.current.isSubcontractor).toBe(false);
   });
 
+  it("lets a subcontractor and a GC Portfolio company author company talks, but not a GC Free company", async () => {
+    const profile = {
+      id: "user-3",
+      companyId: "company-3",
+      role: "admin" as const,
+      tier: "premium" as const,
+      limits: LIMITS,
+    };
+
+    vi.mocked(apiUsers.getCurrentUser).mockResolvedValue({
+      ...profile,
+      companyType: "subcontractor",
+      plan: "trade-free",
+    });
+    const sub = renderHook(() => useCurrentUser(), { wrapper });
+    await waitFor(() => expect(sub.result.current.companyType).toBe("subcontractor"));
+    expect(sub.result.current.canAuthorCompanyTalks).toBe(true);
+
+    vi.mocked(apiUsers.getCurrentUser).mockResolvedValue({
+      ...profile,
+      companyType: "gc",
+      plan: "gc-portfolio",
+    });
+    queryClient.clear();
+    const portfolio = renderHook(() => useCurrentUser(), { wrapper });
+    await waitFor(() => expect(portfolio.result.current.plan).toBe("gc-portfolio"));
+    expect(portfolio.result.current.canAuthorCompanyTalks).toBe(true);
+
+    vi.mocked(apiUsers.getCurrentUser).mockResolvedValue({
+      ...profile,
+      tier: "basic",
+      companyType: "gc",
+      plan: "gc-free",
+    });
+    queryClient.clear();
+    const free = renderHook(() => useCurrentUser(), { wrapper });
+    await waitFor(() => expect(free.result.current.plan).toBe("gc-free"));
+    expect(free.result.current.canAuthorCompanyTalks).toBe(false);
+  });
+
+  it.each([
+    ["admin", true],
+    ["safety_manager", true],
+    ["foreman", false],
+    ["superintendent", false],
+  ])("reports isManagerRole for role %s -> %s", async (role, expected) => {
+    vi.mocked(apiUsers.getCurrentUser).mockResolvedValue({
+      id: "user-4",
+      companyId: "company-4",
+      role,
+      tier: "premium",
+      companyType: "gc",
+      plan: "gc-portfolio",
+      limits: LIMITS,
+    });
+
+    const { result } = renderHook(() => useCurrentUser(), { wrapper });
+
+    await waitFor(() => expect(result.current.role).toBe(role));
+    expect(result.current.isManagerRole).toBe(expected);
+  });
+
   it("defaults tier to null and hasTranslationAccess/hasBrandingAccess to false before the query resolves / without a session", () => {
     mockUseAuth.mockReturnValue({ session: null });
 
@@ -150,5 +212,8 @@ describe("useCurrentUser", () => {
     expect(result.current.limits).toBeNull();
     expect(result.current.isGc).toBe(false);
     expect(result.current.isSubcontractor).toBe(false);
+    // Permissive while the profile is unknown -- the server is the authority.
+    expect(result.current.canAuthorCompanyTalks).toBe(true);
+    expect(result.current.isManagerRole).toBe(false);
   });
 });

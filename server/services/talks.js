@@ -9,7 +9,11 @@ const translation = require("./translation");
 const TALK_COLUMNS =
   "id, slug, title, trade_tag, trade_tags, content, structured, attribution, quiz, translations, is_global, is_core, company_id, created_at";
 
-const toTalk = (row) => ({
+// `isLocked` is a UI hint: true when a meeting log references the talk, which
+// makes it uneditable/undeletable (assertNotLoggedAnywhere is the authority and
+// can disagree if a log lands after this read). Only ever true for the caller's
+// own talks -- see lockedIdsFor.
+const toTalk = (row, { isLocked = false } = {}) => ({
   id: row.id,
   slug: row.slug,
   title: row.title,
@@ -23,6 +27,7 @@ const toTalk = (row) => ({
   isGlobal: row.is_global,
   isCore: row.is_core ?? false,
   companyId: row.company_id,
+  isLocked,
   createdAt: row.created_at,
 });
 
@@ -50,56 +55,83 @@ const buildTranslations = async ({ title, structured, targetLanguages }) => {
 // vector — same pattern as projects.listForCompany.
 // `fullLibrary` false (Trade Free, Phase 9c) narrows the global half to the talks
 // flagged `is_core`; the company's own custom talks are always included.
-const visibilityFilter = (companyId, fullLibrary) =>
-  fullLibrary
+// `gcCompanyIds` (docs/company-talks-design.md) adds a third branch: the custom
+// talks authored by the GCs a subcontractor currently works for. It is never
+// narrowed by `is_core` -- that flag only describes the global library. A
+// PostgREST `or` can't hold a subquery, so callers resolve the ids first
+// (subAccess.listAcceptedGcIds). They are DB uuids, but only uuid-shaped
+// values are ever interpolated, as defense in depth.
+const UUID_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
+const visibilityFilter = (companyId, fullLibrary, gcCompanyIds = []) => {
+  const base = fullLibrary
     ? `is_global.eq.true,company_id.eq.${companyId}`
     : `and(is_global.eq.true,is_core.eq.true),company_id.eq.${companyId}`;
-
-const listForCompany = async (companyId, { fullLibrary = true } = {}) => {
-  const { data, error } = await supabase
-    .from("toolbox_talks")
-    .select(TALK_COLUMNS)
-    .or(visibilityFilter(companyId, fullLibrary))
-    .order("title", { ascending: true });
-
-  if (error) {
-    throw new AppError("Could not load toolbox talks", 502, { cause: error });
-  }
-
-  return data.map(toTalk);
+  const safeGcIds = gcCompanyIds.filter((id) => UUID_PATTERN.test(id));
+  return safeGcIds.length > 0 ? `${base},company_id.in.(${safeGcIds.join(",")})` : base;
 };
 
-// Every talk in the shared global library, alphabetical by title -- the
-// picker source for the top-down policy push feature (Phase 9e,
-// docs/policy-push-design.md). Deliberately narrower than listForCompany's
-// visibility filter, which would also union in the caller's own company's
-// custom talks: a GC's custom talk would be invisible to the very subs a
-// push targets (a sub's own listForCompany only unions global talks with its
-// *own* company_id), so the picker must never offer one.
-const listGlobal = async () => {
+// Which of the given talk ids are referenced by any meeting log (of any
+// company -- the lock is global, see assertNotLoggedAnywhere). No query for an
+// empty list.
+const findLoggedTalkIds = async (ids) => {
+  if (ids.length === 0) return new Set();
+
+  const { data, error } = await supabase
+    .from("meeting_logs")
+    .select("talk_id")
+    .in("talk_id", ids);
+
+  if (error) {
+    throw new AppError("Could not verify which talks are in use", 502, {
+      cause: error,
+    });
+  }
+
+  return new Set(data.map((log) => log.talk_id));
+};
+
+// The ids among `rows` that are locked *for this caller*: only its own talks
+// can be edited/deleted by it, so a global or GC-shared talk is never "locked"
+// from its point of view (it's simply read-only).
+const lockedIdsFor = (rows, companyId) =>
+  findLoggedTalkIds(
+    rows.filter((row) => row.company_id === companyId).map((row) => row.id),
+  );
+
+const listForCompany = async (
+  companyId,
+  { fullLibrary = true, gcCompanyIds = [] } = {},
+) => {
   const { data, error } = await supabase
     .from("toolbox_talks")
     .select(TALK_COLUMNS)
-    .eq("is_global", true)
+    .or(visibilityFilter(companyId, fullLibrary, gcCompanyIds))
     .order("title", { ascending: true });
 
   if (error) {
     throw new AppError("Could not load toolbox talks", 502, { cause: error });
   }
 
-  return data.map(toTalk);
+  const lockedIds = await lockedIdsFor(data, companyId);
+  return data.map((row) => toTalk(row, { isLocked: lockedIds.has(row.id) }));
 };
 
 // Scoped the same way as listForCompany: a talk is fetchable by id only if
-// it's global or belongs to the caller's own company. A talk belonging to
-// another company is indistinguishable from a missing one (404), by design —
-// mirrors projects.update's ownership-in-the-query pattern.
-const getById = async (id, companyId, { fullLibrary = true } = {}) => {
+// it's global, belongs to the caller's own company, or belongs to a GC the
+// caller works for (`gcCompanyIds`). A talk belonging to any other company is
+// indistinguishable from a missing one (404), by design — mirrors
+// projects.update's ownership-in-the-query pattern.
+const getById = async (
+  id,
+  companyId,
+  { fullLibrary = true, gcCompanyIds = [] } = {},
+) => {
   const { data, error } = await supabase
     .from("toolbox_talks")
     .select(TALK_COLUMNS)
     .eq("id", id)
-    .or(visibilityFilter(companyId, fullLibrary))
+    .or(visibilityFilter(companyId, fullLibrary, gcCompanyIds))
     .single();
 
   if (error) {
@@ -111,7 +143,8 @@ const getById = async (id, companyId, { fullLibrary = true } = {}) => {
     throw new AppError("Could not load the talk", 502, { cause: error });
   }
 
-  return toTalk(data);
+  const lockedIds = await lockedIdsFor([data], companyId);
+  return toTalk(data, { isLocked: lockedIds.has(data.id) });
 };
 
 // Creates a company-scoped custom talk. `id` is client-generated (offline-sync
@@ -299,4 +332,4 @@ const remove = async ({ id, companyId }) => {
   return { id: data.id };
 };
 
-module.exports = { listForCompany, listGlobal, getById, create, update, remove };
+module.exports = { listForCompany, getById, create, update, remove };

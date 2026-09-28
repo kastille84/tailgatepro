@@ -65,6 +65,7 @@ const renderList = (
         talks={talks}
         favoriteIds={new Set()}
         onSelect={vi.fn()}
+        ownCompanyId="company-1"
         {...props}
       />
     </ThemeProvider>,
@@ -117,10 +118,31 @@ describe("TalkList", () => {
 
   it("shows a Custom badge for a company's own custom talk, not for a global one", () => {
     renderList({
-      talks: [...talks, { ...talks[0], id: "t3", title: "In-House Talk", isGlobal: false }],
+      talks: [
+        ...talks,
+        {
+          ...talks[0],
+          id: "t3",
+          title: "In-House Talk",
+          isGlobal: false,
+          companyId: "company-1",
+        },
+      ],
     });
 
     expect(screen.getByText("Custom")).toBeDefined();
+  });
+
+  it("labels a talk the caller's own company wrote Custom, and a GC-shared talk From your GC", () => {
+    renderList({
+      talks: [
+        { ...talks[0], id: "own", title: "Own Talk", isGlobal: false, companyId: "company-1" },
+        { ...talks[0], id: "gc", title: "GC Talk", isGlobal: false, companyId: "gc-1" },
+      ],
+    });
+
+    expect(screen.getAllByText("Custom")).toHaveLength(1);
+    expect(screen.getAllByText("From your GC")).toHaveLength(1);
   });
 
   it("shows no Custom badge when every talk is global", () => {

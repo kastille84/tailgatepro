@@ -19,7 +19,8 @@ const assertPolicyPushSpy = vi.spyOn(siteScopeService, "assertPolicyPushAvailabl
 const getCompanySpy = vi.spyOn(companiesService, "getById");
 const setRequiredTopicSpy = vi.spyOn(companiesService, "setRequiredTopic");
 const clearRequiredTopicSpy = vi.spyOn(companiesService, "clearRequiredTopic");
-const listGlobalSpy = vi.spyOn(talksService, "listGlobal");
+const listForCompanySpy = vi.spyOn(talksService, "listForCompany");
+const getTalkByIdSpy = vi.spyOn(talksService, "getById");
 const listActiveJobsitesSpy = vi.spyOn(gcDashboardService, "listActiveJobsites");
 const listLinkedProjectsSpy = vi.spyOn(gcDashboardService, "listLinkedProjects");
 const getCompanyNamesByIdsSpy = vi.spyOn(gcDashboardService, "getCompanyNamesByIds");
@@ -50,13 +51,13 @@ const companyWithPush = {
 };
 
 describe("policyPush service: listPickerTalks", () => {
-  it("delegates to talksService.listGlobal", async () => {
-    listGlobalSpy.mockReset().mockResolvedValue([{ id: "talk-1", title: "Fall Protection" }]);
+  it("delegates to talksService.listForCompany for the GC (global + its own talks)", async () => {
+    listForCompanySpy.mockReset().mockResolvedValue([{ id: "talk-1", title: "Fall Protection" }]);
 
-    await expect(listPickerTalks()).resolves.toEqual([
+    await expect(listPickerTalks("gc-1")).resolves.toEqual([
       { id: "talk-1", title: "Fall Protection" },
     ]);
-    expect(listGlobalSpy).toHaveBeenCalled();
+    expect(listForCompanySpy).toHaveBeenCalledWith("gc-1");
   });
 });
 
@@ -161,10 +162,6 @@ describe("policyPush service: getCurrentPush", () => {
 });
 
 describe("policyPush service: pushRequiredTopic", () => {
-  let talkSingle;
-  let talkEqGlobal;
-  let talkEqId;
-  let talkSelect;
   let userSingle;
   let userEq;
   let userSelect;
@@ -172,11 +169,7 @@ describe("policyPush service: pushRequiredTopic", () => {
   beforeEach(() => {
     assertPolicyPushSpy.mockReset().mockResolvedValue(undefined);
     setRequiredTopicSpy.mockReset().mockResolvedValue(companyWithPush);
-
-    talkSingle = vi.fn().mockResolvedValue({ data: { id: "talk-1", title: "Fall Protection" }, error: null });
-    talkEqGlobal = vi.fn(() => ({ single: talkSingle }));
-    talkEqId = vi.fn(() => ({ single: talkSingle, eq: talkEqGlobal }));
-    talkSelect = vi.fn(() => ({ eq: talkEqId }));
+    getTalkByIdSpy.mockReset().mockResolvedValue({ id: "talk-1", title: "Fall Protection" });
 
     userSingle = vi.fn().mockResolvedValue({ data: { name: "Jane Admin" }, error: null });
     userEq = vi.fn(() => ({ single: userSingle }));
@@ -184,7 +177,6 @@ describe("policyPush service: pushRequiredTopic", () => {
 
     fromSpy.mockReset();
     fromSpy.mockImplementation((table) => {
-      if (table === "toolbox_talks") return { select: talkSelect };
       if (table === "users") return { select: userSelect };
       throw new Error(`Unexpected table: ${table}`);
     });
@@ -193,9 +185,8 @@ describe("policyPush service: pushRequiredTopic", () => {
   it("pushes the required topic and returns its state", async () => {
     const result = await pushRequiredTopic("gc-1", { talkId: "talk-1", pushedByUserId: "user-1" });
 
-    expect(talkSelect).toHaveBeenCalledWith("id, title");
-    expect(talkEqId).toHaveBeenCalledWith("id", "talk-1");
-    expect(talkEqGlobal).toHaveBeenCalledWith("is_global", true);
+    // Validated with the GC's own visibility: global talks + its own company talks.
+    expect(getTalkByIdSpy).toHaveBeenCalledWith("talk-1", "gc-1");
     expect(setRequiredTopicSpy).toHaveBeenCalledWith("gc-1", {
       talkId: "talk-1",
       pushedByUserId: "user-1",
@@ -213,7 +204,7 @@ describe("policyPush service: pushRequiredTopic", () => {
       ...companyWithPush,
       requiredTalkId: "talk-2",
     });
-    talkSingle.mockResolvedValue({ data: { id: "talk-2", title: "Ladder Safety" }, error: null });
+    getTalkByIdSpy.mockResolvedValue({ id: "talk-2", title: "Ladder Safety" });
 
     const result = await pushRequiredTopic("gc-1", { talkId: "talk-2", pushedByUserId: "user-1" });
 
@@ -234,21 +225,14 @@ describe("policyPush service: pushRequiredTopic", () => {
     expect(fromSpy).not.toHaveBeenCalled();
   });
 
-  it("throws a 404 when talkId isn't a global talk (unknown, or a custom talk)", async () => {
-    talkSingle.mockResolvedValue({ data: null, error: { code: "PGRST116" } });
+  it("propagates the 404 when talkId isn't visible to the GC (unknown, or another company's talk)", async () => {
+    const notFound = Object.assign(new Error("Talk not found"), { statusCode: 404 });
+    getTalkByIdSpy.mockRejectedValue(notFound);
 
     await expect(
-      pushRequiredTopic("gc-1", { talkId: "custom-talk", pushedByUserId: "user-1" }),
-    ).rejects.toMatchObject({ statusCode: 404, message: "Talk not found" });
+      pushRequiredTopic("gc-1", { talkId: "other-co-talk", pushedByUserId: "user-1" }),
+    ).rejects.toBe(notFound);
     expect(setRequiredTopicSpy).not.toHaveBeenCalled();
-  });
-
-  it("throws a 502 when the talk lookup fails for another reason", async () => {
-    talkSingle.mockResolvedValue({ data: null, error: { code: "OTHER" } });
-
-    await expect(
-      pushRequiredTopic("gc-1", { talkId: "talk-1", pushedByUserId: "user-1" }),
-    ).rejects.toMatchObject({ statusCode: 502, message: "Could not load the talk" });
   });
 });
 

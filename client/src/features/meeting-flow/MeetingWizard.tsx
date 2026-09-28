@@ -13,6 +13,7 @@ import { useUploadSignatureBlob } from "../../hooks/useUploadSignatureBlob";
 import { useUploadCrewPhoto } from "../../hooks/useUploadCrewPhoto";
 import { useCompleteMeetingLog } from "../../hooks/useCompleteMeetingLog";
 import { useRequiredTopic } from "../../hooks/useRequiredTopic";
+import { useCurrentUser } from "../../hooks/useCurrentUser";
 import {
   clearDraft,
   getActiveDraft,
@@ -109,6 +110,7 @@ export const MeetingWizard = () => {
   );
   const [selectedTalk, setSelectedTalk] = useState<Talk | undefined>(undefined);
   const { requiredTopic } = useRequiredTopic(selectedProject?.id);
+  const { companyId } = useCurrentUser();
   const [signers, setSigners] = useState<DraftSigner[]>([]);
   const [photoBlob, setPhotoBlob] = useState<Blob | null | undefined>(
     undefined,
@@ -534,6 +536,7 @@ export const MeetingWizard = () => {
               favoriteIds={favoriteIds}
               onSelect={handleSelectTalk}
               requiredTalkId={requiredTopic?.talkId ?? null}
+              ownCompanyId={companyId}
             />
           )}
         </>

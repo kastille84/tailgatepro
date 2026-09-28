@@ -64,18 +64,18 @@ not built**: it would be cheap to add later (an insert-only log written from the
 `pushRequiredTopic`/`clearRequiredTopic` call sites), but nothing in this build consumes it — see
 "Known v1 limitations."
 
-## Why the picker only offers global talks
+## What the picker offers (global talks + the GC's own)
 
-`server/services/talks.js` gained `listGlobal()` — every `toolbox_talks` row with
-`is_global = true` — as the picker's data source, deliberately not a reuse of `listForCompany`
-(whose visibility filter unions in the caller's *own* company's custom talks). A subcontractor's
-own `listForCompany` call only ever returns global talks plus *its own* company's custom talks
-(`server/services/talks.js`), so a GC pushing one of its own custom talks would be invisible to
-every sub it's pushed to — a silent, undebuggable failure. `pushRequiredTopic` re-validates this
-server-side (a direct `toolbox_talks` query filtered to `is_global = true`, 404 otherwise) rather
-than trusting the client to only ever submit a picker option. A GC authoring shared content that
-its subs *can* see is a materially bigger feature (cross-company talk visibility) — that's the
-still-open "Company safety form and manual builder" backlog item, not this one.
+**Superseded by `docs/company-talks-design.md`.** v1 of this feature offered global talks only:
+a GC's own custom talk was invisible to the subs a push targets (a sub's `listForCompany` only
+unioned global talks with its *own* company's), so it could never be pushed. Company talks fixed
+that: a sub's visibility now also includes the talks of every GC it works for
+(`talks.js` `visibilityFilter`, `subAccess.listAcceptedGcIds`).
+
+So now `listPickerTalks(gcCompanyId)` is `talks.listForCompany(gcCompanyId)` (global library + the
+GC's own talks), and `pushRequiredTopic` validates with `talks.getById(talkId, gcCompanyId)` — 404
+for any other company's talk. `listGlobal` was removed. Deleting a pushed company talk that was
+never logged silently clears the push (`ON DELETE SET NULL`).
 
 ## Compliance model
 
@@ -107,8 +107,8 @@ requireGcCompany`, camelCase, a resource outside the caller's authorization is a
 | Endpoint | Returns |
 | --- | --- |
 | `GET /api/gc/policy-push?date&tzOffset` | The caller's current push (or nulls if none) plus, when one is active, a per-active-jobsite compliance rollup since it was pushed. 403 `PLAN_LIMIT` unless GC Portfolio. |
-| `GET /api/gc/policy-push/talks` | Every `is_global = true` talk, for the picker. 403 `PLAN_LIMIT` unless GC Portfolio. |
-| `POST /api/gc/policy-push` `{ talkId }` | Pushes/replaces the current topic across every active jobsite. 404 if `talkId` isn't a global talk. 403 `PLAN_LIMIT` unless Portfolio; 403 unless `admin`/`safety_manager`. |
+| `GET /api/gc/policy-push/talks` | Every global talk plus the caller's own company talks, for the picker. 403 `PLAN_LIMIT` unless GC Portfolio. |
+| `POST /api/gc/policy-push` `{ talkId }` | Pushes/replaces the current topic across every active jobsite. 404 if `talkId` isn't a global talk or one of the caller's own company talks. 403 `PLAN_LIMIT` unless Portfolio; 403 unless `admin`/`safety_manager`. |
 | `DELETE /api/gc/policy-push` | Clears the current topic. Same gating as the push above. Idempotent when nothing is currently pushed. |
 | `GET /api/projects/:id/required-topic` | The caller's own project's current required topic (nulls if the project is unlinked, its jobsite is inactive/archived, or the linked GC has nothing pushed). 404 if the project isn't the caller's own. **No plan gate** — see below. |
 
@@ -159,8 +159,9 @@ picking a different talk.
 - **The sub-facing read does zero plan-checking by design** (see "Endpoint contract" above) — this
   is intentional, not an oversight, but is worth re-stating since every other endpoint in this
   feature is plan-gated.
-- **The `ON DELETE SET NULL` degrade paths are ops-only.** A global talk can't be deleted via the
-  app's own talk CRUD today (custom-talk `remove` is scoped to non-global rows only), so
-  `required_talk_id` losing its reference only happens via a direct database operation — untested
-  in practice, but the degrade-to-null-title behavior (`getCurrentPush`/
-  `getRequiredTopicForProject`) is there for that case regardless.
+- **The `ON DELETE SET NULL` degrade path is reachable via the app for a pushed company talk.**
+  A global talk can't be deleted via the app's own talk CRUD (`remove` is scoped to non-global
+  rows), but a GC can delete its own never-logged company talk
+  (`docs/company-talks-design.md`), which nulls `required_talk_id` and so silently clears the push;
+  the degrade-to-null-title behavior (`getCurrentPush`/`getRequiredTopicForProject`) covers it. A
+  pushed talk that subs have logged can't be deleted (`assertNotLoggedAnywhere`).

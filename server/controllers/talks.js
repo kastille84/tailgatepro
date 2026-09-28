@@ -1,21 +1,37 @@
 const talksService = require("../services/talks");
+const talkVisibilityService = require("../services/talkVisibility");
 const translationService = require("../services/translation");
 const { AppError } = require("../utility/AppError");
-const { hasTranslationAccess, hasFullLibrary } = require("../utility/entitlements");
+const { hasTranslationAccess, canAuthorCompanyTalks } = require("../utility/entitlements");
+const { MANAGER_ROLES } = require("../constants/roles");
 
 const UPGRADE_MESSAGE = "Upgrade to Trade Pro to unlock multi-language talks";
+const GC_UPGRADE_MESSAGE = "Upgrade to GC Portfolio to create company talks";
+const GC_MANAGER_MESSAGE = "Only a safety director or admin can write company talks";
 
-// Trade Free sees only the core talks (Phase 9c); the server is the authority.
-const fullLibraryFor = (user) => hasFullLibrary(user.companyType, user.tier);
+// A GC needs Portfolio to author company talks (see canAuthorCompanyTalks) and
+// a manager role -- a company talk reaches every sub on the GC's jobsites, so a
+// superintendent/foreman shouldn't write or rewrite one (delete is manager-only
+// too, via the route). Subcontractors are unaffected.
+const assertCanAuthor = (user) => {
+  if (!canAuthorCompanyTalks(user.companyType, user.tier)) {
+    throw new AppError(GC_UPGRADE_MESSAGE, 403);
+  }
+  if (user.companyType === "gc" && !MANAGER_ROLES.includes(user.role)) {
+    throw new AppError(GC_MANAGER_MESSAGE, 403);
+  }
+};
 
 // req.user is set by loadUserContext (which runs after requireAuth) — the
 // caller's company always comes from there, never from req.body/req.params.
+// Which talks the caller may see (Trade Free core-only, Phase 9c; a sub also
+// sees its GCs' company talks) comes from resolveTalkVisibility — the server
+// is the authority.
 
 exports.listTalks = async (req, res, next) => {
   try {
-    const data = await talksService.listForCompany(req.user.companyId, {
-      fullLibrary: fullLibraryFor(req.user),
-    });
+    const visibility = await talkVisibilityService.resolveTalkVisibility(req.user);
+    const data = await talksService.listForCompany(req.user.companyId, visibility);
     return res.status(200).json({ success: true, data });
   } catch (error) {
     return next(error);
@@ -24,9 +40,8 @@ exports.listTalks = async (req, res, next) => {
 
 exports.getTalk = async (req, res, next) => {
   try {
-    const data = await talksService.getById(req.params.id, req.user.companyId, {
-      fullLibrary: fullLibraryFor(req.user),
-    });
+    const visibility = await talkVisibilityService.resolveTalkVisibility(req.user);
+    const data = await talksService.getById(req.params.id, req.user.companyId, visibility);
     return res.status(200).json({ success: true, data });
   } catch (error) {
     return next(error);
@@ -35,6 +50,7 @@ exports.getTalk = async (req, res, next) => {
 
 exports.createTalk = async (req, res, next) => {
   try {
+    assertCanAuthor(req.user);
     const {
       id,
       title,
@@ -71,6 +87,7 @@ exports.createTalk = async (req, res, next) => {
 
 exports.updateTalk = async (req, res, next) => {
   try {
+    assertCanAuthor(req.user);
     const {
       title,
       tradeTag,

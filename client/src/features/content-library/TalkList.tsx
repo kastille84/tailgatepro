@@ -3,6 +3,7 @@ import { useMemo } from "react";
 import { Button } from "../../ui_comps/button";
 import type { Talk } from "../../interfaces/talk";
 import { FavoriteButton } from "./FavoriteButton";
+import { talkOriginLabel } from "./talkOwnership";
 import {
   StyledCard,
   StyledCardMain,
@@ -27,6 +28,9 @@ interface TalkListProps {
    *  caller's trade/search/custom filters) just means it doesn't show, not
    *  an error. */
   requiredTalkId?: string | null;
+  /** The caller's own company id — tells a "Custom" talk apart from one a GC
+   *  shared ("From your GC"). `null` while the profile is still loading. */
+  ownCompanyId: string | null;
 }
 
 /** Presentational list of talk cards. The page owns the fetch, favorites, and
@@ -37,6 +41,7 @@ export const TalkList = ({
   favoriteIds,
   onSelect,
   requiredTalkId = null,
+  ownCompanyId,
 }: TalkListProps) => {
   const orderedTalks = useMemo(() => {
     if (!requiredTalkId) return talks;
@@ -57,6 +62,7 @@ export const TalkList = ({
     <StyledList>
       {orderedTalks.map((talk) => {
         const isRequired = talk.id === requiredTalkId;
+        const originLabel = talkOriginLabel(talk, ownCompanyId);
         return (
           <StyledCard key={talk.id} $isRequired={isRequired}>
             <StyledCardMain>
@@ -69,7 +75,7 @@ export const TalkList = ({
               {isRequired && (
                 <StyledRequiredBadge>Required by your GC</StyledRequiredBadge>
               )}
-              {!talk.isGlobal && <StyledCustomBadge>Custom</StyledCustomBadge>}
+              {originLabel && <StyledCustomBadge>{originLabel}</StyledCustomBadge>}
               {talk.tradeTag && (
                 <StyledTradeBadge>{talk.tradeTag}</StyledTradeBadge>
               )}

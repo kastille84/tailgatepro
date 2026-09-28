@@ -1,6 +1,7 @@
 const meetingLogsService = require("../services/meetingLogs");
 const companiesService = require("../services/companies");
 const talksService = require("../services/talks");
+const talkVisibilityService = require("../services/talkVisibility");
 const zipBundleService = require("../services/zipBundle");
 const { getLimits, hasFullLibrary } = require("../utility/entitlements");
 const { slugify } = require("../utility/pdfFilename");
@@ -72,11 +73,14 @@ exports.getMeeting = async (req, res, next) => {
 exports.createMeeting = async (req, res, next) => {
   try {
     const { id, projectId, talkId } = req.body;
-    // Trade Free can only run core talks (Phase 9c): a hidden talk is a 404.
+    // Trade Free can only run core talks (Phase 9c) -- plus its GCs' company
+    // talks: a hidden talk is a 404.
     if (talkId && !hasFullLibrary(req.user.companyType, req.user.tier)) {
-      await talksService.getById(talkId, req.user.companyId, {
-        fullLibrary: false,
-      });
+      await talksService.getById(
+        talkId,
+        req.user.companyId,
+        await talkVisibilityService.resolveTalkVisibility(req.user),
+      );
     }
     const data = await meetingLogsService.create({
       id,

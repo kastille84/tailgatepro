@@ -129,7 +129,12 @@ describe("ContentLibrary page", () => {
       isError: false,
     });
     mockUseFavorites.mockReturnValue({ favoriteIds: new Set() });
-    mockUseCurrentUser.mockReturnValue({ limits: { libraryAccess: "full" } });
+    mockUseCurrentUser.mockReturnValue({
+      limits: { libraryAccess: "full" },
+      companyId: "company-1",
+      isGc: false,
+      canAuthorCompanyTalks: true,
+    });
   });
 
   it("shows an upgrade banner for a core-only (Trade Free) plan", () => {
@@ -147,6 +152,56 @@ describe("ContentLibrary page", () => {
     mockUseCurrentUser.mockReturnValue({ limits: null });
     renderPage();
     expect(screen.queryByText(/30 core talks/i)).toBeNull();
+  });
+
+  it("shows the GC copy and the Add button for a GC Portfolio company", () => {
+    mockUseCurrentUser.mockReturnValue({
+      limits: { libraryAccess: "full" },
+      companyId: "gc-1",
+      isGc: true,
+      isManagerRole: true,
+      canAuthorCompanyTalks: true,
+    });
+    renderPage();
+
+    expect(
+      screen.getByText(/every subcontractor on your active jobsites/i),
+    ).toBeDefined();
+    expect(screen.getByRole("button", { name: /add a new talk/i })).toBeDefined();
+    expect(screen.queryByText(/gc portfolio feature/i)).toBeNull();
+  });
+
+  it("shows a manager-only note and no Add button for a Portfolio GC without a manager role", () => {
+    mockUseCurrentUser.mockReturnValue({
+      limits: { libraryAccess: "full" },
+      companyId: "gc-1",
+      isGc: true,
+      isManagerRole: false,
+      canAuthorCompanyTalks: true,
+    });
+    renderPage();
+
+    expect(
+      screen.getByText(/only a safety director or admin can write company talks/i),
+    ).toBeDefined();
+    expect(screen.queryByText(/gc portfolio feature/i)).toBeNull();
+    expect(screen.queryByRole("button", { name: /add a new talk/i })).toBeNull();
+  });
+
+  it("shows an upgrade banner and no Add button for a GC without Portfolio", () => {
+    mockUseCurrentUser.mockReturnValue({
+      limits: { libraryAccess: "full" },
+      companyId: "gc-1",
+      isGc: true,
+      canAuthorCompanyTalks: false,
+    });
+    renderPage();
+
+    expect(screen.getByText(/gc portfolio feature/i)).toBeDefined();
+    expect(
+      screen.getByRole("link", { name: /upgrade to gc portfolio/i }),
+    ).toBeDefined();
+    expect(screen.queryByRole("button", { name: /add a new talk/i })).toBeNull();
   });
 
   it("shows a loading status while auth resolves", () => {

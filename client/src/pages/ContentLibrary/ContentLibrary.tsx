@@ -53,7 +53,8 @@ export const ContentLibrary = () => {
   const { user, loading } = useAuth();
   const { talks, tradeOptions, isLoading, isError } = useTalks();
   const { favoriteIds } = useFavorites();
-  const { limits } = useCurrentUser();
+  const { limits, companyId, isGc, isManagerRole, canAuthorCompanyTalks } =
+    useCurrentUser();
   const {
     trade,
     setTrade,
@@ -87,6 +88,11 @@ export const ContentLibrary = () => {
   // Trade Free only sees the core talks; the server hides the rest.
   const isCoreOnly = limits?.libraryAccess === "core";
 
+  // May the caller write/edit talks: the plan allows it, and a GC also needs a
+  // manager role (server: assertCanAuthor). Permissive while the profile is
+  // unknown (isGc false) so a subcontractor never loses it, e.g. offline.
+  const canWrite = canAuthorCompanyTalks && (!isGc || isManagerRole);
+
   if (loading) {
     return (
       <StyledPage>
@@ -114,8 +120,9 @@ export const ContentLibrary = () => {
             Safety talk library
           </StyledHeadline>
           <StyledLede>
-            OSHA-mapped toolbox talks, ready to run on site. Filter by trade or
-            search by title. Plus add your own custom talks.
+            {isGc
+              ? "OSHA-mapped toolbox talks, plus your own company talks. Every subcontractor on your active jobsites sees the talks you write here and can run them."
+              : "OSHA-mapped toolbox talks, ready to run on site. Filter by trade or search by title. Plus add your own custom talks."}
           </StyledLede>
         </StyledHeroInner>
       </StyledHero>
@@ -134,6 +141,29 @@ export const ContentLibrary = () => {
               </StyledUpgradeBody>
             </StyledUpgradeBanner>
           )}
+          {!canAuthorCompanyTalks && (
+            <StyledUpgradeBanner>
+              <StyledUpgradeTitle>
+                Company talks are a GC Portfolio feature
+              </StyledUpgradeTitle>
+              <StyledUpgradeBody>
+                <Link to="/pricing">Upgrade to GC Portfolio</Link> to write
+                your own talks and share them with every subcontractor on your
+                jobsites.
+              </StyledUpgradeBody>
+            </StyledUpgradeBanner>
+          )}
+          {canAuthorCompanyTalks && !canWrite && (
+            <StyledUpgradeBanner>
+              <StyledUpgradeTitle>
+                Only a safety director or admin can write company talks
+              </StyledUpgradeTitle>
+              <StyledUpgradeBody>
+                You can browse and run every talk here. Ask a safety director
+                or admin at your company to add or change company talks.
+              </StyledUpgradeBody>
+            </StyledUpgradeBanner>
+          )}
           <TalkFilters
             trade={trade}
             onTradeChange={setTrade}
@@ -145,16 +175,18 @@ export const ContentLibrary = () => {
             customOnly={customOnly}
             onCustomOnlyChange={setCustomOnly}
           />
-          <StyledButtonContainer>
-            <Button
-              variant="primary"
-              size="md"
-              onClick={openCreate}
-              leftIcon={<HiOutlinePlus />}
-            >
-              Add a new talk
-            </Button>
-          </StyledButtonContainer>
+          {canWrite && (
+            <StyledButtonContainer>
+              <Button
+                variant="primary"
+                size="md"
+                onClick={openCreate}
+                leftIcon={<HiOutlinePlus />}
+              >
+                Add a new talk
+              </Button>
+            </StyledButtonContainer>
+          )}
 
           {isLoading && <Spinner center message="Loading the talk library…" />}
           {isError && (
@@ -167,6 +199,7 @@ export const ContentLibrary = () => {
               talks={visibleTalks}
               favoriteIds={favoriteIds}
               onSelect={setSelected}
+              ownCompanyId={companyId}
             />
           )}
         </StyledContainer>
@@ -179,6 +212,8 @@ export const ContentLibrary = () => {
         favoriteIds={favoriteIds}
         onClose={() => setSelected(undefined)}
         onEdit={openEdit}
+        ownCompanyId={companyId}
+        canEdit={canWrite}
       />
 
       {isFormOpen && (

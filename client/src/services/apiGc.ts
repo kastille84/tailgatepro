@@ -213,8 +213,8 @@ export const getGcPolicyPush = async (
   return body.data as PolicyPushCompliance;
 };
 
-/** GET /api/gc/policy-push/talks — every global talk, for the push picker
- *  (custom talks are excluded — see docs/policy-push-design.md "Gating"). */
+/** GET /api/gc/policy-push/talks — every global talk plus the GC's own
+ *  company talks, for the push picker (docs/company-talks-design.md). */
 export const getGcPolicyPushTalks = async (
   accessToken: string,
 ): Promise<PolicyPushTalkOption[]> => {

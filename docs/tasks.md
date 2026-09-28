@@ -2537,7 +2537,41 @@ Costs one extra query per request for Free subs (`resolveEffectiveTier`) and per
     two active jobsites each with an accepted sub, confirm the compliance rollup and the
     foreman-side nudge/badge in the meeting wizard, and the 403/404/role-gating behaviors
     described in the design doc's "Endpoint contract".
-- [ ] Company safety form and manual builder (GC Portfolio; the strategy doc also lists it for Trade Pro).
+- [~] Company safety form and manual builder (GC Portfolio; the strategy doc also lists it for Trade Pro) ·
+  status: v1 (GC-authored company talks) code complete, manual verify pending
+
+  Design doc: `docs/company-talks-design.md`. A GC Portfolio company authors ordinary toolbox
+  talks that every sub on its active (non-archived) jobsites sees, can log, and that policy push
+  can push. No schema change — a company talk is `is_global = false`, `company_id = <GC>`.
+
+  - [x] Server: `subAccess.listAcceptedGcIds`; `talks.js` `visibilityFilter` gained a
+    `company_id.in.(…)` branch (uuid-guarded, not narrowed by `is_core`); new
+    `services/talkVisibility.js` (`resolveTalkVisibility`) used by the talks and meetingLogs
+    controllers; `entitlements.canAuthorCompanyTalks` gates create/update (403 for non-Portfolio
+    GC). `listGlobal` removed — the policy-push picker is now `listForCompany(gcId)` and
+    `pushRequiredTopic` validates with `getById(talkId, gcId)`.
+  - [x] Client: `/gc/talks` (`RequireGc`) reuses `ContentLibrary` (GC copy, upgrade banner, no Add
+    button for a non-Portfolio GC); Navbar "Company Talks"; `talkOwnership.ts` — "From your GC"
+    badge and no Edit on a GC-shared talk; `MeetingWizard` passes `ownCompanyId` to `TalkList`;
+    `useCurrentUser().canAuthorCompanyTalks`.
+  - [x] Tests: server 60 files / 956 pass; client 175 files / 1410 pass.
+  - [ ] Manual verify: flip a GC's `tier` to `premium` in Supabase, author a talk at `/gc/talks`,
+    accept a Trade Free sub on an active jobsite — confirm the sub sees it ("From your GC"), can log
+    it, has no Edit; push it via policy push and confirm the wizard banner resolves; archive the
+    jobsite and confirm it disappears; confirm an unrelated sub never sees it.
+  - [ ] Decide the pricing copy: `plans.ts` still lists "Custom company safety form & manual
+    builder" as `comingSoon` (kept on purpose — only the talk-sharing slice shipped). Either keep it
+    until the form/manual builders exist, or reword the bullet to describe company talks.
+  - [x] Follow-up (done): GC create/edit requires `admin`/`safety_manager` (403 for
+    superintendent/foreman; subs unchanged) and talks carry `isLocked` so `TalkDetail` shows a
+    read-only note instead of Edit once a meeting log uses the talk (server 409 stays the authority).
+    Server 60 files / 966 pass; client 175 files / 1418 pass. See `docs/company-talks-design.md`.
+  - [ ] Follow-up: free-form form builder (checklists, incident/near-miss, pre-task plans).
+  - [ ] Follow-up: structured manual builder (overlaps "Custom safety manual upload" below).
+  - [ ] Follow-up: per-jobsite/per-sub audience targeting; versioning instead of the
+    "logged = immutable" lock.
+  - [ ] Follow-up: extend `meetingLogs.createMeeting`'s talk-visibility check to every plan (today
+    only Trade Free is checked, so a paid sub can log any existing talk id).
 - [ ] Custom safety manual upload (Trade Enterprise).
 - [ ] QR-code generation for jobsite invite / join-code links (no generator exists), or drop the QR claims.
 - [ ] Tamper-evidence: a content hash/seal on the PDF + audit log, and GPS capture if the "GPS-verified" claim

@@ -139,6 +139,10 @@ function App() {
                           path="/gc/policy-push"
                           element={<GcPolicyPush />}
                         ></Route>
+                        <Route
+                          path="/gc/talks"
+                          element={<ContentLibrary />}
+                        ></Route>
                       </Route>
                     </Route>
                   </Routes>
