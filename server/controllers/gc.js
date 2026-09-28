@@ -127,10 +127,11 @@ exports.getPolicyPush = async (req, res, next) => {
   }
 };
 
-// GET /api/gc/policy-push/talks — every global talk, for the push picker.
+// GET /api/gc/policy-push/talks — every global talk plus the caller's own
+// company talks, for the push picker.
 exports.listPolicyPushTalks = async (req, res, next) => {
   try {
-    const data = await policyPushService.listPickerTalks();
+    const data = await policyPushService.listPickerTalks(req.user.companyId);
     return res.status(200).json({ success: true, data });
   } catch (error) {
     return next(error);

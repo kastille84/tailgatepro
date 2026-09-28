@@ -18,9 +18,12 @@ const talksService = require("./talks");
 const gcDashboardService = require("./gcDashboard");
 const projectsService = require("./projects");
 
-// Every talk offered by the push picker -- global talks only (see
-// talks.js's listGlobal for why a GC's own custom talks are excluded).
-const listPickerTalks = () => talksService.listGlobal();
+// Every talk offered by the push picker: the global library plus the GC's own
+// company talks (docs/company-talks-design.md). A GC has the full library, so
+// listForCompany's default visibility is exactly that set. The GC's talks are
+// visible to the subs a push targets because talks.js's visibility filter
+// unions in the authoring GC of every jobsite a sub has accepted.
+const listPickerTalks = (gcCompanyId) => talksService.listForCompany(gcCompanyId);
 
 // A talk's title, or null if it no longer exists (the FK is ON DELETE SET
 // NULL, so in practice this only degrades a stale reference rather than
@@ -86,27 +89,14 @@ const getCurrentPush = async (gcCompanyId) => {
 };
 
 // Pushes (or replaces) the caller's company's current required topic.
-// `talkId` must resolve to a *global* talk -- deliberately not
-// talksService.getById, whose company-OR-global visibility filter would
-// wrongly admit the caller's own custom talk as valid (see talks.js's
-// listGlobal for the same reasoning). Replacing an existing push is just a
-// second call, no special-casing needed.
+// `talkId` must resolve to a global talk or one of the caller's own company
+// talks -- talksService.getById's visibility, which 404s any other company's
+// talk. Replacing an existing push is just a second call, no special-casing
+// needed.
 const pushRequiredTopic = async (gcCompanyId, { talkId, pushedByUserId }) => {
   await siteScopeService.assertPolicyPushAvailable(gcCompanyId);
 
-  const { data: talk, error } = await supabase
-    .from("toolbox_talks")
-    .select("id, title")
-    .eq("id", talkId)
-    .eq("is_global", true)
-    .single();
-
-  if (error) {
-    if (error.code === "PGRST116") {
-      throw new AppError("Talk not found", 404, { cause: error });
-    }
-    throw new AppError("Could not load the talk", 502, { cause: error });
-  }
+  const talk = await talksService.getById(talkId, gcCompanyId);
 
   const company = await companiesService.setRequiredTopic(gcCompanyId, {
     talkId,

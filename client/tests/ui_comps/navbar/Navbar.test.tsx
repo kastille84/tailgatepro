@@ -140,9 +140,12 @@ describe("Navbar", () => {
     expect(
       screen.getByRole("link", { name: /policy push/i }).getAttribute("href"),
     ).toBe("/gc/policy-push");
+    expect(
+      screen.getByRole("link", { name: /company talks/i }).getAttribute("href"),
+    ).toBe("/gc/talks");
   });
 
-  it("hides the Subcontractors and Policy Push links for a non-GC company", () => {
+  it("hides the Subcontractors, Company Talks and Policy Push links for a non-GC company", () => {
     mockUseAuth.mockReturnValue({
       user: { id: "user-1" },
       loading: false,
@@ -153,6 +156,7 @@ describe("Navbar", () => {
 
     expect(screen.queryByRole("link", { name: /subcontractors/i })).toBeNull();
     expect(screen.queryByRole("link", { name: /policy push/i })).toBeNull();
+    expect(screen.queryByRole("link", { name: /company talks/i })).toBeNull();
   });
 
   describe("active page highlight", () => {

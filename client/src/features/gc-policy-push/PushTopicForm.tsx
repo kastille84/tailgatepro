@@ -9,7 +9,7 @@ import { Select } from "../../ui_comps/select";
 import { StyledFormRow } from "./styles";
 
 /** Lets a manager (admin/safety_manager — enforced server-side too) pick a
- *  global talk and push it as the company's current required topic across
+ *  global or company talk and push it as the company's current required topic across
  *  every active jobsite (Phase 9e, docs/policy-push-design.md). A broad,
  *  company-wide action, so it's confirmed before firing, same precedent as
  *  an archive/delete flow. */

@@ -1,7 +1,7 @@
 // Plain CommonJS — see requireAuth.test.js for why (nested require() sharing).
 const { supabase } = require("../utility/supabaseClient");
 const companiesService = require("./companies");
-const { getUnlockedSubIds } = require("./subAccess");
+const { getUnlockedSubIds, listAcceptedGcIds } = require("./subAccess");
 
 const fromSpy = vi.spyOn(supabase, "from");
 const getCompanySpy = vi.spyOn(companiesService, "getById");
@@ -72,6 +72,53 @@ describe("subAccess service: getUnlockedSubIds", () => {
     await expect(getUnlockedSubIds("gc-1")).rejects.toMatchObject({
       statusCode: 502,
       message: "Could not check your plan's subcontractors",
+    });
+  });
+});
+
+describe("subAccess service: listAcceptedGcIds", () => {
+  const membershipQuery = (result) => {
+    const query = {
+      then: (resolve, reject) => Promise.resolve(result).then(resolve, reject),
+    };
+    ["select", "eq", "not", "is"].forEach((method) => {
+      query[method] = vi.fn(() => query);
+    });
+    return query;
+  };
+
+  it("returns the distinct GC ids and scopes to the sub's accepted, non-archived memberships", async () => {
+    const query = membershipQuery({
+      data: [
+        { jobsites: { gc_company_id: "gc-1" } },
+        { jobsites: { gc_company_id: "gc-2" } },
+        { jobsites: { gc_company_id: "gc-1" } },
+      ],
+      error: null,
+    });
+    fromSpy.mockReset().mockReturnValue(query);
+
+    await expect(listAcceptedGcIds("sub-1")).resolves.toEqual(["gc-1", "gc-2"]);
+    expect(fromSpy).toHaveBeenCalledWith("jobsite_subcontractors");
+    expect(query.eq).toHaveBeenCalledWith("sub_company_id", "sub-1");
+    expect(query.not).toHaveBeenCalledWith("accepted_at", "is", null);
+    expect(query.is).toHaveBeenCalledWith("jobsites.archived_at", null);
+  });
+
+  it("returns an empty list when the sub has no accepted memberships", async () => {
+    fromSpy.mockReset().mockReturnValue(membershipQuery({ data: [], error: null }));
+
+    await expect(listAcceptedGcIds("sub-1")).resolves.toEqual([]);
+  });
+
+  it("throws a 502 when the membership lookup fails", async () => {
+    fromSpy
+      .mockReset()
+      .mockReturnValue(membershipQuery({ data: null, error: { code: "X" } }));
+
+    await expect(listAcceptedGcIds("sub-1")).rejects.toMatchObject({
+      statusCode: 502,
+      message: "Could not check your jobsite memberships",
     });
   });
 });

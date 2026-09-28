@@ -36,6 +36,17 @@ corporate policy push across all sites" pricing-card bullet (kept in `features`)
 was reworded to describe the shipped feature instead of flagging it coming soon — see the Portfolio row
 below and `docs/policy-push-design.md`.
 
+**Update (form builder deferred):** GC Portfolio's "Custom company safety form & manual builder" bullet was
+reworded to "Custom company safety talks shared with every sub" (what shipped) and its `comingSoon` entry was
+removed. The free-form form builder and structured manual builder are deferred, not promised: they overlap
+heavily with Procore Forms/Inspections/Incidents and SafetyCulture, and depend on the Procore integration
+decision (Phase 9f). The parked design is in `docs/company-talks-design.md` ("Deferred: form builder").
+
+**Update (manual upload dropped):** Trade Enterprise's "Custom safety manual upload" bullet was removed from
+`plans.ts` (both `features` and `comingSoon`) and the strategy doc. A standalone document upload is commodity
+file storage that overlaps Procore Documents/SharePoint/Drive, and its job (using a company's own safety content)
+is already served by custom talks. Revisit only if a customer asks for policy acknowledgment tied to a talk.
+
 ## Tier-gating fact base
 
 - `server/utility/entitlements.js` has exactly two gates, `hasTranslationAccess` and `hasBrandingAccess`, both
@@ -69,7 +80,7 @@ below and `docs/policy-push-design.md`.
 | Trade Pro — AI Talk Builder | Missing | Only manual authoring (`TalkForm.tsx`) | No LLM code; see tasks.md 1736-1741 | Reword (9a) + Build (9e) |
 | Trade Pro — AI multi-language audio, 10+ languages | Partial | `translation.js` (Google Translate, custom talks only), `useTalkAudio.ts` (browser `speechSynthesis`) | Not AI voice; depends on device voices; language count unverified; global library not translated | Reword (9a) |
 | Enterprise — unlimited foremen | Implemented (9c) | `PLAN_LIMITS` `foremanSeats: null` | No cap applied | — |
-| Enterprise — custom safety manual upload | Missing | Only logo/photo/signature uploads exist | No document upload path | Build (9e) |
+| Enterprise — custom safety manual upload | Dropped (2026-09-28) | Only logo/photo/signature uploads exist | No document upload path, by decision: commodity file storage overlapping Procore/existing document tools; custom talks cover the "our own content" job | Dropped; copy removed from `plans.ts` and the strategy doc |
 | Enterprise — Procore, JobTread, QuickBooks sync | Missing | No code | Copy only | Defer (9f) |
 | Enterprise — multi-crew scheduling, equipment check-ins | Missing | No schedule/equipment tables | Not modelled | Build (9e) |
 
@@ -88,7 +99,7 @@ below and `docs/policy-push-design.md`.
 | Portfolio — cross-project scorecards | Implemented (9e) | `services/scorecards.js`, `utility/subScorecard.js`, `utility/rollingWindow.js`, `GET /api/gc/subcontractors[/:companyId/scorecard]` | Rolling 30-day daily-compliance-rate score per sub, averaged across every jobsite that sub has with the GC, with a per-jobsite breakdown; archived jobsites excluded from scoring (see `docs/sub-scorecard-design.md`) | — |
 | Portfolio — top-down policy push | Implemented (9e) | `services/policyPush.js`, three new `companies` columns (`required_talk_id`/`required_talk_pushed_at`/`required_talk_pushed_by`), `GET/POST/DELETE /api/gc/policy-push`, `GET /api/projects/:id/required-topic` | One current required topic per GC, pushed live across every active jobsite; a soft nudge in the meeting wizard (never blocks logging a different talk); manual clear/replace only, no auto-expiry (see `docs/policy-push-design.md`) | — |
 | Portfolio — Superintendent vs Safety Director roles | Implemented (9d-2) | `server/constants/roles.js` (`superintendent`, `SITE_MANAGER_ROLES`), `services/siteScope.js`, `services/jobsiteMembers.js`, `JobsiteMembersModal.tsx` | `superintendent` is scoped to its assigned jobsites via `jobsite_members` (dashboard/meetings/PDF/roster all 404 outside scope); `safety_manager` relabeled "Safety Director"; Portfolio-only, 403 `PLAN_LIMIT` otherwise. Run the `Supabase_SQL.sql` ALTERs before relying on this in prod | — |
-| Portfolio — custom company safety form/manual builder | Missing | No code | — | Build (9e) |
+| Portfolio — custom company safety talks (was "form/manual builder") | Implemented (9e), reworded | `services/talkVisibility.js`, `talks.js` `visibilityFilter`, `subAccess.listAcceptedGcIds`, `entitlements.canAuthorCompanyTalks`, `/gc/talks` | GC-authored company talks shared with every sub on the GC's active jobsites (and pushable via policy push). The form builder and manual builder are deferred and no longer promised (see `docs/company-talks-design.md`) | Resolved: copy reworded, builders deferred |
 | Portfolio — 10 sites vs unlimited | Implemented (9d) | `effectiveJobsiteLimit` via `assertJobsiteAvailable` | Cap 10 (premium) / unlimited (enterprise); no billing sets the tier yet | — |
 
 ## FAQ, callout and landing claims
@@ -116,8 +127,8 @@ Note: the "45 seconds" claim appears only in `docs/pricing-and-positioning-strat
 
 From `docs/pricing-and-positioning-strategy_V2.md`:
 
-- §5: permanent history retention for GC Site Pro/Portfolio; "Custom Company Form Builder" on Trade Pro (`plans.ts`
-  lists it only under GC Portfolio); Procore/ACC as a Trade Pro add-on; SMS "All Sites" and Procore/ACC
+- §5: permanent history retention for GC Site Pro/Portfolio; "Custom Company Form Builder" on Trade Pro
+  (deliberately dropped: the form builder is deferred, see the update above); Procore/ACC as a Trade Pro add-on; SMS "All Sites" and Procore/ACC
   "Multi-Project Routing" on Portfolio; Defense Bundle "Portfolio-Wide Search".
 - §2: smart tagging (trade, phase, equipment, natural-language search), QR pass and roster check-in, SOC-2 and
   cryptographic timestamping.

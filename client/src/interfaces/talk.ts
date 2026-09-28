@@ -72,5 +72,11 @@ export interface Talk {
   translations: Record<string, TalkTranslation> | null;
   isGlobal: boolean;
   companyId: string | null;
+  /** True when a meeting log references this talk, which makes it
+   *  uneditable/undeletable (docs/company-talks-design.md). Only ever true
+   *  for the caller's own talks. A UI hint mirroring the server's `toTalk`
+   *  -- the server's 409 guard is the authority, and it can be stale; a row
+   *  cached before this field existed has it `undefined`, treated as unlocked. */
+  isLocked: boolean;
   createdAt: string;
 }

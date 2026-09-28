@@ -41,6 +41,11 @@ vi.mock("../../../src/hooks/useFavorites", () => ({
 vi.mock("../../../src/hooks/useRequiredTopic", () => ({
   useRequiredTopic: (...args: unknown[]) => mockUseRequiredTopic(...args),
 }));
+// The wizard passes the caller's company id to TalkList (stubbed below) so it
+// can tell a sub's own custom talk from a GC-shared one.
+vi.mock("../../../src/hooks/useCurrentUser", () => ({
+  useCurrentUser: () => ({ companyId: "company-1" }),
+}));
 
 const mockCreateMeetingLog = vi.fn();
 const mockCreateSignature = vi.fn();

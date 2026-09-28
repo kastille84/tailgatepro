@@ -10,6 +10,11 @@ import { getCurrentUser } from "../services/apiUsers";
  *  this hook renders. */
 const TRANSLATION_TIERS = ["premium", "enterprise"];
 
+/** Company-wide manager roles — a hand-kept mirror of the server's
+ *  `MANAGER_ROLES` (server/constants/roles.js), same as
+ *  features/jobsites/JobsiteManager.tsx's own copy. UI hints only. */
+const MANAGER_ROLES = ["admin", "safety_manager"];
+
 /**
  * The caller's own profile + subscription tier (`GET /api/users/me`), kept
  * as its own domain hook layered on top of `useAuth()` rather than merged
@@ -30,6 +35,7 @@ export const useCurrentUser = () => {
 
   return {
     role: query.data?.role ?? null,
+    isManagerRole: MANAGER_ROLES.includes(query.data?.role ?? ""),
     companyId: query.data?.companyId ?? null,
     companyType,
     // Both false until the profile loads, so GC-only / subcontractor-only UI
@@ -47,6 +53,13 @@ export const useCurrentUser = () => {
     // tier list, same reasoning as server/utility/entitlements.js's
     // hasBrandingAccess.
     hasBrandingAccess: tier !== null && TRANSLATION_TIERS.includes(tier),
+    // Authoring company talks: every subcontractor plan, but a GC needs
+    // Portfolio — mirrors server/utility/entitlements.js's
+    // canAuthorCompanyTalks. Permissive while the profile is unknown (loading,
+    // or unavailable offline) so a subcontractor never loses "Add a new talk";
+    // the server is the authority and 403s a non-Portfolio GC regardless.
+    canAuthorCompanyTalks:
+      companyType !== "gc" || query.data?.plan === "gc-portfolio",
     isLoading: query.isLoading,
   };
 };

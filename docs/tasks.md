@@ -2537,8 +2537,55 @@ Costs one extra query per request for Free subs (`resolveEffectiveTier`) and per
     two active jobsites each with an accepted sub, confirm the compliance rollup and the
     foreman-side nudge/badge in the meeting wizard, and the 403/404/role-gating behaviors
     described in the design doc's "Endpoint contract".
-- [ ] Company safety form and manual builder (GC Portfolio; the strategy doc also lists it for Trade Pro).
-- [ ] Custom safety manual upload (Trade Enterprise).
+- [~] Company safety form and manual builder (GC Portfolio; the strategy doc also lists it for Trade Pro) ·
+  status: v1 (GC-authored company talks) code complete, manual verify pending. Form and manual builders
+  **deferred** (2026-09-28): Procore/SafetyCulture overlap and the 9f Procore decision; pricing copy reworded
+  to company talks. Parked design: `docs/company-talks-design.md` ("Deferred: form builder").
+
+  Design doc: `docs/company-talks-design.md`. A GC Portfolio company authors ordinary toolbox
+  talks that every sub on its active (non-archived) jobsites sees, can log, and that policy push
+  can push. No schema change — a company talk is `is_global = false`, `company_id = <GC>`.
+
+  - [x] Server: `subAccess.listAcceptedGcIds`; `talks.js` `visibilityFilter` gained a
+    `company_id.in.(…)` branch (uuid-guarded, not narrowed by `is_core`); new
+    `services/talkVisibility.js` (`resolveTalkVisibility`) used by the talks and meetingLogs
+    controllers; `entitlements.canAuthorCompanyTalks` gates create/update (403 for non-Portfolio
+    GC). `listGlobal` removed — the policy-push picker is now `listForCompany(gcId)` and
+    `pushRequiredTopic` validates with `getById(talkId, gcId)`.
+  - [x] Client: `/gc/talks` (`RequireGc`) reuses `ContentLibrary` (GC copy, upgrade banner, no Add
+    button for a non-Portfolio GC); Navbar "Company Talks"; `talkOwnership.ts` — "From your GC"
+    badge and no Edit on a GC-shared talk; `MeetingWizard` passes `ownCompanyId` to `TalkList`;
+    `useCurrentUser().canAuthorCompanyTalks`.
+  - [x] Tests: server 60 files / 956 pass; client 175 files / 1410 pass.
+  - [ ] Manual verify: flip a GC's `tier` to `premium` in Supabase, author a talk at `/gc/talks`,
+    accept a Trade Free sub on an active jobsite — confirm the sub sees it ("From your GC"), can log
+    it, has no Edit; push it via policy push and confirm the wizard banner resolves; archive the
+    jobsite and confirm it disappears; confirm an unrelated sub never sees it.
+  - [x] Decide the pricing copy (done 2026-09-28): reworded the GC Portfolio bullet to "Custom company
+    safety talks shared with every sub" and removed its `comingSoon` entry in `plans.ts`; updated
+    `docs/pricing-promise-gaps.md` and the strategy doc notes.
+  - [x] Follow-up (done): GC create/edit requires `admin`/`safety_manager` (403 for
+    superintendent/foreman; subs unchanged) and talks carry `isLocked` so `TalkDetail` shows a
+    read-only note instead of Edit once a meeting log uses the talk (server 409 stays the authority).
+    Server 60 files / 966 pass; client 175 files / 1418 pass. See `docs/company-talks-design.md`.
+  - [-] Deferred: free-form form builder (checklists, incident/near-miss, pre-task plans). Overlaps Procore
+    Forms/Inspections/Incidents; revisit after 9f or on customer demand. Design parked in
+    `docs/company-talks-design.md`; cheaper alternative there: 2-3 fixed-shape templates.
+  - [-] Deferred: structured manual builder (same overlap with Procore/existing document tools that got the
+    standalone manual upload below dropped).
+  - [ ] Follow-up: per-jobsite/per-sub audience targeting; versioning instead of the
+    "logged = immutable" lock.
+  - [x] Follow-up (done): `meetingLogs.createMeeting`'s talk-visibility check now runs for every plan
+    (it only checked Trade Free, so a paid sub could log any existing talk id). Controller + test only;
+    server 60 files / 967 pass. Edge: an offline-created log for a GC talk now 404s on flush if the sub's
+    access ended in between (jobsite archived / sub removed), as Trade Free already did. Manual verify:
+    as a Trade Pro sub, `POST /api/meetings` with another company's private talk id -> 404; with a global
+    or accepted-GC talk -> 201.
+- [-] Custom safety manual upload (Trade Enterprise) — **dropped** (2026-09-28). A standalone document upload is
+      commodity file storage that overlaps Procore Documents/SharePoint/Drive and doesn't serve the core loop (run a
+      talk, capture signatures, audit PDF, GC visibility); its job ("use our own safety content") is already covered
+      by Trade Pro custom talks and GC company talks. Removed from Trade Enterprise's pricing copy. Revisit only if a
+      customer asks for policy acknowledgment tied to a talk.
 - [ ] QR-code generation for jobsite invite / join-code links (no generator exists), or drop the QR claims.
 - [ ] Tamper-evidence: a content hash/seal on the PDF + audit log, and GPS capture if the "GPS-verified" claim
       stays; otherwise remove both claims in 9a.
@@ -2557,8 +2604,8 @@ Costs one extra query per request for Free subs (`resolveEffectiveTier`) and per
       watermark exist today.
 - [ ] PDF footer CTA "Claim Your Free GC Portal" (§7); the shipped watermark has no CTA.
 - [ ] Smart tagging / natural-language search, SOC-2, cryptographic timestamping (§2).
-- [ ] `plans.ts` listing gaps vs strategy doc §5 (permanent GC history, Trade Pro form builder, Procore/ACC add-on,
-      Portfolio-wide search) — decide whether to list or drop.
+- [ ] `plans.ts` listing gaps vs strategy doc §5 (permanent GC history, Procore/ACC add-on, Portfolio-wide
+      search) — decide whether to list or drop. (Trade Pro form builder: dropped, deferred with the form builder.)
 
 ## Phase 10 — Word-library import (300 toolbox talks) · status: 112 talks approved and seeded to non-prod and prod (34 original + 55 agency + 20 authored + 3 Word); the other 126 Word talks dropped
 

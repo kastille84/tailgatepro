@@ -68,6 +68,7 @@ export const Navbar: React.FC = () => {
               </NavAnchor>
             )}
             {isGc && <NavAnchor to="/gc/subcontractors">Subcontractors</NavAnchor>}
+            {isGc && <NavAnchor to="/gc/talks">Company Talks</NavAnchor>}
             {isGc && <NavAnchor to="/gc/policy-push">Policy Push</NavAnchor>}
             <NavAnchor to="/settings">Settings</NavAnchor>
             <Button

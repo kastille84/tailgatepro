@@ -1,5 +1,6 @@
 // Plain CommonJS — see requireAuth.test.js for why (nested require() sharing).
 const talksService = require("../services/talks");
+const talkVisibilityService = require("../services/talkVisibility");
 const translationService = require("../services/translation");
 const {
   listTalks,
@@ -15,6 +16,7 @@ const getByIdSpy = vi.spyOn(talksService, "getById");
 const createSpy = vi.spyOn(talksService, "create");
 const updateSpy = vi.spyOn(talksService, "update");
 const removeSpy = vi.spyOn(talksService, "remove");
+const resolveVisibilitySpy = vi.spyOn(talkVisibilityService, "resolveTalkVisibility");
 const getSupportedLanguagesSpy = vi.spyOn(
   translationService,
   "getSupportedLanguages",
@@ -45,6 +47,9 @@ describe("talks controller", () => {
     createSpy.mockReset();
     updateSpy.mockReset();
     removeSpy.mockReset();
+    resolveVisibilitySpy
+      .mockReset()
+      .mockResolvedValue({ fullLibrary: true, gcCompanyIds: [] });
     getSupportedLanguagesSpy.mockReset();
     req = {
       params: {},
@@ -54,6 +59,7 @@ describe("talks controller", () => {
         companyId: "company-1",
         companyType: "subcontractor",
         tier: "premium",
+        role: "foreman",
       },
     };
     res = {
@@ -72,26 +78,40 @@ describe("talks controller", () => {
       await listTalks(req, res, next);
 
       // Assert
+      expect(resolveVisibilitySpy).toHaveBeenCalledWith(req.user);
       expect(listForCompanySpy).toHaveBeenCalledWith("company-1", {
         fullLibrary: true,
+        gcCompanyIds: [],
       });
       expect(res.status).toHaveBeenCalledWith(200);
       expect(res.json).toHaveBeenCalledWith({ success: true, data: [talk] });
       expect(next).not.toHaveBeenCalled();
     });
 
-    it("should narrow the list to core talks for a Trade Free caller", async () => {
+    it("should pass the resolved visibility (core-only library, the sub's GCs) to the service", async () => {
       // Arrange
-      req.user.tier = "basic";
+      const visibility = { fullLibrary: false, gcCompanyIds: ["gc-1"] };
+      resolveVisibilitySpy.mockResolvedValue(visibility);
       listForCompanySpy.mockResolvedValue([talk]);
 
       // Act
       await listTalks(req, res, next);
 
       // Assert
-      expect(listForCompanySpy).toHaveBeenCalledWith("company-1", {
-        fullLibrary: false,
-      });
+      expect(listForCompanySpy).toHaveBeenCalledWith("company-1", visibility);
+    });
+
+    it("should forward a visibility-lookup error to next()", async () => {
+      // Arrange
+      const error = new Error("membership lookup failed");
+      resolveVisibilitySpy.mockRejectedValue(error);
+
+      // Act
+      await listTalks(req, res, next);
+
+      // Assert
+      expect(next).toHaveBeenCalledWith(error);
+      expect(listForCompanySpy).not.toHaveBeenCalled();
     });
 
     it("should forward a service error to next()", async () => {
@@ -120,15 +140,17 @@ describe("talks controller", () => {
       // Assert
       expect(getByIdSpy).toHaveBeenCalledWith("talk-1", "company-1", {
         fullLibrary: true,
+        gcCompanyIds: [],
       });
       expect(res.status).toHaveBeenCalledWith(200);
       expect(res.json).toHaveBeenCalledWith({ success: true, data: talk });
       expect(next).not.toHaveBeenCalled();
     });
 
-    it("should scope a Trade Free caller to core talks", async () => {
+    it("should scope the lookup to the resolved visibility (core-only library, the sub's GCs)", async () => {
       // Arrange
-      req.user.tier = "basic";
+      const visibility = { fullLibrary: false, gcCompanyIds: ["gc-1"] };
+      resolveVisibilitySpy.mockResolvedValue(visibility);
       req.params = { id: "talk-1" };
       getByIdSpy.mockResolvedValue(talk);
 
@@ -136,9 +158,7 @@ describe("talks controller", () => {
       await getTalk(req, res, next);
 
       // Assert
-      expect(getByIdSpy).toHaveBeenCalledWith("talk-1", "company-1", {
-        fullLibrary: false,
-      });
+      expect(getByIdSpy).toHaveBeenCalledWith("talk-1", "company-1", visibility);
     });
 
     it("should forward a service error to next() (e.g. the 404 not-found case)", async () => {
@@ -257,6 +277,77 @@ describe("talks controller", () => {
       expect(createSpy).toHaveBeenCalled();
       expect(res.status).toHaveBeenCalledWith(201);
     });
+
+    it.each(["admin", "safety_manager"])(
+      "should let a GC Portfolio %s author a company talk",
+      async (role) => {
+        // Arrange
+        req.user.companyType = "gc";
+        req.user.tier = "premium";
+        req.user.role = role;
+        createSpy.mockResolvedValue(customTalk);
+
+        // Act
+        await createTalk(req, res, next);
+
+        // Assert
+        expect(createSpy).toHaveBeenCalled();
+        expect(res.status).toHaveBeenCalledWith(201);
+      },
+    );
+
+    it.each(["superintendent", "foreman"])(
+      "should reject a GC Portfolio %s with a 403, without calling the service",
+      async (role) => {
+        // Arrange
+        req.user.companyType = "gc";
+        req.user.tier = "premium";
+        req.user.role = role;
+
+        // Act
+        await createTalk(req, res, next);
+
+        // Assert
+        expect(createSpy).not.toHaveBeenCalled();
+        expect(next).toHaveBeenCalledWith(
+          expect.objectContaining({
+            statusCode: 403,
+            message: "Only a safety director or admin can write company talks",
+          }),
+        );
+      },
+    );
+
+    it("should let a subcontractor foreman author regardless of the manager-role rule", async () => {
+      // Arrange
+      req.user.role = "foreman";
+      createSpy.mockResolvedValue(customTalk);
+
+      // Act
+      await createTalk(req, res, next);
+
+      // Assert
+      expect(createSpy).toHaveBeenCalled();
+      expect(res.status).toHaveBeenCalledWith(201);
+    });
+
+    it("should reject a non-Portfolio GC with a 403, without calling the service", async () => {
+      // Arrange
+      req.user.companyType = "gc";
+      req.user.tier = "basic";
+
+      // Act
+      await createTalk(req, res, next);
+
+      // Assert
+      expect(createSpy).not.toHaveBeenCalled();
+      expect(next).toHaveBeenCalledWith(
+        expect.objectContaining({
+          statusCode: 403,
+          message: "Upgrade to GC Portfolio to create company talks",
+        }),
+      );
+    });
   });
 
   describe("updateTalk", () => {
@@ -299,6 +390,58 @@ describe("talks controller", () => {
       expect(res.status).toHaveBeenCalledWith(200);
       expect(res.json).toHaveBeenCalledWith({ success: true, data: updatedTalk });
       expect(next).not.toHaveBeenCalled();
+    });
+
+    it("should let a GC Portfolio safety manager edit a company talk", async () => {
+      // Arrange
+      req.user.companyType = "gc";
+      req.user.tier = "premium";
+      req.user.role = "safety_manager";
+      updateSpy.mockResolvedValue(updatedTalk);
+
+      // Act
+      await updateTalk(req, res, next);
+
+      // Assert
+      expect(updateSpy).toHaveBeenCalled();
+      expect(res.status).toHaveBeenCalledWith(200);
+    });
+
+    it("should reject a GC Portfolio superintendent with a 403, without calling the service", async () => {
+      // Arrange
+      req.user.companyType = "gc";
+      req.user.tier = "premium";
+      req.user.role = "superintendent";
+
+      // Act
+      await updateTalk(req, res, next);
+
+      // Assert
+      expect(updateSpy).not.toHaveBeenCalled();
+      expect(next).toHaveBeenCalledWith(
+        expect.objectContaining({
+          statusCode: 403,
+          message: "Only a safety director or admin can write company talks",
+        }),
+      );
+    });
+
+    it("should reject a non-Portfolio GC with a 403, without calling the service", async () => {
+      // Arrange
+      req.user.companyType = "gc";
+      req.user.tier = "basic";
+
+      // Act
+      await updateTalk(req, res, next);
+
+      // Assert
+      expect(updateSpy).not.toHaveBeenCalled();
+      expect(next).toHaveBeenCalledWith(
+        expect.objectContaining({
+          statusCode: 403,
+          message: "Upgrade to GC Portfolio to create company talks",
+        }),
+      );
     });
 
     it("should forward a service error to next() (e.g. the 409 in-use guard or 404 not-found)", async () => {
