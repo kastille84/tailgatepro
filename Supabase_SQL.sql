@@ -302,6 +302,12 @@ CREATE TABLE jobsites (
   -- Who originated the row: 'gc' (POST /api/jobsites) or 'subcontractor'
   -- (join-code link find-or-create). NULL = legacy/unknown, never guessed.
   origin TEXT CHECK (origin IN ('gc', 'subcontractor')),
+  -- Phase 9e (docs/jobsite-qr-join-design.md): this jobsite's own standing
+  -- QR/join link, created lazily on first ask via GET /api/jobsites/:id/join-link.
+  -- Unlike jobsite_subcontractors.token below, this one never expires and is
+  -- meant to be publicly displayed — the same trust model companies.join_code
+  -- already has, just scoped to one jobsite instead of the whole GC company.
+  join_token TEXT UNIQUE,
   created_at TIMESTAMPTZ DEFAULT NOW()
 );
 
@@ -316,6 +322,7 @@ CREATE INDEX idx_jobsites_gc_company ON jobsites (gc_company_id);
 -- CREATE INDEX IF NOT EXISTS idx_jobsites_gc_company ON jobsites (gc_company_id);
 -- ALTER TABLE jobsites ADD COLUMN IF NOT EXISTS plan TEXT NOT NULL DEFAULT 'free' CHECK (plan IN ('free', 'site_pro'));  -- Phase 9b
 -- ALTER TABLE jobsites ADD COLUMN IF NOT EXISTS origin TEXT CHECK (origin IN ('gc', 'subcontractor'));  -- who created the jobsite; NULL = unknown
+-- ALTER TABLE jobsites ADD COLUMN IF NOT EXISTS join_token TEXT UNIQUE;  -- Phase 9e
 
 -- 12. Jobsite Subcontractors (Phase 8d) — folds the GC's invite-by-email into
 -- the jobsite roster instead of a separate invites table, so "invited, not
@@ -329,7 +336,12 @@ CREATE TABLE jobsite_subcontractors (
   id UUID PRIMARY KEY,
   jobsite_id UUID NOT NULL REFERENCES jobsites(id) ON DELETE CASCADE,
   sub_company_id UUID REFERENCES companies(id) ON DELETE CASCADE,
-  invited_email TEXT NOT NULL,
+  -- Nullable (Phase 9e): NULL on a row created via jobsites.join_token
+  -- (docs/jobsite-qr-join-design.md) — that admission path has no invited
+  -- email at all, unlike the GC-sent email invite below. Standard SQL treats
+  -- every NULL as distinct, so any number of such rows coexist per jobsite
+  -- under jobsite_subs_email_unique with no constraint change.
+  invited_email TEXT,
   token TEXT UNIQUE,
   expires_at TIMESTAMPTZ,
   accepted_at TIMESTAMPTZ,
@@ -352,6 +364,7 @@ ALTER TABLE jobsite_subcontractors ENABLE ROW LEVEL SECURITY;
 -- ALTER TABLE jobsite_subcontractors ADD CONSTRAINT jobsite_subs_email_unique UNIQUE (jobsite_id, invited_email);
 -- CREATE UNIQUE INDEX IF NOT EXISTS jobsite_subs_company_unique ON jobsite_subcontractors (jobsite_id, sub_company_id) WHERE sub_company_id IS NOT NULL;
 -- ALTER TABLE jobsite_subcontractors ENABLE ROW LEVEL SECURITY;
+-- ALTER TABLE jobsite_subcontractors ALTER COLUMN invited_email DROP NOT NULL;  -- Phase 9e
 
 -- 13. Projects: attach to a jobsite (Phase 8d) — nullable, so every existing
 -- sub-owned project (and any new one with no GC, or only a free-text GC) is

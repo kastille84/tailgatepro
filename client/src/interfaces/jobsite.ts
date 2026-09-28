@@ -1,4 +1,4 @@
-import type { ProjectStatus } from "./project";
+import type { Project, ProjectStatus } from "./project";
 
 /** One row of a jobsite's roster: a pending invite or an accepted sub. The
  *  invite token is never part of this shape — it only leaves the server via
@@ -55,6 +55,29 @@ export interface JobsiteInvitePreview {
   jobsiteName: string | null;
   email: string;
 }
+
+/** GET /api/jobsites/:id/join-link's response (Phase 9e) — the jobsite's own
+ *  standing QR/join URL, created on first ask. Unlike the invite token, this
+ *  one is meant to be publicly displayed. */
+export interface JobsiteJoinLink {
+  joinUrl: string;
+}
+
+/** GET /api/jobsites/join/:token's public preview — shown on the join page
+ *  before the scanner has any session. No email: nothing is invited, anyone
+ *  with the link can join. */
+export interface JobsiteJoinPreview {
+  gcCompanyName: string | null;
+  jobsiteName: string | null;
+}
+
+/** POST /api/jobsites/join/:token/accept's response — the sub's new (or, on a
+ *  repeat scan, already-existing) project on the jobsite. `alreadyMember` is
+ *  true only on a repeat scan, when no new project is created and the other
+ *  project fields are absent. */
+export type JobsiteJoinAcceptResult =
+  | (Project & { alreadyMember: false })
+  | { alreadyMember: true };
 
 /** One row of GET/PUT /api/jobsites/:id/members (Phase 9d-2) — one of the
  *  company's superintendents, flagged with whether they're assigned to this

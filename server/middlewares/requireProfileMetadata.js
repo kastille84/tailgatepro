@@ -26,10 +26,18 @@ const requireProfileMetadata = (req, res, next) => {
     typeof metadata.jobsiteInviteToken === "string"
       ? metadata.jobsiteInviteToken.trim()
       : "";
+  // Phase 9e: a brand-new sub signing up straight from a scanned jobsite QR
+  // code (docs/jobsite-qr-join-design.md), as opposed to jobsiteInviteToken's
+  // GC-sent email invite. Validated identically to jobsiteInviteToken below —
+  // the two differ only in which service call createProfile makes with them.
+  const jobsiteJoinToken =
+    typeof metadata.jobsiteJoinToken === "string" ? metadata.jobsiteJoinToken.trim() : "";
 
-  // The two invite kinds are mutually exclusive: a team invite joins an
-  // existing company, a jobsite invite founds a brand-new one.
-  if (inviteToken && jobsiteInviteToken) {
+  // The three token kinds are mutually exclusive: a team invite joins an
+  // existing company, a jobsite invite or a jobsite join link each found a
+  // brand-new one.
+  const tokenCount = [inviteToken, jobsiteInviteToken, jobsiteJoinToken].filter(Boolean).length;
+  if (tokenCount > 1) {
     return next(new AppError("Profile details are incomplete", 422));
   }
 
@@ -43,11 +51,12 @@ const requireProfileMetadata = (req, res, next) => {
       ? metadata.companyName.trim()
       : "";
 
-  // Phase 8d Case B: a GC's jobsite invite to an unregistered sub. The invitee
-  // names their own company (the GC never pre-creates one), but companyType is
-  // forced to "subcontractor" rather than read from metadata — a GC must not be
-  // able to self-declare into a sub invite.
-  if (jobsiteInviteToken) {
+  // Phase 8d Case B / Phase 9e: a GC's jobsite invite, or a scanned jobsite
+  // QR/join link, reaching an unregistered sub. The invitee names their own
+  // company (the GC never pre-creates one), but companyType is forced to
+  // "subcontractor" rather than read from metadata — self-declaring into
+  // either kind of jobsite admission must not be possible.
+  if (jobsiteInviteToken || jobsiteJoinToken) {
     if (!companyName) {
       return next(new AppError("Profile details are incomplete", 422));
     }
@@ -55,7 +64,7 @@ const requireProfileMetadata = (req, res, next) => {
       name,
       companyName,
       companyType: "subcontractor",
-      jobsiteInviteToken,
+      ...(jobsiteInviteToken ? { jobsiteInviteToken } : { jobsiteJoinToken }),
     };
     return next();
   }

@@ -632,3 +632,106 @@ describe("users service: createProfile (jobsite invite branch, Phase 8d Case B)"
     expect(companiesDelete).not.toHaveBeenCalled();
   });
 });
+
+describe("users service: createProfile (jobsite QR/join-link branch, Phase 9e)", () => {
+  let companiesInsert;
+  let companiesEq;
+  let companiesDelete;
+  let usersSingle;
+  let usersInsert;
+  let acceptJoinLinkSpy;
+  let errorSpy;
+
+  const payload = {
+    id: "auth-user-3",
+    email: "carla@newco.com",
+    name: "Carla Sub",
+    companyName: "Newer Co Roofing",
+    companyType: "subcontractor",
+    jobsiteJoinToken: "c".repeat(64),
+  };
+
+  beforeEach(() => {
+    companiesInsert = vi.fn().mockResolvedValue({ error: null });
+    companiesEq = vi.fn().mockResolvedValue({ error: null });
+    companiesDelete = vi.fn(() => ({ eq: companiesEq }));
+
+    usersSingle = vi.fn().mockResolvedValue({
+      data: { id: "auth-user-3", name: "Carla Sub", role: "admin", company_id: "generated-company-id" },
+      error: null,
+    });
+    usersInsert = vi.fn(() => ({ select: vi.fn(() => ({ single: usersSingle })) }));
+
+    fromSpy.mockReset();
+    fromSpy.mockImplementation((table) => {
+      if (table === "companies") return { insert: companiesInsert, delete: companiesDelete };
+      if (table === "users") return { insert: usersInsert };
+      throw new Error(`Unexpected table: ${table}`);
+    });
+
+    acceptJoinLinkSpy = vi.spyOn(jobsitesService, "acceptJoinLink").mockResolvedValue({ id: "project-9" });
+    errorSpy = vi.spyOn(console, "error").mockImplementation(() => {});
+  });
+
+  afterEach(() => {
+    acceptJoinLinkSpy.mockRestore();
+    errorSpy.mockRestore();
+  });
+
+  it("should create the company and admin user first, then accept the jobsite join link for the new company (no email involved)", async () => {
+    // Act
+    const result = await createProfile(payload);
+
+    // Assert
+    const companyId = companiesInsert.mock.calls[0][0].id;
+    expect(companyId).toMatch(UUID_RE);
+    expect(companiesInsert.mock.calls[0][0].company_type).toBe("subcontractor");
+    expect(usersInsert).toHaveBeenCalledWith({
+      id: "auth-user-3",
+      company_id: companyId,
+      role: "admin",
+      name: "Carla Sub",
+    });
+    expect(acceptJoinLinkSpy).toHaveBeenCalledWith({ token: "c".repeat(64), companyId });
+    expect(usersInsert.mock.invocationCallOrder[0]).toBeLessThan(
+      acceptJoinLinkSpy.mock.invocationCallOrder[0],
+    );
+    expect(result).toEqual({
+      id: "auth-user-3",
+      name: "Carla Sub",
+      role: "admin",
+      companyId: "generated-company-id",
+    });
+  });
+
+  it("should not accept anything when no jobsiteJoinToken is present", async () => {
+    // Act
+    await createProfile({ ...payload, jobsiteJoinToken: undefined });
+
+    // Assert
+    expect(acceptJoinLinkSpy).not.toHaveBeenCalled();
+  });
+
+  it("should not attempt the accept when the user insert fails", async () => {
+    // Arrange
+    usersSingle.mockResolvedValue({ data: null, error: { code: "OTHER", message: "unexpected" } });
+
+    // Act & Assert
+    await expect(createProfile(payload)).rejects.toMatchObject({ statusCode: 502 });
+    expect(acceptJoinLinkSpy).not.toHaveBeenCalled();
+  });
+
+  it("should log and swallow a failed accept, still returning the created profile", async () => {
+    // Arrange
+    const acceptError = new Error("boom");
+    acceptJoinLinkSpy.mockRejectedValue(acceptError);
+
+    // Act
+    const result = await createProfile(payload);
+
+    // Assert
+    expect(errorSpy).toHaveBeenCalledWith("users: failed to accept a jobsite join link", acceptError);
+    expect(result.id).toBe("auth-user-3");
+    expect(companiesDelete).not.toHaveBeenCalled();
+  });
+});

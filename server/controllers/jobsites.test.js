@@ -10,6 +10,9 @@ const {
   inviteSubcontractor,
   previewInvite,
   acceptInvite,
+  getJoinLink,
+  previewJoinLink,
+  acceptJoinLink,
   removeSubcontractor,
   listMembers,
   setMembers,
@@ -24,6 +27,9 @@ const updateSpy = vi.spyOn(jobsitesService, "update");
 const createInviteSpy = vi.spyOn(jobsitesService, "createInvite");
 const previewInviteSpy = vi.spyOn(jobsitesService, "previewInvite");
 const acceptInviteSpy = vi.spyOn(jobsitesService, "acceptInvite");
+const getOrCreateJoinTokenSpy = vi.spyOn(jobsitesService, "getOrCreateJoinToken");
+const previewJoinLinkSpy = vi.spyOn(jobsitesService, "previewJoinLink");
+const acceptJoinLinkSpy = vi.spyOn(jobsitesService, "acceptJoinLink");
 const removeSubcontractorSpy = vi.spyOn(jobsitesService, "removeSubcontractor");
 const sendJobsiteInviteEmailSpy = vi.spyOn(emailService, "sendJobsiteInviteEmail");
 const keysSpy = vi.spyOn(envUtils, "keysBasedOnEnv");
@@ -180,6 +186,9 @@ describe("jobsites controller: invites (Phase 8d)", () => {
     createInviteSpy.mockReset();
     previewInviteSpy.mockReset();
     acceptInviteSpy.mockReset();
+    getOrCreateJoinTokenSpy.mockReset();
+    previewJoinLinkSpy.mockReset();
+    acceptJoinLinkSpy.mockReset();
     removeSubcontractorSpy.mockReset();
     sendJobsiteInviteEmailSpy.mockReset().mockResolvedValue(undefined);
     keysSpy.mockReset().mockReturnValue({ clientUrl: "https://localhost:5173" });
@@ -315,6 +324,110 @@ describe("jobsites controller: invites (Phase 8d)", () => {
 
       // Act
       await acceptInvite(req, res, next);
+
+      // Assert
+      expect(next).toHaveBeenCalledWith(error);
+    });
+  });
+
+  describe("getJoinLink (Phase 9e)", () => {
+    beforeEach(() => {
+      req.params = { id: "jobsite-1" };
+    });
+
+    it("creates/reads the join token and responds 200 with the full join URL", async () => {
+      // Arrange
+      getOrCreateJoinTokenSpy.mockResolvedValue("b".repeat(64));
+
+      // Act
+      await getJoinLink(req, res, next);
+
+      // Assert
+      expect(getOrCreateJoinTokenSpy).toHaveBeenCalledWith({
+        jobsiteId: "jobsite-1",
+        gcCompanyId: "gc-1",
+        allowedJobsiteIds: null,
+      });
+      expect(res.status).toHaveBeenCalledWith(200);
+      expect(res.json).toHaveBeenCalledWith({
+        success: true,
+        data: { joinUrl: `https://localhost:5173/jobsite-join/${"b".repeat(64)}` },
+      });
+      expect(next).not.toHaveBeenCalled();
+    });
+
+    it("forwards a getOrCreateJoinToken failure to next", async () => {
+      // Arrange
+      const error = new Error("boom");
+      getOrCreateJoinTokenSpy.mockRejectedValue(error);
+
+      // Act
+      await getJoinLink(req, res, next);
+
+      // Assert
+      expect(next).toHaveBeenCalledWith(error);
+    });
+  });
+
+  describe("previewJoinLink (Phase 9e)", () => {
+    beforeEach(() => {
+      req.params = { token: TOKEN };
+    });
+
+    it("returns the join link preview", async () => {
+      // Arrange
+      const preview = { gcCompanyName: "Turner Construction", jobsiteName: "Riverside Tower" };
+      previewJoinLinkSpy.mockResolvedValue(preview);
+
+      // Act
+      await previewJoinLink(req, res, next);
+
+      // Assert
+      expect(previewJoinLinkSpy).toHaveBeenCalledWith(TOKEN);
+      expect(res.status).toHaveBeenCalledWith(200);
+      expect(res.json).toHaveBeenCalledWith({ success: true, data: preview });
+    });
+
+    it("forwards a previewJoinLink failure to next", async () => {
+      // Arrange
+      const error = new Error("boom");
+      previewJoinLinkSpy.mockRejectedValue(error);
+
+      // Act
+      await previewJoinLink(req, res, next);
+
+      // Assert
+      expect(next).toHaveBeenCalledWith(error);
+    });
+  });
+
+  describe("acceptJoinLink (Phase 9e)", () => {
+    beforeEach(() => {
+      req.params = { token: TOKEN };
+      req.user = { id: "user-2", name: "Jane", companyId: "company-9", role: "admin" };
+    });
+
+    it("accepts using the caller's own company (no email involved) and responds 200 with the result", async () => {
+      // Arrange
+      const result = { id: "project-9", jobsiteId: "jobsite-1", alreadyMember: false };
+      acceptJoinLinkSpy.mockResolvedValue(result);
+
+      // Act
+      await acceptJoinLink(req, res, next);
+
+      // Assert
+      expect(acceptJoinLinkSpy).toHaveBeenCalledWith({ token: TOKEN, companyId: "company-9" });
+      expect(res.status).toHaveBeenCalledWith(200);
+      expect(res.json).toHaveBeenCalledWith({ success: true, data: result });
+    });
+
+    it("forwards an acceptJoinLink failure to next", async () => {
+      // Arrange
+      const error = new Error("boom");
+      acceptJoinLinkSpy.mockRejectedValue(error);
+
+      // Act
+      await acceptJoinLink(req, res, next);
 
       // Assert
       expect(next).toHaveBeenCalledWith(error);

@@ -155,6 +155,7 @@ still its own row, now optionally pointed at one of these via `jobsite_id` (see 
 | `archived_at` | Timestamptz | Nullable | `NULL` = live; a timestamp = archived |
 | `plan` | Text | Not Null, Default `'free'`, CHECK in (`free`, `site_pro`) | Phase 9b: per-site GC plan. `site_pro` = a paid GC Site Pro site (see `server/utility/entitlements.js`). Not yet enforced or written (9d) |
 | `origin` | Text | Nullable, CHECK in (`gc`, `subcontractor`) | Who created the jobsite: `gc` via `POST /api/jobsites`, `subcontractor` when a join-code link find-or-created it. `NULL` = created before this column existed (origin unknown, never guessed). Server-written only; drives the "Created by subcontractor" badge |
+| `join_token` | Text | Unique (Nullable) | Phase 9e (`docs/jobsite-qr-join-design.md`): this jobsite's own standing QR/join link, created lazily on first `GET /api/jobsites/:id/join-link`. Never expires, unlike `jobsite_subcontractors.token` below — meant to be publicly displayed (a QR code, a printed poster), the same trust model `companies.join_code` has |
 | `created_at` | Timestamptz | Default `now()` | |
 
 > RLS: enabled with no policies (server-brokered, deny-all) — see `docs/data-access.md`.
@@ -164,7 +165,7 @@ still its own row, now optionally pointed at one of these via `jobsite_id` (see 
 | `id` | UUID | Primary Key | Server-generated UUID (not an offline record) |
 | `jobsite_id` | UUID | Not Null, FK -> `jobsites.id` (ON DELETE CASCADE) | The jobsite being invited to / joined |
 | `sub_company_id` | UUID | Nullable, FK -> `companies.id` (ON DELETE CASCADE) | `NULL` until accepted — the invite carries only an email until then |
-| `invited_email` | Text | Not Null | The address the GC invited |
+| `invited_email` | Text | Nullable | The address the GC invited by email. `NULL` on a row created via the jobsite's `join_token` (Phase 9e, `docs/jobsite-qr-join-design.md`) — that admission path has no invited email at all |
 | `token` | Text | Unique (Nullable) | Server-generated 64-hex secret (`server/utility/inviteToken.js`, shared with `company_invites`); `NULL` once accepted |
 | `expires_at` | Timestamptz | Nullable | 7-day TTL; `NULL` once accepted |
 | `accepted_at` | Timestamptz | Nullable | `NULL` = still pending; set = this is now a live membership row |

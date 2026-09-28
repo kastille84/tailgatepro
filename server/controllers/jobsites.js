@@ -98,6 +98,50 @@ exports.acceptInvite = async (req, res, next) => {
   }
 };
 
+// GET /api/jobsites/:id/join-link — GC manager/site-scoped superintendent
+// only (route guards). Returns the jobsite's standing QR/join URL,
+// generating the token on first use. Unlike the invite token, this one is
+// meant to be shown/printed — see docs/jobsite-qr-join-design.md.
+exports.getJoinLink = async (req, res, next) => {
+  try {
+    const token = await jobsitesService.getOrCreateJoinToken({
+      jobsiteId: req.params.id,
+      gcCompanyId: req.user.companyId,
+      allowedJobsiteIds: await siteScopeService.getAllowedJobsiteIds(req.user),
+    });
+    const joinUrl = `${envUtils.keysBasedOnEnv().clientUrl}/jobsite-join/${token}`;
+    return res.status(200).json({ success: true, data: { joinUrl } });
+  } catch (error) {
+    return next(error);
+  }
+};
+
+// GET /api/jobsites/join/:token — public, unauthenticated preview shown
+// before the scanner has any account. The token itself is the credential.
+exports.previewJoinLink = async (req, res, next) => {
+  try {
+    const data = await jobsitesService.previewJoinLink(req.params.token);
+    return res.status(200).json({ success: true, data });
+  } catch (error) {
+    return next(error);
+  }
+};
+
+// POST /api/jobsites/join/:token/accept — a subcontractor company
+// self-admits onto the jobsite (Phase 9e). No email check — see
+// jobsitesService.acceptJoinLink for why.
+exports.acceptJoinLink = async (req, res, next) => {
+  try {
+    const data = await jobsitesService.acceptJoinLink({
+      token: req.params.token,
+      companyId: req.user.companyId,
+    });
+    return res.status(200).json({ success: true, data });
+  } catch (error) {
+    return next(error);
+  }
+};
+
 exports.removeSubcontractor = async (req, res, next) => {
   try {
     const data = await jobsitesService.removeSubcontractor({
