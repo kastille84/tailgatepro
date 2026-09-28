@@ -8,9 +8,16 @@ exports.createProfile = async (req, res, next) => {
     // (normalized from that same token's user_metadata) — never trust
     // anything in req.body. `inviteToken` is only present on an invited
     // signup (Phase 8c), `jobsiteInviteToken` only on a GC's jobsite-invite
-    // signup (Phase 8d); destructuring yields undefined otherwise.
-    const { name, companyName, companyType, inviteToken, jobsiteInviteToken } =
-      req.profile;
+    // signup (Phase 8d), `jobsiteJoinToken` only on a scanned jobsite QR
+    // signup (Phase 9e); destructuring yields undefined otherwise.
+    const {
+      name,
+      companyName,
+      companyType,
+      inviteToken,
+      jobsiteInviteToken,
+      jobsiteJoinToken,
+    } = req.profile;
     const data = await usersService.createProfile({
       id: req.userId, // the connection between req.userId and this is the user's Supabase id
       email: req.userEmail,
@@ -19,6 +26,7 @@ exports.createProfile = async (req, res, next) => {
       companyType,
       inviteToken,
       jobsiteInviteToken,
+      jobsiteJoinToken,
     });
     return res.status(201).json({ success: true, data });
   } catch (error) {

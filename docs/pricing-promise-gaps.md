@@ -47,6 +47,14 @@ decision (Phase 9f). The parked design is in `docs/company-talks-design.md` ("De
 file storage that overlaps Procore Documents/SharePoint/Drive, and its job (using a company's own safety content)
 is already served by custom talks. Revisit only if a customer asks for policy acknowledgment tied to a talk.
 
+**Update (9e QR jobsite join shipped):** the two QR rows below flipped from Reword-only (9a removed the
+claims) to actually **Implemented** — a new per-jobsite `jobsites.join_token` (standing, no expiry) plus a
+client-rendered QR code (`JobsiteJoinQrCard.tsx`, the `qrcode` package) and a public `/jobsite-join/:token`
+page. Self-service, no GC approval, available on every jobsite regardless of plan — see
+`docs/jobsite-qr-join-design.md`. Code complete; manual verify pending. No pricing/landing copy was changed
+by this update — reintroducing the QR wording on the Pricing FAQ/GcSection/HowItWorks pages is a separate,
+deliberate copy decision, not made here.
+
 ## Tier-gating fact base
 
 - `server/utility/entitlements.js` has exactly two gates, `hasTranslationAccess` and `hasBrandingAccess`, both
@@ -106,8 +114,8 @@ is already served by custom talks. Revisit only if a customer asks for policy ac
 
 | Claim | Where | Status | Gap | Resolution |
 |---|---|---|---|---|
-| Scan a QR code or tap a link to open the app | Pricing FAQ, HowItWorks | Partial | A link works (PWA URL); no QR generator in the repo | Build (9e) or Reword |
-| Project-specific QR codes/links for GC sponsorship | Pricing FAQ, GcSection | Missing | Only a company-wide `join_code` and per-jobsite email invites exist; no QR | Build (9e) or Reword |
+| Scan a QR code or tap a link to open the app | Pricing FAQ, HowItWorks | Implemented (9e) | `GET /api/jobsites/:id/join-link`, `JobsiteJoinQrCard.tsx` (client-rendered via `qrcode`), `/jobsite-join/:token`. Manual verify pending — see `docs/jobsite-qr-join-design.md` | — |
+| Project-specific QR codes/links for GC sponsorship | Pricing FAQ, GcSection | Implemented (9e) | A new per-jobsite `jobsites.join_token` (standing, no expiry) — self-service join, no GC approval, available on every jobsite regardless of plan; the company-wide `join_code` and per-jobsite email invites are unchanged, additive paths. Manual verify pending | — |
 | "Every subcontractor gets full access for $0" | Pricing callout | Partial (9d) | Enforced via effective tier (see Site Pro row); unbuyable until billing, copy still says coming soon | Defer (9f) |
 | "Emailed PDFs stay in your inbox forever" | Pricing FAQ | Partial, misleading | The email carries a signed link expiring after 30 days (`EMAIL_PDF_URL_TTL_SECONDS`), not an attachment | Resolved: copy reworded (9a); a GC can re-open an expired link via the in-app report page (9c) |
 | "Tamper-evident signatures" / tamper-evident PDF | Pricing hero, ComparisonTable | Partial | App-level lock only; no hash/HMAC/seal/audit log; service-role writes bypass it | Build (9e) or Reword |

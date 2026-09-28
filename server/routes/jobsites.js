@@ -17,6 +17,9 @@ const {
   inviteSubcontractor,
   previewInvite,
   acceptInvite,
+  getJoinLink,
+  previewJoinLink,
+  acceptJoinLink,
   removeSubcontractor,
   listMembers,
   setMembers,
@@ -131,6 +134,47 @@ router.post(
   [inviteTokenParam],
   validate,
   acceptInvite,
+);
+
+const joinTokenParam = param("token")
+  .isHexadecimal()
+  .withMessage("Invalid job site link")
+  .isLength({ min: 64, max: 64 })
+  .withMessage("Invalid job site link");
+
+// GET /api/jobsites/:id/join-link — a GC admin/safety_manager/superintendent
+// fetches this jobsite's standing QR/join link (Phase 9e), generating it on
+// first use. Same role set as the invite route — a site-scoped
+// superintendent may pull the poster for their own jobsite.
+router.get(
+  "/:id/join-link",
+  requireAuth,
+  loadUserContext,
+  requireGcCompany,
+  requireRole(...SITE_MANAGER_ROLES),
+  [param("id").isUUID().withMessage("A valid jobsite id is required")],
+  validate,
+  getJoinLink,
+);
+
+// GET /api/jobsites/join/:token — public preview for the join page, before
+// the scanner has any account. No requireAuth: the token is the credential,
+// same trust model as GET /api/jobsites/invite/:token.
+router.get("/join/:token", [joinTokenParam], validate, previewJoinLink);
+
+// POST /api/jobsites/join/:token/accept — a subcontractor company
+// self-admits onto the jobsite (Phase 9e). Manager-gated for the same reason
+// as acceptInvite: it binds the whole company to a GC's site. No email check
+// — a QR/join link isn't addressed to anyone in particular.
+router.post(
+  "/join/:token/accept",
+  requireAuth,
+  loadUserContext,
+  requireSubcontractorCompany,
+  requireRole(...MANAGER_ROLES),
+  [joinTokenParam],
+  validate,
+  acceptJoinLink,
 );
 
 // DELETE /api/jobsites/:id/subcontractors/:subId — a GC removes a sub (or

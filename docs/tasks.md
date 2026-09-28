@@ -2586,7 +2586,66 @@ Costs one extra query per request for Free subs (`resolveEffectiveTier`) and per
       talk, capture signatures, audit PDF, GC visibility); its job ("use our own safety content") is already covered
       by Trade Pro custom talks and GC company talks. Removed from Trade Enterprise's pricing copy. Revisit only if a
       customer asks for policy acknowledgment tied to a talk.
-- [ ] QR-code generation for jobsite invite / join-code links (no generator exists), or drop the QR claims.
+- [x] QR-code jobsite join · status: code complete, manual verify pending
+
+  Design doc: `docs/jobsite-qr-join-design.md`. Self-service (no GC approval — the GC sees new
+  joiners on the roster and can remove one, same as any other sub), available on every jobsite, no
+  plan gate. A new per-jobsite `jobsites.join_token` (standing, no expiry, unlike the 7-day
+  email-invite token) admits a sub directly onto that jobsite via a QR/link — sidesteps the company
+  join code's fuzzy-name-matching duplicate-jobsite issue (see "Reconcile duplicate jobsites,"
+  above) since it targets a real jobsite id, never a name match.
+
+  - Server: new `jobsites.join_token TEXT UNIQUE` column;
+    `jobsite_subcontractors.invited_email` dropped its `NOT NULL` (a QR-joined row has none — no
+    constraint change needed, standard SQL treats every `NULL` as distinct under the existing
+    `jobsite_subs_email_unique`). `services/jobsites.js` gained `getOrCreateJoinToken` (mirrors
+    `companies.getOrCreateJoinCode`'s race-safe lazy-create), `previewJoinLink`, `acceptJoinLink` —
+    an insert, not `acceptInvite`'s update, with no email check; a repeat scan (23505 on the
+    company-membership unique index) is an idempotent `{ alreadyMember: true }`, not an error,
+    since re-scanning a poster is ordinary. New `GET /api/jobsites/:id/join-link`, `GET
+    /api/jobsites/join/:token`, `POST /api/jobsites/join/:token/accept`
+    (`routes/jobsites.js` + `controllers/jobsites.js`). `requireProfileMetadata.js` gained a third
+    token key, `jobsiteJoinToken` (validated identically to `jobsiteInviteToken`, the three keys
+    mutually exclusive); `services/users.js`'s `createProfile` gained a matching branch that calls
+    `acceptJoinLink` instead of `acceptInvite` (no email involved) — the QR/join-link mirror of 8d
+    Case B, letting a brand-new sub sign up straight from a scanned poster.
+  - Server tests: `jobsites.test.js` (service) +23 (`getOrCreateJoinToken`, `previewJoinLink`,
+    `acceptJoinLink`); `jobsites.test.js` (controller) +9; `requireProfileMetadata.test.js` +6;
+    `users.test.js` (service) +4, (controller) +1. Full `npm run test:server`: 60 suites / 1002
+    tests passing.
+  - Client: new dependency `qrcode` (+ `@types/qrcode` dev) — client-side rendering only, so the
+    join link is never sent to a third-party QR image service. New
+    `interfaces/jobsite.ts` types (`JobsiteJoinLink`, `JobsiteJoinPreview`, `JobsiteJoinAcceptResult`);
+    `apiJobsites.ts` gained `getJobsiteJoinLink`/`getJobsiteJoinPreview`/`acceptJobsiteJoinLink`; new
+    `hooks/useJobsiteJoinLink.ts` (mirrors `useJoinCode.ts`), `useJoinLinkPreview.ts`,
+    `useAcceptJoinLink.ts`. New `features/jobsites/JobsiteJoinQrCard.tsx` — renders the QR to a
+    canvas, a Copy-link button (same pattern as `JoinCodeCard.tsx`), and a Download-QR button
+    reusing `utils/triggerBrowserDownload.ts` (built for the Defense Bundle ZIP) — wired into
+    `JobsiteRosterModal.tsx` alongside the email invite form. New `pages/JoinJobsite/` (public
+    route `/jobsite-join/:token`, wired in `App.tsx` next to `/jobsite-invite/:token`), structured
+    after `AcceptJobsiteInvite.tsx` but simpler: no invited-email preview/mismatch state (a QR link
+    isn't addressed to anyone), and its signup form asks for an email too, since none is invited.
+    An existing account's sign-in leg reuses `Login.tsx`'s existing `state.from` redirect-back
+    as-is. Neither of the two blocker states (GC account, wrong role) offers a Log Out button —
+    unlike `AcceptJobsiteInvite`'s email-mismatch case, signing in as someone else on the same
+    device doesn't fix either one.
+  - Client tests: new `JobsiteJoinQrCard.test.tsx` (9), `useJobsiteJoinHooks.test.tsx` (11 across
+    the three hooks), `JoinJobsite.test.tsx` (20); `apiJobsites.test.ts` +6; `JobsiteRosterModal.test.tsx`
+    +2 (renders/hides the QR card); `App.test.tsx` +1. Full client suite: 178 files / 1462+ tests
+    passing, 100% coverage.
+  - Known v1 limitations (see the design doc): no rotation/revocation of the join token itself
+    (symmetric with `companies.join_code`, which also never expires or regenerates) — the only
+    lever if a link circulates too far is removing the offending sub afterward via the existing
+    roster "Remove" button; no audience restriction by design; installed-PWA-vs-browser-tab scan
+    behavior is unverified.
+  - **To ship:** run the two `ALTER TABLE` statements in Supabase (`Supabase_SQL.sql`:
+    `jobsites.join_token`, `jobsite_subcontractors.invited_email` nullable) before deploying.
+  - Verify: manual pass pending — as a GC, open a jobsite's roster, show the QR code, scan it (or
+    open the copied link) as a subcontractor admin/safety_manager on another account, confirm
+    immediate roster acceptance with no approval step; confirm a repeat scan toasts "already on
+    this job site" instead of erroring; confirm a foreman/GC account sees the right blocked state;
+    confirm a brand-new sub can sign up straight from the link and lands already joined; confirm
+    Remove still works on a QR-joined sub.
 - [ ] Tamper-evidence: a content hash/seal on the PDF + audit log, and GPS capture if the "GPS-verified" claim
       stays; otherwise remove both claims in 9a.
 - [ ] AI Talk Builder and cloud AI voice (see ~1736-1741).

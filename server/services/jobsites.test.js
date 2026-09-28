@@ -10,6 +10,9 @@ const {
   createInvite,
   previewInvite,
   acceptInvite,
+  getOrCreateJoinToken,
+  previewJoinLink,
+  acceptJoinLink,
   removeSubcontractor,
 } = require("./jobsites");
 
@@ -925,6 +928,299 @@ describe("jobsites service: acceptInvite", () => {
     await expect(acceptInvite(args)).rejects.toBe(projectError);
     expect(errorSpy).toHaveBeenCalledWith(
       "jobsites: failed to roll back an accepted invite",
+      expect.anything(),
+    );
+  });
+});
+
+describe("jobsites service: getOrCreateJoinToken (Phase 9e)", () => {
+  const args = { jobsiteId: "jobsite-1", gcCompanyId: "gc-1" };
+
+  it("should return the existing token without writing, after checking ownership", async () => {
+    // Arrange
+    const owned = chain({ data: ownedJobsiteRow, error: null });
+    const read = chain({ data: { join_token: TOKEN }, error: null });
+    queueFrom(["jobsites", owned], ["jobsites", read]);
+
+    // Act
+    const result = await getOrCreateJoinToken(args);
+
+    // Assert
+    expect(owned.eq).toHaveBeenCalledWith("id", "jobsite-1");
+    expect(owned.eq).toHaveBeenCalledWith("gc_company_id", "gc-1");
+    expect(read.select).toHaveBeenCalledWith("join_token");
+    expect(fromSpy).toHaveBeenCalledTimes(2);
+    expect(result).toBe(TOKEN);
+  });
+
+  it("should throw a 404 AppError without any query when the jobsite is outside a site-scoped user's assigned sites", async () => {
+    // Arrange
+    fromSpy.mockReset();
+
+    // Act & Assert
+    await expect(
+      getOrCreateJoinToken({ ...args, allowedJobsiteIds: ["jobsite-2"] }),
+    ).rejects.toMatchObject({ statusCode: 404, message: "Jobsite not found" });
+    expect(fromSpy).not.toHaveBeenCalled();
+  });
+
+  it("should throw a 404 AppError when the jobsite is missing or another GC's", async () => {
+    // Arrange
+    queueFrom(["jobsites", chain({ data: null, error: { code: "PGRST116" } })]);
+
+    // Act & Assert
+    await expect(getOrCreateJoinToken(args)).rejects.toMatchObject({
+      statusCode: 404,
+      message: "Jobsite not found",
+    });
+  });
+
+  it("should generate and write a fresh token, race-safely guarded on join_token IS NULL, when none exists yet", async () => {
+    // Arrange
+    const owned = chain({ data: ownedJobsiteRow, error: null });
+    const read = chain({ data: { join_token: null }, error: null });
+    const write = chain({ data: [{ join_token: TOKEN }], error: null });
+    queueFrom(["jobsites", owned], ["jobsites", read], ["jobsites", write]);
+
+    // Act
+    const result = await getOrCreateJoinToken(args);
+
+    // Assert
+    expect(write.update.mock.calls[0][0].join_token).toMatch(/^[0-9a-f]{64}$/);
+    expect(write.eq).toHaveBeenCalledWith("id", "jobsite-1");
+    expect(write.is).toHaveBeenCalledWith("join_token", null);
+    expect(result).toMatch(/^[0-9a-f]{64}$/);
+  });
+
+  it("should retry on a generated-token collision (23505) and succeed on the next attempt", async () => {
+    // Arrange
+    const owned = chain({ data: ownedJobsiteRow, error: null });
+    const read = chain({ data: { join_token: null }, error: null });
+    const collide = chain({ data: null, error: { code: "23505" } });
+    const write = chain({ data: [{ join_token: TOKEN }], error: null });
+    queueFrom(["jobsites", owned], ["jobsites", read], ["jobsites", collide], ["jobsites", write]);
+
+    // Act
+    const result = await getOrCreateJoinToken(args);
+
+    // Assert
+    expect(result).toMatch(/^[0-9a-f]{64}$/);
+  });
+
+  it("should re-read the winner's token when another request wins the race", async () => {
+    // Arrange
+    const owned = chain({ data: ownedJobsiteRow, error: null });
+    const read = chain({ data: { join_token: null }, error: null });
+    const write = chain({ data: [], error: null });
+    const reread = chain({ data: { join_token: TOKEN }, error: null });
+    queueFrom(["jobsites", owned], ["jobsites", read], ["jobsites", write], ["jobsites", reread]);
+
+    // Act
+    const result = await getOrCreateJoinToken(args);
+
+    // Assert
+    expect(result).toBe(TOKEN);
+  });
+
+  it("should throw a 502 AppError after repeated collisions", async () => {
+    // Arrange
+    const owned = chain({ data: ownedJobsiteRow, error: null });
+    const read = chain({ data: { join_token: null }, error: null });
+    queueFrom(
+      ["jobsites", owned],
+      ["jobsites", read],
+      ["jobsites", chain({ data: null, error: { code: "23505" } })],
+      ["jobsites", chain({ data: null, error: { code: "23505" } })],
+      ["jobsites", chain({ data: null, error: { code: "23505" } })],
+      ["jobsites", chain({ data: null, error: { code: "23505" } })],
+      ["jobsites", chain({ data: null, error: { code: "23505" } })],
+    );
+
+    // Act & Assert
+    await expect(getOrCreateJoinToken(args)).rejects.toMatchObject({
+      statusCode: 502,
+      message: "Could not create a job site link, please try again",
+    });
+  });
+
+  it("should throw a 502 AppError when the write fails for any other reason", async () => {
+    // Arrange
+    const owned = chain({ data: ownedJobsiteRow, error: null });
+    const read = chain({ data: { join_token: null }, error: null });
+    queueFrom(
+      ["jobsites", owned],
+      ["jobsites", read],
+      ["jobsites", chain({ data: null, error: { code: "OTHER" } })],
+    );
+
+    // Act & Assert
+    await expect(getOrCreateJoinToken(args)).rejects.toMatchObject({
+      statusCode: 502,
+      message: "Could not create this job site's link",
+    });
+  });
+});
+
+describe("jobsites service: previewJoinLink (Phase 9e)", () => {
+  const jobsiteRow = { id: "jobsite-1", name: "Riverside Tower", gc_company_id: "gc-1", companies: { name: "Turner Construction" } };
+
+  it("should return only the GC name and jobsite name", async () => {
+    // Arrange
+    const lookup = chain({ data: jobsiteRow, error: null });
+    queueFrom(["jobsites", lookup]);
+
+    // Act
+    const result = await previewJoinLink(TOKEN);
+
+    // Assert
+    expect(lookup.select).toHaveBeenCalledWith("id, name, gc_company_id, companies(name)");
+    expect(lookup.eq).toHaveBeenCalledWith("join_token", TOKEN);
+    expect(result).toEqual({ gcCompanyName: "Turner Construction", jobsiteName: "Riverside Tower" });
+  });
+
+  it("should fall back to a null GC name when the embedded company is missing", async () => {
+    // Arrange
+    queueFrom(["jobsites", chain({ data: { ...jobsiteRow, companies: null }, error: null })]);
+
+    // Act
+    const result = await previewJoinLink(TOKEN);
+
+    // Assert
+    expect(result.gcCompanyName).toBeNull();
+  });
+
+  it("should throw a 404 AppError when no jobsite carries the token", async () => {
+    // Arrange
+    queueFrom(["jobsites", chain({ data: null, error: { code: "PGRST116" } })]);
+
+    // Act & Assert
+    await expect(previewJoinLink(TOKEN)).rejects.toMatchObject({
+      statusCode: 404,
+      message: "This job site link is invalid",
+    });
+  });
+
+  it("should throw a 502 AppError on any other lookup failure", async () => {
+    // Arrange
+    queueFrom(["jobsites", chain({ data: null, error: { code: "OTHER" } })]);
+
+    // Act & Assert
+    await expect(previewJoinLink(TOKEN)).rejects.toMatchObject({ statusCode: 502 });
+  });
+});
+
+describe("jobsites service: acceptJoinLink (Phase 9e)", () => {
+  const jobsiteRow = { id: "jobsite-1", name: "Riverside Tower", gc_company_id: "gc-1", companies: { name: "Turner Construction" } };
+  const project = { id: "project-9", jobsiteId: "jobsite-1", gcCompanyId: "gc-1" };
+  const args = { token: TOKEN, companyId: "company-9" };
+
+  let createSpy;
+  let errorSpy;
+
+  beforeEach(() => {
+    createSpy = vi.spyOn(projectsService, "create").mockResolvedValue(project);
+    errorSpy = vi.spyOn(console, "error").mockImplementation(() => {});
+  });
+
+  afterEach(() => {
+    createSpy.mockRestore();
+    errorSpy.mockRestore();
+  });
+
+  it("should insert a fresh accepted roster row with no invited email, then create the sub's project through the admission-gated projects service", async () => {
+    // Arrange
+    const lookup = chain({ data: jobsiteRow, error: null });
+    const insert = chain({ data: { id: "roster-9" }, error: null });
+    queueFrom(["jobsites", lookup], ["jobsite_subcontractors", insert]);
+
+    // Act
+    const result = await acceptJoinLink(args);
+
+    // Assert
+    const payload = insert.insert.mock.calls[0][0];
+    expect(payload.id).toMatch(UUID_RE);
+    expect(payload.jobsite_id).toBe("jobsite-1");
+    expect(payload.sub_company_id).toBe("company-9");
+    expect(payload.invited_email).toBeNull();
+    expect(payload.accepted_at).toEqual(expect.any(String));
+    expect(createSpy).toHaveBeenCalledWith({
+      id: expect.stringMatching(UUID_RE),
+      ownerCompanyId: "company-9",
+      name: "Riverside Tower",
+      jobsiteId: "jobsite-1",
+    });
+    expect(result).toEqual({ ...project, alreadyMember: false });
+  });
+
+  it("should propagate the 404 for an invalid token", async () => {
+    // Arrange
+    queueFrom(["jobsites", chain({ data: null, error: { code: "PGRST116" } })]);
+
+    // Act & Assert
+    await expect(acceptJoinLink(args)).rejects.toMatchObject({ statusCode: 404 });
+    expect(createSpy).not.toHaveBeenCalled();
+  });
+
+  it("should treat a repeat scan (already a member) as an idempotent success, not an error", async () => {
+    // Arrange
+    queueFrom(
+      ["jobsites", chain({ data: jobsiteRow, error: null })],
+      ["jobsite_subcontractors", chain({ data: null, error: { code: "23505" } })],
+    );
+
+    // Act
+    const result = await acceptJoinLink(args);
+
+    // Assert
+    expect(result).toEqual({ alreadyMember: true });
+    expect(createSpy).not.toHaveBeenCalled();
+  });
+
+  it("should throw a 502 AppError when the insert fails for any other reason", async () => {
+    // Arrange
+    queueFrom(
+      ["jobsites", chain({ data: jobsiteRow, error: null })],
+      ["jobsite_subcontractors", chain({ data: null, error: { code: "OTHER" } })],
+    );
+
+    // Act & Assert
+    await expect(acceptJoinLink(args)).rejects.toMatchObject({
+      statusCode: 502,
+      message: "Could not join this job site",
+    });
+  });
+
+  it("should delete the just-inserted roster row and rethrow when the project insert fails", async () => {
+    // Arrange
+    const projectError = new Error("insert failed");
+    createSpy.mockRejectedValue(projectError);
+    const rollback = chain({ data: null, error: null });
+    queueFrom(
+      ["jobsites", chain({ data: jobsiteRow, error: null })],
+      ["jobsite_subcontractors", chain({ data: { id: "roster-9" }, error: null })],
+      ["jobsite_subcontractors", rollback],
+    );
+
+    // Act & Assert
+    await expect(acceptJoinLink(args)).rejects.toBe(projectError);
+    expect(rollback.delete).toHaveBeenCalled();
+    expect(rollback.eq).toHaveBeenCalledWith("id", "roster-9");
+  });
+
+  it("should log a failed rollback but still rethrow the original project error", async () => {
+    // Arrange
+    const projectError = new Error("insert failed");
+    createSpy.mockRejectedValue(projectError);
+    queueFrom(
+      ["jobsites", chain({ data: jobsiteRow, error: null })],
+      ["jobsite_subcontractors", chain({ data: { id: "roster-9" }, error: null })],
+      ["jobsite_subcontractors", chain({ data: null, error: { code: "OTHER" } })],
+    );
+
+    // Act & Assert
+    await expect(acceptJoinLink(args)).rejects.toBe(projectError);
+    expect(errorSpy).toHaveBeenCalledWith(
+      "jobsites: failed to roll back an accepted join link",
       expect.anything(),
     );
   });

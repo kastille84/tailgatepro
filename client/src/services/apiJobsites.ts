@@ -4,6 +4,9 @@ import type {
   InviteSubcontractorResult,
   Jobsite,
   JobsiteInvitePreview,
+  JobsiteJoinAcceptResult,
+  JobsiteJoinLink,
+  JobsiteJoinPreview,
   JobsiteMembersResult,
   JobsitePatch,
   JobsiteSummary,
@@ -157,4 +160,50 @@ export const acceptJobsiteInvite = async (
     headers: { Authorization: `Bearer ${accessToken}` },
   });
   return unwrap<Project>(res);
+};
+
+/**
+ * GET /api/jobsites/:id/join-link (Phase 9e) — a GC manager/site-scoped
+ * superintendent fetches this jobsite's standing QR/join URL, created on
+ * first ask. Unlike the invite token, this one is meant to be shown/printed.
+ */
+export const getJobsiteJoinLink = async (
+  accessToken: string,
+  jobsiteId: string,
+): Promise<JobsiteJoinLink> => {
+  const res = await fetchWithTimeout(`/api/jobsites/${jobsiteId}/join-link`, {
+    method: "GET",
+    headers: { Authorization: `Bearer ${accessToken}` },
+  });
+  return unwrap<JobsiteJoinLink>(res);
+};
+
+/**
+ * GET /api/jobsites/join/:token — public, unauthenticated preview shown
+ * before the scanner has any account. Throws with the server's message on an
+ * invalid token.
+ */
+export const getJobsiteJoinPreview = async (
+  token: string,
+): Promise<JobsiteJoinPreview> => {
+  const res = await fetchWithTimeout(`/api/jobsites/join/${token}`, {
+    method: "GET",
+  });
+  return unwrap<JobsiteJoinPreview>(res);
+};
+
+/**
+ * POST /api/jobsites/join/:token/accept — a subcontractor admin/safety_manager
+ * self-admits their company onto the jobsite. No email is checked (there is
+ * none) — see docs/jobsite-qr-join-design.md.
+ */
+export const acceptJobsiteJoinLink = async (
+  accessToken: string,
+  token: string,
+): Promise<JobsiteJoinAcceptResult> => {
+  const res = await fetchWithTimeout(`/api/jobsites/join/${token}/accept`, {
+    method: "POST",
+    headers: { Authorization: `Bearer ${accessToken}` },
+  });
+  return unwrap<JobsiteJoinAcceptResult>(res);
 };

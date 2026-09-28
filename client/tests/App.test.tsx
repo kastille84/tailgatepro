@@ -66,6 +66,10 @@ vi.mock("../src/pages/AcceptInvite", () => ({
   ),
 }));
 
+vi.mock("../src/pages/JoinJobsite", () => ({
+  JoinJobsite: () => <div data-testid="join-jobsite-page">Join jobsite page</div>,
+}));
+
 vi.mock("../src/pages/Dashboard", () => ({
   Dashboard: () => <div data-testid="dashboard-page">Dashboard page</div>,
 }));
@@ -158,6 +162,13 @@ describe("App", () => {
     render(<App />);
 
     expect(screen.getByTestId("accept-invite-page")).toBeDefined();
+  });
+
+  it("renders the jobsite-join route shell without requiring a session", () => {
+    window.history.pushState({}, "", "/jobsite-join/some-token");
+    render(<App />);
+
+    expect(screen.getByTestId("join-jobsite-page")).toBeDefined();
   });
 
   it("renders the dashboard route shell behind the RequireAuth layout route", () => {

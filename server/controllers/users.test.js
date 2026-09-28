@@ -161,6 +161,48 @@ describe("users controller: createProfile (jobsite invite, Phase 8d)", () => {
   });
 });
 
+describe("users controller: createProfile (jobsite QR/join-link, Phase 9e)", () => {
+  it("should pass a jobsite-QR-joined signup's jobsiteJoinToken and forced companyType through to the service", async () => {
+    // Arrange
+    createProfileSpy.mockReset().mockResolvedValue({
+      id: "auth-user-3",
+      name: "Carla Sub",
+      role: "admin",
+      companyId: "company-10",
+    });
+    const req = {
+      userId: "auth-user-3",
+      userEmail: "carla@newco.com",
+      profile: {
+        name: "Carla Sub",
+        companyName: "Newer Co Roofing",
+        companyType: "subcontractor",
+        jobsiteJoinToken: "c".repeat(64),
+      },
+      body: {},
+    };
+    const res = { status: vi.fn().mockReturnThis(), json: vi.fn().mockReturnThis() };
+    const next = vi.fn();
+
+    // Act
+    await createProfile(req, res, next);
+
+    // Assert
+    expect(createProfileSpy).toHaveBeenCalledWith({
+      id: "auth-user-3",
+      email: "carla@newco.com",
+      name: "Carla Sub",
+      companyName: "Newer Co Roofing",
+      companyType: "subcontractor",
+      inviteToken: undefined,
+      jobsiteInviteToken: undefined,
+      jobsiteJoinToken: "c".repeat(64),
+    });
+    expect(res.status).toHaveBeenCalledWith(201);
+    expect(next).not.toHaveBeenCalled();
+  });
+});
+
 describe("users controller: getCurrentUser", () => {
   it("should respond 200 with req.user plus the resolved plan and limits", () => {
     const req = {

@@ -117,6 +117,44 @@ export const StyledMembersRow = styled.li`
   padding: 0.4rem 0;
 `;
 
+/** Phase 9e: a jobsite's standing QR/join link, shown in JobsiteRosterModal
+ *  alongside the email invite form. */
+export const StyledJoinQrWrap = styled.div`
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 1.2rem;
+  padding: 1.6rem;
+  border: 0.1rem solid ${({ theme }) => theme.colors.navy[100]};
+  border-radius: ${({ theme }) => theme.borderRadius.md};
+  background-color: ${({ theme }) => theme.colors.concrete[100]};
+`;
+
+/** White quiet-zone frame around the canvas: a dark page theme must not
+ *  reduce the QR's contrast, since scanning apps expect a light margin. */
+export const StyledJoinQrCanvasFrame = styled.div`
+  padding: 0.8rem;
+  border-radius: ${({ theme }) => theme.borderRadius.sm};
+  background-color: #ffffff;
+  line-height: 0;
+`;
+
+export const StyledJoinQrUrl = styled.p`
+  margin: 0;
+  max-width: 100%;
+  overflow-wrap: break-word;
+  font-family: ui-monospace, "SFMono-Regular", Menlo, Consolas, monospace;
+  font-size: 1.3rem;
+  color: ${({ theme }) => theme.colors.navy[600]};
+  user-select: all;
+`;
+
+export const StyledJoinQrActions = styled.div`
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1.2rem;
+`;
+
 export const StyledToolbar = styled.div`
   display: flex;
   align-items: center;

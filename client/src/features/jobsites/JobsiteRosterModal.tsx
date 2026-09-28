@@ -7,6 +7,7 @@ import { useOnlineStatus } from "../../context/online-status";
 import { useRemoveSubcontractor } from "../../hooks/useRemoveSubcontractor";
 import type { Jobsite, JobsiteSubcontractor } from "../../interfaces/jobsite";
 import { InviteSubcontractorForm } from "./InviteSubcontractorForm";
+import { JobsiteJoinQrCard } from "./JobsiteJoinQrCard";
 import {
   StyledMeta,
   StyledName,
@@ -67,10 +68,18 @@ export const JobsiteRosterModal = ({
             </StyledNote>
             {!isOnline && (
               <StyledNote role="status">
-                You're offline. Connect to the internet to send an invite.
+                You're offline. Connect to the internet to send an invite or
+                load the QR code.
               </StyledNote>
             )}
             <InviteSubcontractorForm jobsiteId={jobsite.id} />
+
+            <StyledNote>
+              Or let subs scan a QR code. Anyone who scans it joins this job
+              site right away — no approval needed. You can always remove a
+              subcontractor below.
+            </StyledNote>
+            <JobsiteJoinQrCard jobsiteId={jobsite.id} jobsiteName={jobsite.name} />
           </>
         )}
 

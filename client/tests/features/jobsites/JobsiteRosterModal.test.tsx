@@ -25,6 +25,19 @@ vi.mock("../../../src/features/jobsites/InviteSubcontractorForm", () => ({
     <div data-testid="invite-form">{jobsiteId}</div>
   ),
 }));
+vi.mock("../../../src/features/jobsites/JobsiteJoinQrCard", () => ({
+  JobsiteJoinQrCard: ({
+    jobsiteId,
+    jobsiteName,
+  }: {
+    jobsiteId: string;
+    jobsiteName: string;
+  }) => (
+    <div data-testid="join-qr-card">
+      {jobsiteId}:{jobsiteName}
+    </div>
+  ),
+}));
 
 const jobsite: Jobsite = {
   id: "j1",
@@ -79,6 +92,7 @@ describe("JobsiteRosterModal", () => {
     expect(screen.getByText("bob@new.com")).toBeDefined();
     expect(screen.getByText("Pending")).toBeDefined();
     expect(screen.getByTestId("invite-form").textContent).toBe("j1");
+    expect(screen.getByTestId("join-qr-card").textContent).toBe("j1:Riverside");
   });
 
   it("hides a locked sub's identity, offers an upgrade link, and still allows removal", async () => {
@@ -115,6 +129,7 @@ describe("JobsiteRosterModal", () => {
     renderModal({ canManage: false });
 
     expect(screen.queryByTestId("invite-form")).toBeNull();
+    expect(screen.queryByTestId("join-qr-card")).toBeNull();
     expect(screen.queryByRole("button", { name: /remove|cancel invite/i })).toBeNull();
     expect(screen.getByText("Acme Roofing")).toBeDefined();
   });

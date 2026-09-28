@@ -41,6 +41,7 @@ const ROSTER_COLUMNS =
   "id, jobsite_id, sub_company_id, invited_email, token, expires_at, accepted_at";
 
 const INVALID_INVITE_MESSAGE = "This invite link is invalid or has expired";
+const INVALID_JOIN_LINK_MESSAGE = "This job site link is invalid";
 
 // A jobsite with its roster embedded, for the GC's list view. The token is
 // deliberately absent from both the select and the mapped shape.
@@ -391,6 +392,144 @@ const acceptInvite = async ({ token, email, companyId }) => {
   }
 };
 
+// A generated token can collide with another jobsite's (UNIQUE -> 23505).
+// With generateInviteToken's 256-bit space that's vanishingly rare, so a
+// handful of retries is plenty — same reasoning/count as
+// companies.getOrCreateJoinCode's JOIN_CODE_MAX_ATTEMPTS.
+const JOIN_TOKEN_MAX_ATTEMPTS = 5;
+
+const readJoinToken = async (jobsiteId) => {
+  const { data, error } = await supabase
+    .from("jobsites")
+    .select("join_token")
+    .eq("id", jobsiteId)
+    .single();
+
+  if (error) {
+    if (error.code === "PGRST116") {
+      throw new AppError("Jobsite not found", 404, { cause: error });
+    }
+    throw new AppError("Could not load this job site's link", 502, { cause: error });
+  }
+
+  return data.join_token;
+};
+
+// GET /api/jobsites/:id/join-link (Phase 9e, docs/jobsite-qr-join-design.md)
+// — the jobsite's own standing QR/join link, created lazily on first ask
+// (jobsites.join_token is NULL until then). Unlike the per-invite token, this
+// one is meant to be publicly displayed (in a QR code or a printed poster),
+// the same trust model companies.join_code already has. The
+// `.is("join_token", null)` guard makes the write race-safe without a
+// transaction, the identical trick getOrCreateJoinCode uses.
+const getOrCreateJoinToken = async ({ jobsiteId, gcCompanyId, allowedJobsiteIds = null }) => {
+  await getOwnedJobsite(jobsiteId, gcCompanyId, allowedJobsiteIds);
+
+  const existing = await readJoinToken(jobsiteId);
+  if (existing) return existing;
+
+  for (let attempt = 0; attempt < JOIN_TOKEN_MAX_ATTEMPTS; attempt += 1) {
+    const { data, error } = await supabase
+      .from("jobsites")
+      .update({ join_token: generateInviteToken() })
+      .eq("id", jobsiteId)
+      .is("join_token", null)
+      .select("join_token");
+
+    if (error) {
+      if (error.code === "23505") continue;
+      throw new AppError("Could not create this job site's link", 502, { cause: error });
+    }
+    if (data.length === 0) return readJoinToken(jobsiteId);
+    return data[0].join_token;
+  }
+
+  throw new AppError("Could not create a job site link, please try again", 502);
+};
+
+// Shared lookup for the QR/join-link admission path: resolves a jobsite by
+// its standing join_token. Unlike getActiveInvite there is no expiry to check
+// and no invited email to return — the token itself is the only fact.
+const getJobsiteByJoinToken = async (token) => {
+  const { data, error } = await supabase
+    .from("jobsites")
+    .select("id, name, gc_company_id, companies(name)")
+    .eq("join_token", token)
+    .single();
+
+  if (error) {
+    if (error.code === "PGRST116") {
+      throw new AppError(INVALID_JOIN_LINK_MESSAGE, 404, { cause: error });
+    }
+    throw new AppError("Could not look up this job site link", 502, { cause: error });
+  }
+
+  return {
+    jobsiteId: data.id,
+    jobsiteName: data.name,
+    gcCompanyId: data.gc_company_id,
+    gcCompanyName: data.companies?.name ?? null,
+  };
+};
+
+// GET /api/jobsites/join/:token — public preview, before any account exists.
+const previewJoinLink = async (token) => {
+  const jobsite = await getJobsiteByJoinToken(token);
+  return { gcCompanyName: jobsite.gcCompanyName, jobsiteName: jobsite.jobsiteName };
+};
+
+// Self-admits the caller's own subcontractor company onto a jobsite via its
+// standing QR/join link (Phase 9e). Decided with the user: no GC approval —
+// the GC's existing roster visibility and removeSubcontractor are the
+// control, not a gate before joining. Unlike acceptInvite there is no
+// pending row to stamp (a fresh accepted row is inserted directly) and no
+// email check applies (there is no invited email). Re-scanning a link the
+// caller's company already accepted is an idempotent success, not an error —
+// unlike a repeat email-invite accept, scanning the same poster twice is
+// ordinary behavior, so a jobsite_subs_company_unique conflict (23505) is
+// swallowed rather than thrown.
+const acceptJoinLink = async ({ token, companyId }) => {
+  const jobsite = await getJobsiteByJoinToken(token);
+
+  const { data: inserted, error: insertError } = await supabase
+    .from("jobsite_subcontractors")
+    .insert({
+      id: uuidv4(),
+      jobsite_id: jobsite.jobsiteId,
+      sub_company_id: companyId,
+      invited_email: null,
+      accepted_at: new Date().toISOString(),
+    })
+    .select("id")
+    .single();
+
+  if (insertError) {
+    if (insertError.code === "23505") {
+      return { alreadyMember: true };
+    }
+    throw new AppError("Could not join this job site", 502, { cause: insertError });
+  }
+
+  try {
+    const project = await projectsService.create({
+      id: uuidv4(),
+      ownerCompanyId: companyId,
+      name: jobsite.jobsiteName,
+      jobsiteId: jobsite.jobsiteId,
+    });
+    return { ...project, alreadyMember: false };
+  } catch (projectError) {
+    const { error: rollbackError } = await supabase
+      .from("jobsite_subcontractors")
+      .delete()
+      .eq("id", inserted.id);
+    if (rollbackError) {
+      console.error("jobsites: failed to roll back an accepted join link", rollbackError);
+    }
+    throw projectError;
+  }
+};
+
 // Removes a sub from a jobsite the caller's GC company owns. The sub's
 // project rows are detached (jobsite_id and gc_company_id nulled — the GC
 // loses dashboard access to them, same as an unlink) BEFORE the roster row is
@@ -449,6 +588,9 @@ module.exports = {
   createInvite,
   previewInvite,
   acceptInvite,
+  getOrCreateJoinToken,
+  previewJoinLink,
+  acceptJoinLink,
   removeSubcontractor,
   getOwnedJobsite,
 };

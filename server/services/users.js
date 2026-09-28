@@ -24,6 +24,7 @@ const createProfile = async ({
   companyType,
   inviteToken,
   jobsiteInviteToken,
+  jobsiteJoinToken,
 }) => {
   if (inviteToken) {
     return createProfileFromInvite({ id, email, name, inviteToken });
@@ -87,6 +88,20 @@ const createProfile = async ({
       });
     } catch (acceptError) {
       console.error("users: failed to accept a jobsite invite", acceptError);
+    }
+  }
+
+  // Phase 9e: a brand-new sub signing up straight from a scanned jobsite QR
+  // code (docs/jobsite-qr-join-design.md). Mutually exclusive with
+  // jobsiteInviteToken (enforced by requireProfileMetadata), same
+  // best-effort/never-throws-past-profile-creation reasoning as above — a
+  // failed accept leaves a working account, recoverable by opening the same
+  // link again while signed in.
+  if (jobsiteJoinToken) {
+    try {
+      await jobsitesService.acceptJoinLink({ token: jobsiteJoinToken, companyId });
+    } catch (acceptError) {
+      console.error("users: failed to accept a jobsite join link", acceptError);
     }
   }
 
