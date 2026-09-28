@@ -87,8 +87,8 @@ export const StyledRequiredBadge = styled.span`
   border-radius: ${({ theme }) => theme.borderRadius.sm};
   font-size: 1.2rem;
   font-weight: 700;
-  color: ${({ theme }) => theme.colors.orange[700]};
-  background-color: ${({ theme }) => theme.colors.orange[200]};
+  color: ${({ theme }) => theme.colors.navy[700]};
+  background-color: ${({ theme }) => theme.colors.navy[200]};
 `;
 
 export const StyledEmpty = styled.p`
@@ -303,4 +303,13 @@ export const StyledTranslationsNote = styled.p`
     color: ${({ theme }) => theme.colors.orange[600]};
     font-weight: 700;
   }
+`;
+
+export const StyledBadgeContainer = styled.div`
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  justify-content: center;
+  gap: 0.8rem;
+  margin-bottom: 1.6rem;
 `;

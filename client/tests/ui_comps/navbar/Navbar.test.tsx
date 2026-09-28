@@ -23,9 +23,9 @@ vi.mock("../../../src/features/pwa-install", () => ({
   InstallButton: () => <button type="button">Install app</button>,
 }));
 
-const renderNavbar = () =>
+const renderNavbar = (initialEntries: string[] = ["/"]) =>
   render(
-    <MemoryRouter>
+    <MemoryRouter initialEntries={initialEntries}>
       <ThemeProvider theme={theme}>
         <Navbar />
       </ThemeProvider>
@@ -153,6 +153,53 @@ describe("Navbar", () => {
 
     expect(screen.queryByRole("link", { name: /subcontractors/i })).toBeNull();
     expect(screen.queryByRole("link", { name: /policy push/i })).toBeNull();
+  });
+
+  describe("active page highlight", () => {
+    const loggedIn = (isGc: boolean) => {
+      mockUseAuth.mockReturnValue({
+        user: { id: "user-1" },
+        loading: false,
+        logout: vi.fn(),
+      });
+      mockUseCurrentUser.mockReturnValue({ isGc });
+    };
+    const current = (name: RegExp) =>
+      screen.getByRole("link", { name }).getAttribute("aria-current");
+
+    it("marks only the link for the current page", () => {
+      loggedIn(false);
+      renderNavbar(["/projects"]);
+
+      expect(current(/projects/i)).toBe("page");
+      expect(current(/dashboard/i)).toBeNull();
+    });
+
+    it("marks History on /meetings but not on the /meetings/new flow", () => {
+      loggedIn(false);
+      const { unmount } = renderNavbar(["/meetings"]);
+      expect(current(/history/i)).toBe("page");
+      unmount();
+
+      renderNavbar(["/meetings/new"]);
+      expect(current(/history/i)).toBeNull();
+    });
+
+    it("keeps Subcontractors marked on a subcontractor detail page", () => {
+      loggedIn(true);
+      renderNavbar(["/gc/subcontractors/abc"]);
+
+      expect(current(/subcontractors/i)).toBe("page");
+    });
+
+    it("never marks the Login or Sign Up links", () => {
+      renderNavbar(["/login"]);
+
+      const loginLink = screen
+        .getByRole("button", { name: /^login$/i })
+        .closest("a");
+      expect(loginLink?.getAttribute("aria-current")).toBeNull();
+    });
   });
 
   it("closes the collapsed menu when a nav link inside it is clicked", () => {

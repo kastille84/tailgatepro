@@ -14,6 +14,7 @@ import {
   StyledRequiredBadge,
   StyledTradeBadge,
   StyledButtonContainer,
+  StyledBadgeContainer,
 } from "./styles";
 
 interface TalkListProps {
@@ -64,13 +65,21 @@ export const TalkList = ({
                 <StyledMeta>{talk.structured.summary}</StyledMeta>
               )}
             </StyledCardMain>
-            {isRequired && <StyledRequiredBadge>Required by your GC</StyledRequiredBadge>}
-            {!talk.isGlobal && <StyledCustomBadge>Custom</StyledCustomBadge>}
-            {talk.tradeTag && (
-              <StyledTradeBadge>{talk.tradeTag}</StyledTradeBadge>
-            )}
+            <StyledBadgeContainer>
+              {isRequired && (
+                <StyledRequiredBadge>Required by your GC</StyledRequiredBadge>
+              )}
+              {!talk.isGlobal && <StyledCustomBadge>Custom</StyledCustomBadge>}
+              {talk.tradeTag && (
+                <StyledTradeBadge>{talk.tradeTag}</StyledTradeBadge>
+              )}
+            </StyledBadgeContainer>
+
             <StyledButtonContainer>
-              <FavoriteButton talk={talk} isFavorited={favoriteIds.has(talk.id)} />
+              <FavoriteButton
+                talk={talk}
+                isFavorited={favoriteIds.has(talk.id)}
+              />
               <Button
                 variant="outline"
                 size="sm"

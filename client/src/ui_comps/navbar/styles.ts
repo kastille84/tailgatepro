@@ -1,5 +1,5 @@
 import styled from "styled-components";
-import { Link } from "react-router-dom";
+import { Link, NavLink } from "react-router-dom";
 
 export const Nav = styled.header`
   position: relative;
@@ -52,6 +52,11 @@ export const NavLinks = styled.nav<{ $open?: boolean }>`
     border-radius: 0.6rem;
   }
 
+  a[aria-current="page"] {
+    color: ${({ theme }) => theme.colors.concrete[100]};
+    box-shadow: inset 0 -0.3rem 0 ${({ theme }) => theme.colors.orange[500]};
+  }
+
   @media (max-width: ${({ theme }) => theme.breakpoints.md}) {
     position: absolute;
     left: 0;
@@ -66,7 +71,15 @@ export const NavLinks = styled.nav<{ $open?: boolean }>`
   }
 `;
 
-export const NavAnchor = styled(Link)`
+export const NavAnchor = styled(NavLink)`
+  color: inherit;
+  &:hover {
+    opacity: 0.9;
+  }
+`;
+
+// Wraps a Button (Login / Sign Up), so it must not get the active-page highlight.
+export const ButtonAnchor = styled(Link)`
   color: inherit;
   &:hover {
     opacity: 0.9;

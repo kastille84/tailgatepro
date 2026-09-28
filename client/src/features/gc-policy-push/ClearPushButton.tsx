@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { StyledClearButtonContainer } from "./styles";
 
 import { useClearPolicyPush } from "../../hooks/useClearPolicyPush";
 import { Button } from "../../ui_comps/button";
@@ -17,8 +18,12 @@ export const ClearPushButton = () => {
   };
 
   return (
-    <>
-      <Button type="button" variant="outline" onClick={() => setIsConfirmOpen(true)}>
+    <StyledClearButtonContainer>
+      <Button
+        type="button"
+        variant="outline"
+        onClick={() => setIsConfirmOpen(true)}
+      >
         Clear required topic
       </Button>
 
@@ -31,8 +36,9 @@ export const ClearPushButton = () => {
         onConfirm={handleConfirm}
         onClose={() => setIsConfirmOpen(false)}
       >
-        No topic will be required across your active sites until you push a new one.
+        No topic will be required across your active sites until you push a new
+        one.
       </ConfirmDialog>
-    </>
+    </StyledClearButtonContainer>
   );
 };

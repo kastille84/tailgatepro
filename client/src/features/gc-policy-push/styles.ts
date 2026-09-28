@@ -162,3 +162,14 @@ export const StyledUpgradeBody = styled.p`
     font-weight: 700;
   }
 `;
+
+export const StyledClearButtonContainer = styled.div`
+  display: flex;
+  justify-content: flex-start;
+  margin-top: 1.6rem;
+  margin-bottom: 1.6rem;
+
+  @media (min-width: 600px) {
+    justify-content: flex-end;
+  }
+`;
