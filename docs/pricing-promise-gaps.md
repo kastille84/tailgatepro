@@ -31,6 +31,11 @@ subcontractor safety scorecards" pricing-card bullet (kept in `features`) and th
 was reworded so only "top-down corporate policy push" is still flagged coming soon — see the Portfolio row
 below and `docs/sub-scorecard-design.md`.
 
+**Update (9e policy push shipped):** the "coming soon" tag was dropped from GC Portfolio's "Top-down
+corporate policy push across all sites" pricing-card bullet (kept in `features`) and the Pricing FAQ line
+was reworded to describe the shipped feature instead of flagging it coming soon — see the Portfolio row
+below and `docs/policy-push-design.md`.
+
 ## Tier-gating fact base
 
 - `server/utility/entitlements.js` has exactly two gates, `hasTranslationAccess` and `hasBrandingAccess`, both
@@ -81,7 +86,7 @@ below and `docs/sub-scorecard-design.md`.
 | Site Pro — Procore & Autodesk ACC sync | Missing | No code | Copy only | Defer (9f) |
 | Site Pro — 1-click OSHA Defense Bundle (ZIP) | Implemented (9e) | `services/gcDashboard.js` `getDefenseBundleEntries`, `services/zipBundle.js`, `GET /api/gc/jobsites/:id/defense-bundle` | Streams every completed log's PDF for one jobsite plus an `index.csv`, gated on `jobsites.plan === "site_pro"`; Portfolio's separate "Portfolio-Wide Search" version is unbuilt | — |
 | Portfolio — cross-project scorecards | Implemented (9e) | `services/scorecards.js`, `utility/subScorecard.js`, `utility/rollingWindow.js`, `GET /api/gc/subcontractors[/:companyId/scorecard]` | Rolling 30-day daily-compliance-rate score per sub, averaged across every jobsite that sub has with the GC, with a per-jobsite breakdown; archived jobsites excluded from scoring (see `docs/sub-scorecard-design.md`) | — |
-| Portfolio — top-down policy push | Missing | No code or schema | — | Build (9e) |
+| Portfolio — top-down policy push | Implemented (9e) | `services/policyPush.js`, three new `companies` columns (`required_talk_id`/`required_talk_pushed_at`/`required_talk_pushed_by`), `GET/POST/DELETE /api/gc/policy-push`, `GET /api/projects/:id/required-topic` | One current required topic per GC, pushed live across every active jobsite; a soft nudge in the meeting wizard (never blocks logging a different talk); manual clear/replace only, no auto-expiry (see `docs/policy-push-design.md`) | — |
 | Portfolio — Superintendent vs Safety Director roles | Implemented (9d-2) | `server/constants/roles.js` (`superintendent`, `SITE_MANAGER_ROLES`), `services/siteScope.js`, `services/jobsiteMembers.js`, `JobsiteMembersModal.tsx` | `superintendent` is scoped to its assigned jobsites via `jobsite_members` (dashboard/meetings/PDF/roster all 404 outside scope); `safety_manager` relabeled "Safety Director"; Portfolio-only, 403 `PLAN_LIMIT` otherwise. Run the `Supabase_SQL.sql` ALTERs before relying on this in prod | — |
 | Portfolio — custom company safety form/manual builder | Missing | No code | — | Build (9e) |
 | Portfolio — 10 sites vs unlimited | Implemented (9d) | `effectiveJobsiteLimit` via `assertJobsiteAvailable` | Cap 10 (premium) / unlimited (enterprise); no billing sets the tier yet | — |

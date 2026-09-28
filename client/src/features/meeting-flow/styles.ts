@@ -178,6 +178,20 @@ export const StyledStepHint = styled.p`
   color: ${({ theme }) => theme.colors.navy[400]};
 `;
 
+/** A GC's top-down policy push, nudged at the talk step (Phase 9e,
+ *  docs/policy-push-design.md). Purely decorative -- the foreman can still
+ *  pick any talk. */
+export const StyledRequiredTopicBanner = styled.p`
+  margin: 0;
+  padding: 1.2rem 1.4rem;
+  border-radius: ${({ theme }) => theme.borderRadius.sm};
+  background-color: ${({ theme }) => theme.colors.orange[100]};
+  color: ${({ theme }) => theme.colors.orange[700]};
+  font-size: 1.4rem;
+  font-weight: 600;
+  line-height: 1.5;
+`;
+
 export const StyledWizardError = styled.p`
   margin: 0;
   padding: 1.2rem 1.4rem;

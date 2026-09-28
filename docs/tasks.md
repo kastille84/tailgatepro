@@ -2159,7 +2159,7 @@ from the dashboard, so run the 8d-g backfill first.
 - [x] GC links a sub company to a project (`project_subcontractors`) — done: slim version (GC join code)
       shipped in Phase 6b–6d, superseded by 8d above
 
-## Phase 9 — Pricing-promise gaps · status: audited 2026-09-24; 9a (copy fixes) and 9b (entitlement foundation) done, 9c done (seat caps, history window, library split, archive, PDF-link re-issue), 9d code complete (including 9d-2 roles/scoping — run the `Supabase_SQL.sql` ALTERs), 9e in progress (the GC per-jobsite and subcontractor's own OSHA Defense Bundle ZIPs, plus cross-project sub safety scorecards, shipped; code complete, manual verify pending; other 9e items not started), 9f–9g not started
+## Phase 9 — Pricing-promise gaps · status: audited 2026-09-24; 9a (copy fixes) and 9b (entitlement foundation) done, 9c done (seat caps, history window, library split, archive, PDF-link re-issue), 9d code complete (including 9d-2 roles/scoping — run the `Supabase_SQL.sql` ALTERs), 9e in progress (the GC per-jobsite and subcontractor's own OSHA Defense Bundle ZIPs, cross-project sub safety scorecards, and top-down corporate policy push all shipped; code complete, manual verify pending; other 9e items not started), 9f–9g not started
 
 Audit of the pricing page (`client/src/data/plans.ts`, `Pricing.tsx` FAQ/callout) and landing page copy against
 the code. Full evidence table, statuses and per-gap resolution live in `docs/pricing-promise-gaps.md` — every
@@ -2477,7 +2477,66 @@ Costs one extra query per request for Free subs (`resolveEffectiveTier`) and per
     billing yet, same caveat as every other paid-tier GC feature), set up a sub accepted on 2+
     jobsites with a mix of logged/missing days, confirm the list/detail pages and the 403/404
     behaviors described in the design doc's "Endpoint contract".
-- [ ] Top-down corporate policy push across all sites.
+- [x] Top-down corporate policy push across all sites · status: code complete, manual verify pending
+
+  Design doc: `docs/policy-push-design.md`. Gated on GC Portfolio (`getPlanId(...) ===
+  "gc-portfolio"`), same as the pricing doc's explicit Portfolio-only promise. One current
+  required topic per GC, applied live across every active jobsite (including ones added after
+  the push); a soft nudge in the meeting wizard, never a block; manual clear/replace only, no
+  auto-expiry; the picker offers global talks only (a GC's own custom talk would be invisible
+  to the very subs it's pushed to). Replaces the "Missing" row
+  `docs/pricing-promise-gaps.md` flagged for this promise.
+
+  - Server: three new nullable columns on `companies` (`required_talk_id`,
+    `required_talk_pushed_at`, `required_talk_pushed_by`). `companies.js` gained
+    `setRequiredTopic`/`clearRequiredTopic`; `siteScope.js` gained
+    `assertPolicyPushAvailable` (mirrors the other two GC-Portfolio gates); `talks.js` gained
+    `listGlobal` (deliberately narrower than `listForCompany`). New
+    `server/services/policyPush.js` (`listPickerTalks`, `getCurrentPush`, `pushRequiredTopic`,
+    `clearRequiredTopic`, `getComplianceRollup` — reuses the existing, unmodified
+    `computeCompliance` with a single since-pushed-at window rather than
+    `subScorecard.js`'s per-day rolling approach, `getRequiredTopicForProject` — the sub-facing
+    read, no plan gate by design). `gcDashboard.js` now also exports `listActiveJobsites` for
+    reuse. New `GET /api/gc/policy-push` (+ compliance rollup), `GET
+    /api/gc/policy-push/talks`, `POST /api/gc/policy-push` (manager-only), `DELETE
+    /api/gc/policy-push` (manager-only), `GET /api/projects/:id/required-topic` —
+    `controllers/gc.js` + `routes/gc.js`, `controllers/projects.js` + `routes/projects.js`.
+  - Server tests: `policyPush.test.js` (new, 30 tests incl. the wrong-talk-still-missing and
+    log-before-pushedAt-excluded compliance cases); `companies.test.js` +12,
+    `siteScope.test.js` +4, `talks.test.js` +3, `gc.test.js` +12, `projects.test.js`
+    (controller) +2. Full `npm run test:server`: 59 suites / 934 tests passing.
+  - Client: new `interfaces/policyPush.ts` + `interfaces/requiredTopic.ts`; `apiGc.ts` gained
+    `getGcPolicyPush`/`getGcPolicyPushTalks`/`pushGcPolicyTopic`/`clearGcPolicyPush`;
+    `apiProjects.ts` gained `getRequiredTopic`; new `hooks/useGcPolicyPush.ts` +
+    `useGcPolicyPushTalks.ts` + `usePushPolicyTopic.ts` + `useClearPolicyPush.ts` +
+    `useRequiredTopic.ts`; new `features/gc-policy-push/` (`CurrentPushCard`, `PushTopicForm`,
+    `ClearPushButton`, `PolicyComplianceTable`, `PolicyPushUpgradeNotice`); new
+    `pages/GcPolicyPush`, wired into `App.tsx`'s `RequireGc` block at `/gc/policy-push`.
+    `Navbar.tsx` gained a "Policy Push" link, always visible to every GC (same convention as
+    Subcontractors) — the page itself shows `PolicyPushUpgradeNotice` to a non-Portfolio GC and
+    hides the push/clear controls from a non-manager, server still enforces the real gates.
+    Foreman side: `features/meeting-flow/MeetingWizard.tsx` + new `RequiredTopicBanner.tsx`
+    nudge at the talk step; `content-library/TalkList.tsx` gained an optional `requiredTalkId`
+    prop that pins and badges the GC's required talk — never blocks picking a different one.
+  - Client tests: new tests for every file above (hooks, feature components, the page,
+    `RequiredTopicBanner`); `apiGc.test.ts` +14, `apiProjects.test.ts` +3, `TalkList.test.tsx`
+    +3, `MeetingWizard.test.tsx` +2, `Navbar.test.tsx` updated. Full client suite: 174 files /
+    1393 tests passing, 100% coverage except the two pre-existing, unrelated gaps in
+    `MeetingWizard.tsx`/`PhotoCapture.tsx` under `src/features/meeting-flow` (confirmed
+    untouched logic, same as every prior 9e feature's note).
+  - Copy: dropped "Top-down corporate policy push across all sites" from GC Portfolio's
+    `comingSoon` in `plans.ts` (kept in `features` — it's shipped now); reworded the matching
+    Pricing FAQ line to describe the shipped feature instead of flagging it coming soon.
+  - Known v1 limitations (see the design doc): no auto-expiry/rotation; no per-jobsite
+    override; no audit trail of past pushes; a downgraded-off-Portfolio GC's already-pushed
+    topic keeps showing to subs until re-upgrade-and-clear; the sub-facing read does zero
+    plan-checking by design; the `ON DELETE SET NULL` degrade paths are ops-only (a global talk
+    can't be deleted via the app's own talk CRUD today).
+  - Verify: manual pass pending — flip a GC's `tier` to `premium`/`enterprise` in Supabase (no
+    billing yet, same caveat as every other paid-tier GC feature), push a global talk across
+    two active jobsites each with an accepted sub, confirm the compliance rollup and the
+    foreman-side nudge/badge in the meeting wizard, and the 403/404/role-gating behaviors
+    described in the design doc's "Endpoint contract".
 - [ ] Company safety form and manual builder (GC Portfolio; the strategy doc also lists it for Trade Pro).
 - [ ] Custom safety manual upload (Trade Enterprise).
 - [ ] QR-code generation for jobsite invite / join-code links (no generator exists), or drop the QR claims.

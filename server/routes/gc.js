@@ -1,10 +1,12 @@
 const express = require("express");
-const { param, query } = require("express-validator");
+const { body, param, query } = require("express-validator");
 
 const { requireAuth } = require("../middlewares/requireAuth");
 const { loadUserContext } = require("../middlewares/loadUserContext");
 const { requireGcCompany } = require("../middlewares/requireGcCompany");
+const { requireRole } = require("../middlewares/requireRole");
 const { validate } = require("../middlewares/validate");
+const { MANAGER_ROLES } = require("../constants/roles");
 const {
   getOverview,
   listMeetings,
@@ -13,6 +15,10 @@ const {
   getDefenseBundle,
   listSubcontractorScorecards,
   getSubcontractorScorecard,
+  getPolicyPush,
+  listPolicyPushTalks,
+  pushPolicyTopic,
+  clearPolicyPush,
 } = require("../controllers/gc");
 
 const router = express.Router();
@@ -114,6 +120,43 @@ router.get(
   validate,
   getSubcontractorScorecard,
 );
+
+// GET /api/gc/policy-push?date&tzOffset — the caller's current top-down
+// policy push plus a per-active-jobsite compliance rollup (Phase 9e,
+// docs/policy-push-design.md). GC Portfolio only; 403 PLAN_LIMIT otherwise.
+// No role gate beyond company membership — any GC member may read this.
+router.get(
+  "/policy-push",
+  [
+    query("date")
+      .matches(/^\d{4}-\d{2}-\d{2}$/)
+      .withMessage("date must be in YYYY-MM-DD format"),
+    query("tzOffset")
+      .isInt({ min: -840, max: 840 })
+      .withMessage("tzOffset must be minutes between -840 and 840"),
+  ],
+  validate,
+  getPolicyPush,
+);
+
+// GET /api/gc/policy-push/talks — every global talk, for the push picker.
+router.get("/policy-push/talks", listPolicyPushTalks);
+
+// POST /api/gc/policy-push { talkId } — pushes/replaces the current required
+// topic across every active jobsite. Manager-only (admin/safety_manager) — a
+// company-wide push is not a site action, so superintendent is excluded
+// (unlike SITE_MANAGER_ROLES).
+router.post(
+  "/policy-push",
+  requireRole(...MANAGER_ROLES),
+  [body("talkId").isUUID().withMessage("A valid talk id is required")],
+  validate,
+  pushPolicyTopic,
+);
+
+// DELETE /api/gc/policy-push — clears the current required topic. Same
+// manager-only gate as the push above.
+router.delete("/policy-push", requireRole(...MANAGER_ROLES), clearPolicyPush);
 
 // GET /api/gc/jobsites/:id/defense-bundle — streams a ZIP of every completed
 // log's PDF for the jobsite (Phase 9e, docs/osha-defense-bundle-design.md).

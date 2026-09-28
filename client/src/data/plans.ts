@@ -113,9 +113,6 @@ export const GC_PLANS: Plan[] = [
       "Multi-manager roles — Superintendent vs Safety Director",
       "Custom company safety form & manual builder",
     ],
-    comingSoon: [
-      "Top-down corporate policy push across all sites",
-      "Custom company safety form & manual builder",
-    ],
+    comingSoon: ["Custom company safety form & manual builder"],
   },
 ];

@@ -135,3 +135,31 @@ describe("siteScope service: assertScorecardsAvailable", () => {
     });
   });
 });
+
+describe("siteScope service: assertPolicyPushAvailable", () => {
+  const { assertPolicyPushAvailable } = require("./siteScope");
+
+  it.each(["premium", "enterprise"])("passes for a GC Portfolio company (tier %s)", async (tier) => {
+    getCompanySpy.mockReset().mockResolvedValue({ id: "gc-1", companyType: "gc", tier });
+
+    await expect(assertPolicyPushAvailable("gc-1")).resolves.toBeUndefined();
+  });
+
+  it.each([
+    ["gc", "basic"],
+    ["subcontractor", "premium"],
+  ])("throws a 403 PLAN_LIMIT for a %s company on tier %s", async (companyType, tier) => {
+    getCompanySpy.mockReset().mockResolvedValue({ id: "c-1", companyType, tier });
+
+    await expect(assertPolicyPushAvailable("c-1")).rejects.toMatchObject({
+      statusCode: 403,
+      data: { code: "PLAN_LIMIT" },
+    });
+  });
+
+  it("propagates a 502 from the company lookup", async () => {
+    getCompanySpy.mockReset().mockRejectedValue({ statusCode: 502, message: "Could not load the company" });
+
+    await expect(assertPolicyPushAvailable("c-1")).rejects.toMatchObject({ statusCode: 502 });
+  });
+});

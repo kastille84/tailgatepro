@@ -532,8 +532,10 @@ module.exports = {
   getMeeting,
   getMeetingPdfUrl,
   getDefenseBundleEntries,
-  // Exported for services/scorecards.js (Phase 9e) to reuse rather than
-  // re-querying -- no logic change, just widening this module's surface.
+  // Exported for services/scorecards.js and services/policyPush.js (Phase 9e)
+  // to reuse rather than re-querying -- no logic change, just widening this
+  // module's surface.
+  listActiveJobsites,
   listLinkedProjects,
   listCompletedLogsInWindow,
   getCompanyNamesByIds,

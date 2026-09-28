@@ -3,6 +3,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import {
   createProject,
   deleteProject,
+  getRequiredTopic,
   linkProjectToGc,
   listProjects,
   unlinkProjectFromGc,
@@ -469,6 +470,64 @@ describe("apiProjects", () => {
 
       await expect(
         unlinkProjectFromGc("token-123", "project-1"),
+      ).rejects.toThrow(GENERIC);
+    });
+  });
+
+  describe("getRequiredTopic", () => {
+    const requiredTopic = {
+      talkId: "talk-1",
+      talkTitle: "Fall Protection",
+      pushedAt: "2026-09-01T00:00:00.000Z",
+    };
+
+    it("GETs /api/projects/:id/required-topic and returns the data", async () => {
+      const fetchMock = vi.fn().mockResolvedValue({
+        ok: true,
+        status: 200,
+        json: async () => ({ success: true, data: requiredTopic }),
+      });
+      vi.stubGlobal("fetch", fetchMock);
+
+      await expect(
+        getRequiredTopic("token-123", "project-1"),
+      ).resolves.toEqual(requiredTopic);
+      expect(fetchMock).toHaveBeenCalledWith(
+        "/api/projects/project-1/required-topic",
+        expect.objectContaining({
+          method: "GET",
+          headers: expect.objectContaining({ Authorization: "Bearer token-123" }),
+        }),
+      );
+    });
+
+    it("rejects with the backend message on an error response", async () => {
+      vi.stubGlobal(
+        "fetch",
+        vi.fn().mockResolvedValue({
+          ok: false,
+          status: 404,
+          json: async () => ({ success: false, error: "Project not found" }),
+        }),
+      );
+
+      await expect(
+        getRequiredTopic("token-123", "project-1"),
+      ).rejects.toThrow("Project not found");
+    });
+
+    it("rejects with the generic message when the response body has no error field", async () => {
+      vi.stubGlobal(
+        "fetch",
+        vi.fn().mockResolvedValue({
+          ok: false,
+          status: 500,
+          json: async () => ({ success: false }),
+        }),
+      );
+
+      await expect(
+        getRequiredTopic("token-123", "project-1"),
       ).rejects.toThrow(GENERIC);
     });
   });

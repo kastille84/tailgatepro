@@ -12,6 +12,7 @@ import { useCreateSignature } from "../../hooks/useCreateSignature";
 import { useUploadSignatureBlob } from "../../hooks/useUploadSignatureBlob";
 import { useUploadCrewPhoto } from "../../hooks/useUploadCrewPhoto";
 import { useCompleteMeetingLog } from "../../hooks/useCompleteMeetingLog";
+import { useRequiredTopic } from "../../hooks/useRequiredTopic";
 import {
   clearDraft,
   getActiveDraft,
@@ -24,6 +25,7 @@ import { TalkFilters } from "../content-library/TalkFilters";
 import { TalkList } from "../content-library/TalkList";
 import { PhotoCapture } from "./PhotoCapture";
 import { ProjectPicker } from "./ProjectPicker";
+import { RequiredTopicBanner } from "./RequiredTopicBanner";
 import { TalkPresenter } from "./TalkPresenter";
 import { SignaturesStep } from "./SignaturesStep";
 import type { Project } from "../../interfaces/project";
@@ -106,6 +108,7 @@ export const MeetingWizard = () => {
     undefined,
   );
   const [selectedTalk, setSelectedTalk] = useState<Talk | undefined>(undefined);
+  const { requiredTopic } = useRequiredTopic(selectedProject?.id);
   const [signers, setSigners] = useState<DraftSigner[]>([]);
   const [photoBlob, setPhotoBlob] = useState<Blob | null | undefined>(
     undefined,
@@ -507,6 +510,7 @@ export const MeetingWizard = () => {
           </StyledStepHeaderRow>
           <StyledStepTitle>Pick a talk</StyledStepTitle>
           <StyledStepHint>Select a talk to present to the crew.</StyledStepHint>
+          <RequiredTopicBanner projectId={selectedProject?.id} />
           <TalkFilters
             trade={trade}
             onTradeChange={setTrade}
@@ -529,6 +533,7 @@ export const MeetingWizard = () => {
               talks={visibleTalks}
               favoriteIds={favoriteIds}
               onSelect={handleSelectTalk}
+              requiredTalkId={requiredTopic?.talkId ?? null}
             />
           )}
         </>

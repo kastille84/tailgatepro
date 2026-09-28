@@ -9,13 +9,18 @@ export const StyledList = styled.ul`
   gap: 1.2rem;
 `;
 
-export const StyledCard = styled.li`
+/** `$isRequired` highlights the GC's currently pushed topic (Phase 9e,
+ *  docs/policy-push-design.md) -- a pure nudge, never used to disable or
+ *  otherwise gate the card. */
+export const StyledCard = styled.li<{ $isRequired?: boolean }>`
   display: flex;
   flex-direction: column;
   align-items: flex-start;
   gap: 1.2rem;
   padding: 1.6rem;
-  border: 0.1rem solid ${({ theme }) => theme.colors.navy[100]};
+  border: 0.1rem solid
+    ${({ theme, $isRequired }) =>
+      $isRequired ? theme.colors.orange[400] : theme.colors.navy[100]};
   border-radius: ${({ theme }) => theme.borderRadius.md};
   background-color: ${({ theme }) => theme.colors.concrete[100]};
 
@@ -70,6 +75,20 @@ export const StyledCustomBadge = styled.span`
   font-weight: 700;
   color: ${({ theme }) => theme.colors.navy[700]};
   background-color: ${({ theme }) => theme.colors.navy[100]};
+`;
+
+/** Marks the GC's currently pushed required topic (Phase 9e,
+ *  docs/policy-push-design.md) in the meeting wizard's talk picker. Orange,
+ *  matching the trade badge's color family (this is a GC-set attribute, not
+ *  an ownership marker like StyledCustomBadge). */
+export const StyledRequiredBadge = styled.span`
+  flex-shrink: 0;
+  padding: 0.4rem 0.9rem;
+  border-radius: ${({ theme }) => theme.borderRadius.sm};
+  font-size: 1.2rem;
+  font-weight: 700;
+  color: ${({ theme }) => theme.colors.orange[700]};
+  background-color: ${({ theme }) => theme.colors.orange[200]};
 `;
 
 export const StyledEmpty = styled.p`

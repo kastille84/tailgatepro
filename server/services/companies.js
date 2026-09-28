@@ -6,7 +6,8 @@ const { resolveEffectiveTier } = require("./sponsorship");
 // The columns every companies query selects, and the snake_case -> camelCase
 // mapper applied to each row before it leaves the service. Services never
 // leak DB column names to the controller layer.
-const COMPANY_COLUMNS = "id, name, company_type, tier, logo_path";
+const COMPANY_COLUMNS =
+  "id, name, company_type, tier, logo_path, required_talk_id, required_talk_pushed_at, required_talk_pushed_by";
 
 const toCompany = (row) => ({
   id: row.id,
@@ -14,6 +15,11 @@ const toCompany = (row) => ({
   companyType: row.company_type,
   tier: row.tier,
   logoPath: row.logo_path,
+  // Phase 9e (docs/policy-push-design.md): the GC's current top-down policy
+  // push. requiredTalkId is null when no push is currently active.
+  requiredTalkId: row.required_talk_id,
+  requiredTalkPushedAt: row.required_talk_pushed_at,
+  requiredTalkPushedBy: row.required_talk_pushed_by,
 });
 
 // A single company by id — unlike projects.getById/talks.getById, this isn't
@@ -144,4 +150,62 @@ const getByJoinCode = async (joinCode) => {
   return { id: data.id, name: data.name };
 };
 
-module.exports = { getById, updateLogo, getOrCreateJoinCode, getByJoinCode };
+// Sets (or replaces) the caller's own company's current top-down policy push
+// (Phase 9e, docs/policy-push-design.md). Replacing an existing push is just
+// a second call — no special-casing needed. `companyId` is always the
+// caller's own verified company (loadUserContext), same trust boundary as
+// getById/updateLogo above.
+const setRequiredTopic = async (companyId, { talkId, pushedByUserId }) => {
+  const { data, error } = await supabase
+    .from("companies")
+    .update({
+      required_talk_id: talkId,
+      required_talk_pushed_at: new Date().toISOString(),
+      required_talk_pushed_by: pushedByUserId,
+    })
+    .eq("id", companyId)
+    .select(COMPANY_COLUMNS)
+    .single();
+
+  if (error) {
+    if (error.code === "PGRST116") {
+      throw new AppError("Company not found", 404, { cause: error });
+    }
+    throw new AppError("Could not push the required topic", 502, { cause: error });
+  }
+
+  return toCompany(data);
+};
+
+// Clears the caller's own company's current policy push. Clearing when
+// nothing is currently pushed is a no-op (idempotent), not an error.
+const clearRequiredTopic = async (companyId) => {
+  const { data, error } = await supabase
+    .from("companies")
+    .update({
+      required_talk_id: null,
+      required_talk_pushed_at: null,
+      required_talk_pushed_by: null,
+    })
+    .eq("id", companyId)
+    .select(COMPANY_COLUMNS)
+    .single();
+
+  if (error) {
+    if (error.code === "PGRST116") {
+      throw new AppError("Company not found", 404, { cause: error });
+    }
+    throw new AppError("Could not clear the required topic", 502, { cause: error });
+  }
+
+  return toCompany(data);
+};
+
+module.exports = {
+  getById,
+  updateLogo,
+  getOrCreateJoinCode,
+  getByJoinCode,
+  setRequiredTopic,
+  clearRequiredTopic,
+};

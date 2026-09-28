@@ -12,6 +12,9 @@
 | `tier` | Enum | Not Null | `basic`, `premium`, `enterprise` |
 | `logo_path` | Text | Nullable | Storage path of the uploaded company logo (`company-logos` bucket); embedded in generated PDFs and removes the free-tier watermark for Trade Pro+ tiers |
 | `join_code` | Text | Unique (Nullable) | GC-only (Phase 6): the 8-character code a subcontractor enters to link a project to this GC. Generated server-side on the GC's first `GET /api/companies/join-code`; always `NULL` for a subcontractor (**CHECK** `check_join_code_gc_only`: `join_code IS NULL OR company_type = 'gc'`). See `docs/gc-dashboard-design.md` |
+| `required_talk_id` | UUID | FK → `toolbox_talks.id`, `ON DELETE SET NULL`, Nullable | GC-only (Phase 9e, GC Portfolio, `docs/policy-push-design.md`): the GC's current top-down policy push — one global toolbox talk pushed as required reading across every active jobsite. `NULL` = no push currently active. Cleared/replaced by the GC only; never auto-expires |
+| `required_talk_pushed_at` | Timestamptz | Nullable | When the current `required_talk_id` was pushed |
+| `required_talk_pushed_by` | UUID | FK → `users.id`, `ON DELETE SET NULL`, Nullable | Which user pushed the current `required_talk_id` |
 
 | Table: `users` | Type | Constraints | Description |
 | :--- | :--- | :--- | :--- |

@@ -16,6 +16,7 @@ const {
   deleteProject,
   linkGc,
   unlinkGc,
+  getRequiredTopic,
 } = require("../controllers/projects");
 
 const router = express.Router();
@@ -149,6 +150,19 @@ router.delete(
   [param("id").isUUID().withMessage("A valid project id is required")],
   validate,
   unlinkGc,
+);
+
+// GET /api/projects/:id/required-topic — the caller's own project's current
+// top-down policy push, if any (Phase 9e, docs/policy-push-design.md). Any
+// company member (including a foreman) may read this — no role gate, no
+// plan gate.
+router.get(
+  "/:id/required-topic",
+  requireAuth,
+  loadUserContext,
+  [param("id").isUUID().withMessage("A valid project id is required")],
+  validate,
+  getRequiredTopic,
 );
 
 // DELETE /api/projects/:id — hard-delete a project the caller's company owns.

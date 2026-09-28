@@ -137,9 +137,12 @@ describe("Navbar", () => {
     expect(
       screen.getByRole("link", { name: /subcontractors/i }).getAttribute("href"),
     ).toBe("/gc/subcontractors");
+    expect(
+      screen.getByRole("link", { name: /policy push/i }).getAttribute("href"),
+    ).toBe("/gc/policy-push");
   });
 
-  it("hides the Subcontractors link for a non-GC company", () => {
+  it("hides the Subcontractors and Policy Push links for a non-GC company", () => {
     mockUseAuth.mockReturnValue({
       user: { id: "user-1" },
       loading: false,
@@ -149,6 +152,7 @@ describe("Navbar", () => {
     renderNavbar();
 
     expect(screen.queryByRole("link", { name: /subcontractors/i })).toBeNull();
+    expect(screen.queryByRole("link", { name: /policy push/i })).toBeNull();
   });
 
   it("closes the collapsed menu when a nav link inside it is clicked", () => {

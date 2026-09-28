@@ -2,7 +2,7 @@
 // `supabase.from` is looked up fresh at call time (not destructured), so a
 // single module-scope spy reconfigured per test is enough — no re-spying.
 const { supabase } = require("../utility/supabaseClient");
-const { listForCompany, getById, create, update, remove } = require("./talks");
+const { listForCompany, listGlobal, getById, create, update, remove } = require("./talks");
 const translation = require("./translation");
 
 const TALK_COLUMNS =
@@ -113,6 +113,46 @@ describe("talks service: listForCompany", () => {
 
     // Act & Assert
     await expect(listForCompany("company-1")).rejects.toMatchObject({
+      statusCode: 502,
+      message: "Could not load toolbox talks",
+    });
+  });
+});
+
+describe("talks service: listGlobal", () => {
+  let order;
+  let eqGlobal;
+  let select;
+
+  beforeEach(() => {
+    order = vi.fn().mockResolvedValue({ data: [dbRow], error: null });
+    eqGlobal = vi.fn(() => ({ order }));
+    select = vi.fn(() => ({ eq: eqGlobal }));
+
+    fromSpy.mockReset();
+    fromSpy.mockImplementation((table) => {
+      if (table === "toolbox_talks") return { select };
+      throw new Error(`Unexpected table: ${table}`);
+    });
+  });
+
+  it("should query only global talks, alphabetically, and map rows to camelCase", async () => {
+    // Act
+    const result = await listGlobal();
+
+    // Assert
+    expect(select).toHaveBeenCalledWith(TALK_COLUMNS);
+    expect(eqGlobal).toHaveBeenCalledWith("is_global", true);
+    expect(order).toHaveBeenCalledWith("title", { ascending: true });
+    expect(result).toEqual([mappedTalk]);
+  });
+
+  it("should throw a 502 AppError on a query failure", async () => {
+    // Arrange
+    order.mockResolvedValue({ data: null, error: { code: "OTHER" } });
+
+    // Act & Assert
+    await expect(listGlobal()).rejects.toMatchObject({
       statusCode: 502,
       message: "Could not load toolbox talks",
     });

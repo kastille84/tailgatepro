@@ -61,9 +61,25 @@ const assertScorecardsAvailable = async (companyId) => {
   }
 };
 
+// Top-down corporate policy push is also a GC Portfolio feature (Phase 9e,
+// docs/policy-push-design.md) -- same shape and reasoning as
+// assertSiteRolesAvailable/assertScorecardsAvailable. `companyId` is always
+// the caller's verified company (loadUserContext).
+const assertPolicyPushAvailable = async (companyId) => {
+  const company = await companiesService.getById(companyId);
+  if (getPlanId(company.companyType, company.tier) !== "gc-portfolio") {
+    throw new AppError(
+      "Top-down corporate policy push is part of GC Portfolio. Upgrade to use it.",
+      403,
+      { data: { code: "PLAN_LIMIT" } },
+    );
+  }
+};
+
 module.exports = {
   getAllowedJobsiteIds,
   isJobsiteAllowed,
   assertSiteRolesAvailable,
   assertScorecardsAvailable,
+  assertPolicyPushAvailable,
 };

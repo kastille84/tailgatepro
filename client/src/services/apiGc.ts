@@ -9,6 +9,11 @@ import type {
   GcSubScorecardSummary,
   GcSubScorecardDetail,
 } from "../interfaces/gcSubcontractors";
+import type {
+  PolicyPushCompliance,
+  PolicyPushState,
+  PolicyPushTalkOption,
+} from "../interfaces/policyPush";
 
 const GENERIC_ERROR = "Something went wrong. Please try again.";
 const DEFAULT_BUNDLE_FILENAME = "defense-bundle.zip";
@@ -179,6 +184,99 @@ export const getGcSubcontractorScorecard = async (
   }
 
   return body.data as GcSubScorecardDetail;
+};
+
+/** GET /api/gc/policy-push — the caller's current top-down policy push plus,
+ *  when one is active, a per-active-jobsite compliance rollup since it was
+ *  pushed (Phase 9e, docs/policy-push-design.md). GC Portfolio only; a 403
+ *  `PLAN_LIMIT` throws a `PlanLimitError` (defense in depth — the page should
+ *  already gate on `useCurrentUser().plan` before calling this). */
+export const getGcPolicyPush = async (
+  accessToken: string,
+  date: string,
+  tzOffset: number,
+): Promise<PolicyPushCompliance> => {
+  const res = await fetchWithTimeout(
+    `/api/gc/policy-push?date=${date}&tzOffset=${tzOffset}`,
+    { method: "GET", headers: authHeaders(accessToken) },
+  );
+
+  const body = await res.json().catch(() => null);
+
+  if (!res.ok || !body?.success) {
+    if (body?.data?.code === "PLAN_LIMIT") {
+      throw new PlanLimitError(body.error ?? GENERIC_ERROR, body.data.limit ?? null);
+    }
+    throw new Error(body?.error ?? GENERIC_ERROR);
+  }
+
+  return body.data as PolicyPushCompliance;
+};
+
+/** GET /api/gc/policy-push/talks — every global talk, for the push picker
+ *  (custom talks are excluded — see docs/policy-push-design.md "Gating"). */
+export const getGcPolicyPushTalks = async (
+  accessToken: string,
+): Promise<PolicyPushTalkOption[]> => {
+  const res = await fetchWithTimeout("/api/gc/policy-push/talks", {
+    method: "GET",
+    headers: authHeaders(accessToken),
+  });
+
+  const body = await res.json().catch(() => null);
+
+  if (!res.ok || !body?.success) {
+    if (body?.data?.code === "PLAN_LIMIT") {
+      throw new PlanLimitError(body.error ?? GENERIC_ERROR, body.data.limit ?? null);
+    }
+    throw new Error(body?.error ?? GENERIC_ERROR);
+  }
+
+  return body.data as PolicyPushTalkOption[];
+};
+
+/** POST /api/gc/policy-push — pushes (or replaces) the caller's company's
+ *  current required topic across every active jobsite. Manager-only
+ *  (admin/safety_manager) — a 403 without `PLAN_LIMIT` data means the
+ *  caller's role, not their plan. */
+export const pushGcPolicyTopic = async (
+  accessToken: string,
+  talkId: string,
+): Promise<PolicyPushState> => {
+  const res = await fetchWithTimeout("/api/gc/policy-push", {
+    method: "POST",
+    headers: authHeaders(accessToken),
+    body: JSON.stringify({ talkId }),
+  });
+
+  const body = await res.json().catch(() => null);
+
+  if (!res.ok || !body?.success) {
+    if (body?.data?.code === "PLAN_LIMIT") {
+      throw new PlanLimitError(body.error ?? GENERIC_ERROR, body.data.limit ?? null);
+    }
+    throw new Error(body?.error ?? GENERIC_ERROR);
+  }
+
+  return body.data as PolicyPushState;
+};
+
+/** DELETE /api/gc/policy-push — clears the caller's company's current
+ *  required topic. Same manager-only gate as the push above. */
+export const clearGcPolicyPush = async (accessToken: string): Promise<void> => {
+  const res = await fetchWithTimeout("/api/gc/policy-push", {
+    method: "DELETE",
+    headers: authHeaders(accessToken),
+  });
+
+  const body = await res.json().catch(() => null);
+
+  if (!res.ok || !body?.success) {
+    if (body?.data?.code === "PLAN_LIMIT") {
+      throw new PlanLimitError(body.error ?? GENERIC_ERROR, body.data.limit ?? null);
+    }
+    throw new Error(body?.error ?? GENERIC_ERROR);
+  }
 };
 
 /** GET /api/gc/jobsites/:id/defense-bundle — a streamed ZIP body, not the

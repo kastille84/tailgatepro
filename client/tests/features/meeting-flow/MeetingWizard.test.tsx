@@ -24,6 +24,7 @@ vi.mock("react-router-dom", async () => {
 const mockUseProjects = vi.fn();
 const mockUseTalks = vi.fn();
 const mockUseFavorites = vi.fn();
+const mockUseRequiredTopic = vi.fn();
 vi.mock("../../../src/hooks/useProjects", () => ({
   useProjects: (...args: unknown[]) => mockUseProjects(...args),
 }));
@@ -32,6 +33,13 @@ vi.mock("../../../src/hooks/useTalks", () => ({
 }));
 vi.mock("../../../src/hooks/useFavorites", () => ({
   useFavorites: (...args: unknown[]) => mockUseFavorites(...args),
+}));
+// Phase 9e (docs/policy-push-design.md): both MeetingWizard and its
+// RequiredTopicBanner child call this hook, which otherwise needs a real
+// AuthProvider -- mocked here so this suite stays focused on the wizard's own
+// orchestration, same reasoning as every other hook mocked above.
+vi.mock("../../../src/hooks/useRequiredTopic", () => ({
+  useRequiredTopic: (...args: unknown[]) => mockUseRequiredTopic(...args),
 }));
 
 const mockCreateMeetingLog = vi.fn();
@@ -247,6 +255,7 @@ beforeEach(async () => {
     isError: false,
   });
   mockUseFavorites.mockReturnValue({ favoriteIds: new Set() });
+  mockUseRequiredTopic.mockReturnValue({ requiredTopic: null });
   mockCreateMeetingLog.mockResolvedValue("meeting-1");
   mockCreateSignature.mockResolvedValue("sig-server-1");
   mockUploadSignatureBlob.mockResolvedValue(undefined);
@@ -348,6 +357,31 @@ describe("MeetingWizard", () => {
     expect((await screen.findByRole("alert")).textContent).toMatch(
       /could not load the talk library/i,
     );
+  });
+
+  it("shows a required-topic nudge at the talk step when the GC has one pushed (Phase 9e)", async () => {
+    mockUseRequiredTopic.mockReturnValue({
+      requiredTopic: { talkId: "t1", talkTitle: "Fall Protection", pushedAt: "x" },
+    });
+    renderWizard();
+    fireEvent.click(
+      await screen.findByRole("button", { name: /select-project-p1/i }),
+    );
+
+    expect(mockUseRequiredTopic).toHaveBeenCalledWith("p1");
+    expect(
+      await screen.findByText(/your gc requires this topic: fall protection/i),
+    ).toBeDefined();
+  });
+
+  it("shows no required-topic nudge at the talk step when nothing is pushed", async () => {
+    renderWizard();
+    fireEvent.click(
+      await screen.findByRole("button", { name: /select-project-p1/i }),
+    );
+
+    await screen.findByTestId("talk-list");
+    expect(screen.queryByText(/your gc requires this topic/i)).toBeNull();
   });
 
   it("narrows the talk step's list using the trade/search/favorites/custom filters", async () => {

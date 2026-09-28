@@ -6,13 +6,16 @@ const {
   updateLogo,
   getOrCreateJoinCode,
   getByJoinCode,
+  setRequiredTopic,
+  clearRequiredTopic,
 } = require("./companies");
 
 const JOIN_CODE_PATTERN = new RegExp(
   `^[${JOIN_CODE_ALPHABET}]{${JOIN_CODE_LENGTH}}$`,
 );
 
-const COMPANY_COLUMNS = "id, name, company_type, tier, logo_path";
+const COMPANY_COLUMNS =
+  "id, name, company_type, tier, logo_path, required_talk_id, required_talk_pushed_at, required_talk_pushed_by";
 
 const dbRow = {
   id: "company-1",
@@ -20,6 +23,9 @@ const dbRow = {
   company_type: "subcontractor",
   tier: "premium",
   logo_path: "company-1/logo",
+  required_talk_id: null,
+  required_talk_pushed_at: null,
+  required_talk_pushed_by: null,
 };
 
 const mappedCompany = {
@@ -28,6 +34,9 @@ const mappedCompany = {
   companyType: "subcontractor",
   tier: "premium",
   logoPath: "company-1/logo",
+  requiredTalkId: null,
+  requiredTalkPushedAt: null,
+  requiredTalkPushedBy: null,
 };
 
 const fromSpy = vi.spyOn(supabase, "from");
@@ -307,6 +316,138 @@ describe("companies service: getOrCreateJoinCode", () => {
     await expect(getOrCreateJoinCode("company-1")).rejects.toMatchObject({
       statusCode: 502,
       message: "Could not load the join code",
+    });
+  });
+});
+
+describe("companies service: setRequiredTopic", () => {
+  let single;
+  let select;
+  let eqId;
+  let update;
+
+  const pushedRow = {
+    ...dbRow,
+    required_talk_id: "talk-1",
+    required_talk_pushed_at: "2024-06-01T00:00:00.000Z",
+    required_talk_pushed_by: "user-1",
+  };
+  const pushedCompany = {
+    ...mappedCompany,
+    requiredTalkId: "talk-1",
+    requiredTalkPushedAt: "2024-06-01T00:00:00.000Z",
+    requiredTalkPushedBy: "user-1",
+  };
+
+  beforeEach(() => {
+    single = vi.fn().mockResolvedValue({ data: pushedRow, error: null });
+    select = vi.fn(() => ({ single }));
+    eqId = vi.fn(() => ({ select }));
+    update = vi.fn(() => ({ eq: eqId }));
+
+    fromSpy.mockReset();
+    fromSpy.mockImplementation((table) => {
+      if (table === "companies") return { update };
+      throw new Error(`Unexpected table: ${table}`);
+    });
+  });
+
+  it("should set the required talk columns and return the mapped row", async () => {
+    // Act
+    const result = await setRequiredTopic("company-1", {
+      talkId: "talk-1",
+      pushedByUserId: "user-1",
+    });
+
+    // Assert
+    expect(update).toHaveBeenCalledWith(
+      expect.objectContaining({
+        required_talk_id: "talk-1",
+        required_talk_pushed_by: "user-1",
+      }),
+    );
+    expect(typeof update.mock.calls[0][0].required_talk_pushed_at).toBe("string");
+    expect(eqId).toHaveBeenCalledWith("id", "company-1");
+    expect(select).toHaveBeenCalledWith(COMPANY_COLUMNS);
+    expect(result).toEqual(pushedCompany);
+  });
+
+  it("should throw a 404 AppError when no row matches the company id", async () => {
+    // Arrange
+    single.mockResolvedValue({ data: null, error: { code: "PGRST116" } });
+
+    // Act & Assert
+    await expect(
+      setRequiredTopic("missing", { talkId: "talk-1", pushedByUserId: "user-1" }),
+    ).rejects.toMatchObject({ statusCode: 404, message: "Company not found" });
+  });
+
+  it("should throw a 502 AppError on any other query failure", async () => {
+    // Arrange
+    single.mockResolvedValue({ data: null, error: { code: "OTHER" } });
+
+    // Act & Assert
+    await expect(
+      setRequiredTopic("company-1", { talkId: "talk-1", pushedByUserId: "user-1" }),
+    ).rejects.toMatchObject({
+      statusCode: 502,
+      message: "Could not push the required topic",
+    });
+  });
+});
+
+describe("companies service: clearRequiredTopic", () => {
+  let single;
+  let select;
+  let eqId;
+  let update;
+
+  beforeEach(() => {
+    single = vi.fn().mockResolvedValue({ data: dbRow, error: null });
+    select = vi.fn(() => ({ single }));
+    eqId = vi.fn(() => ({ select }));
+    update = vi.fn(() => ({ eq: eqId }));
+
+    fromSpy.mockReset();
+    fromSpy.mockImplementation((table) => {
+      if (table === "companies") return { update };
+      throw new Error(`Unexpected table: ${table}`);
+    });
+  });
+
+  it("should null out the required talk columns and return the mapped row", async () => {
+    // Act
+    const result = await clearRequiredTopic("company-1");
+
+    // Assert
+    expect(update).toHaveBeenCalledWith({
+      required_talk_id: null,
+      required_talk_pushed_at: null,
+      required_talk_pushed_by: null,
+    });
+    expect(eqId).toHaveBeenCalledWith("id", "company-1");
+    expect(result).toEqual(mappedCompany);
+  });
+
+  it("should throw a 404 AppError when no row matches the company id", async () => {
+    // Arrange
+    single.mockResolvedValue({ data: null, error: { code: "PGRST116" } });
+
+    // Act & Assert
+    await expect(clearRequiredTopic("missing")).rejects.toMatchObject({
+      statusCode: 404,
+      message: "Company not found",
+    });
+  });
+
+  it("should throw a 502 AppError on any other query failure", async () => {
+    // Arrange
+    single.mockResolvedValue({ data: null, error: { code: "OTHER" } });
+
+    // Act & Assert
+    await expect(clearRequiredTopic("company-1")).rejects.toMatchObject({
+      statusCode: 502,
+      message: "Could not clear the required topic",
     });
   });
 });
