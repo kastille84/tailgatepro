@@ -6,6 +6,11 @@ import { ThemeProvider } from "styled-components";
 import { ProjectList } from "../../../src/features/projects";
 import theme from "../../../src/styles/theme";
 import type { Project } from "../../../src/interfaces/project";
+import type { JobsiteMembership } from "../../../src/interfaces/jobsite";
+
+vi.mock("../../../src/hooks/useSetMyCadence", () => ({
+  useSetMyCadence: () => ({ setMyCadence: vi.fn(), isSaving: false }),
+}));
 
 const projects: Project[] = [
   {
@@ -39,7 +44,37 @@ const renderList = (
     </ThemeProvider>,
   );
 
+const membership: JobsiteMembership = {
+  jobsiteId: "j1",
+  jobsiteName: "Downtown Highrise",
+  jobsiteCadence: "weekly",
+  subCadence: null,
+  effectiveCadence: "weekly",
+};
+
 describe("ProjectList", () => {
+  it("shows a talk-cadence control on a live project linked to a job site with a membership", () => {
+    renderList({
+      projects: [{ ...projects[0], jobsiteId: "j1" }],
+      cadenceByJobsiteId: new Map([["j1", membership]]),
+    });
+
+    expect(screen.getByLabelText("Talk cadence for Downtown Highrise")).toBeDefined();
+  });
+
+  it("shows no cadence control without a job site, without a membership, or when archived", () => {
+    renderList({
+      projects: [
+        { ...projects[0], id: "a", jobsiteId: null },
+        { ...projects[0], id: "b", jobsiteId: "other" },
+        { ...projects[0], id: "c", jobsiteId: "j1", archivedAt: "2026-01-01T00:00:00.000Z" },
+      ],
+      cadenceByJobsiteId: new Map([["j1", membership]]),
+    });
+
+    expect(screen.queryByText("Talk cadence")).toBeNull();
+  });
+
   it("renders an empty state when there are no projects", () => {
     renderList({ projects: [] });
     expect(screen.getByText(/no projects yet/i)).toBeDefined();

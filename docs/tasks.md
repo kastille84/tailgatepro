@@ -1697,8 +1697,7 @@ tests` surfaces are all pre-existing, in files this pass didn't touch — `Meeti
 
 ### Not in Phase 6 (tracked, not dropped)
 
-- [ ] Configurable meeting cadence (GC- or sub-defined, e.g. weekly) — daily is the v1 rule; only the 6a design
-      sketch and the window-parameterized compliance util (6e) prepare for it
+- [x] Configurable meeting cadence (GC- or sub-defined, e.g. weekly) — shipped as 11f below
 - Email invites & role enforcement, `gc_contact_email` supersession → Cross-cutting epic below
 - GC tier gating / blurred subs / SMS nudges, Procore/ACC sync, OSHA Defense ZIP, cross-project scorecards /
   multi-manager roles, GC-owned canonical jobsites → future
@@ -2879,9 +2878,29 @@ they can be worked one at a time. Tick a box here **and** in its source phase wh
   - Verify (user, needs live Supabase): `node scripts/regenerate-pdfs.js --id <id>` dry run lists it; with
     `--apply` the downloaded PDF shows the current header/local-time format and the same seal fragment, Verify
     still says "Verified", an audit row has `regenerated: true`, and the GC gets no email.
-- [ ] 11f. Configurable meeting cadence (GC- or sub-defined, e.g. weekly instead of the
-      hardcoded daily rule) — `compliance.js`/`dayWindow.js` are already window-parameterized in
-      prep for this. See Phase 6 (~line 1657).
+- [x] 11f. Configurable meeting cadence (daily / weekly). Done · status: code complete, live smoke pending (apply the
+      two `ALTER TABLE` lines in `Supabase_SQL.sql` first).
+  - **Model:** `jobsites.meeting_cadence` (GC default, NOT NULL, `'daily'`) + nullable
+    `jobsite_subcontractors.meeting_cadence` (a sub's own override). A sub may only **tighten** (daily on a weekly
+    site); the effective cadence is always the stricter of the two (`server/utility/cadence.js`), so a GC later
+    tightening the default automatically wins over an older looser override. Weekly = Monday–Sunday in the
+    viewer's timezone (`weekWindow` in `dayWindow.js`, derived from `date` + `tzOffset`, client sends nothing new).
+  - **Dashboard:** `getOverview` computes each sub's effective cadence, fetches logs once over the widest window,
+    and runs `computeCompliance` once per cadence group with that group's window (`compliance.js` unchanged);
+    each sub carries `cadence`. UI copy no longer says "today" (stat tile "logged", per-sub "No talk logged
+    today/this week", hero copy).
+  - **Scorecards:** period-based instead of day-based — `rollingPeriodWindows` (weekly = Mon–Sun weeks overlapping
+    the 30-day range), `computeRollingCompliance` (`expectedPeriods`/`loggedPeriods`, renamed from
+    `expectedDays`/`loggedDays` in the API + client), and an unlogged **still-open** weekly period is not counted
+    as a miss (daily keeps counting today). Breakdown row reads "Logged x of y expected weeks|days".
+  - **Settings UI:** GC sets the default in the edit-jobsite form (`PATCH /api/jobsites/:id` `meetingCadence`);
+    a sub sets its override via `GET /api/jobsites/memberships` + `PATCH /api/jobsites/:id/my-cadence` (manager
+    role, 422 if looser than the GC default) and a "Talk cadence" control on each GC-linked project card on the Projects page (`ProjectCadenceControl`).
+  - Deliberately not built: "every N days", GC-configurable week start, DST-day handling (still 11h).
+    `policyPush.js` needs no change. Tests: server 1126 passed (3 skipped); the touched client suites pass.
+  - Verify (user, needs live Supabase): set a jobsite to weekly → dashboard shows weekly subs as "logged" for a
+    Monday log through Sunday; a sub tightens to daily → its row flips to the daily window; a sub cannot loosen a
+    daily site (422); the scorecard for a weekly sub shows weeks, not ~14%.
 - [ ] 11g. Pagination for `GET /api/gc/meetings` past the current 200-row cap.
       See Phase 6e (~line 1573).
 - [ ] 11h. DST-transition day fix in `server/utility/dayWindow.js` (currently treats every day

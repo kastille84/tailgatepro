@@ -75,10 +75,10 @@ export const GcDashboard = () => {
         <StyledHeroInner>
           <StyledEyebrow>GC Compliance</StyledEyebrow>
           <StyledHeadline id="gc-dashboard-hero-heading">
-            Today's job sites
+            Job site compliance
           </StyledHeadline>
           <StyledLede>
-            Which linked subcontractors have logged a safety talk today.
+            Which linked subcontractors have logged a safety talk for their current period — today, or this week for a weekly cadence.
           </StyledLede>
         </StyledHeroInner>
       </StyledHero>
@@ -87,7 +87,7 @@ export const GcDashboard = () => {
         <StyledContainer>
           {!isOnline && (
             <StyledOfflineNote role="status">
-              You're offline. Reconnect to see today's compliance status.
+              You're offline. Reconnect to see current compliance status.
             </StyledOfflineNote>
           )}
 

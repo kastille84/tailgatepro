@@ -6,7 +6,7 @@
 // instant, since a calendar day is always exactly 24h in that arithmetic
 // (the client-local wall-clock DST question dayWindow already resolved once,
 // at the anchor).
-const { dayWindow } = require("./dayWindow");
+const { dayWindow, weekWindow } = require("./dayWindow");
 
 const DAY_MS = 24 * 60 * 60 * 1000;
 
@@ -27,4 +27,26 @@ const rollingDayWindows = ({ date, tzOffset, days }) => {
   return windows;
 };
 
-module.exports = { rollingDayWindows };
+// The windows a scorecard scores against, one per period, oldest first. Daily
+// is `rollingDayWindows`. Weekly is every Mon-Sun week overlapping the same
+// `days`-day range (the oldest may start before the range does), ending on the
+// week containing "today" -- the same span of history, counted in weeks.
+const rollingPeriodWindows = ({ date, tzOffset, days, cadence }) => {
+  const dayWindows = rollingDayWindows({ date, tzOffset, days });
+  if (cadence !== "weekly") return dayWindows;
+
+  const rangeStartMs = new Date(dayWindows[0].start).getTime();
+  const current = weekWindow({ date, tzOffset });
+  const windows = [current];
+  let startMs = new Date(current.start).getTime();
+  while (startMs > rangeStartMs) {
+    startMs -= 7 * DAY_MS;
+    windows.unshift({
+      start: new Date(startMs).toISOString(),
+      end: new Date(startMs + 7 * DAY_MS).toISOString(),
+    });
+  }
+  return windows;
+};
+
+module.exports = { rollingDayWindows, rollingPeriodWindows };

@@ -37,7 +37,7 @@ export const SubComplianceRow = ({ sub, onSelect }: SubComplianceRowProps) => {
         <StyledSubMeta>
           {sub.lastLoggedAt
             ? `Last logged ${new Date(sub.lastLoggedAt).toLocaleString()}`
-            : "No talk logged today"}
+            : `No talk logged ${sub.cadence === "weekly" ? "this week" : "today"}`}
         </StyledSubMeta>
         <StyledStatusPill $status={sub.status === "logged" ? "logged" : "missing"}>
           {sub.status === "logged" ? "Logged" : "Missing"}

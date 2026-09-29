@@ -11,7 +11,7 @@
 // worker name + quiz pass/fail.
 const { supabase } = require("../utility/supabaseClient");
 const { AppError } = require("../utility/AppError");
-const { dayWindow } = require("../utility/dayWindow");
+const { effectiveCadence, windowFor } = require("../utility/cadence");
 const { computeCompliance } = require("../utility/compliance");
 const { buildPdfFilename } = require("../utility/pdfFilename");
 const { isSubLocked } = require("../utility/subLocking");
@@ -146,16 +146,33 @@ const listCompletedLogsInWindow = async (projectIds, window) => {
   return data;
 };
 
+const rosterFields = (row) => {
+  const accepted = (row.jobsite_subcontractors ?? []).filter(
+    (sub) => sub.sub_company_id && sub.accepted_at,
+  );
+  return {
+    subIds: accepted.map((sub) => sub.sub_company_id),
+    cadenceBySub: new Map(
+      accepted.map((sub) => [
+        sub.sub_company_id,
+        effectiveCadence(row.meeting_cadence ?? "daily", sub.meeting_cadence),
+      ]),
+    ),
+  };
+};
+
 // The GC's live jobsites (active, not archived) with their accepted roster
 // embedded. A pending invite has no sub_company_id yet and is not a roster
-// member — it can't be "missing" a log until it's accepted.
+// member — it can't be "missing" a log until it's accepted. `cadenceBySub` is
+// each accepted sub's effective cadence: the strictest of the jobsite's default
+// and the sub's own override (utility/cadence.js).
 const listActiveJobsites = async (gcCompanyId, allowedJobsiteIds = null) => {
   if (allowedJobsiteIds !== null && allowedJobsiteIds.length === 0) return [];
 
   let query = supabase
     .from("jobsites")
     .select(
-      "id, name, origin, jobsite_subcontractors(sub_company_id, accepted_at)",
+      "id, name, origin, meeting_cadence, jobsite_subcontractors(sub_company_id, accepted_at, meeting_cadence)",
     )
     .eq("gc_company_id", gcCompanyId)
     .eq("status", "active")
@@ -172,17 +189,19 @@ const listActiveJobsites = async (gcCompanyId, allowedJobsiteIds = null) => {
     id: row.id,
     name: row.name,
     createdBySub: row.origin === "subcontractor",
-    subIds: (row.jobsite_subcontractors ?? [])
-      .filter((sub) => sub.sub_company_id && sub.accepted_at)
-      .map((sub) => sub.sub_company_id),
+    ...rosterFields(row),
   }));
 };
 
 // GET /api/gc/overview — the GC's real jobsites, each with a per-sub
-// compliance status for the given day. The roster is the accepted members, so
+// compliance status for the sub's current period: today for a daily cadence,
+// this Mon-Sun week for a weekly one. The roster is the accepted members, so
 // an accepted sub that never logged shows `missing`.
 const getOverview = async (gcCompanyId, { date, tzOffset, allowedJobsiteIds = null }) => {
-  const window = dayWindow({ date, tzOffset });
+  const windows = {
+    daily: windowFor("daily", { date, tzOffset }),
+    weekly: windowFor("weekly", { date, tzOffset }),
+  };
 
   const [jobsiteRows, allProjects, unlocked] = await Promise.all([
     listActiveJobsites(gcCompanyId, allowedJobsiteIds),
@@ -196,8 +215,17 @@ const getOverview = async (gcCompanyId, { date, tzOffset, allowedJobsiteIds = nu
 
   const projectIds = projects.map((project) => project.id);
   const subIds = jobsiteRows.flatMap((jobsite) => jobsite.subIds);
+  // One log query over the widest window any sub needs; computeCompliance
+  // narrows it to each sub's own period. The week contains today, so it
+  // only widens the range when a weekly sub exists.
+  const anyWeekly = jobsiteRows.some((jobsite) =>
+    [...jobsite.cadenceBySub.values()].includes("weekly"),
+  );
+  const logRange = anyWeekly
+    ? { start: windows.weekly.start, end: windows.weekly.end }
+    : windows.daily;
   const [logs, companyNamesById] = await Promise.all([
-    listCompletedLogsInWindow(projectIds, window),
+    listCompletedLogsInWindow(projectIds, logRange),
     getCompanyNamesByIds(subIds),
   ]);
 
@@ -224,11 +252,23 @@ const getOverview = async (gcCompanyId, { date, tzOffset, allowedJobsiteIds = nu
         }
       }
 
-      const compliance = computeCompliance({
-        roster: jobsite.subIds.map((subId) => ({ subId })),
-        logs: logsByJobsite.get(jobsite.id) ?? [],
-        window,
-      });
+      // Each cadence group is scored against its own window; the entries are
+      // then put back in roster order.
+      const jobsiteLogs = logsByJobsite.get(jobsite.id) ?? [];
+      const complianceBySub = new Map();
+      for (const cadence of ["daily", "weekly"]) {
+        const roster = jobsite.subIds
+          .filter((subId) => jobsite.cadenceBySub.get(subId) === cadence)
+          .map((subId) => ({ subId }));
+        for (const entry of computeCompliance({
+          roster,
+          logs: jobsiteLogs,
+          window: windows[cadence],
+        })) {
+          complianceBySub.set(entry.subId, entry);
+        }
+      }
+      const compliance = jobsite.subIds.map((subId) => complianceBySub.get(subId));
 
       return {
         id: jobsite.id,
@@ -238,6 +278,7 @@ const getOverview = async (gcCompanyId, { date, tzOffset, allowedJobsiteIds = nu
           companyId: entry.subId,
           companyName: companyNamesById.get(entry.subId) ?? null,
           projectId: projectIdBySub.get(entry.subId) ?? null,
+          cadence: jobsite.cadenceBySub.get(entry.subId),
           status: entry.status,
           lastLoggedAt: entry.lastLoggedAt,
           count: entry.count,
@@ -265,6 +306,7 @@ const getOverview = async (gcCompanyId, { date, tzOffset, allowedJobsiteIds = nu
             companyId: null,
             companyName: null,
             projectId: null,
+            cadence: null,
             status: null,
             lastLoggedAt: null,
             count: null,

@@ -1,5 +1,7 @@
-/** Per-sub compliance status for one linked jobsite, for the day the overview
- *  was requested. Mirrors a `getOverview` jobsite entry
+import type { MeetingCadence } from "./jobsite";
+
+/** Per-sub compliance status for one linked jobsite, for the sub's current
+ *  period (today, or this Mon-Sun week) as of the day the overview was requested. Mirrors a `getOverview` jobsite entry
  *  (server/services/gcDashboard.js). */
 export interface GcSubCompliance {
   /** Null when `locked`. */
@@ -8,6 +10,9 @@ export interface GcSubCompliance {
   /** The sub's earliest active project id in this jobsite — what a drill-in
    *  opens. `null` when an accepted sub has no active project there yet. */
   projectId: string | null;
+  /** How often this sub must log (effective: the stricter of the jobsite's
+   *  default and the sub's own override). Null when `locked`. */
+  cadence: MeetingCadence | null;
   /** Null when `locked`. */
   status: "logged" | "missing" | null;
   lastLoggedAt: string | null;

@@ -9,8 +9,10 @@ import {
   getJobsiteJoinPreview,
   inviteSubcontractor,
   listJobsiteMembers,
+  listJobsiteMemberships,
   listJobsites,
   removeSubcontractor,
+  setMyJobsiteCadence,
   setJobsiteMembers,
   updateJobsite,
 } from "../../src/services/apiJobsites";
@@ -420,6 +422,62 @@ describe("apiJobsites", () => {
           headers: { Authorization: "Bearer token-123" },
         }),
       );
+    });
+  });
+
+  describe("listJobsiteMemberships (Phase 11f)", () => {
+    it("GETs /api/jobsites/memberships with the bearer token", async () => {
+      const fetchMock = vi.fn().mockResolvedValue(okResponse([{ jobsiteId: "j1" }]));
+      vi.stubGlobal("fetch", fetchMock);
+
+      await expect(listJobsiteMemberships("token-123")).resolves.toEqual([{ jobsiteId: "j1" }]);
+      expect(fetchMock).toHaveBeenCalledWith(
+        "/api/jobsites/memberships",
+        expect.objectContaining({
+          method: "GET",
+          headers: { Authorization: "Bearer token-123" },
+        }),
+      );
+    });
+  });
+
+  describe("setMyJobsiteCadence (Phase 11f)", () => {
+    it("PATCHes /api/jobsites/:id/my-cadence with the cadence", async () => {
+      const fetchMock = vi.fn().mockResolvedValue(okResponse({ effectiveCadence: "daily" }));
+      vi.stubGlobal("fetch", fetchMock);
+
+      await expect(setMyJobsiteCadence("token-123", "j1", "daily")).resolves.toEqual({
+        effectiveCadence: "daily",
+      });
+      expect(fetchMock).toHaveBeenCalledWith(
+        "/api/jobsites/j1/my-cadence",
+        expect.objectContaining({
+          method: "PATCH",
+          body: JSON.stringify({ cadence: "daily" }),
+        }),
+      );
+    });
+
+    it("sends null to clear the override", async () => {
+      const fetchMock = vi.fn().mockResolvedValue(okResponse({}));
+      vi.stubGlobal("fetch", fetchMock);
+
+      await setMyJobsiteCadence("t", "j1", null);
+
+      expect(fetchMock.mock.calls[0][1].body).toBe(JSON.stringify({ cadence: null }));
+    });
+
+    it("rejects with the backend error message", async () => {
+      vi.stubGlobal(
+        "fetch",
+        vi.fn().mockResolvedValue({
+          ok: false,
+          status: 422,
+          json: async () => ({ success: false, error: "Too loose" }),
+        }),
+      );
+
+      await expect(setMyJobsiteCadence("t", "j1", "weekly")).rejects.toThrow("Too loose");
     });
   });
 });

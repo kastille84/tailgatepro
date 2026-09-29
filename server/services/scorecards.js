@@ -5,8 +5,9 @@
 // helpers rather than re-querying them.
 const { supabase } = require("../utility/supabaseClient");
 const { AppError } = require("../utility/AppError");
-const { rollingDayWindows } = require("../utility/rollingWindow");
-const { computeRollingDailyCompliance, buildScorecard } = require("../utility/subScorecard");
+const { rollingPeriodWindows } = require("../utility/rollingWindow");
+const { computeRollingCompliance, buildScorecard } = require("../utility/subScorecard");
+const { effectiveCadence } = require("../utility/cadence");
 // Namespaced, not destructured -- same convention every other cross-service
 // call in this codebase uses (companiesService.getById-style), so a test's
 // vi.spyOn on either service's methods is picked up regardless of require
@@ -30,7 +31,7 @@ const listPortfolioRoster = async (gcCompanyId, allowedJobsiteIds = null) => {
   let query = supabase
     .from("jobsite_subcontractors")
     .select(
-      "jobsite_id, sub_company_id, accepted_at, jobsites!inner(name, gc_company_id, status, archived_at)",
+      "jobsite_id, sub_company_id, accepted_at, meeting_cadence, jobsites!inner(name, gc_company_id, status, archived_at, meeting_cadence)",
     )
     .eq("jobsites.gc_company_id", gcCompanyId)
     .eq("jobsites.status", "active")
@@ -50,19 +51,32 @@ const listPortfolioRoster = async (gcCompanyId, allowedJobsiteIds = null) => {
     since: row.accepted_at,
     jobsiteId: row.jobsite_id,
     jobsiteName: row.jobsites.name,
+    // Strictest of the GC's jobsite default and the sub's own override.
+    cadence: effectiveCadence(row.jobsites.meeting_cadence ?? "daily", row.meeting_cadence),
   }));
 };
 
 // Shared by both endpoints below: every sub's full scorecard (overall score +
 // per-jobsite breakdown) for the caller's portfolio, keyed by companyId. A
-// single query spans the whole rolling window (no per-day round trip) --
-// computeRollingDailyCompliance narrows it to each day itself, the same way
+// single query spans the whole rolling window (no per-period round trip) --
+// computeRollingCompliance narrows it to each period (a day or a Mon-Sun week,
+// per the sub's effective cadence on that jobsite) itself, the same way
 // computeCompliance narrows any window.
 const buildAllScorecards = async (gcCompanyId, { date, tzOffset, allowedJobsiteIds = null }) => {
   await siteScopeService.assertScorecardsAvailable(gcCompanyId);
 
-  const dayWindows = rollingDayWindows({ date, tzOffset, days: ROLLING_WINDOW_DAYS });
-  const rangeWindow = { start: dayWindows[0].start, end: dayWindows[dayWindows.length - 1].end };
+  const windowsByCadence = {
+    daily: rollingPeriodWindows({ date, tzOffset, days: ROLLING_WINDOW_DAYS, cadence: "daily" }),
+    weekly: rollingPeriodWindows({ date, tzOffset, days: ROLLING_WINDOW_DAYS, cadence: "weekly" }),
+  };
+  const { daily, weekly } = windowsByCadence;
+  // One query over the widest range: the oldest week can start before the
+  // 30-day range does.
+  const rangeWindow = {
+    start: weekly[0].start < daily[0].start ? weekly[0].start : daily[0].start,
+    end: daily[daily.length - 1].end,
+  };
+  const asOf = daily[daily.length - 1].end;
 
   const [roster, allProjects] = await Promise.all([
     listPortfolioRoster(gcCompanyId, allowedJobsiteIds),
@@ -101,16 +115,19 @@ const buildAllScorecards = async (gcCompanyId, { date, tzOffset, allowedJobsiteI
   const scorecards = new Map();
   for (const [subId, entries] of rosterBySub) {
     const perJobsite = entries.map((entry) => {
-      const [daily] = computeRollingDailyCompliance({
+      const [result] = computeRollingCompliance({
         roster: [{ subId, since: entry.since }],
         logs: logsByJobsite.get(entry.jobsiteId) ?? [],
-        dayWindows,
+        windows: windowsByCadence[entry.cadence],
+        // Only a weekly period can still be open; daily has always counted today.
+        asOf: entry.cadence === "weekly" ? asOf : undefined,
       });
       return {
         jobsiteId: entry.jobsiteId,
         jobsiteName: entry.jobsiteName,
-        expectedDays: daily.expectedDays,
-        loggedDays: daily.loggedDays,
+        cadence: entry.cadence,
+        expectedPeriods: result.expectedPeriods,
+        loggedPeriods: result.loggedPeriods,
       };
     });
 

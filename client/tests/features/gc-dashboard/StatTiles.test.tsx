@@ -20,7 +20,7 @@ describe("StatTiles", () => {
     expect(screen.getByText("4")).toBeDefined();
     expect(screen.getByText("subs on site")).toBeDefined();
     expect(screen.getByText("3")).toBeDefined();
-    expect(screen.getByText("logged today")).toBeDefined();
+    expect(screen.getByText("logged")).toBeDefined();
     expect(screen.getByText("1")).toBeDefined();
     expect(screen.getByText("missing")).toBeDefined();
   });

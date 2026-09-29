@@ -41,7 +41,7 @@ const detail = {
   companyName: "Rivera Electric",
   overallScore: 87,
   jobsites: [
-    { jobsiteId: "jobsite-1", jobsiteName: "Downtown Tower", expectedDays: 30, loggedDays: 26, score: 87 },
+    { jobsiteId: "jobsite-1", jobsiteName: "Downtown Tower", cadence: "daily", expectedPeriods: 30, loggedPeriods: 26, score: 87 },
   ],
 };
 

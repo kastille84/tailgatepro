@@ -151,3 +151,29 @@ export const StyledDangerZoneTitle = styled.h4`
   letter-spacing: 0.04em;
   color: ${({ theme }) => theme.colors.navy[400]};
 `;
+
+/** Full-width row along the bottom of a project card for the sub's own
+ *  meeting-cadence control (only on a card linked to a GC job site). */
+export const StyledCadenceRow = styled.div`
+  flex: 1 1 100%;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.8rem 1.6rem;
+  padding-top: 1.2rem;
+  border-top: 0.1rem solid ${({ theme }) => theme.colors.navy[100]};
+`;
+
+export const StyledCadenceText = styled.div`
+  flex: 1 1 16rem;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+`;
+
+export const StyledCadenceLabel = styled.span`
+  font-size: 1.4rem;
+  font-weight: 700;
+  color: ${({ theme }) => theme.colors.navy[700]};
+`;

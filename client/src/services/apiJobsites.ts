@@ -7,9 +7,12 @@ import type {
   JobsiteJoinAcceptResult,
   JobsiteJoinLink,
   JobsiteJoinPreview,
+  JobsiteMembership,
   JobsiteMembersResult,
   JobsitePatch,
   JobsiteSummary,
+  MeetingCadence,
+  MyCadenceResult,
 } from "../interfaces/jobsite";
 import type { Project } from "../interfaces/project";
 
@@ -206,4 +209,32 @@ export const acceptJobsiteJoinLink = async (
     headers: { Authorization: `Bearer ${accessToken}` },
   });
   return unwrap<JobsiteJoinAcceptResult>(res);
+};
+
+/** GET /api/jobsites/memberships (Phase 11f) — the caller's subcontractor
+ *  company's own jobsites with their meeting cadence. */
+export const listJobsiteMemberships = async (
+  accessToken: string,
+): Promise<JobsiteMembership[]> => {
+  const res = await fetchWithTimeout("/api/jobsites/memberships", {
+    method: "GET",
+    headers: { Authorization: `Bearer ${accessToken}` },
+  });
+  return unwrap<JobsiteMembership[]>(res);
+};
+
+/** PATCH /api/jobsites/:id/my-cadence (Phase 11f) — tighten (or, with `null`,
+ *  clear) this company's own cadence on a jobsite. A value looser than the
+ *  GC's default is rejected by the server. */
+export const setMyJobsiteCadence = async (
+  accessToken: string,
+  jobsiteId: string,
+  cadence: MeetingCadence | null,
+): Promise<MyCadenceResult> => {
+  const res = await fetchWithTimeout(`/api/jobsites/${jobsiteId}/my-cadence`, {
+    method: "PATCH",
+    headers: authHeaders(accessToken),
+    body: JSON.stringify({ cadence }),
+  });
+  return unwrap<MyCadenceResult>(res);
 };

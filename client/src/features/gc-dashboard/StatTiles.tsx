@@ -6,7 +6,8 @@ interface StatTilesProps {
 }
 
 /** The three headline numbers for the GC's overview: subs on site, how many
- *  logged today, how many are missing. Purely presentational. */
+ *  have logged for their current period (today, or this week for a weekly
+ *  cadence), how many are missing. Purely presentational. */
 export const StatTiles = ({ totals }: StatTilesProps) => (
   <StyledStatRow>
     <StyledStatTile>
@@ -15,7 +16,7 @@ export const StatTiles = ({ totals }: StatTilesProps) => (
     </StyledStatTile>
     <StyledStatTile>
       <strong>{totals.logged}</strong>
-      <span>logged today</span>
+      <span>logged</span>
     </StyledStatTile>
     <StyledStatTile>
       <strong>{totals.missing}</strong>

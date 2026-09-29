@@ -15,10 +15,12 @@ const {
   acceptJoinLink,
   removeSubcontractor,
   hasActiveSitePro,
+  listMemberships,
+  setMyCadence,
 } = require("./jobsites");
 
 const JOBSITE_COLUMNS =
-  "id, gc_company_id, name, status, archived_at, origin, plan, created_at";
+  "id, gc_company_id, name, status, archived_at, origin, plan, meeting_cadence, created_at";
 const LIST_SELECT = `${JOBSITE_COLUMNS}, jobsite_subcontractors(id, sub_company_id, invited_email, accepted_at, companies(name))`;
 const ROSTER_COLUMNS =
   "id, jobsite_id, sub_company_id, invited_email, token, expires_at, accepted_at";
@@ -42,6 +44,7 @@ const mappedJobsite = {
   archivedAt: null,
   createdBySub: false,
   plan: "free",
+  meetingCadence: "daily",
   createdAt: "2026-01-01T00:00:00.000Z",
 };
 
@@ -372,6 +375,25 @@ describe("jobsites service: update", () => {
     expect(update).toHaveBeenCalledWith({ name: "New Name" });
     expect(eqId).toHaveBeenCalledWith("id", "jobsite-1");
     expect(eqGc).toHaveBeenCalledWith("gc_company_id", "gc-1");
+  });
+
+  it("should write meeting_cadence when meetingCadence is patched", async () => {
+    // Act
+    await updateJobsite({ id: "jobsite-1", gcCompanyId: "gc-1", patch: { meetingCadence: "weekly" } });
+
+    // Assert
+    expect(update).toHaveBeenCalledWith({ meeting_cadence: "weekly" });
+  });
+
+  it("should map a stored weekly cadence onto the returned jobsite", async () => {
+    // Arrange
+    single.mockResolvedValue({ data: { ...dbRow, meeting_cadence: "weekly" }, error: null });
+
+    // Act
+    const result = await updateJobsite({ id: "jobsite-1", gcCompanyId: "gc-1", patch: { name: "x" } });
+
+    // Assert
+    expect(result.meetingCadence).toBe("weekly");
   });
 
   it("should write the status key when status is patched", async () => {
@@ -1390,6 +1412,153 @@ describe("jobsites service: hasActiveSitePro", () => {
     await expect(hasActiveSitePro("gc-1")).rejects.toMatchObject({
       statusCode: 502,
       message: "Could not check your job site plan",
+    });
+  });
+});
+
+describe("jobsites service: listMemberships", () => {
+  it("should map each accepted membership with the jobsite default, own override and effective cadence", async () => {
+    // Arrange
+    const query = chain({
+      data: [
+        {
+          jobsite_id: "jobsite-1",
+          meeting_cadence: "daily",
+          jobsites: { name: "Riverside Tower", meeting_cadence: "weekly" },
+        },
+        {
+          jobsite_id: "jobsite-2",
+          meeting_cadence: null,
+          jobsites: { name: "North Site", meeting_cadence: null },
+        },
+      ],
+      error: null,
+    });
+    queueFrom(["jobsite_subcontractors", query]);
+
+    // Act
+    const result = await listMemberships("sub-1");
+
+    // Assert
+    expect(query.eq).toHaveBeenCalledWith("sub_company_id", "sub-1");
+    expect(query.eq).toHaveBeenCalledWith("jobsites.status", "active");
+    expect(result).toEqual([
+      {
+        jobsiteId: "jobsite-1",
+        jobsiteName: "Riverside Tower",
+        jobsiteCadence: "weekly",
+        subCadence: "daily",
+        effectiveCadence: "daily",
+      },
+      {
+        jobsiteId: "jobsite-2",
+        jobsiteName: "North Site",
+        jobsiteCadence: "daily",
+        subCadence: null,
+        effectiveCadence: "daily",
+      },
+    ]);
+  });
+
+  it("should throw a 502 AppError when the query fails", async () => {
+    // Arrange
+    queueFrom(["jobsite_subcontractors", chain({ data: null, error: new Error("db down") })]);
+
+    // Act & Assert
+    await expect(listMemberships("sub-1")).rejects.toMatchObject({
+      statusCode: 502,
+      message: "Could not load your job sites",
+    });
+  });
+});
+
+describe("jobsites service: setMyCadence", () => {
+  const args = { jobsiteId: "jobsite-1", companyId: "sub-1" };
+  const membership = (jobsiteCadence) =>
+    chain({ data: { id: "roster-1", jobsites: { meeting_cadence: jobsiteCadence } }, error: null });
+
+  it("should let a sub tighten a weekly jobsite to daily", async () => {
+    // Arrange
+    const read = membership("weekly");
+    const write = chain({ data: null, error: null });
+    queueFrom(["jobsite_subcontractors", read], ["jobsite_subcontractors", write]);
+
+    // Act
+    const result = await setMyCadence({ ...args, cadence: "daily" });
+
+    // Assert
+    expect(read.eq).toHaveBeenCalledWith("sub_company_id", "sub-1");
+    expect(write.update).toHaveBeenCalledWith({ meeting_cadence: "daily" });
+    expect(write.eq).toHaveBeenCalledWith("id", "roster-1");
+    expect(result).toEqual({
+      jobsiteId: "jobsite-1",
+      jobsiteCadence: "weekly",
+      subCadence: "daily",
+      effectiveCadence: "daily",
+    });
+  });
+
+  it("should clear the override when cadence is null", async () => {
+    // Arrange
+    const write = chain({ data: null, error: null });
+    queueFrom(["jobsite_subcontractors", membership("daily")], ["jobsite_subcontractors", write]);
+
+    // Act
+    const result = await setMyCadence({ ...args, cadence: null });
+
+    // Assert
+    expect(write.update).toHaveBeenCalledWith({ meeting_cadence: null });
+    expect(result.effectiveCadence).toBe("daily");
+  });
+
+  it("should reject an override looser than the jobsite's default with a 422", async () => {
+    // Arrange
+    const write = chain({ data: null, error: null });
+    queueFrom(["jobsite_subcontractors", membership("daily")]);
+
+    // Act & Assert
+    await expect(setMyCadence({ ...args, cadence: "weekly" })).rejects.toMatchObject({
+      statusCode: 422,
+    });
+    expect(write.update).not.toHaveBeenCalled();
+  });
+
+  it("should treat a jobsite the company doesn't belong to as a 404", async () => {
+    // Arrange
+    queueFrom([
+      "jobsite_subcontractors",
+      chain({ data: null, error: Object.assign(new Error("none"), { code: "PGRST116" }) }),
+    ]);
+
+    // Act & Assert
+    await expect(setMyCadence({ ...args, cadence: "daily" })).rejects.toMatchObject({
+      statusCode: 404,
+      message: "Jobsite not found",
+    });
+  });
+
+  it("should throw a 502 when the membership lookup fails", async () => {
+    // Arrange
+    queueFrom(["jobsite_subcontractors", chain({ data: null, error: new Error("db down") })]);
+
+    // Act & Assert
+    await expect(setMyCadence({ ...args, cadence: "daily" })).rejects.toMatchObject({
+      statusCode: 502,
+      message: "Could not load your job site",
+    });
+  });
+
+  it("should throw a 502 when the update fails", async () => {
+    // Arrange
+    queueFrom(
+      ["jobsite_subcontractors", membership("weekly")],
+      ["jobsite_subcontractors", chain({ data: null, error: new Error("db down") })],
+    );
+
+    // Act & Assert
+    await expect(setMyCadence({ ...args, cadence: "daily" })).rejects.toMatchObject({
+      statusCode: 502,
+      message: "Could not update your meeting cadence",
     });
   });
 });

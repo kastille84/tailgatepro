@@ -35,6 +35,8 @@ const jobsite: Jobsite = {
   status: "active",
   archivedAt: null,
   createdBySub: false,
+  plan: "free",
+  meetingCadence: "daily",
   createdAt: "x",
   subcontractors: [],
 };
@@ -123,10 +125,32 @@ describe("JobsiteForm", () => {
     await waitFor(() =>
       expect(mockUpdate).toHaveBeenCalledWith({
         id: "j1",
-        patch: { name: "Riverside Tower", status: "completed" },
+        patch: { name: "Riverside Tower", status: "completed", meetingCadence: "daily" },
       }),
     );
     await waitFor(() => expect(onClose).toHaveBeenCalled());
+  });
+
+  it("saves a changed meeting cadence in edit mode and hides the control when creating", async () => {
+    renderForm({ jobsite });
+
+    fireEvent.change(screen.getByLabelText(/safety talk cadence/i), {
+      target: { value: "weekly" },
+    });
+    fireEvent.click(screen.getByRole("button", { name: /save changes/i }));
+
+    await waitFor(() =>
+      expect(mockUpdate).toHaveBeenCalledWith({
+        id: "j1",
+        patch: { name: "Riverside", status: "active", meetingCadence: "weekly" },
+      }),
+    );
+  });
+
+  it("does not show the cadence control when creating", () => {
+    renderForm();
+
+    expect(screen.queryByLabelText(/safety talk cadence/i)).toBeNull();
   });
 
   it("stays open when saving an edit fails", async () => {

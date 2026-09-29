@@ -24,6 +24,7 @@ const jobsiteSchema = z.object({
     .min(1, "Job site name is required")
     .max(120, "Job site name is too long"),
   status: z.enum(["active", "completed"]).optional(),
+  meetingCadence: z.enum(["daily", "weekly"]).optional(),
 });
 
 type JobsiteValues = z.infer<typeof jobsiteSchema>;
@@ -55,6 +56,7 @@ export const JobsiteForm = ({ isOpen, onClose, jobsite }: JobsiteFormProps) => {
     defaultValues: {
       name: jobsite?.name ?? "",
       status: jobsite?.status ?? "active",
+      meetingCadence: jobsite?.meetingCadence ?? "daily",
     },
   });
 
@@ -63,7 +65,11 @@ export const JobsiteForm = ({ isOpen, onClose, jobsite }: JobsiteFormProps) => {
       if (jobsite) {
         await updateJobsite({
           id: jobsite.id,
-          patch: { name: values.name, status: values.status },
+          patch: {
+            name: values.name,
+            status: values.status,
+            meetingCadence: values.meetingCadence,
+          },
         });
       } else {
         await createJobsite({ name: values.name });
@@ -89,6 +95,7 @@ export const JobsiteForm = ({ isOpen, onClose, jobsite }: JobsiteFormProps) => {
 
   const nameId = "jobsite-name";
   const statusId = "jobsite-status";
+  const cadenceId = "jobsite-cadence";
 
   return (
     <Modal
@@ -125,6 +132,23 @@ export const JobsiteForm = ({ isOpen, onClose, jobsite }: JobsiteFormProps) => {
                 { value: "completed", label: "Completed" },
               ]}
               {...register("status")}
+            />
+          </FormField>
+        )}
+
+        {isEdit && (
+          <FormField
+            id={cadenceId}
+            label="Safety talk cadence"
+            hint="How often each subcontractor must log a talk. A weekly week runs Monday to Sunday; a subcontractor can choose to log daily instead."
+          >
+            <Select
+              id={cadenceId}
+              options={[
+                { value: "daily", label: "Daily" },
+                { value: "weekly", label: "Weekly" },
+              ]}
+              {...register("meetingCadence")}
             />
           </FormField>
         )}

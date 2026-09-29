@@ -10,7 +10,9 @@ const DAY_MS = 24 * 60 * 60 * 1000;
 const MAX_TZ_OFFSET_MINUTES = 14 * 60;
 const DATE_PATTERN = /^(\d{4})-(\d{2})-(\d{2})$/;
 
-const dayWindow = ({ date, tzOffset }) => {
+// Validates the client's local date + offset and returns the UTC instant of
+// that calendar day's local midnight, plus the parsed day-of-week source.
+const localMidnightMs = ({ date, tzOffset }) => {
   const match = DATE_PATTERN.exec(date ?? "");
   if (!match) {
     throw new AppError("date must be in YYYY-MM-DD format", 400);
@@ -36,11 +38,29 @@ const dayWindow = ({ date, tzOffset }) => {
     throw new AppError("date must be a real calendar date", 400);
   }
 
-  const startMs = midnightUtcMs + tzOffset * 60 * 1000;
+  return { midnightUtcMs, startMs: midnightUtcMs + tzOffset * 60 * 1000 };
+};
+
+const dayWindow = ({ date, tzOffset }) => {
+  const { startMs } = localMidnightMs({ date, tzOffset });
   return {
     start: new Date(startMs).toISOString(),
     end: new Date(startMs + DAY_MS).toISOString(),
   };
 };
 
-module.exports = { dayWindow };
+// The Monday-to-Sunday local calendar week containing `date`, as the same
+// half-open UTC range (meeting cadence "weekly", docs/gc-dashboard-design.md).
+// The weekday comes from the calendar date itself (`getUTCDay` on the UTC
+// midnight of that date), so it needs nothing beyond `date` and `tzOffset`.
+const weekWindow = ({ date, tzOffset }) => {
+  const { midnightUtcMs, startMs } = localMidnightMs({ date, tzOffset });
+  const daysSinceMonday = (new Date(midnightUtcMs).getUTCDay() + 6) % 7;
+  const weekStartMs = startMs - daysSinceMonday * DAY_MS;
+  return {
+    start: new Date(weekStartMs).toISOString(),
+    end: new Date(weekStartMs + 7 * DAY_MS).toISOString(),
+  };
+};
+
+module.exports = { dayWindow, weekWindow };

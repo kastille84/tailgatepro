@@ -9,12 +9,16 @@ import theme from "../../../src/styles/theme";
 const mockUseAuth = vi.fn();
 const mockUseProjects = vi.fn();
 const mockUseCurrentUser = vi.fn();
+const mockUseJobsiteMemberships = vi.fn();
 
 vi.mock("../../../src/context/auth", () => ({
   useAuth: () => mockUseAuth(),
 }));
 vi.mock("../../../src/hooks/useCurrentUser", () => ({
   useCurrentUser: () => mockUseCurrentUser(),
+}));
+vi.mock("../../../src/hooks/useJobsiteMemberships", () => ({
+  useJobsiteMemberships: (...args: unknown[]) => mockUseJobsiteMemberships(...args),
 }));
 vi.mock("../../../src/hooks/useProjects", () => ({
   useProjects: (...args: unknown[]) => mockUseProjects(...args),
@@ -27,13 +31,16 @@ vi.mock("../../../src/features/projects", () => ({
     projects,
     onEdit,
     onLinkGc,
+    cadenceByJobsiteId,
   }: {
     projects: { id: string }[];
     onEdit: (p: { id: string }) => void;
     onLinkGc?: (p: { id: string }) => void;
+    cadenceByJobsiteId?: Map<string, unknown>;
   }) => (
     <div data-testid="project-list">
       {projects.length} projects
+      <span data-testid="cadence-count">{cadenceByJobsiteId?.size}</span>
       <button type="button" onClick={() => onEdit({ id: "p1" })}>
         stub-edit
       </button>
@@ -93,11 +100,29 @@ describe("Projects page", () => {
     vi.clearAllMocks();
     mockUseAuth.mockReturnValue({ user: { email: "a@b.com" }, loading: false });
     mockUseCurrentUser.mockReturnValue({ isSubcontractor: true });
+    mockUseJobsiteMemberships.mockReturnValue({ memberships: [] });
     mockUseProjects.mockReturnValue({
       projects: [],
       isLoading: false,
       isError: false,
     });
+  });
+
+  it("passes a subcontractor's job-site memberships to the project list", () => {
+    mockUseJobsiteMemberships.mockReturnValue({
+      memberships: [{ jobsiteId: "j1" }, { jobsiteId: "j2" }],
+    });
+    renderPage();
+
+    expect(mockUseJobsiteMemberships).toHaveBeenCalledWith({ enabled: true });
+    expect(screen.getByTestId("cadence-count").textContent).toBe("2");
+  });
+
+  it("does not load memberships for a GC", () => {
+    mockUseCurrentUser.mockReturnValue({ isSubcontractor: false, isGc: true });
+    renderPage();
+
+    expect(mockUseJobsiteMemberships).toHaveBeenCalledWith({ enabled: false });
   });
 
   it("shows a GC the job-site manager instead of the project list and controls", () => {

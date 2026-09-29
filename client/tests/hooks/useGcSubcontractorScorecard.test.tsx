@@ -22,8 +22,9 @@ const detail: GcSubScorecardDetail = {
     {
       jobsiteId: "jobsite-1",
       jobsiteName: "Downtown Tower",
-      expectedDays: 30,
-      loggedDays: 26,
+      cadence: "daily",
+      expectedPeriods: 30,
+      loggedPeriods: 26,
       score: 87,
     },
   ],

@@ -12,6 +12,7 @@ const sub: GcSubCompliance = {
   companyId: "sub-1",
   companyName: "Rivera Electric",
   projectId: "project-1",
+  cadence: "daily",
   status: "logged",
   lastLoggedAt: "2026-09-21T13:00:00.000Z",
   count: 1,
@@ -48,6 +49,12 @@ describe("SubComplianceRow", () => {
     expect(screen.getByText("No talk logged today")).toBeDefined();
   });
 
+  it("says 'this week' in the no-talk message for a weekly sub", () => {
+    renderRow({ status: "missing", lastLoggedAt: null, count: 0, cadence: "weekly" });
+
+    expect(screen.getByText("No talk logged this week")).toBeDefined();
+  });
+
   it("falls back to a placeholder name when companyName is null", () => {
     renderRow({ companyName: null });
 
@@ -62,6 +69,7 @@ describe("SubComplianceRow", () => {
         companyId: null,
         companyName: null,
         projectId: null,
+        cadence: null,
         status: null,
         lastLoggedAt: null,
         count: null,

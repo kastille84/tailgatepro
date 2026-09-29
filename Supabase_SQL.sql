@@ -335,6 +335,10 @@ CREATE TABLE jobsites (
   -- meant to be publicly displayed — the same trust model companies.join_code
   -- already has, just scoped to one jobsite instead of the whole GC company.
   join_token TEXT UNIQUE,
+  -- Phase 11f (docs/gc-dashboard-design.md "Configurable cadence"): how often
+  -- subs on this site must log a talk. The GC's default; a sub may tighten it
+  -- for itself via jobsite_subcontractors.meeting_cadence, never relax it.
+  meeting_cadence TEXT NOT NULL DEFAULT 'daily' CHECK (meeting_cadence IN ('daily', 'weekly')),
   created_at TIMESTAMPTZ DEFAULT NOW()
 );
 
@@ -350,6 +354,7 @@ CREATE INDEX idx_jobsites_gc_company ON jobsites (gc_company_id);
 -- ALTER TABLE jobsites ADD COLUMN IF NOT EXISTS plan TEXT NOT NULL DEFAULT 'free' CHECK (plan IN ('free', 'site_pro'));  -- Phase 9b
 -- ALTER TABLE jobsites ADD COLUMN IF NOT EXISTS origin TEXT CHECK (origin IN ('gc', 'subcontractor'));  -- who created the jobsite; NULL = unknown
 -- ALTER TABLE jobsites ADD COLUMN IF NOT EXISTS join_token TEXT UNIQUE;  -- Phase 9e
+-- ALTER TABLE jobsites ADD COLUMN IF NOT EXISTS meeting_cadence TEXT NOT NULL DEFAULT 'daily' CHECK (meeting_cadence IN ('daily', 'weekly'));  -- Phase 11f
 
 -- 12. Jobsite Subcontractors (Phase 8d) — folds the GC's invite-by-email into
 -- the jobsite roster instead of a separate invites table, so "invited, not
@@ -372,6 +377,10 @@ CREATE TABLE jobsite_subcontractors (
   token TEXT UNIQUE,
   expires_at TIMESTAMPTZ,
   accepted_at TIMESTAMPTZ,
+  -- Phase 11f: this sub company's own cadence override. NULL = inherit
+  -- jobsites.meeting_cadence. Only ever tightens it (daily on a weekly site) —
+  -- enforced in the service, and the effective cadence is the stricter of the two.
+  meeting_cadence TEXT CHECK (meeting_cadence IN ('daily', 'weekly')),
   created_at TIMESTAMPTZ DEFAULT NOW(),
   CONSTRAINT jobsite_subs_email_unique UNIQUE (jobsite_id, invited_email)
 );
@@ -392,6 +401,7 @@ ALTER TABLE jobsite_subcontractors ENABLE ROW LEVEL SECURITY;
 -- CREATE UNIQUE INDEX IF NOT EXISTS jobsite_subs_company_unique ON jobsite_subcontractors (jobsite_id, sub_company_id) WHERE sub_company_id IS NOT NULL;
 -- ALTER TABLE jobsite_subcontractors ENABLE ROW LEVEL SECURITY;
 -- ALTER TABLE jobsite_subcontractors ALTER COLUMN invited_email DROP NOT NULL;  -- Phase 9e
+-- ALTER TABLE jobsite_subcontractors ADD COLUMN IF NOT EXISTS meeting_cadence TEXT CHECK (meeting_cadence IN ('daily', 'weekly'));  -- Phase 11f
 
 -- 13. Projects: attach to a jobsite (Phase 8d) — nullable, so every existing
 -- sub-owned project (and any new one with no GC, or only a free-text GC) is

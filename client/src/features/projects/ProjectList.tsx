@@ -1,5 +1,7 @@
 import { Button } from "../../ui_comps/button";
+import type { JobsiteMembership } from "../../interfaces/jobsite";
 import type { Project } from "../../interfaces/project";
+import { ProjectCadenceControl } from "./ProjectCadenceControl";
 import {
   StyledArchivedBadge,
   StyledCard,
@@ -20,6 +22,9 @@ interface ProjectListProps {
    *  passes it only for subcontractors (the server 403s a GC), so the list
    *  itself stays free of any account-type logic. */
   onLinkGc?: (project: Project) => void;
+  /** The sub's memberships keyed by jobsite id. A live project linked to one
+   *  of these gets its own talk-cadence control. */
+  cadenceByJobsiteId?: Map<string, JobsiteMembership>;
 }
 
 /** Presentational list of project cards. The page owns the data and the
@@ -28,6 +33,7 @@ export const ProjectList = ({
   projects,
   onEdit,
   onLinkGc,
+  cadenceByJobsiteId,
 }: ProjectListProps) => {
   if (projects.length === 0) {
     return (
@@ -42,6 +48,10 @@ export const ProjectList = ({
     <StyledList>
       {projects.map((project) => {
         const linkLabel = project.gcCompanyId ? "Unlink GC" : "Link to GC";
+        const membership =
+          project.jobsiteId && !project.archivedAt
+            ? cadenceByJobsiteId?.get(project.jobsiteId)
+            : undefined;
 
         return (
           <StyledCard key={project.id}>
@@ -79,6 +89,7 @@ export const ProjectList = ({
                 Edit
               </Button>
             </StyledCardActions>
+            {membership && <ProjectCadenceControl membership={membership} />}
           </StyledCard>
         );
       })}

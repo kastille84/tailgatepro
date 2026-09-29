@@ -173,12 +173,56 @@ describe("scorecards service", () => {
           {
             jobsiteId: "jobsite-1",
             jobsiteName: "Riverside Tower",
-            expectedDays: expect.any(Number),
-            loggedDays: expect.any(Number),
+            cadence: "daily",
+            expectedPeriods: expect.any(Number),
+            loggedPeriods: expect.any(Number),
             score: expect.any(Number),
           },
         ],
       });
+    });
+
+    it("should score a weekly jobsite in weeks, and let a sub's daily override win", async () => {
+      // Arrange — sub-1 on a weekly jobsite (2 weeks logged of the closed ones),
+      // sub-1 also on a weekly jobsite where it overrode to daily.
+      fromSpy.mockImplementation((table) => {
+        if (table === "jobsite_subcontractors") {
+          return chain({
+            data: [
+              rosterRow({
+                accepted_at: "2020-01-01T00:00:00.000Z",
+                jobsites: { ...rosterRow().jobsites, meeting_cadence: "weekly" },
+              }),
+              rosterRow({
+                jobsite_id: "jobsite-2",
+                accepted_at: "2020-01-01T00:00:00.000Z",
+                meeting_cadence: "daily",
+                jobsites: { ...rosterRow().jobsites, name: "North Site", meeting_cadence: "weekly" },
+              }),
+            ],
+            error: null,
+          });
+        }
+        throw new Error(`Unexpected table: ${table}`);
+      });
+      listLinkedProjectsSpy.mockResolvedValue([
+        project(),
+        project({ id: "project-2", jobsiteId: "jobsite-2" }),
+      ]);
+      listCompletedLogsInWindowSpy.mockResolvedValue([
+        { project_id: "project-1", held_at: "2026-09-15T12:00:00.000Z" },
+      ]);
+
+      // Act
+      const result = await getSubcontractorScorecard("sub-1", "gc-1", args);
+
+      // Assert — "today" 2026-09-21 (a Monday): the open current week is
+      // forgiven, so the weekly jobsite expects the 5 closed weeks (1 logged);
+      // the daily-override jobsite expects all 30 days (0 logged).
+      const [weekly, daily] = result.jobsites;
+      expect(weekly).toMatchObject({ cadence: "weekly", expectedPeriods: 5, loggedPeriods: 1 });
+      expect(daily).toMatchObject({ cadence: "daily", expectedPeriods: 30, loggedPeriods: 0 });
+      expect(listCompletedLogsInWindowSpy.mock.calls[0][1].start).toBe("2026-08-17T00:00:00.000Z");
     });
 
     it("should roll up more than one jobsite for the same sub", async () => {

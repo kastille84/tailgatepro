@@ -208,20 +208,17 @@ two rows under the same key, they merge (`logged` if either logged). This is del
 "Riverside Tower" and "Riverside Twr" become two jobsites, and the GC can't merge them in v1. That
 limitation is the concrete argument for the GC-owned canonical jobsite later.
 
-### Configurable cadence (design only — not built)
+### Configurable cadence (built in 11f)
 
-Daily is decided; the GC and/or an individual sub (some subs will want weekly) is expected to configure it
-later. When that lands:
+Daily stays the default; a jobsite can be set to **weekly** (Monday–Sunday in the viewer's timezone).
 
-- **Owner and conflicts:** the natural model is a GC-level default with a per-sub override, with the GC's
-  setting acting as a *floor* a sub can tighten but not relax — otherwise a sub could opt itself out of
-  daily talks the GC requires. Per-project cadence is the alternative if one GC's sites differ. To decide
-  with real GCs, not now.
-- **Storage:** a small `cadence` value on the relevant row (company default; `project_subcontractors` is a
-  natural home for a per-sub-per-site override — another reason to write it now).
-- **Computation:** the overview derives a *per-sub* window instead of one shared "today," and calls the
-  same `compliance.js` per sub. The function and status names don't change.
-- **Nothing in Phase 6** adds a cadence column, endpoint parameter or settings UI.
+- **Owner and conflicts:** the GC sets a per-jobsite default (`jobsites.meeting_cadence`); a sub may set its own
+  override (`jobsite_subcontractors.meeting_cadence`) that can only *tighten* it, so a sub can't opt itself out of
+  talks the GC requires. The effective cadence is the stricter of the two (`server/utility/cadence.js`).
+- **Computation:** `getOverview` derives each sub's effective cadence and scores it against its own window
+  (`dayWindow` or `weekWindow`) via the same `compliance.js`; logs are fetched once over the widest window.
+  Scorecards count *periods* (days or weeks) — see `docs/sub-scorecard-design.md`.
+- **Not built:** every-N-days, a configurable week start, and DST-day handling (11h).
 
 ## RLS finding: code and docs disagreed — resolved in 6b
 

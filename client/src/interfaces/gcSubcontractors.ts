@@ -1,13 +1,19 @@
+import type { MeetingCadence } from "./jobsite";
+
 /** One jobsite's contribution to a sub's rolling 30-day compliance score.
  *  Mirrors a `buildScorecard` jobsite entry (server/utility/subScorecard.js). */
 export interface GcSubJobsiteBreakdown {
   jobsiteId: string;
   jobsiteName: string;
-  /** Days in the rolling window the sub was an accepted roster member of this
-   *  jobsite (prorated for a recent join — never the full 30 for one). */
-  expectedDays: number;
-  /** Of `expectedDays`, how many had a completed log. */
-  loggedDays: number;
+  /** The sub's effective cadence on this jobsite — a "period" below is a day
+   *  when daily, a Mon-Sun week when weekly. */
+  cadence: MeetingCadence;
+  /** Periods in the rolling window the sub was an accepted roster member of
+   *  this jobsite (prorated for a recent join; an unlogged, still-open weekly
+   *  period isn't counted). */
+  expectedPeriods: number;
+  /** Of `expectedPeriods`, how many had a completed log. */
+  loggedPeriods: number;
   /** 0-100, this jobsite's own rounded rate. */
   score: number;
 }
