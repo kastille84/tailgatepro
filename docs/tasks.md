@@ -2901,8 +2901,10 @@ they can be worked one at a time. Tick a box here **and** in its source phase wh
   - Verify (user, needs live Supabase): set a jobsite to weekly → dashboard shows weekly subs as "logged" for a
     Monday log through Sunday; a sub tightens to daily → its row flips to the daily window; a sub cannot loosen a
     daily site (422); the scorecard for a weekly sub shows weeks, not ~14%.
-- [ ] 11g. Pagination for `GET /api/gc/meetings` past the current 200-row cap.
-      See Phase 6e (~line 1573).
+- [x] 11g. Pagination for `GET /api/gc/meetings` past the current 200-row cap.
+      See Phase 6e (~line 1573). Shipped: `limit`/`offset` (default 20, max 100) with a `hasMore` peek row and a
+      stable `held_at, id` sort; client `useGcMeetings` is a `useInfiniteQuery` with "load more" in
+      `SubMeetingsModal`. Server (gcDashboard, gc controller) and client (modal, hook, services) suites pass.
 - [ ] 11h. DST-transition day fix in `server/utility/dayWindow.js` (currently treats every day
       as a flat 24h window). See Phase 6e (~line 1573).
 - [ ] 11i. Disable the "Link to GC" UI while a project's create is still queued in the offline
