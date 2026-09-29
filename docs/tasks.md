@@ -2159,7 +2159,7 @@ from the dashboard, so run the 8d-g backfill first.
 - [x] GC links a sub company to a project (`project_subcontractors`) — done: slim version (GC join code)
       shipped in Phase 6b–6d, superseded by 8d above
 
-## Phase 9 — Pricing-promise gaps · status: audited 2026-09-24; 9a (copy fixes) and 9b (entitlement foundation) done, 9c done (seat caps, history window, library split, archive, PDF-link re-issue), 9d code complete (including 9d-2 roles/scoping — run the `Supabase_SQL.sql` ALTERs), 9e in progress (the GC per-jobsite and subcontractor's own OSHA Defense Bundle ZIPs, cross-project sub safety scorecards, and top-down corporate policy push all shipped; code complete, manual verify pending; other 9e items not started), 9f–9g not started
+## Phase 9 — Pricing-promise gaps · status: audited 2026-09-24; 9a (copy fixes) and 9b (entitlement foundation) done, 9c done (seat caps, history window, library split, archive, PDF-link re-issue), 9d code complete (including 9d-2 roles/scoping — run the `Supabase_SQL.sql` ALTERs), 9e in progress (the GC per-jobsite and subcontractor's own OSHA Defense Bundle ZIPs, cross-project sub safety scorecards, top-down corporate policy push, QR-code jobsite join, and the tamper-evidence content seal + audit log all shipped; code complete, manual verify pending; other 9e items not started), 9f–9g not started
 
 Audit of the pricing page (`client/src/data/plans.ts`, `Pricing.tsx` FAQ/callout) and landing page copy against
 the code. Full evidence table, statuses and per-gap resolution live in `docs/pricing-promise-gaps.md` — every
@@ -2646,8 +2646,62 @@ Costs one extra query per request for Free subs (`resolveEffectiveTier`) and per
     this job site" instead of erroring; confirm a foreman/GC account sees the right blocked state;
     confirm a brand-new sub can sign up straight from the link and lands already joined; confirm
     Remove still works on a QR-joined sub.
-- [ ] Tamper-evidence: a content hash/seal on the PDF + audit log, and GPS capture if the "GPS-verified" claim
-      stays; otherwise remove both claims in 9a.
+- [x] Tamper-evidence: a content hash/seal on the PDF + audit log · status: code complete, manual verify pending
+
+  Design doc: `docs/tamper-evidence-design.md`. Scope decided: an HMAC-SHA256 content seal (server-only
+  secret, not a plain hash — a plain hash wouldn't close the "service-role writes bypass it" gap
+  `docs/pricing-promise-gaps.md` flagged) computed atomically at completion, plus a `meeting_logs`-scoped
+  audit trail and a small client-facing Verify affordance. No plan gate — the one 9e feature that
+  deliberately isn't gated (baseline record integrity, not a premium capability). GPS capture dropped by
+  decision, not built: no live copy claims it anymore (9a already reworded `CompliancePdfCard.tsx`/
+  `ComparisonTable.tsx`), and the aspirational strategy-doc line was reworded instead of building capture.
+
+  - Server: new `meeting_logs.content_seal`/`sealed_at` columns; new `meeting_log_audit_events` table
+    (`created`/`completed`/`pdf_generated`/`seal_verified`, server-generated `uuidv4()` id, soft-fail
+    writes). New `server/utility/contentSeal.js` (`buildCanonicalPayload`, `computeSeal`, `sealsMatch`,
+    `shortSeal` — pure, HMAC-SHA256 keyed by the new `MEETING_LOG_SEAL_SECRET` env var). New
+    `server/services/auditLog.js`. `meetingLogs.js`'s `complete()` now seals the row in the same update
+    that stamps `completed_at`/`held_at`, and gained `verifySeal`; `assertNotCompleted` extended to hand
+    back the fields the seal payload needs. `pdfGenerationQueue.js` records a `pdf_generated` audit event.
+    `pdfGeneration.js`'s footer prints a short seal fragment (`Content seal: ...`) when one exists. New
+    `GET /api/meetings/:id/verify-seal` (`routes/meetingLogs.js` + `controllers/meetingLogs.js`) and its
+    GC-side twin `GET /api/gc/meetings/:id/verify-seal` (`gcDashboard.js`'s new `verifySeal`,
+    `controllers/gc.js`, `routes/gc.js`) — `toMeetingSummary` gained a derived `sealed` boolean, never the
+    raw seal.
+  - Server tests: new `contentSeal.test.js` (12), `auditLog.test.js` (4); `meetingLogs.test.js` +30-ish
+    across `complete`/`assertNotCompleted`/new `verifySeal`; `gcDashboard.test.js` +new `verifySeal`
+    describe + `sealed` assertions; `pdfGeneration.test.js` +2; `pdfGenerationQueue.test.js` +2;
+    `controllers/meetingLogs.test.js` + `controllers/gc.test.js` updated/extended. Full
+    `npm run test:server`: 62 suites / 1042 tests passing.
+  - Client: `interfaces/meetingLog.ts` gained `contentSeal`/`sealedAt` + new `SealVerification`;
+    `interfaces/gcDashboard.ts`'s `GcMeetingSummary` gained `sealed`. `apiMeetingLogs.ts`/`apiGc.ts` gained
+    `verifyMeetingSeal`/`verifyGcMeetingSeal`. New `hooks/useVerifyMeetingSeal.ts` +
+    `useVerifyGcMeetingSeal.ts` (mirror the existing PDF-URL hooks' "fetch on click, shared across a list"
+    shape, plus a `verifyingId` so one row's result can't flash on every row). New
+    `features/meeting-shared/SealBadge.tsx` — a neutral "Sealed" pill + a Verify button that turns
+    green/red once checked — wired into `MonthMeetings.tsx` and `SubMeetingsModal.tsx`.
+  - Client tests: new `SealBadge.test.tsx` (9), `useVerifyMeetingSeal.test.tsx` (4),
+    `useVerifyGcMeetingSeal.test.tsx` (4); `apiMeetingLogs.test.ts` +3, `apiGc.test.ts` +3;
+    `MonthMeetings.test.tsx` +2, `SubMeetingsModal.test.tsx` +2. Full client suite: 181 files / 1490 tests
+    passing, 100% coverage except the two pre-existing, unrelated gaps in
+    `MeetingWizard.tsx`/`PhotoCapture.tsx` under `src/features/meeting-flow` (confirmed untouched logic,
+    same as every prior 9e feature's note).
+  - Copy: `docs/pricing-promise-gaps.md`'s "Tamper-evident signatures" row flipped to Implemented; its
+    "GPS-verified" row flipped to Resolved (dropped); `docs/pricing-and-positioning-strategy_V2.md`'s PDF
+    Engine Quality row reworded from "GPS-verified" to "HMAC-sealed".
+  - Known v1 limitations (see the design doc): no backfill for pre-feature meetings; no blob-content
+    hashing (paths/ids only, not image bytes); the printed PDF fragment is a human receipt, not a
+    self-contained checksum; the audit log has no viewer UI yet (write-only); no GPS, by decision.
+  - **To ship:** run the new `ALTER TABLE`/`CREATE TABLE` statements in Supabase (`Supabase_SQL.sql`:
+    `meeting_logs.content_seal`/`sealed_at`, `meeting_log_audit_events`) and set
+    `MEETING_LOG_SEAL_SECRET`/`MEETING_LOG_SEAL_SECRET_PROD` before deploying.
+  - Verify: manual pass pending — run the Supabase migration and set `MEETING_LOG_SEAL_SECRET`, then as a
+    sub complete a meeting log and confirm `content_seal`/`sealed_at` are populated, the PDF footer shows
+    the seal line, and `meeting_log_audit_events` gets `created`/`completed`/`pdf_generated` rows; click
+    Verify on the Meeting History page and confirm "Verified"; as a linked GC, click Verify on the same
+    meeting and confirm "Verified" there too; hand-edit a sealed row's field in Supabase and confirm Verify
+    now returns "Tampered" on both sides; confirm a pre-feature meeting (no seal) shows no badge on either
+    side.
 - [ ] AI Talk Builder and cloud AI voice (see ~1736-1741).
 - [ ] Grow the library toward 500+ (see ~1749-1754; currently 112).
 - [ ] Multi-crew scheduling and equipment check-ins (no tables or code).

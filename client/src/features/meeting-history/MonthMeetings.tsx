@@ -2,10 +2,12 @@ import { HiOutlineArrowLeft, HiOutlineDocumentText } from "react-icons/hi2";
 
 import { useMeetingLogs } from "../../hooks/useMeetingLogs";
 import { useMeetingPdfUrl } from "../../hooks/useMeetingPdfUrl";
+import { useVerifyMeetingSeal } from "../../hooks/useVerifyMeetingSeal";
 import { useProjects } from "../../hooks/useProjects";
 import { useTalks } from "../../hooks/useTalks";
 import { Button } from "../../ui_comps/button";
 import { Spinner } from "../../ui_comps/spinner";
+import { SealBadge } from "../meeting-shared/SealBadge";
 import { formatMonth, monthRange } from "./monthUtils";
 import {
   StyledEmpty,
@@ -14,6 +16,7 @@ import {
   StyledMonthHeader,
   StyledMonthTitle,
   StyledRow,
+  StyledRowActions,
   StyledRowInfo,
   StyledRowMeta,
   StyledRowTitle,
@@ -39,6 +42,12 @@ export const MonthMeetings = ({ month, onBack }: MonthMeetingsProps) => {
   const { projects } = useProjects();
   const { talks } = useTalks();
   const { openPdf, isPending } = useMeetingPdfUrl();
+  const {
+    verifySeal,
+    result: sealResult,
+    isPending: sealPending,
+    verifyingId,
+  } = useVerifyMeetingSeal();
 
   return (
     <>
@@ -77,19 +86,29 @@ export const MonthMeetings = ({ month, onBack }: MonthMeetingsProps) => {
                     {formatHeldAt(meeting.heldAt ?? meeting.createdAt)}
                   </StyledRowMeta>
                 </StyledRowInfo>
-                {meeting.finalPdfUrl ? (
-                  <Button
-                    variant="outline"
-                    size="md"
-                    leftIcon={<HiOutlineDocumentText />}
-                    disabled={isPending}
-                    onClick={() => openPdf(meeting.id)}
-                  >
-                    Open PDF
-                  </Button>
-                ) : (
-                  <StyledRowMeta>PDF pending</StyledRowMeta>
-                )}
+                <StyledRowActions>
+                  {meeting.finalPdfUrl ? (
+                    <Button
+                      variant="outline"
+                      size="md"
+                      leftIcon={<HiOutlineDocumentText />}
+                      disabled={isPending}
+                      onClick={() => openPdf(meeting.id)}
+                    >
+                      Open PDF
+                    </Button>
+                  ) : (
+                    <StyledRowMeta>PDF pending</StyledRowMeta>
+                  )}
+                  <SealBadge
+                    meetingId={meeting.id}
+                    sealed={Boolean(meeting.contentSeal)}
+                    onVerify={verifySeal}
+                    isPending={sealPending}
+                    result={sealResult}
+                    verifyingId={verifyingId}
+                  />
+                </StyledRowActions>
               </StyledRow>
             );
           })}

@@ -3,6 +3,7 @@
 // rendered PDF buffer's bytes.
 
 const { renderMeetingLogPdf, ensureRoomFor } = require("./pdfGeneration");
+const { shortSeal } = require("../utility/contentSeal");
 
 const meetingLog = {
   id: "meeting-1",
@@ -298,6 +299,32 @@ describe("pdfGeneration: renderMeetingLogPdf", () => {
     const text = decodeRenderedText(buffer);
 
     expect(text).toContain("(signature image unavailable)");
+  });
+
+  it("prints the tamper-evidence content seal footer line when the meeting has one", async () => {
+    const buffer = await renderMeetingLogPdf({
+      meetingLog: { ...meetingLog, contentSeal: "a1b2c3d4e5f60708090a0b0c0d0e0f10" },
+      project,
+      talk: talkWithAttributionAndQuiz,
+      signatures,
+      company,
+    });
+    const text = decodeRenderedText(buffer);
+
+    expect(text).toContain(`Content seal: ${shortSeal("a1b2c3d4e5f60708090a0b0c0d0e0f10")}`);
+  });
+
+  it("omits the content seal footer line for a meeting with no seal yet (in progress, or completed before this feature shipped)", async () => {
+    const buffer = await renderMeetingLogPdf({
+      meetingLog, // no contentSeal field
+      project,
+      talk: talkWithAttributionAndQuiz,
+      signatures,
+      company,
+    });
+    const text = decodeRenderedText(buffer);
+
+    expect(text).not.toContain("Content seal:");
   });
 
   it("prints the free-tier watermark footer for a basic-tier company", async () => {

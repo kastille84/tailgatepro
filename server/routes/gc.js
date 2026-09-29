@@ -12,6 +12,7 @@ const {
   listMeetings,
   getMeeting,
   getMeetingPdfUrl,
+  verifyMeetingSeal,
   getDefenseBundle,
   listSubcontractorScorecards,
   getSubcontractorScorecard,
@@ -44,8 +45,10 @@ router.get(
   getOverview,
 );
 
-// GET /api/gc/meetings?projectId&from&to — completed logs for the caller's
-// linked projects, optionally scoped to one project and/or a held_at range.
+// GET /api/gc/meetings?projectId&from&to&limit&offset — completed logs for
+// the caller's linked projects, optionally scoped to one project and/or a
+// held_at range, paginated via limit/offset (docs/tasks.md "pagination for
+// GET /meetings past 200 rows").
 router.get(
   "/meetings",
   [
@@ -61,6 +64,14 @@ router.get(
       .optional({ checkFalsy: true })
       .isISO8601()
       .withMessage("to must be an ISO 8601 timestamp"),
+    query("limit")
+      .optional({ checkFalsy: true })
+      .isInt({ min: 1, max: 100 })
+      .withMessage("limit must be an integer between 1 and 100"),
+    query("offset")
+      .optional({ checkFalsy: true })
+      .isInt({ min: 0 })
+      .withMessage("offset must be a non-negative integer"),
   ],
   validate,
   listMeetings,
@@ -83,6 +94,17 @@ router.get(
   [param("id").isUUID().withMessage("A valid meeting id is required")],
   validate,
   getMeetingPdfUrl,
+);
+
+// GET /api/gc/meetings/:id/verify-seal — recomputes and compares the
+// meeting's tamper-evidence content seal (Phase 9e,
+// docs/tamper-evidence-design.md). No plan gate — see the design doc's
+// "Gating" section.
+router.get(
+  "/meetings/:id/verify-seal",
+  [param("id").isUUID().withMessage("A valid meeting id is required")],
+  validate,
+  verifyMeetingSeal,
 );
 
 // GET /api/gc/subcontractors?date&tzOffset — every distinct sub across the

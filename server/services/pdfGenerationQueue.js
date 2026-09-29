@@ -29,6 +29,10 @@ const { buildPdfFilename } = require("../utility/pdfFilename");
 // the top level, unlike meetingLogsService/signaturesService below.
 const emailService = require("./email");
 const envUtils = require("../utility/envUtils");
+// auditLog.js has no reverse dependency (only supabase/uuid), so — like
+// companiesService/emailService above — it's safe to require at the top
+// level, unlike meetingLogsService/signaturesService below.
+const auditLogService = require("./auditLog");
 
 const PDF_BUCKET = "meeting-pdfs";
 const CREW_PHOTO_BUCKET = "crew-photos";
@@ -159,6 +163,11 @@ const enqueue = async (meetingLogId, companyId) => {
     const path = meetingLogsService.pdfPath(meetingLogId);
     await storageService.uploadBlob(PDF_BUCKET, path, pdfBuffer, "application/pdf");
     await meetingLogsService.setFinalPdfUrl(meetingLogId, companyId, path);
+    await auditLogService.record({
+      meetingLogId,
+      eventType: "pdf_generated",
+      metadata: { path },
+    });
 
     // Silently skip when neither a linked GC admin nor gc_contact_email
     // resolves to anything (see resolveGcContactEmail above), per docs/tasks.md

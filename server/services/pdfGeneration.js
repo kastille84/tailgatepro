@@ -13,6 +13,7 @@
 const PDFDocument = require("pdfkit");
 const { hasBrandingAccess } = require("../utility/entitlements");
 const { formatDate } = require("../utility/formatDate");
+const { shortSeal } = require("../utility/contentSeal");
 
 const BODY_FONT = "Helvetica";
 const BOLD_FONT = "Helvetica-Bold";
@@ -183,6 +184,22 @@ const renderMeetingLogPdf = ({
       .moveDown()
       .fontSize(9)
       .text(`Generated ${formatDate(new Date().toISOString())}`);
+
+    // Tamper-evidence seal (Phase 9e, docs/tamper-evidence-design.md): a
+    // short, human-eyeballable fragment of the full HMAC-SHA256 seal stored
+    // on meeting_logs.content_seal. This fragment is not itself checked
+    // against anything — it's a printed receipt for a human to compare by
+    // eye; real verification always goes through
+    // GET /api/meetings/:id/verify-seal (or the GC-side equivalent), which
+    // recomputes the full digest server-side. Absent for any meeting
+    // completed before this shipped (content_seal is null, not backfilled).
+    if (meetingLog.contentSeal) {
+      doc
+        .fontSize(8)
+        .fillColor("#555555")
+        .text(`Content seal: ${shortSeal(meetingLog.contentSeal)}`);
+      doc.fillColor("black");
+    }
 
     // Static free-tier watermark (docs/pricing-and-positioning-strategy_V2.md:
     // Trade Free PDFs carry this, Trade Pro+ removes it and adds the

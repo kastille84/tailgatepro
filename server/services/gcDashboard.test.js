@@ -1,15 +1,20 @@
 // Plain CommonJS — see requireAuth.test.js for why (nested require() sharing).
+process.env.MEETING_LOG_SEAL_SECRET = "test-only-seal-secret";
+
 const { supabase } = require("../utility/supabaseClient");
 const companiesService = require("./companies");
 const storageService = require("./storage");
 const subAccessService = require("./subAccess");
 const jobsitesService = require("./jobsites");
+const auditLogService = require("./auditLog");
+const contentSeal = require("../utility/contentSeal");
 const {
   assertGcLinkedProject,
   getOverview,
   listMeetings,
   getMeeting,
   getMeetingPdfUrl,
+  verifySeal,
   getDefenseBundleEntries,
 } = require("./gcDashboard");
 
@@ -480,7 +485,8 @@ describe("gcDashboard service: listMeetings", () => {
   let projectsEq2;
   let projectsEq;
   let projectsSelect;
-  let meetingsLimit;
+  let meetingsRange;
+  let meetingsOrder2;
   let meetingsOrder;
   let meetingsNot;
   let meetingsIn;
@@ -534,8 +540,9 @@ describe("gcDashboard service: listMeetings", () => {
     projectsEq = vi.fn(() => ({ order: projectsOrder, eq: projectsEq2 }));
     projectsSelect = vi.fn(() => ({ eq: projectsEq }));
 
-    meetingsLimit = vi.fn().mockResolvedValue({ data: [dbLog], error: null });
-    meetingsOrder = vi.fn(() => ({ limit: meetingsLimit }));
+    meetingsRange = vi.fn().mockResolvedValue({ data: [dbLog], error: null });
+    meetingsOrder2 = vi.fn(() => ({ range: meetingsRange }));
+    meetingsOrder = vi.fn(() => ({ order: meetingsOrder2 }));
     const meetingsChain = {};
     meetingsChain.gte = vi.fn(() => meetingsChain);
     meetingsChain.lt = vi.fn(() => meetingsChain);
@@ -567,7 +574,7 @@ describe("gcDashboard service: listMeetings", () => {
     const result = await listMeetings("gc-1");
 
     // Assert
-    expect(result).toEqual([]);
+    expect(result).toEqual({ meetings: [], hasMore: false });
     expect(meetingsSelect).not.toHaveBeenCalled();
   });
 
@@ -579,21 +586,51 @@ describe("gcDashboard service: listMeetings", () => {
     expect(meetingsIn).toHaveBeenCalledWith("project_id", ["project-1"]);
     expect(meetingsNot).toHaveBeenCalledWith("completed_at", "is", null);
     expect(meetingsOrder).toHaveBeenCalledWith("held_at", { ascending: false });
-    expect(meetingsLimit).toHaveBeenCalledWith(200);
-    expect(result).toEqual([
-      {
-        id: "meeting-1",
-        projectId: "project-1",
-        projectName: "Riverside Tower",
-        companyId: "sub-1",
-        companyName: "Acme Roofing",
-        talkTitle: "Fall Protection",
-        heldAt: "2026-09-21T14:00:00.000Z",
-        completedAt: "2026-09-21T14:05:00.000Z",
-        signerCount: 2,
-        pdfReady: true,
-      },
-    ]);
+    expect(meetingsOrder2).toHaveBeenCalledWith("id", { ascending: false });
+    expect(meetingsRange).toHaveBeenCalledWith(0, 20);
+    expect(result).toEqual({
+      meetings: [
+        {
+          id: "meeting-1",
+          projectId: "project-1",
+          projectName: "Riverside Tower",
+          companyId: "sub-1",
+          companyName: "Acme Roofing",
+          talkTitle: "Fall Protection",
+          heldAt: "2026-09-21T14:00:00.000Z",
+          completedAt: "2026-09-21T14:05:00.000Z",
+          signerCount: 2,
+          pdfReady: true,
+          sealed: false,
+        },
+      ],
+      hasMore: false,
+    });
+  });
+
+  it("should paginate with the given limit/offset and report hasMore when an extra row comes back", async () => {
+    // Arrange — one more row than the requested page size.
+    meetingsRange.mockResolvedValue({
+      data: [dbLog, { ...dbLog, id: "meeting-2" }],
+      error: null,
+    });
+
+    // Act
+    const result = await listMeetings("gc-1", { limit: 1, offset: 5 });
+
+    // Assert
+    expect(meetingsRange).toHaveBeenCalledWith(5, 6);
+    expect(result.hasMore).toBe(true);
+    expect(result.meetings).toHaveLength(1);
+    expect(result.meetings[0].id).toBe("meeting-1");
+  });
+
+  it("should clamp an oversized limit to the page-size ceiling", async () => {
+    // Act
+    await listMeetings("gc-1", { limit: 9999 });
+
+    // Assert
+    expect(meetingsRange).toHaveBeenCalledWith(0, 100);
   });
 
   it("should expose no crewPhotoUrl, finalPdfUrl or signature path fields", async () => {
@@ -601,14 +638,14 @@ describe("gcDashboard service: listMeetings", () => {
     const result = await listMeetings("gc-1");
 
     // Assert
-    expect(result[0]).not.toHaveProperty("crewPhotoUrl");
-    expect(result[0]).not.toHaveProperty("finalPdfUrl");
-    expect(result[0]).not.toHaveProperty("signaturePath");
+    expect(result.meetings[0]).not.toHaveProperty("crewPhotoUrl");
+    expect(result.meetings[0]).not.toHaveProperty("finalPdfUrl");
+    expect(result.meetings[0]).not.toHaveProperty("signaturePath");
   });
 
   it("should report pdfReady false when no PDF has been generated yet", async () => {
     // Arrange
-    meetingsLimit.mockResolvedValue({
+    meetingsRange.mockResolvedValue({
       data: [{ ...dbLog, final_pdf_url: null }],
       error: null,
     });
@@ -617,7 +654,22 @@ describe("gcDashboard service: listMeetings", () => {
     const result = await listMeetings("gc-1");
 
     // Assert
-    expect(result[0].pdfReady).toBe(false);
+    expect(result.meetings[0].pdfReady).toBe(false);
+  });
+
+  it("should report sealed as a boolean, never the raw content_seal, and true once one exists", async () => {
+    // Arrange
+    meetingsRange.mockResolvedValue({
+      data: [{ ...dbLog, content_seal: "abc123" }],
+      error: null,
+    });
+
+    // Act
+    const result = await listMeetings("gc-1");
+
+    // Assert
+    expect(result.meetings[0].sealed).toBe(true);
+    expect(result.meetings[0]).not.toHaveProperty("content_seal");
   });
 
   it("should scope to a single project and validate it's linked when projectId is given", async () => {
@@ -645,7 +697,7 @@ describe("gcDashboard service: listMeetings", () => {
     const result = await listMeetings("gc-1", { allowedJobsiteIds: [] });
 
     // Assert
-    expect(result).toEqual([]);
+    expect(result).toEqual({ meetings: [], hasMore: false });
     expect(fromSpy).not.toHaveBeenCalled();
   });
 
@@ -675,13 +727,13 @@ describe("gcDashboard service: listMeetings", () => {
     const result = await listMeetings("gc-1");
 
     // Assert
-    expect(result).toEqual([]);
+    expect(result).toEqual({ meetings: [], hasMore: false });
     expect(meetingsSelect).not.toHaveBeenCalled();
   });
 
   it("should throw a 502 when the meetings query fails", async () => {
     // Arrange
-    meetingsLimit.mockResolvedValue({ data: null, error: new Error("db down") });
+    meetingsRange.mockResolvedValue({ data: null, error: new Error("db down") });
 
     // Act & Assert
     await expect(listMeetings("gc-1")).rejects.toMatchObject({ statusCode: 502 });
@@ -782,6 +834,7 @@ describe("gcDashboard service: getMeeting / getMeetingPdfUrl", () => {
         completedAt: "2026-09-21T14:05:00.000Z",
         signerCount: 1,
         pdfReady: true,
+        sealed: false,
         signers: [{ workerName: "Jane Doe", quizPassed: true }],
       });
     });
@@ -900,6 +953,184 @@ describe("gcDashboard service: getMeeting / getMeetingPdfUrl", () => {
       await expect(getMeetingPdfUrl("meeting-1", "gc-1")).rejects.toMatchObject({
         statusCode: 404,
       });
+    });
+  });
+});
+
+describe("gcDashboard service: verifySeal", () => {
+  let meetingSingle;
+  let meetingEq;
+  let meetingSelect;
+  let projectsSingle;
+  let projectsEqGc;
+  let projectsEqId;
+  let projectsSelect;
+  let signaturesEq;
+  let signaturesSelect;
+
+  const sigRows = [
+    { id: "sig-1", worker_name: "Jane Doe", quiz_score: 3, quiz_passed: true },
+  ];
+
+  const dbMeeting = {
+    id: "meeting-1",
+    project_id: "project-1",
+    company_id: "sub-1",
+    talk_id: "talk-1",
+    foreman_id: "user-1",
+    crew_photo_url: null,
+    held_at: "2026-09-21T14:00:00.000Z",
+    completed_at: "2026-09-21T14:05:00.000Z",
+    final_pdf_url: "meeting-1/report.pdf",
+    content_seal: null, // set per-test
+    sealed_at: "2026-09-21T14:05:00.000Z",
+  };
+
+  const validSeal = contentSeal.computeSeal(
+    contentSeal.buildCanonicalPayload({
+      meetingLog: {
+        id: "meeting-1",
+        projectId: "project-1",
+        talkId: "talk-1",
+        companyId: "sub-1",
+        foremanId: "user-1",
+        crewPhotoUrl: null,
+        heldAt: "2026-09-21T14:00:00.000Z",
+        completedAt: "2026-09-21T14:05:00.000Z",
+      },
+      signatures: [
+        { id: "sig-1", workerName: "Jane Doe", quizScore: 3, quizPassed: true },
+      ],
+    }),
+  );
+
+  beforeEach(() => {
+    meetingSingle = vi
+      .fn()
+      .mockResolvedValue({ data: { ...dbMeeting, content_seal: validSeal }, error: null });
+    meetingEq = vi.fn(() => ({ single: meetingSingle }));
+    meetingSelect = vi.fn(() => ({ eq: meetingEq }));
+
+    projectsSingle = vi.fn().mockResolvedValue({
+      data: {
+        id: "project-1",
+        owner_company_id: "sub-1",
+        name: "Riverside Tower",
+        status: "active",
+        archived_at: null,
+        created_at: "2026-09-01T00:00:00.000Z",
+      },
+      error: null,
+    });
+    projectsEqGc = vi.fn(() => ({ single: projectsSingle }));
+    projectsEqId = vi.fn(() => ({ eq: projectsEqGc }));
+    projectsSelect = vi.fn(() => ({ eq: projectsEqId }));
+
+    signaturesEq = vi.fn().mockResolvedValue({ data: sigRows, error: null });
+    signaturesSelect = vi.fn(() => ({ eq: signaturesEq }));
+
+    fromSpy.mockReset();
+    fromSpy.mockImplementation((table) => {
+      if (table === "meeting_logs") return { select: meetingSelect };
+      if (table === "projects") return { select: projectsSelect };
+      if (table === "signatures") return { select: signaturesSelect };
+      throw new Error(`Unexpected table: ${table}`);
+    });
+
+    vi.spyOn(auditLogService, "record").mockReset().mockResolvedValue(undefined);
+  });
+
+  it("should return valid:true and record a seal_verified audit event when the recomputed seal matches", async () => {
+    // Act
+    const result = await verifySeal("meeting-1", "gc-1", null, "user-2");
+
+    // Assert
+    expect(result).toEqual({ valid: true, sealedAt: "2026-09-21T14:05:00.000Z" });
+    expect(auditLogService.record).toHaveBeenCalledWith({
+      meetingLogId: "meeting-1",
+      eventType: "seal_verified",
+      actorId: "user-2",
+      metadata: { valid: true, via: "gc" },
+    });
+  });
+
+  it("should return valid:true when held_at/completed_at come back from the DB in a different lexical timestamp format than what was used to compute the stored seal (regression: PostgREST's timestamptz round-trip vs. the JS Date#toISOString() used at seal time must not read as tampering)", async () => {
+    // Arrange — same instants as dbMeeting's held_at/completed_at, but
+    // formatted the way Postgres/PostgREST actually returns a TIMESTAMPTZ
+    // column (offset instead of "Z", no fractional digits since they're
+    // exactly zero).
+    meetingSingle.mockResolvedValue({
+      data: {
+        ...dbMeeting,
+        content_seal: validSeal,
+        held_at: "2026-09-21T14:00:00+00:00",
+        completed_at: "2026-09-21T14:05:00+00:00",
+      },
+      error: null,
+    });
+
+    // Act
+    const result = await verifySeal("meeting-1", "gc-1");
+
+    // Assert
+    expect(result.valid).toBe(true);
+  });
+
+  it("should return valid:false when the stored seal no longer matches the row's current fields", async () => {
+    // Arrange
+    meetingSingle.mockResolvedValue({
+      data: { ...dbMeeting, content_seal: validSeal, talk_id: "talk-tampered" },
+      error: null,
+    });
+
+    // Act
+    const result = await verifySeal("meeting-1", "gc-1");
+
+    // Assert
+    expect(result.valid).toBe(false);
+    expect(auditLogService.record).toHaveBeenCalledWith(
+      expect.objectContaining({ metadata: { valid: false, via: "gc" } }),
+    );
+  });
+
+  it("should throw a 404 AppError when the meeting hasn't been sealed yet", async () => {
+    // Arrange
+    meetingSingle.mockResolvedValue({ data: { ...dbMeeting, content_seal: null }, error: null });
+
+    // Act & Assert
+    await expect(verifySeal("meeting-1", "gc-1")).rejects.toMatchObject({
+      statusCode: 404,
+      message: "This meeting hasn't been sealed yet",
+    });
+    expect(auditLogService.record).not.toHaveBeenCalled();
+  });
+
+  it("should 404 when the meeting's project isn't linked to this GC", async () => {
+    // Arrange
+    projectsSingle.mockResolvedValue({ data: null, error: { code: "PGRST116" } });
+
+    // Act & Assert
+    await expect(verifySeal("meeting-1", "gc-1")).rejects.toMatchObject({
+      statusCode: 404,
+    });
+  });
+
+  it("should 404 when the meeting's project is outside a site-scoped user's assigned jobsites", async () => {
+    // Act & Assert
+    await expect(verifySeal("meeting-1", "gc-1", ["site-a"])).rejects.toMatchObject({
+      statusCode: 404,
+      message: "Project not found",
+    });
+  });
+
+  it("should throw a 502 AppError when loading the signatures fails", async () => {
+    // Arrange
+    signaturesEq.mockResolvedValue({ data: null, error: new Error("db down") });
+
+    // Act & Assert
+    await expect(verifySeal("meeting-1", "gc-1")).rejects.toMatchObject({
+      statusCode: 502,
+      message: "Could not verify the meeting's signatures",
     });
   });
 });

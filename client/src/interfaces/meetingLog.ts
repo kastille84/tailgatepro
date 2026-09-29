@@ -21,4 +21,18 @@ export interface MeetingLog {
   heldAt: string | null;
   syncedAt: string | null;
   createdAt: string;
+  /** HMAC-SHA256 tamper-evidence seal (Phase 9e), set once at completion. Null
+   *  until completed, and for a meeting completed before this feature
+   *  shipped (not backfilled). Never verify by comparing this string
+   *  client-side — always call `verifyMeetingSeal`. */
+  contentSeal: string | null;
+  sealedAt: string | null;
+}
+
+/** The result of `GET /api/meetings/:id/verify-seal` (or the GC-side
+ *  equivalent): whether the meeting's current server-side state still
+ *  matches its stored content seal. */
+export interface SealVerification {
+  valid: boolean;
+  sealedAt: string;
 }

@@ -180,10 +180,23 @@ export const StyledMeetingTitle = styled.span`
   overflow-wrap: anywhere;
 `;
 
+export const StyledMeetingActions = styled.div`
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 0.8rem;
+`;
+
 export const StyledMeetingDate = styled.span`
   font-size: 1.2rem;
   font-weight: 500;
   color: ${({ theme }) => theme.colors.navy[400]};
+`;
+
+export const StyledLoadMore = styled.div`
+  display: flex;
+  justify-content: center;
+  margin-top: 1.6rem;
 `;
 
 export const StyledEmpty = styled.p`

@@ -5,6 +5,7 @@ import {
   getGcMeetings,
   getGcMeetingById,
   getGcMeetingPdfUrl,
+  verifyGcMeetingSeal,
   getDefenseBundle,
   getGcSubcontractorScorecards,
   getGcSubcontractorScorecard,
@@ -97,15 +98,17 @@ describe("apiGc", () => {
   });
 
   describe("getGcMeetings", () => {
+    const page = { meetings: [meeting], hasMore: false };
+
     it("GETs /api/gc/meetings with no query string when no filters are given", async () => {
       const fetchMock = vi.fn().mockResolvedValue({
         ok: true,
         status: 200,
-        json: async () => ({ success: true, data: [meeting] }),
+        json: async () => ({ success: true, data: page }),
       });
       vi.stubGlobal("fetch", fetchMock);
 
-      await expect(getGcMeetings("token-123")).resolves.toEqual([meeting]);
+      await expect(getGcMeetings("token-123")).resolves.toEqual(page);
       expect(fetchMock).toHaveBeenCalledWith(
         "/api/gc/meetings",
         expect.objectContaining({ method: "GET" }),
@@ -116,7 +119,7 @@ describe("apiGc", () => {
       const fetchMock = vi.fn().mockResolvedValue({
         ok: true,
         status: 200,
-        json: async () => ({ success: true, data: [meeting] }),
+        json: async () => ({ success: true, data: page }),
       });
       vi.stubGlobal("fetch", fetchMock);
 
@@ -128,11 +131,11 @@ describe("apiGc", () => {
       );
     });
 
-    it("includes every provided filter in the query string", async () => {
+    it("includes every provided filter in the query string, including limit/offset", async () => {
       const fetchMock = vi.fn().mockResolvedValue({
         ok: true,
         status: 200,
-        json: async () => ({ success: true, data: [] }),
+        json: async () => ({ success: true, data: { meetings: [], hasMore: false } }),
       });
       vi.stubGlobal("fetch", fetchMock);
 
@@ -140,12 +143,16 @@ describe("apiGc", () => {
         projectId: "project-1",
         from: "2026-09-01T00:00:00.000Z",
         to: "2026-09-21T00:00:00.000Z",
+        limit: 20,
+        offset: 40,
       });
 
       const [url] = fetchMock.mock.calls[0];
       expect(url).toContain("projectId=project-1");
       expect(url).toContain("from=2026-09-01T00%3A00%3A00.000Z");
       expect(url).toContain("to=2026-09-21T00%3A00%3A00.000Z");
+      expect(url).toContain("limit=20");
+      expect(url).toContain("offset=40");
     });
 
     it("rejects with the generic message when the response is unsuccessful without a body", async () => {
@@ -275,6 +282,59 @@ describe("apiGc", () => {
       );
       await expect(
         getGcMeetingPdfUrl("token-123", "meeting-1"),
+      ).rejects.toThrow(GENERIC);
+    });
+  });
+
+  describe("verifyGcMeetingSeal", () => {
+    it("GETs /api/gc/meetings/:id/verify-seal and returns the result", async () => {
+      const fetchMock = vi.fn().mockResolvedValue({
+        ok: true,
+        status: 200,
+        json: async () => ({
+          success: true,
+          data: { valid: false, sealedAt: "2026-09-21T13:05:00.000Z" },
+        }),
+      });
+      vi.stubGlobal("fetch", fetchMock);
+
+      await expect(
+        verifyGcMeetingSeal("token-123", "meeting-1"),
+      ).resolves.toEqual({ valid: false, sealedAt: "2026-09-21T13:05:00.000Z" });
+      expect(fetchMock).toHaveBeenCalledWith(
+        "/api/gc/meetings/meeting-1/verify-seal",
+        expect.objectContaining({ method: "GET" }),
+      );
+    });
+
+    it("rejects with the backend error message when the meeting hasn't been sealed yet", async () => {
+      vi.stubGlobal(
+        "fetch",
+        vi.fn().mockResolvedValue({
+          ok: false,
+          status: 404,
+          json: async () => ({
+            success: false,
+            error: "This meeting hasn't been sealed yet",
+          }),
+        }),
+      );
+      await expect(
+        verifyGcMeetingSeal("token-123", "meeting-1"),
+      ).rejects.toThrow("This meeting hasn't been sealed yet");
+    });
+
+    it("rejects with the generic message when the response is unsuccessful without a body", async () => {
+      vi.stubGlobal(
+        "fetch",
+        vi.fn().mockResolvedValue({
+          ok: false,
+          status: 500,
+          json: async () => null,
+        }),
+      );
+      await expect(
+        verifyGcMeetingSeal("token-123", "meeting-1"),
       ).rejects.toThrow(GENERIC);
     });
   });

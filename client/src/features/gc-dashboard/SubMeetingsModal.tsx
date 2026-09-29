@@ -4,11 +4,15 @@ import { Spinner } from "../../ui_comps/spinner";
 import { useOnlineStatus } from "../../context/online-status";
 import { useGcMeetings } from "../../hooks/useGcMeetings";
 import { useGcMeetingPdfUrl } from "../../hooks/useGcMeetingPdfUrl";
+import { useVerifyGcMeetingSeal } from "../../hooks/useVerifyGcMeetingSeal";
+import { SealBadge } from "../meeting-shared/SealBadge";
 import type { GcSubCompliance } from "../../interfaces/gcDashboard";
 import {
   StyledEmpty,
   StyledError,
+  StyledMeetingActions,
   StyledMeetingDate,
+  StyledLoadMore,
   StyledMeetingList,
   StyledMeetingMeta,
   StyledMeetingRow,
@@ -30,13 +34,26 @@ interface SubMeetingsModalProps {
  */
 export const SubMeetingsModal = ({ sub, onClose }: SubMeetingsModalProps) => {
   const { isOnline } = useOnlineStatus();
-  const { meetings, isLoading, isError } = useGcMeetings(
+  const {
+    meetings,
+    isLoading,
+    isError,
+    hasNextPage,
+    isFetchingNextPage,
+    fetchNextPage,
+  } = useGcMeetings(
     { projectId: sub?.projectId ?? undefined },
     // No project to drill into means no request — an empty projectId filter
     // would otherwise list every one of the GC's meetings.
     Boolean(sub?.projectId),
   );
   const { openPdf, isPending } = useGcMeetingPdfUrl();
+  const {
+    verifySeal,
+    result: sealResult,
+    isPending: sealPending,
+    verifyingId,
+  } = useVerifyGcMeetingSeal();
 
   return (
     <Modal isOpen={Boolean(sub)} onClose={onClose} title={sub?.companyName ?? ""}>
@@ -69,19 +86,43 @@ export const SubMeetingsModal = ({ sub, onClose }: SubMeetingsModalProps) => {
                   {meeting.signerCount === 1 ? "signer" : "signers"}
                 </StyledMeetingDate>
               </StyledMeetingMeta>
-              <Button
-                type="button"
-                variant="outline"
-                size="sm"
-                disabled={!meeting.pdfReady || !isOnline}
-                loading={isPending}
-                onClick={() => openPdf(meeting.id)}
-              >
-                {meeting.pdfReady ? "Open PDF" : "PDF pending"}
-              </Button>
+              <StyledMeetingActions>
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  disabled={!meeting.pdfReady || !isOnline}
+                  loading={isPending}
+                  onClick={() => openPdf(meeting.id)}
+                >
+                  {meeting.pdfReady ? "Open PDF" : "PDF pending"}
+                </Button>
+                <SealBadge
+                  meetingId={meeting.id}
+                  sealed={meeting.sealed}
+                  onVerify={verifySeal}
+                  isPending={sealPending}
+                  result={sealResult}
+                  verifyingId={verifyingId}
+                />
+              </StyledMeetingActions>
             </StyledMeetingRow>
           ))}
         </StyledMeetingList>
+      )}
+      {!isLoading && !isError && hasNextPage && (
+        <StyledLoadMore>
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            loading={isFetchingNextPage}
+            disabled={!isOnline}
+            onClick={() => fetchNextPage()}
+          >
+            Load more
+          </Button>
+        </StyledLoadMore>
       )}
     </Modal>
   );

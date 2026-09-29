@@ -11,6 +11,7 @@ const companiesService = require("./companies");
 const usersService = require("./users");
 const pdfGeneration = require("./pdfGeneration");
 const emailService = require("./email");
+const auditLogService = require("./auditLog");
 const { enqueue } = require("./pdfGenerationQueue");
 
 const meetingLog = {
@@ -116,6 +117,7 @@ describe("pdfGenerationQueue: enqueue", () => {
       .mockResolvedValue("https://signed.example/report.pdf");
     vi.spyOn(pdfGeneration, "renderMeetingLogPdf").mockReset().mockResolvedValue(pdfBuffer);
     vi.spyOn(emailService, "sendMeetingLogEmail").mockReset().mockResolvedValue(undefined);
+    vi.spyOn(auditLogService, "record").mockReset().mockResolvedValue(undefined);
 
     consoleErrorSpy = vi.spyOn(console, "error").mockImplementation(() => {});
   });
@@ -167,6 +169,11 @@ describe("pdfGenerationQueue: enqueue", () => {
       "company-1",
       "meeting-1/report.pdf",
     );
+    expect(auditLogService.record).toHaveBeenCalledWith({
+      meetingLogId: "meeting-1",
+      eventType: "pdf_generated",
+      metadata: { path: "meeting-1/report.pdf" },
+    });
     expect(consoleErrorSpy).not.toHaveBeenCalled();
   });
 
@@ -444,6 +451,7 @@ describe("pdfGenerationQueue: enqueue", () => {
       "meetingLogsService.setFinalPdfUrl",
       () => meetingLogsService.setFinalPdfUrl.mockRejectedValue(new Error("boom")),
     ],
+    ["auditLogService.record", () => auditLogService.record.mockRejectedValue(new Error("boom"))],
     [
       "storageService.getSignedUrl",
       () => {

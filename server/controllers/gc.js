@@ -28,12 +28,14 @@ exports.getOverview = async (req, res, next) => {
 
 exports.listMeetings = async (req, res, next) => {
   try {
-    const { projectId, from, to } = req.query;
+    const { projectId, from, to, limit, offset } = req.query;
     const allowedJobsiteIds = await siteScopeService.getAllowedJobsiteIds(req.user);
     const data = await gcDashboardService.listMeetings(req.user.companyId, {
       projectId,
       from,
       to,
+      limit: limit !== undefined ? Number(limit) : undefined,
+      offset: offset !== undefined ? Number(offset) : undefined,
       allowedJobsiteIds,
     });
     return res.status(200).json({ success: true, data });
@@ -65,6 +67,24 @@ exports.getMeetingPdfUrl = async (req, res, next) => {
       allowedJobsiteIds,
     );
     return res.status(200).json({ success: true, data: { url } });
+  } catch (error) {
+    return next(error);
+  }
+};
+
+// GET /api/gc/meetings/:id/verify-seal — recomputes the meeting's
+// tamper-evidence content seal from current server state and compares it to
+// what was stored at completion (Phase 9e, docs/tamper-evidence-design.md).
+exports.verifyMeetingSeal = async (req, res, next) => {
+  try {
+    const allowedJobsiteIds = await siteScopeService.getAllowedJobsiteIds(req.user);
+    const data = await gcDashboardService.verifySeal(
+      req.params.id,
+      req.user.companyId,
+      allowedJobsiteIds,
+      req.user.id,
+    );
+    return res.status(200).json({ success: true, data });
   } catch (error) {
     return next(error);
   }

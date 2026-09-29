@@ -11,7 +11,9 @@ const mockUseMeetingLogs = vi.fn();
 const mockUseProjects = vi.fn();
 const mockUseTalks = vi.fn();
 const mockUseMeetingPdfUrl = vi.fn();
+const mockUseVerifyMeetingSeal = vi.fn();
 const openPdf = vi.fn();
+const verifySeal = vi.fn();
 const onBack = vi.fn();
 
 vi.mock("../../../src/hooks/useMeetingLogs", () => ({
@@ -26,6 +28,9 @@ vi.mock("../../../src/hooks/useTalks", () => ({
 vi.mock("../../../src/hooks/useMeetingPdfUrl", () => ({
   useMeetingPdfUrl: () => mockUseMeetingPdfUrl(),
 }));
+vi.mock("../../../src/hooks/useVerifyMeetingSeal", () => ({
+  useVerifyMeetingSeal: () => mockUseVerifyMeetingSeal(),
+}));
 
 const baseMeeting = {
   id: "meeting-1",
@@ -39,6 +44,8 @@ const baseMeeting = {
   heldAt: "2026-09-21T13:00:00.000Z",
   syncedAt: null,
   createdAt: "2026-09-21T13:00:00.000Z",
+  contentSeal: "a1b2c3",
+  sealedAt: "2026-09-21T13:05:00.000Z",
 };
 
 const logs = (overrides = {}) => ({
@@ -66,6 +73,12 @@ describe("MonthMeetings", () => {
       talks: [{ id: "talk-1", title: "Fall Protection" }],
     });
     mockUseMeetingPdfUrl.mockReturnValue({ openPdf, isPending: false });
+    mockUseVerifyMeetingSeal.mockReturnValue({
+      verifySeal,
+      result: undefined,
+      isPending: false,
+      verifyingId: undefined,
+    });
   });
 
   it("fetches only the chosen month's range and titles the list", () => {
@@ -121,6 +134,20 @@ describe("MonthMeetings", () => {
     renderMonth();
     expect(screen.getByText("PDF pending")).toBeDefined();
     expect(screen.queryByRole("button", { name: /open pdf/i })).toBeNull();
+  });
+
+  it("shows the seal badge and verifies a meeting's content seal on click", () => {
+    renderMonth();
+    fireEvent.click(screen.getByRole("button", { name: "Verify" }));
+    expect(verifySeal).toHaveBeenCalledWith("meeting-1");
+  });
+
+  it("hides the seal badge for a meeting with no content seal yet", () => {
+    mockUseMeetingLogs.mockReturnValue(
+      logs({ meetings: [{ ...baseMeeting, contentSeal: null }] }),
+    );
+    renderMonth();
+    expect(screen.queryByText("Sealed")).toBeNull();
   });
 
   it("shows an empty state for a month with no meetings", () => {

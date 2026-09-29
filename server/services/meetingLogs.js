@@ -3,16 +3,18 @@ const { AppError } = require("../utility/AppError");
 const { buildPdfFilename } = require("../utility/pdfFilename");
 const { resolveHeldAt } = require("../utility/heldAt");
 const entitlementsService = require("../utility/entitlements");
+const contentSeal = require("../utility/contentSeal");
 const pdfGenerationQueue = require("./pdfGenerationQueue");
 const storageService = require("./storage");
 const projectsService = require("./projects");
 const companiesService = require("./companies");
+const auditLogService = require("./auditLog");
 
 // The columns every meeting_logs query selects, and the snake_case ->
 // camelCase mapper applied to each row before it leaves the service. Services
 // never leak DB column names to the controller layer.
 const MEETING_LOG_COLUMNS =
-  "id, project_id, talk_id, foreman_id, company_id, crew_photo_url, final_pdf_url, completed_at, held_at, synced_at, created_at";
+  "id, project_id, talk_id, foreman_id, company_id, crew_photo_url, final_pdf_url, completed_at, held_at, synced_at, created_at, content_seal, sealed_at";
 
 const CREW_PHOTO_BUCKET = "crew-photos";
 const CREW_PHOTO_URL_TTL_SECONDS = 300;
@@ -37,6 +39,12 @@ const toMeetingLog = (row) => ({
   heldAt: row.held_at ?? row.completed_at,
   syncedAt: row.synced_at,
   createdAt: row.created_at,
+  // Phase 9e tamper-evidence (docs/tamper-evidence-design.md): null until
+  // complete() seals the row, and for every meeting completed before this
+  // feature shipped (not backfilled). Never verified by comparing this
+  // string client-side — always go through verifySeal below.
+  contentSeal: row.content_seal,
+  sealedAt: row.sealed_at,
 });
 
 // Creates a meeting log with the client-generated `id` (offline-sync
@@ -83,6 +91,13 @@ const create = async ({ id, companyId, projectId, talkId, foremanId }) => {
     }
     throw new AppError("Could not create the meeting", 502, { cause: error });
   }
+
+  await auditLogService.record({
+    meetingLogId: data.id,
+    eventType: "created",
+    actorId: foremanId,
+    metadata: { projectId, talkId: talkId ?? null },
+  });
 
   return toMeetingLog(data);
 };
@@ -236,13 +251,15 @@ const getById = async (id, companyId, { historyDays = null } = {}) => {
 
 // Shared guard: once a meeting_log is completed it's an immutable OSHA
 // record — no further signatures, no further edits. Mirrors talks.js's
-// assertNotLoggedAnywhere. Returns the row's id/talkId (already scoped to the
-// caller's company) so callers that need it next — signatures.create, to
-// score against the talk's quiz — don't have to look the meeting up twice.
+// assertNotLoggedAnywhere. Returns the row's fields (already scoped to the
+// caller's company) so callers that need them next don't have to look the
+// meeting up twice: signatures.create needs talkId to score against the
+// talk's quiz; complete() below needs the rest to build its tamper-evidence
+// seal payload (docs/tamper-evidence-design.md).
 const assertNotCompleted = async (id, companyId) => {
   const { data, error } = await supabase
     .from("meeting_logs")
-    .select("id, talk_id, completed_at")
+    .select("id, project_id, talk_id, foreman_id, crew_photo_url, completed_at")
     .eq("id", id)
     .eq("company_id", companyId)
     .single();
@@ -263,28 +280,42 @@ const assertNotCompleted = async (id, companyId) => {
     );
   }
 
-  return { id: data.id, talkId: data.talk_id };
+  return {
+    id: data.id,
+    projectId: data.project_id,
+    talkId: data.talk_id,
+    foremanId: data.foreman_id,
+    crewPhotoUrl: data.crew_photo_url,
+  };
 };
 
 // Finalizes a meeting: requires at least one signature (an attendance record
 // with zero attendees isn't a valid completed meeting) and, once stamped,
-// locks the meeting_log and its signatures via assertNotCompleted. Triggers
-// the Phase 5 PDF-generation pipeline (see pdfGenerationQueue.js) — soft-fail,
-// so a PDF/upload failure never unwinds completed_at or fails this call.
+// locks the meeting_log and its signatures via assertNotCompleted. Also
+// computes and stores the tamper-evidence content seal in this same update
+// (docs/tamper-evidence-design.md "Delivery") — atomically, so a completed
+// meeting can never exist unsealed — then triggers the Phase 5 PDF-generation
+// pipeline (see pdfGenerationQueue.js), which stays soft-fail: a PDF/upload
+// failure never unwinds completed_at/content_seal or fails this call.
 //
 // `completed_at` is stamped at server receipt (the audit record); `held_at` is
 // the optional client-reported time the meeting was actually held, resolved by
 // resolveHeldAt (which falls back to receipt time and never throws — see
 // utility/heldAt.js for why a bad value must not fail this call). Both use the
-// same `now` so an on-time completion has identical timestamps.
-const complete = async ({ id, companyId, heldAt }) => {
-  await assertNotCompleted(id, companyId);
+// same `now` so an on-time completion has identical timestamps, and the seal
+// covers whichever `heldAt` ends up stored.
+//
+// `actorId` is the completing user (req.user.id) — distinct from the
+// meeting's original `foremanId` when someone else finishes a draft another
+// foreman started — recorded on the `completed` audit event, not on the row
+// itself.
+const complete = async ({ id, companyId, heldAt, actorId = null }) => {
+  const meetingInfo = await assertNotCompleted(id, companyId);
 
   const { data: signatures, error: signaturesError } = await supabase
     .from("signatures")
-    .select("id")
-    .eq("meeting_id", id)
-    .limit(1);
+    .select("id, worker_name, quiz_score, quiz_passed")
+    .eq("meeting_id", id);
 
   if (signaturesError) {
     throw new AppError("Could not verify the meeting has signatures", 502, {
@@ -300,11 +331,37 @@ const complete = async ({ id, companyId, heldAt }) => {
   }
 
   const now = new Date();
+  const resolvedHeldAt = resolveHeldAt({ heldAt, now });
+  const nowIso = now.toISOString();
+
+  const seal = contentSeal.computeSeal(
+    contentSeal.buildCanonicalPayload({
+      meetingLog: {
+        id: meetingInfo.id,
+        projectId: meetingInfo.projectId,
+        talkId: meetingInfo.talkId,
+        companyId,
+        foremanId: meetingInfo.foremanId,
+        crewPhotoUrl: meetingInfo.crewPhotoUrl,
+        heldAt: resolvedHeldAt,
+        completedAt: nowIso,
+      },
+      signatures: signatures.map((s) => ({
+        id: s.id,
+        workerName: s.worker_name,
+        quizScore: s.quiz_score,
+        quizPassed: s.quiz_passed,
+      })),
+    }),
+  );
+
   const { data, error } = await supabase
     .from("meeting_logs")
     .update({
-      completed_at: now.toISOString(),
-      held_at: resolveHeldAt({ heldAt, now }),
+      completed_at: nowIso,
+      held_at: resolvedHeldAt,
+      content_seal: seal,
+      sealed_at: nowIso,
     })
     .eq("id", id)
     .eq("company_id", companyId)
@@ -318,9 +375,84 @@ const complete = async ({ id, companyId, heldAt }) => {
     throw new AppError("Could not complete the meeting", 502, { cause: error });
   }
 
+  await auditLogService.record({
+    meetingLogId: id,
+    eventType: "completed",
+    actorId,
+    metadata: { signatureCount: signatures.length },
+  });
+
   await pdfGenerationQueue.enqueue(id, companyId);
 
   return toMeetingLog(data);
+};
+
+// Recomputes a completed meeting's content seal from current DB state and
+// compares it to what was stored at completion (docs/tamper-evidence-design.md
+// "Endpoint contract"). Every call — whether it comes back valid or
+// tampered — is itself recorded as a seal_verified audit event, so the audit
+// trail shows every time someone checked, not just failures.
+const verifySeal = async (id, companyId, actorId = null) => {
+  const { data, error } = await supabase
+    .from("meeting_logs")
+    .select(
+      "id, project_id, talk_id, foreman_id, crew_photo_url, held_at, completed_at, content_seal, sealed_at",
+    )
+    .eq("id", id)
+    .eq("company_id", companyId)
+    .single();
+
+  if (error) {
+    if (error.code === "PGRST116") {
+      throw new AppError("Meeting not found", 404, { cause: error });
+    }
+    throw new AppError("Could not load the meeting", 502, { cause: error });
+  }
+  if (!data.content_seal) {
+    throw new AppError("This meeting hasn't been sealed yet", 404);
+  }
+
+  const { data: signatures, error: signaturesError } = await supabase
+    .from("signatures")
+    .select("id, worker_name, quiz_score, quiz_passed")
+    .eq("meeting_id", id);
+  if (signaturesError) {
+    throw new AppError("Could not verify the meeting's signatures", 502, {
+      cause: signaturesError,
+    });
+  }
+
+  const expectedSeal = contentSeal.computeSeal(
+    contentSeal.buildCanonicalPayload({
+      meetingLog: {
+        id: data.id,
+        projectId: data.project_id,
+        talkId: data.talk_id,
+        companyId,
+        foremanId: data.foreman_id,
+        crewPhotoUrl: data.crew_photo_url,
+        heldAt: data.held_at,
+        completedAt: data.completed_at,
+      },
+      signatures: signatures.map((s) => ({
+        id: s.id,
+        workerName: s.worker_name,
+        quizScore: s.quiz_score,
+        quizPassed: s.quiz_passed,
+      })),
+    }),
+  );
+
+  const valid = contentSeal.sealsMatch(expectedSeal, data.content_seal);
+
+  await auditLogService.record({
+    meetingLogId: id,
+    eventType: "seal_verified",
+    actorId,
+    metadata: { valid, via: "sub" },
+  });
+
+  return { valid, sealedAt: data.sealed_at };
 };
 
 // The path a meeting's crew photo lives at, relative to the `crew-photos`
@@ -515,6 +647,7 @@ module.exports = {
   countHiddenForCompany,
   getById,
   complete,
+  verifySeal,
   assertNotCompleted,
   uploadCrewPhoto,
   getCrewPhotoUrl,

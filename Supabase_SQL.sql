@@ -195,6 +195,18 @@ CREATE TABLE meeting_logs (
   -- progress. See docs/gc-dashboard-design.md.
   held_at TIMESTAMPTZ,
   synced_at TIMESTAMPTZ,
+  -- Phase 9e tamper-evidence (docs/tamper-evidence-design.md): an
+  -- HMAC-SHA256 seal over this row's immutable-post-completion fields plus
+  -- its signatures, keyed by a server-only secret (MEETING_LOG_SEAL_SECRET,
+  -- never stored here or sent to the client) so a DB-only tamperer (a
+  -- service-role write that bypasses the app entirely) can't forge a valid
+  -- seal without also having the secret. Computed once, atomically, in the
+  -- same UPDATE that stamps completed_at/held_at in complete() -- a
+  -- completed meeting can never exist unsealed. NULL for a meeting still in
+  -- progress, and for every meeting completed before this feature shipped
+  -- (not backfilled).
+  content_seal TEXT,
+  sealed_at TIMESTAMPTZ,
   created_at TIMESTAMPTZ DEFAULT NOW()
 );
 
@@ -206,6 +218,8 @@ ALTER TABLE meeting_logs ENABLE ROW LEVEL SECURITY;
 -- ALTER TABLE meeting_logs ADD COLUMN IF NOT EXISTS company_id UUID REFERENCES companies(id);
 -- ALTER TABLE meeting_logs ADD COLUMN IF NOT EXISTS completed_at TIMESTAMPTZ;
 -- ALTER TABLE meeting_logs ADD COLUMN IF NOT EXISTS held_at TIMESTAMPTZ;
+-- ALTER TABLE meeting_logs ADD COLUMN IF NOT EXISTS content_seal TEXT;  -- Phase 9e
+-- ALTER TABLE meeting_logs ADD COLUMN IF NOT EXISTS sealed_at TIMESTAMPTZ;  -- Phase 9e
 -- ALTER TABLE meeting_logs ENABLE ROW LEVEL SECURITY;
 -- UPDATE meeting_logs SET company_id = (SELECT owner_company_id FROM projects WHERE projects.id = meeting_logs.project_id) WHERE company_id IS NULL;
 -- Backfill (Phase 6): existing completed meetings keep the date they have today.
@@ -407,3 +421,31 @@ CREATE INDEX IF NOT EXISTS idx_jobsite_members_user ON jobsite_members (user_id)
 ALTER TABLE companies ADD COLUMN IF NOT EXISTS required_talk_id UUID REFERENCES toolbox_talks(id) ON DELETE SET NULL;
 ALTER TABLE companies ADD COLUMN IF NOT EXISTS required_talk_pushed_at TIMESTAMPTZ;
 ALTER TABLE companies ADD COLUMN IF NOT EXISTS required_talk_pushed_by UUID REFERENCES users(id) ON DELETE SET NULL;
+
+-- 16. Meeting Log Audit Events (Phase 9e, docs/tamper-evidence-design.md) — a
+-- lifecycle trail scoped to meeting_logs only (not a general system-wide
+-- audit log): created / completed / pdf_generated / seal_verified. `id` is
+-- server-generated (uuidv4(), server/services/auditLog.js), the same
+-- offline-sync exception jobsites.id/company_invites.id already carry --
+-- every event here originates from an authenticated server-side step, never
+-- an offline client write. `actor_id` is nullable: a pdf_generated event has
+-- no human actor (the async PDF queue produced it), and any actor's account
+-- could later be deleted without invalidating the historical event.
+CREATE TABLE meeting_log_audit_events (
+  id UUID PRIMARY KEY,
+  meeting_log_id UUID NOT NULL REFERENCES meeting_logs(id) ON DELETE CASCADE,
+  event_type TEXT NOT NULL CHECK (event_type IN ('created', 'completed', 'pdf_generated', 'seal_verified')),
+  actor_id UUID REFERENCES users(id) ON DELETE SET NULL,
+  metadata JSONB,
+  created_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+-- Server-only table: enable RLS with NO policies so the public anon key is
+-- denied all access. The server's service-role key bypasses RLS and still works.
+ALTER TABLE meeting_log_audit_events ENABLE ROW LEVEL SECURITY;
+
+CREATE INDEX idx_meeting_log_audit_events_meeting_log_id ON meeting_log_audit_events (meeting_log_id);
+
+-- If the table already exists from an earlier run:
+-- CREATE INDEX IF NOT EXISTS idx_meeting_log_audit_events_meeting_log_id ON meeting_log_audit_events (meeting_log_id);
+-- ALTER TABLE meeting_log_audit_events ENABLE ROW LEVEL SECURITY;

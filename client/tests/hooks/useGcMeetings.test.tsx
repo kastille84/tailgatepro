@@ -1,6 +1,6 @@
 import React from "react";
 import { describe, it, expect, vi, beforeEach } from "vitest";
-import { renderHook, waitFor } from "@testing-library/react";
+import { renderHook, waitFor, act } from "@testing-library/react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 
 import { useGcMeetings } from "../../src/hooks/useGcMeetings";
@@ -27,6 +27,8 @@ const meeting: GcMeetingSummary = {
   pdfReady: true,
 };
 
+const secondMeeting: GcMeetingSummary = { ...meeting, id: "meeting-2" };
+
 describe("useGcMeetings", () => {
   let queryClient: QueryClient;
 
@@ -42,8 +44,11 @@ describe("useGcMeetings", () => {
     <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
   );
 
-  it("fetches meetings with the given filters", async () => {
-    vi.mocked(apiGc.getGcMeetings).mockResolvedValue([meeting]);
+  it("fetches the first page of meetings with the given filters", async () => {
+    vi.mocked(apiGc.getGcMeetings).mockResolvedValue({
+      meetings: [meeting],
+      hasMore: false,
+    });
 
     const { result } = renderHook(
       () => useGcMeetings({ projectId: "project-1" }),
@@ -53,9 +58,39 @@ describe("useGcMeetings", () => {
     await waitFor(() => expect(result.current.isLoading).toBe(false));
     expect(apiGc.getGcMeetings).toHaveBeenCalledWith("token-123", {
       projectId: "project-1",
+      limit: 20,
+      offset: 0,
     });
     expect(result.current.meetings).toEqual([meeting]);
     expect(result.current.isError).toBe(false);
+    expect(result.current.hasNextPage).toBe(false);
+  });
+
+  it("fetches and appends the next page when fetchNextPage is called", async () => {
+    vi.mocked(apiGc.getGcMeetings)
+      .mockResolvedValueOnce({ meetings: [meeting], hasMore: true })
+      .mockResolvedValueOnce({ meetings: [secondMeeting], hasMore: false });
+
+    const { result } = renderHook(() => useGcMeetings({ projectId: "project-1" }), {
+      wrapper,
+    });
+
+    await waitFor(() => expect(result.current.hasNextPage).toBe(true));
+    expect(result.current.meetings).toEqual([meeting]);
+
+    await act(async () => {
+      await result.current.fetchNextPage();
+    });
+
+    expect(apiGc.getGcMeetings).toHaveBeenLastCalledWith("token-123", {
+      projectId: "project-1",
+      limit: 20,
+      offset: 20,
+    });
+    await waitFor(() =>
+      expect(result.current.meetings).toEqual([meeting, secondMeeting]),
+    );
+    expect(result.current.hasNextPage).toBe(false);
   });
 
   it("defaults meetings to an empty array and reports the error on failure", async () => {
@@ -65,6 +100,7 @@ describe("useGcMeetings", () => {
 
     await waitFor(() => expect(result.current.isError).toBe(true));
     expect(result.current.meetings).toEqual([]);
+    expect(result.current.hasNextPage).toBe(false);
   });
 
   it("is disabled (no fetch) without a session", () => {

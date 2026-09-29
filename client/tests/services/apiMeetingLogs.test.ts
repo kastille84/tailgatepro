@@ -8,6 +8,7 @@ import {
   getMeetingMonths,
   getMeetingPdfUrl,
   uploadCrewPhoto,
+  verifyMeetingSeal,
 } from "../../src/services/apiMeetingLogs";
 import { DEFAULT_FETCH_TIMEOUT_MS } from "../../src/utils/fetchWithTimeout";
 import { PlanLimitError } from "../../src/utils/PlanLimitError";
@@ -495,6 +496,66 @@ describe("apiMeetingLogs", () => {
         }),
       );
       await expect(getMeetingPdfUrl("token-123", "meeting-1")).rejects.toThrow(
+        GENERIC,
+      );
+    });
+  });
+
+  describe("verifyMeetingSeal", () => {
+    it("GETs the verify-seal endpoint and returns the result", async () => {
+      const fetchMock = vi.fn().mockResolvedValue({
+        ok: true,
+        status: 200,
+        json: async () => ({
+          success: true,
+          data: { valid: true, sealedAt: "2026-09-21T06:00:00.000Z" },
+        }),
+      });
+      vi.stubGlobal("fetch", fetchMock);
+
+      await expect(verifyMeetingSeal("token-123", "meeting-1")).resolves.toEqual({
+        valid: true,
+        sealedAt: "2026-09-21T06:00:00.000Z",
+      });
+      expect(fetchMock).toHaveBeenCalledWith(
+        "/api/meetings/meeting-1/verify-seal",
+        expect.objectContaining({
+          method: "GET",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: "Bearer token-123",
+          },
+        }),
+      );
+    });
+
+    it("rejects with the backend error message when the meeting hasn't been sealed yet", async () => {
+      vi.stubGlobal(
+        "fetch",
+        vi.fn().mockResolvedValue({
+          ok: false,
+          status: 404,
+          json: async () => ({
+            success: false,
+            error: "This meeting hasn't been sealed yet",
+          }),
+        }),
+      );
+      await expect(verifyMeetingSeal("token-123", "meeting-1")).rejects.toThrow(
+        "This meeting hasn't been sealed yet",
+      );
+    });
+
+    it("rejects with the generic message when the response has no body", async () => {
+      vi.stubGlobal(
+        "fetch",
+        vi.fn().mockResolvedValue({
+          ok: false,
+          status: 500,
+          json: async () => null,
+        }),
+      );
+      await expect(verifyMeetingSeal("token-123", "meeting-1")).rejects.toThrow(
         GENERIC,
       );
     });
