@@ -141,4 +141,32 @@ describe("buildPdfFilename", () => {
     // Assert
     expect(filename).toBe("acme-site-a-2026-09-14-abcdef01.pdf");
   });
+
+  it("should file a late-evening talk under the foreman's local date when tzOffset is given", () => {
+    // Act — 03:00 UTC Sept 21 is still Sept 20 at UTC-7
+    const filename = buildPdfFilename({
+      companyName: "Acme",
+      projectName: "Site A",
+      meetingDate: "2026-09-21T03:00:00.000Z",
+      meetingLogId: "abcdef01-0000-0000-0000-000000000000",
+      tzOffset: 420,
+    });
+
+    // Assert
+    expect(filename).toBe("acme-site-a-2026-09-20-abcdef01.pdf");
+  });
+
+  it("should keep the UTC date when tzOffset is null (a meeting completed before it was stored)", () => {
+    // Act
+    const filename = buildPdfFilename({
+      companyName: "Acme",
+      projectName: "Site A",
+      meetingDate: "2026-09-21T03:00:00.000Z",
+      meetingLogId: "abcdef01-0000-0000-0000-000000000000",
+      tzOffset: null,
+    });
+
+    // Assert
+    expect(filename).toBe("acme-site-a-2026-09-21-abcdef01.pdf");
+  });
 });

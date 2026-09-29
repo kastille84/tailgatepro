@@ -27,7 +27,7 @@ const {
 process.env.MEETING_LOG_SEAL_SECRET = "test-only-seal-secret";
 
 const MEETING_LOG_COLUMNS =
-  "id, project_id, talk_id, foreman_id, company_id, crew_photo_url, final_pdf_url, completed_at, held_at, synced_at, created_at, content_seal, sealed_at";
+  "id, project_id, talk_id, foreman_id, company_id, crew_photo_url, final_pdf_url, completed_at, held_at, held_tz_offset, synced_at, created_at, content_seal, sealed_at";
 
 const dbRow = {
   id: "meeting-1",
@@ -55,6 +55,7 @@ const mappedMeetingLog = {
   finalPdfUrl: null,
   completedAt: null,
   heldAt: null,
+  heldTzOffset: null,
   syncedAt: null,
   createdAt: "2026-09-14T00:00:00.000Z",
   contentSeal: null,
@@ -775,6 +776,7 @@ describe("meetingLogs service: complete", () => {
     expect(updateFn).toHaveBeenCalledWith({
       completed_at: receiptTime,
       held_at: receiptTime,
+      held_tz_offset: null,
       content_seal: expectedSeal(receiptTime),
       sealed_at: receiptTime,
     });
@@ -814,9 +816,42 @@ describe("meetingLogs service: complete", () => {
     expect(updateFn).toHaveBeenCalledWith({
       completed_at: receiptTime,
       held_at: heldAt,
+      held_tz_offset: null,
       content_seal: expectedSeal(heldAt),
       sealed_at: receiptTime,
     });
+  });
+
+  it("should store the foreman's timezone offset alongside held_at, outside the seal", async () => {
+    // Arrange
+    const heldAt = "2026-09-20T22:30:00.000Z";
+
+    // Act
+    await complete({
+      id: "meeting-1",
+      companyId: "company-1",
+      heldAt,
+      heldTzOffset: 420,
+    });
+
+    // Assert — same seal as without an offset: it's display-only
+    expect(updateFn).toHaveBeenCalledWith({
+      completed_at: receiptTime,
+      held_at: heldAt,
+      held_tz_offset: 420,
+      content_seal: expectedSeal(heldAt),
+      sealed_at: receiptTime,
+    });
+  });
+
+  it("should still complete, storing a null offset, when the reported offset is out of range", async () => {
+    // Act
+    await complete({ id: "meeting-1", companyId: "company-1", heldTzOffset: 9999 });
+
+    // Assert
+    expect(updateFn).toHaveBeenCalledWith(
+      expect.objectContaining({ held_tz_offset: null }),
+    );
   });
 
   it("should still complete, falling back to receipt time, when the reported held_at is older than the backdate limit", async () => {
@@ -835,6 +870,7 @@ describe("meetingLogs service: complete", () => {
     expect(updateFn).toHaveBeenCalledWith({
       completed_at: receiptTime,
       held_at: receiptTime,
+      held_tz_offset: null,
       content_seal: expectedSeal(receiptTime),
       sealed_at: receiptTime,
     });
@@ -854,6 +890,7 @@ describe("meetingLogs service: complete", () => {
     expect(updateFn).toHaveBeenCalledWith({
       completed_at: receiptTime,
       held_at: receiptTime,
+      held_tz_offset: null,
       content_seal: expectedSeal(receiptTime),
       sealed_at: receiptTime,
     });
@@ -1506,7 +1543,7 @@ describe("meetingLogs service: getDefenseBundleEntries", () => {
 
     // Assert
     expect(select).toHaveBeenCalledWith(
-      "id, held_at, completed_at, final_pdf_url, toolbox_talks(title), projects(name, gc_name_custom)",
+      "id, held_at, held_tz_offset, completed_at, final_pdf_url, toolbox_talks(title), projects(name, gc_name_custom)",
     );
     expect(eqFn).toHaveBeenCalledWith("company_id", "company-1");
     expect(notFn).toHaveBeenCalledWith("completed_at", "is", null);

@@ -201,6 +201,11 @@ CREATE TABLE meeting_logs (
   -- completed_at stays as the server-side audit stamp. NULL = still in
   -- progress. See docs/gc-dashboard-design.md.
   held_at TIMESTAMPTZ,
+  -- Phase 11d: the foreman's Date#getTimezoneOffset() (minutes, UTC minus
+  -- local; 420 = UTC-7) at completion, so held_at can be printed in local time
+  -- on the PDF/email/filename instead of UTC. Display-only and NOT covered by
+  -- content_seal. NULL (older meetings) = display in UTC.
+  held_tz_offset SMALLINT,
   synced_at TIMESTAMPTZ,
   -- Phase 9e tamper-evidence (docs/tamper-evidence-design.md): an
   -- HMAC-SHA256 seal over this row's immutable-post-completion fields plus
@@ -225,6 +230,7 @@ ALTER TABLE meeting_logs ENABLE ROW LEVEL SECURITY;
 -- ALTER TABLE meeting_logs ADD COLUMN IF NOT EXISTS company_id UUID REFERENCES companies(id);
 -- ALTER TABLE meeting_logs ADD COLUMN IF NOT EXISTS completed_at TIMESTAMPTZ;
 -- ALTER TABLE meeting_logs ADD COLUMN IF NOT EXISTS held_at TIMESTAMPTZ;
+-- ALTER TABLE meeting_logs ADD COLUMN IF NOT EXISTS held_tz_offset SMALLINT;  -- Phase 11d
 -- ALTER TABLE meeting_logs ADD COLUMN IF NOT EXISTS content_seal TEXT;  -- Phase 9e
 -- ALTER TABLE meeting_logs ADD COLUMN IF NOT EXISTS sealed_at TIMESTAMPTZ;  -- Phase 9e
 -- ALTER TABLE meeting_logs ENABLE ROW LEVEL SECURITY;

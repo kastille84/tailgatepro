@@ -192,6 +192,19 @@ describe("pdfGeneration: renderMeetingLogPdf", () => {
     expect(text).not.toContain("2026-09-18T12:00:00.000Z");
   });
 
+  it("prints the held time in the foreman's local zone when heldTzOffset is set", async () => {
+    const buffer = await renderMeetingLogPdf({
+      meetingLog: { ...meetingLog, heldAt: "2026-09-19T03:00:00.000Z", heldTzOffset: 420 },
+      project,
+      talk: talkWithAttributionAndQuiz,
+      signatures,
+      company,
+    });
+    const text = decodeRenderedText(buffer);
+
+    expect(text).toContain("September 18, 2026 at 8:00 PM UTC-7");
+  });
+
   it("prints the held time, not the later server-receipt time, and keeps the 'Generated' footer as the server-side stamp", async () => {
     const buffer = await renderMeetingLogPdf({
       meetingLog,

@@ -448,6 +448,21 @@ describe("meetingLogs controller", () => {
       });
     });
 
+    it("should forward the client-reported req.body.heldTzOffset to the service", async () => {
+      // Arrange
+      req.params = { id: "meeting-1" };
+      req.body = { heldAt: "2026-09-20T22:30:00.000Z", heldTzOffset: 420 };
+      completeSpy.mockResolvedValue(meeting);
+
+      // Act
+      await completeMeeting(req, res, next);
+
+      // Assert
+      expect(completeSpy).toHaveBeenCalledWith(
+        expect.objectContaining({ heldTzOffset: 420 }),
+      );
+    });
+
     it("should always pass the caller's own id as actorId, never from the request body", async () => {
       // Arrange
       req.params = { id: "meeting-1" };

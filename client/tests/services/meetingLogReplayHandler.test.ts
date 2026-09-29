@@ -144,13 +144,14 @@ describe("meetingLogReplayHandler (entity: meeting_completion)", () => {
       entity: "meeting_completion",
       op: "complete",
       entityId: "meeting-1",
-      payload: { heldAt: "2026-09-20T22:30:00.000Z" },
+      payload: { heldAt: "2026-09-20T22:30:00.000Z", heldTzOffset: 420 },
     });
 
     expect(apiMeetingLogs.completeMeeting).toHaveBeenCalledWith(
       "token-123",
       "meeting-1",
       "2026-09-20T22:30:00.000Z",
+      420,
     );
   });
 
@@ -168,6 +169,7 @@ describe("meetingLogReplayHandler (entity: meeting_completion)", () => {
     expect(apiMeetingLogs.completeMeeting).toHaveBeenCalledWith(
       "token-123",
       "meeting-1",
+      undefined,
       undefined,
     );
   });

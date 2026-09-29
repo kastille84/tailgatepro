@@ -68,6 +68,8 @@ describe("useCompleteMeetingLog", () => {
   it("enqueues a meeting_completion row keyed by the meetingId, depending on every signatureId, stamped with when the meeting was held", async () => {
     vi.useFakeTimers({ toFake: ["Date"] });
     vi.setSystemTime(new Date("2026-09-20T22:30:00.000Z"));
+    // Pinned so the assertion doesn't depend on the machine's timezone.
+    vi.spyOn(Date.prototype, "getTimezoneOffset").mockReturnValue(420);
     vi.mocked(outbox.enqueueMutation).mockResolvedValue({} as never);
 
     const { result } = renderHook(() => useCompleteMeetingLog(), { wrapper });
@@ -84,7 +86,8 @@ describe("useCompleteMeetingLog", () => {
         op: "complete",
         // Captured at enqueue time, so a completion that syncs days later
         // still records when the meeting actually happened.
-        payload: { heldAt: "2026-09-20T22:30:00.000Z" },
+        // The foreman's timezone offset rides along so the PDF prints local time.
+        payload: { heldAt: "2026-09-20T22:30:00.000Z", heldTzOffset: 420 },
         dependsOnEntityIds: ["signature-1", "signature-2"],
       },
       mockReplayer,

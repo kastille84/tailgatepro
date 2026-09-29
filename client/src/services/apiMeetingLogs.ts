@@ -58,12 +58,14 @@ export const createMeetingLog = async (
  * falls back to its own receipt time. A retried complete against a meeting
  * that already landed 409s with a message the offline queue's `flush()`
  * recognizes as "already synced" rather than a real failure — see
- * `utils/db/outbox.ts`.
+ * `utils/db/outbox.ts`. `heldTzOffset` (`Date#getTimezoneOffset()` minutes)
+ * rides along in the same body so the server can format `heldAt` in local time.
  */
 export const completeMeeting = async (
   accessToken: string,
   meetingId: string,
   heldAt?: string,
+  heldTzOffset?: number,
 ): Promise<MeetingLog> => {
   const res = await fetchWithTimeout(`/api/meetings/${meetingId}/complete`, {
     method: "PATCH",
@@ -71,7 +73,12 @@ export const completeMeeting = async (
       Authorization: `Bearer ${accessToken}`,
       ...(heldAt && { "Content-Type": "application/json" }),
     },
-    ...(heldAt && { body: JSON.stringify({ heldAt }) }),
+    ...(heldAt && {
+      body: JSON.stringify({
+        heldAt,
+        ...(heldTzOffset !== undefined && { heldTzOffset }),
+      }),
+    }),
   });
 
   const body = await res.json().catch(() => null);

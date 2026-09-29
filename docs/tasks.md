@@ -1442,9 +1442,8 @@ completion row is enqueued), so `MeetingWizard.tsx` and its tests are unchanged.
       downloaded filename and the email carry the held date. Then `curl` `PATCH …/complete` with no body →
       `held_at` = `completed_at`; and with a `heldAt` ~10 days old → still completes, `held_at` = server time
 - [ ] Known limitations, tracked not dropped: (1) already-generated PDFs keep the old "Completed" header — no
-      regeneration path exists; (2) `formatDate` prints UTC and `held_at` keeps no timezone, so a late-evening
-      West Coast talk can show the next calendar date on the PDF — a real fix stores the foreman's tz offset
-      (e.g. `held_tz_offset`) and formats with it; (3) a client-supplied time can be backdated (bounded to 7
+      regeneration path exists; (2) ~~`formatDate` printed UTC, so a late-evening West Coast talk could show
+      the next calendar date on the PDF~~ — fixed in Phase 11d (`held_tz_offset`); (3) a client-supplied time can be backdated (bounded to 7
       days, and `completed_at` is kept as server-side evidence), so 6e/6f show both `heldAt` and `completedAt`
       on the GC detail view; (4) `heldAt` is stamped when the completion row is enqueued, so a save resumed after
       an interruption stamps the resume time rather than the first Save tap
@@ -2851,9 +2850,20 @@ they can be worked one at a time. Tick a box here **and** in its source phase wh
 - [x] 11c. Full tier-gating of PDF branding by *plan name* instead of raw `tier`,
       plus fixing GC branding to key off owning a Site Pro jobsite (not just GC
       Portfolio tier). Done — see Phase 5e (~line 1159).
-- [ ] 11d. Store the foreman's timezone offset on a meeting log (e.g. `held_tz_offset`) so
+- [x] 11d. Store the foreman's timezone offset on a meeting log (e.g. `held_tz_offset`) so
       `held_at` formats in local time instead of UTC — fixes a late-evening West Coast talk
       printing the next calendar date on the PDF. See Phase 6b2 (~line 1409).
+      Done · status: code complete, live smoke pending (apply the `ALTER TABLE` first). New nullable
+      `meeting_logs.held_tz_offset SMALLINT` (`Date#getTimezoneOffset()` minutes; `Supabase_SQL.sql` +
+      `Supabase_Schema.md`, no backfill — NULL keeps UTC output, so existing PDFs/filenames are unchanged).
+      Client sends `heldTzOffset` with `heldAt` (hook payload → replay handler → `completeMeeting`); the route
+      validates it as an optional int ±840, and `resolveHeldTzOffset` nulls anything invalid rather than
+      rejecting (same retry-forever-outbox reasoning as `heldAt`). `formatDate(iso, tzOffset?)` prints local time
+      with a `UTC-7`/`UTC+5:30` label; `buildPdfFilename` takes `tzOffset` and files under the local date — wired
+      into the PDF header, the email `completedDate`, and every filename path (`getPdfUrl`, sub/GC defense
+      bundles, GC `getMeetingPdfUrl`, the emailed link) so they all agree. **Deliberately not in the content
+      seal**: adding a key would invalidate every already-sealed meeting, and the instant (`held_at`) is still
+      sealed. Server 1078/1078; the 3 touched client suites pass with the changed files at 100%.
 - [ ] 11e. Regeneration path for already-completed PDFs, so a header/format fix can be reapplied
       to historical logs, not just new ones. See Phase 6b2 (~line 1409).
 - [ ] 11f. Configurable meeting cadence (GC- or sub-defined, e.g. weekly instead of the

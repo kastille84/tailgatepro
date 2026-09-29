@@ -122,6 +122,11 @@ router.patch(
       .optional()
       .isISO8601()
       .withMessage("heldAt must be an ISO 8601 timestamp"),
+    body("heldTzOffset")
+      .optional()
+      .isInt({ min: -840, max: 840 })
+      .withMessage("heldTzOffset must be minutes between -840 and 840")
+      .toInt(),
   ],
   validate,
   completeMeeting,

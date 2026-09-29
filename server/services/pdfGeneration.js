@@ -117,7 +117,7 @@ const renderMeetingLogPdf = ({
     // server-receipt `completedAt`. The "Generated" footer below is server
     // time (this runs synchronously inside complete()), so an offline meeting
     // synced later shows both.
-    labelLine(doc, "Meeting held", formatDate(meetingLog.heldAt));
+    labelLine(doc, "Meeting held", formatDate(meetingLog.heldAt, meetingLog.heldTzOffset));
 
     // Talk content
     if (talk?.structured?.summary) {

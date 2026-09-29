@@ -102,6 +102,7 @@ exports.completeMeeting = async (req, res, next) => {
       id: req.params.id,
       companyId: req.user.companyId,
       heldAt: req.body?.heldAt,
+      heldTzOffset: req.body?.heldTzOffset,
       actorId: req.user.id,
     });
     return res.status(200).json({ success: true, data });

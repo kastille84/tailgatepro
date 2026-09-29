@@ -26,6 +26,7 @@ const meetingLog = {
   // Held the previous evening, synced/completed after midnight UTC — distinct
   // from completedAt so the tests below can prove which one is used.
   heldAt: "2026-09-13T22:30:00.000Z",
+  heldTzOffset: 420,
   syncedAt: null,
   createdAt: "2026-09-14T00:00:00.000Z",
 };
@@ -210,6 +211,7 @@ describe("pdfGenerationQueue: enqueue", () => {
       pdfUrl: "https://signed.example/report.pdf",
       reportUrl: expect.stringMatching(/\/gc\/meetings\/meeting-1\/report$/),
       meetingDate: meetingLog.heldAt,
+      meetingTzOffset: 420,
     });
     expect(consoleErrorSpy).not.toHaveBeenCalled();
   });

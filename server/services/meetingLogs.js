@@ -1,7 +1,7 @@
 const { supabase } = require("../utility/supabaseClient");
 const { AppError } = require("../utility/AppError");
 const { buildPdfFilename } = require("../utility/pdfFilename");
-const { resolveHeldAt } = require("../utility/heldAt");
+const { resolveHeldAt, resolveHeldTzOffset } = require("../utility/heldAt");
 const entitlementsService = require("../utility/entitlements");
 const contentSeal = require("../utility/contentSeal");
 const pdfGenerationQueue = require("./pdfGenerationQueue");
@@ -14,7 +14,7 @@ const auditLogService = require("./auditLog");
 // camelCase mapper applied to each row before it leaves the service. Services
 // never leak DB column names to the controller layer.
 const MEETING_LOG_COLUMNS =
-  "id, project_id, talk_id, foreman_id, company_id, crew_photo_url, final_pdf_url, completed_at, held_at, synced_at, created_at, content_seal, sealed_at";
+  "id, project_id, talk_id, foreman_id, company_id, crew_photo_url, final_pdf_url, completed_at, held_at, held_tz_offset, synced_at, created_at, content_seal, sealed_at";
 
 const CREW_PHOTO_BUCKET = "crew-photos";
 const CREW_PHOTO_URL_TTL_SECONDS = 300;
@@ -37,6 +37,9 @@ const toMeetingLog = (row) => ({
   finalPdfUrl: row.final_pdf_url,
   completedAt: row.completed_at,
   heldAt: row.held_at ?? row.completed_at,
+  // The foreman's `Date#getTimezoneOffset()` when held, display-only (not
+  // sealed); null for meetings completed before it was stored -> UTC display.
+  heldTzOffset: row.held_tz_offset ?? null,
   syncedAt: row.synced_at,
   createdAt: row.created_at,
   // Phase 9e tamper-evidence (docs/tamper-evidence-design.md): null until
@@ -303,13 +306,15 @@ const assertNotCompleted = async (id, companyId) => {
 // resolveHeldAt (which falls back to receipt time and never throws — see
 // utility/heldAt.js for why a bad value must not fail this call). Both use the
 // same `now` so an on-time completion has identical timestamps, and the seal
-// covers whichever `heldAt` ends up stored.
+// covers whichever `heldAt` ends up stored. `heldTzOffset` (the foreman's
+// timezone offset) is display-only and deliberately NOT sealed — adding it to
+// the payload would invalidate every already-sealed meeting.
 //
 // `actorId` is the completing user (req.user.id) — distinct from the
 // meeting's original `foremanId` when someone else finishes a draft another
 // foreman started — recorded on the `completed` audit event, not on the row
 // itself.
-const complete = async ({ id, companyId, heldAt, actorId = null }) => {
+const complete = async ({ id, companyId, heldAt, heldTzOffset, actorId = null }) => {
   const meetingInfo = await assertNotCompleted(id, companyId);
 
   const { data: signatures, error: signaturesError } = await supabase
@@ -360,6 +365,7 @@ const complete = async ({ id, companyId, heldAt, actorId = null }) => {
     .update({
       completed_at: nowIso,
       held_at: resolvedHeldAt,
+      held_tz_offset: resolveHeldTzOffset(heldTzOffset),
       content_seal: seal,
       sealed_at: nowIso,
     })
@@ -555,6 +561,7 @@ const getPdfUrl = async (id, companyId, { historyDays = null } = {}) => {
     projectName: project.name,
     meetingDate: meeting.heldAt,
     meetingLogId: meeting.id,
+    tzOffset: meeting.heldTzOffset,
   });
 
   return storageService.getSignedUrl(
@@ -591,7 +598,7 @@ const getDefenseBundleEntries = async (companyId, { companyType, tier }) => {
   const { data, error } = await supabase
     .from("meeting_logs")
     .select(
-      "id, held_at, completed_at, final_pdf_url, toolbox_talks(title), projects(name, gc_name_custom)",
+      "id, held_at, held_tz_offset, completed_at, final_pdf_url, toolbox_talks(title), projects(name, gc_name_custom)",
     )
     .eq("company_id", companyId)
     .not("completed_at", "is", null)
@@ -622,6 +629,7 @@ const getDefenseBundleEntries = async (companyId, { companyType, tier }) => {
         projectName,
         meetingDate: heldAt,
         meetingLogId: row.id,
+        tzOffset: row.held_tz_offset,
       }),
       // The CSV's "Company" column holds the project's GC/client here, not
       // the caller's own company — every row would otherwise repeat the same

@@ -247,6 +247,27 @@ describe("apiMeetingLogs", () => {
       );
     });
 
+    it("includes heldTzOffset in the JSON body when given, even when it is 0 (UTC)", async () => {
+      const fetchMock = vi.fn().mockResolvedValue({
+        ok: true,
+        status: 200,
+        json: async () => ({ success: true, data: meetingLog }),
+      });
+      vi.stubGlobal("fetch", fetchMock);
+
+      await completeMeeting("token-123", "meeting-1", "2026-09-20T22:30:00.000Z", 0);
+
+      expect(fetchMock).toHaveBeenCalledWith(
+        "/api/meetings/meeting-1/complete",
+        expect.objectContaining({
+          body: JSON.stringify({
+            heldAt: "2026-09-20T22:30:00.000Z",
+            heldTzOffset: 0,
+          }),
+        }),
+      );
+    });
+
     it("PATCHes with only the bearer token (no body) and returns the completed meeting log", async () => {
       const fetchMock = vi.fn().mockResolvedValue({
         ok: true,

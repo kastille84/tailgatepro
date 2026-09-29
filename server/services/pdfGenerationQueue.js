@@ -180,6 +180,7 @@ const enqueue = async (meetingLogId, companyId) => {
         projectName: project.name,
         meetingDate: meetingLog.heldAt,
         meetingLogId: meetingLog.id,
+        tzOffset: meetingLog.heldTzOffset,
       });
 
       const pdfUrl = await storageService.getSignedUrl(
@@ -198,6 +199,7 @@ const enqueue = async (meetingLogId, companyId) => {
         // GC Report page mints a fresh signed URL for a logged-in GC.
         reportUrl: `${envUtils.keysBasedOnEnv().clientUrl}/gc/meetings/${meetingLogId}/report`,
         meetingDate: meetingLog.heldAt,
+        meetingTzOffset: meetingLog.heldTzOffset,
       });
     }
   } catch (error) {

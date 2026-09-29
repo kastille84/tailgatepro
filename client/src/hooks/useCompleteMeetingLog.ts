@@ -27,6 +27,8 @@ export interface CompleteMeetingLogInput {
  * synced the next morning still be recorded (and filed on the PDF, its
  * filename, and the GC dashboard) under the day it actually happened. A save
  * resumed after an interruption stamps the resume time, not the first tap.
+ * `heldTzOffset` (`getTimezoneOffset()` at that same moment) lets the server
+ * print that time in the foreman's local zone instead of UTC.
  */
 export const useCompleteMeetingLog = () => {
   const { session } = useAuth();
@@ -39,7 +41,10 @@ export const useCompleteMeetingLog = () => {
           entity: "meeting_completion",
           entityId: meetingId,
           op: "complete",
-          payload: { heldAt: new Date().toISOString() },
+          payload: {
+            heldAt: new Date().toISOString(),
+            heldTzOffset: new Date().getTimezoneOffset(),
+          },
           dependsOnEntityIds: signatureIds,
         },
         session ? createReplayer(session.access_token) : undefined,

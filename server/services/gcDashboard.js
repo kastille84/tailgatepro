@@ -381,7 +381,7 @@ const getCompletedLinkedMeeting = async (id, gcCompanyId, allowedJobsiteIds) => 
   const { data, error } = await supabase
     .from("meeting_logs")
     .select(
-      "id, project_id, company_id, talk_id, foreman_id, crew_photo_url, held_at, completed_at, final_pdf_url, content_seal, sealed_at",
+      "id, project_id, company_id, talk_id, foreman_id, crew_photo_url, held_at, held_tz_offset, completed_at, final_pdf_url, content_seal, sealed_at",
     )
     .eq("id", id)
     .single();
@@ -467,6 +467,7 @@ const getMeetingPdfUrl = async (id, gcCompanyId, allowedJobsiteIds = null) => {
     projectName: project.name,
     meetingDate: row.held_at ?? row.completed_at,
     meetingLogId: row.id,
+    tzOffset: row.held_tz_offset,
   });
 
   return storageService.getSignedUrl(
@@ -563,7 +564,7 @@ const getDefenseBundleEntries = async (jobsiteId, gcCompanyId, allowedJobsiteIds
 
   const { data, error } = await supabase
     .from("meeting_logs")
-    .select("id, project_id, company_id, held_at, completed_at, final_pdf_url, toolbox_talks(title)")
+    .select("id, project_id, company_id, held_at, held_tz_offset, completed_at, final_pdf_url, toolbox_talks(title)")
     .in("project_id", projectIds)
     .not("completed_at", "is", null)
     .order("held_at", { ascending: true });
@@ -591,6 +592,7 @@ const getDefenseBundleEntries = async (jobsiteId, gcCompanyId, allowedJobsiteIds
         projectName,
         meetingDate: heldAt,
         meetingLogId: row.id,
+        tzOffset: row.held_tz_offset,
       }),
       companyName,
       projectName,

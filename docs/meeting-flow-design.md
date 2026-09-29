@@ -289,7 +289,7 @@ synchronously inside `complete()`, "Generated" is also the server-receipt time (
 offline meeting synced the next day shows both — the held time is the meeting's date, the generated
 time is the audit evidence of when the server received it. (Phase 6b2 replaced the earlier
 "Completed: `completed_at`" header line; already-generated PDFs keep the old wording, since there is no
-regeneration path.) The PDF's download filename and the GC email's date use `held_at` too. Nothing
+regeneration path.) The PDF's download filename and the GC email's date use `held_at` too. Since Phase 11d the header, filename and email render `held_at` in the foreman's local time (`meeting_logs.held_tz_offset`, e.g. "8:00 PM UTC-7"); meetings without a stored offset still print UTC. Nothing
 beyond what's already captured by the meeting wizard — no new data collection is implied by the PDF
 itself.
 

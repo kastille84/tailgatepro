@@ -87,6 +87,7 @@
 | `final_pdf_url` | Text | Nullable | Supabase Storage path for GC |
 | `completed_at` | Timestamptz| Nullable | Set once >=1 signature exists; locks the record and triggers Phase 5 PDF generation. Stamped at **server receipt** — an audit stamp, not the time the meeting happened |
 | `held_at` | Timestamptz| Nullable | Phase 6: when the meeting was actually held, as reported by the client at completion (the wizard's local time). Drives GC compliance windows and the PDF's meeting date/filename; backfilled from `completed_at` for existing rows. See `docs/gc-dashboard-design.md` |
+| `held_tz_offset` | Smallint | Nullable | Phase 11d: the foreman's `Date#getTimezoneOffset()` (minutes, UTC minus local; 420 = UTC-7) at completion, so `held_at` prints in local time on the PDF, email and filename. Display-only, not covered by `content_seal`; NULL (older meetings) = UTC |
 | `synced_at` | Timestamptz| Nullable | Used for offline-sync tracking |
 | `content_seal` | Text | Nullable | Phase 9e (`docs/tamper-evidence-design.md`): HMAC-SHA256 seal over this row's immutable-post-completion fields plus its signatures, keyed by the server-only `MEETING_LOG_SEAL_SECRET`. Set once, atomically, in the same update that stamps `completed_at`. `NULL` while in progress, and for every meeting completed before this feature shipped (not backfilled) |
 | `sealed_at` | Timestamptz | Nullable | When `content_seal` was computed — always equal to `completed_at` for a meeting sealed by this feature |
