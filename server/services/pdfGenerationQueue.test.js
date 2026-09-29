@@ -12,7 +12,7 @@ const usersService = require("./users");
 const pdfGeneration = require("./pdfGeneration");
 const emailService = require("./email");
 const auditLogService = require("./auditLog");
-const { enqueue } = require("./pdfGenerationQueue");
+const { enqueue, regenerate } = require("./pdfGenerationQueue");
 
 const meetingLog = {
   id: "meeting-1",
@@ -475,5 +475,75 @@ describe("pdfGenerationQueue: enqueue", () => {
     // Act & Assert
     await expect(enqueue("meeting-1", "company-1")).resolves.toBeUndefined();
     expect(consoleErrorSpy).toHaveBeenCalled();
+  });
+});
+
+describe("pdfGenerationQueue: regenerate", () => {
+  let consoleErrorSpy;
+
+  beforeEach(() => {
+    vi.spyOn(meetingLogsService, "getById").mockReset().mockResolvedValue(meetingLog);
+    vi.spyOn(meetingLogsService, "pdfPath")
+      .mockReset()
+      .mockReturnValue("meeting-1/report.pdf");
+    vi.spyOn(meetingLogsService, "setFinalPdfUrl").mockReset().mockResolvedValue(undefined);
+    vi.spyOn(projectsService, "getById").mockReset().mockResolvedValue(project);
+    vi.spyOn(talksService, "getById").mockReset().mockResolvedValue(talk);
+    vi.spyOn(signaturesService, "listForMeeting").mockReset().mockResolvedValue(signatures);
+    vi.spyOn(companiesService, "getById").mockReset().mockResolvedValue(company);
+    vi.spyOn(usersService, "getAdminEmail").mockReset().mockResolvedValue(null);
+    vi.spyOn(storageService, "downloadBlob").mockReset().mockImplementation(downloadBlobImpl);
+    vi.spyOn(storageService, "uploadBlob").mockReset().mockResolvedValue(undefined);
+    vi.spyOn(storageService, "getSignedUrl")
+      .mockReset()
+      .mockResolvedValue("https://signed.example/report.pdf");
+    vi.spyOn(pdfGeneration, "renderMeetingLogPdf").mockReset().mockResolvedValue(pdfBuffer);
+    vi.spyOn(emailService, "sendMeetingLogEmail").mockReset().mockResolvedValue(undefined);
+    vi.spyOn(auditLogService, "record").mockReset().mockResolvedValue(undefined);
+
+    consoleErrorSpy = vi.spyOn(console, "error").mockImplementation(() => {});
+  });
+
+  afterEach(() => {
+    consoleErrorSpy.mockRestore();
+  });
+
+  it("should re-render, overwrite the PDF, and audit it as regenerated without emailing", async () => {
+    // Arrange — a project that enqueue() would email
+    projectsService.getById.mockResolvedValue({ ...project, gcContactEmail: "gc@example.com" });
+
+    // Act
+    const path = await regenerate("meeting-1", "company-1");
+
+    // Assert
+    expect(path).toBe("meeting-1/report.pdf");
+    expect(pdfGeneration.renderMeetingLogPdf).toHaveBeenCalled();
+    expect(storageService.uploadBlob).toHaveBeenCalledWith(
+      "meeting-pdfs",
+      "meeting-1/report.pdf",
+      pdfBuffer,
+      "application/pdf",
+    );
+    expect(meetingLogsService.setFinalPdfUrl).toHaveBeenCalledWith(
+      "meeting-1",
+      "company-1",
+      "meeting-1/report.pdf",
+    );
+    expect(auditLogService.record).toHaveBeenCalledWith({
+      meetingLogId: "meeting-1",
+      eventType: "pdf_generated",
+      metadata: { path: "meeting-1/report.pdf", regenerated: true },
+    });
+    expect(storageService.getSignedUrl).not.toHaveBeenCalled();
+    expect(emailService.sendMeetingLogEmail).not.toHaveBeenCalled();
+  });
+
+  it("should rethrow when rendering fails so the caller can report it", async () => {
+    // Arrange
+    pdfGeneration.renderMeetingLogPdf.mockRejectedValue(new Error("boom"));
+
+    // Act & Assert
+    await expect(regenerate("meeting-1", "company-1")).rejects.toThrow("boom");
+    expect(auditLogService.record).not.toHaveBeenCalled();
   });
 });

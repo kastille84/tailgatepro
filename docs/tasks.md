@@ -1441,8 +1441,8 @@ completion row is enqueued), so `MeetingWizard.tsx` and its tests are unchanged.
       `meeting_logs.held_at` is set; the PDF header reads `Meeting held: …` and its footer `Generated …`; the
       downloaded filename and the email carry the held date. Then `curl` `PATCH …/complete` with no body →
       `held_at` = `completed_at`; and with a `heldAt` ~10 days old → still completes, `held_at` = server time
-- [ ] Known limitations, tracked not dropped: (1) already-generated PDFs keep the old "Completed" header — no
-      regeneration path exists; (2) ~~`formatDate` printed UTC, so a late-evening West Coast talk could show
+- [ ] Known limitations, tracked not dropped: (1) already-generated PDFs keep the old "Completed" header until
+      re-rendered with `scripts/regenerate-pdfs.js` (Phase 11e); (2) ~~`formatDate` printed UTC, so a late-evening West Coast talk could show
       the next calendar date on the PDF~~ — fixed in Phase 11d (`held_tz_offset`); (3) a client-supplied time can be backdated (bounded to 7
       days, and `completed_at` is kept as server-side evidence), so 6e/6f show both `heldAt` and `completedAt`
       on the GC detail view; (4) `heldAt` is stamped when the completion row is enqueued, so a save resumed after
@@ -2864,8 +2864,21 @@ they can be worked one at a time. Tick a box here **and** in its source phase wh
       bundles, GC `getMeetingPdfUrl`, the emailed link) so they all agree. **Deliberately not in the content
       seal**: adding a key would invalidate every already-sealed meeting, and the instant (`held_at`) is still
       sealed. Server 1078/1078; the 3 touched client suites pass with the changed files at 100%.
-- [ ] 11e. Regeneration path for already-completed PDFs, so a header/format fix can be reapplied
+- [x] 11e. Regeneration path for already-completed PDFs, so a header/format fix can be reapplied
       to historical logs, not just new ones. See Phase 6b2 (~line 1409).
+  - `pdfGenerationQueue.js`: fetch → render → upload → `setFinalPdfUrl` extracted into `renderAndStore`;
+    `enqueue()` unchanged in behavior (soft-fail, audit, GC email); new exported `regenerate(id, companyId)`
+    reuses it, audits `pdf_generated` with `metadata.regenerated: true` (no CHECK-constraint migration), never
+    emails, and throws so callers can report per row. Overwrites the same `<id>/report.pdf`, so old emailed
+    signed links keep working. The seal is unaffected (covers ids/timestamps/signature fields, not PDF bytes).
+  - Operator script `scripts/regenerate-pdfs.js` (dry-run default, `--apply`, `--id`, `--company`, `--since`,
+    `--limit`; continues past per-meeting failures, exit 1 if any failed) + pure `scripts/lib/regeneratePlan.js`.
+    Deliberately no HTTP endpoint (no platform-admin role). Only completed meetings that already have a PDF.
+  - Tests: `regeneratePlan.test.js` (11) + 2 `regenerate` cases in `pdfGenerationQueue.test.js`; server suite
+    1091 passed / 3 skipped.
+  - Verify (user, needs live Supabase): `node scripts/regenerate-pdfs.js --id <id>` dry run lists it; with
+    `--apply` the downloaded PDF shows the current header/local-time format and the same seal fragment, Verify
+    still says "Verified", an audit row has `regenerated: true`, and the GC gets no email.
 - [ ] 11f. Configurable meeting cadence (GC- or sub-defined, e.g. weekly instead of the
       hardcoded daily rule) — `compliance.js`/`dayWindow.js` are already window-parameterized in
       prep for this. See Phase 6 (~line 1657).
