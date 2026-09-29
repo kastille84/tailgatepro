@@ -218,7 +218,8 @@ Daily stays the default; a jobsite can be set to **weekly** (Monday–Sunday in 
 - **Computation:** `getOverview` derives each sub's effective cadence and scores it against its own window
   (`dayWindow` or `weekWindow`) via the same `compliance.js`; logs are fetched once over the widest window.
   Scorecards count *periods* (days or weeks) — see `docs/sub-scorecard-design.md`.
-- **Not built:** every-N-days, a configurable week start, and DST-day handling (11h).
+- **Not built:** every-N-days and a configurable week start. DST days are exact when the client sends an IANA
+  `timeZone` alongside `date`/`tzOffset` (11h); without it the server falls back to the flat `tzOffset`.
 
 ## RLS finding: code and docs disagreed — resolved in 6b
 

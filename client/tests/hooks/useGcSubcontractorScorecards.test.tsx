@@ -36,7 +36,7 @@ describe("useGcSubcontractorScorecards", () => {
   it("fetches the scorecards for the given date and tzOffset", async () => {
     vi.mocked(apiGc.getGcSubcontractorScorecards).mockResolvedValue(scorecards);
 
-    const { result } = renderHook(() => useGcSubcontractorScorecards("2026-09-21", 300), {
+    const { result } = renderHook(() => useGcSubcontractorScorecards("2026-09-21", 300, "America/New_York"), {
       wrapper,
     });
 
@@ -45,6 +45,7 @@ describe("useGcSubcontractorScorecards", () => {
       "token-123",
       "2026-09-21",
       300,
+      "America/New_York",
     );
     expect(result.current.scorecards).toEqual(scorecards);
     expect(result.current.isError).toBe(false);

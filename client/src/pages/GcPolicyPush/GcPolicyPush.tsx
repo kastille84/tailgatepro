@@ -39,7 +39,11 @@ const getLocalDateAndTzOffset = () => {
   const year = now.getFullYear();
   const month = String(now.getMonth() + 1).padStart(2, "0");
   const day = String(now.getDate()).padStart(2, "0");
-  return { date: `${year}-${month}-${day}`, tzOffset: now.getTimezoneOffset() };
+  return {
+    date: `${year}-${month}-${day}`,
+    tzOffset: now.getTimezoneOffset(),
+    timeZone: Intl.DateTimeFormat().resolvedOptions().timeZone,
+  };
 };
 
 /** Top-down corporate policy push (Phase 9e, docs/policy-push-design.md),
@@ -56,8 +60,8 @@ export const GcPolicyPush = () => {
   const isPortfolio = plan === "gc-portfolio";
   const canManage = role !== null && MANAGER_ROLES.includes(role);
 
-  const { date, tzOffset } = getLocalDateAndTzOffset();
-  const { policyPush, isLoading, isError } = useGcPolicyPush(date, tzOffset);
+  const { date, tzOffset, timeZone } = getLocalDateAndTzOffset();
+  const { policyPush, isLoading, isError } = useGcPolicyPush(date, tzOffset, timeZone);
 
   if (loading) {
     return (

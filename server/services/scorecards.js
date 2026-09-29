@@ -62,12 +62,12 @@ const listPortfolioRoster = async (gcCompanyId, allowedJobsiteIds = null) => {
 // computeRollingCompliance narrows it to each period (a day or a Mon-Sun week,
 // per the sub's effective cadence on that jobsite) itself, the same way
 // computeCompliance narrows any window.
-const buildAllScorecards = async (gcCompanyId, { date, tzOffset, allowedJobsiteIds = null }) => {
+const buildAllScorecards = async (gcCompanyId, { date, tzOffset, timeZone, allowedJobsiteIds = null }) => {
   await siteScopeService.assertScorecardsAvailable(gcCompanyId);
 
   const windowsByCadence = {
-    daily: rollingPeriodWindows({ date, tzOffset, days: ROLLING_WINDOW_DAYS, cadence: "daily" }),
-    weekly: rollingPeriodWindows({ date, tzOffset, days: ROLLING_WINDOW_DAYS, cadence: "weekly" }),
+    daily: rollingPeriodWindows({ date, tzOffset, timeZone, days: ROLLING_WINDOW_DAYS, cadence: "daily" }),
+    weekly: rollingPeriodWindows({ date, tzOffset, timeZone, days: ROLLING_WINDOW_DAYS, cadence: "weekly" }),
   };
   const { daily, weekly } = windowsByCadence;
   // One query over the widest range: the oldest week can start before the

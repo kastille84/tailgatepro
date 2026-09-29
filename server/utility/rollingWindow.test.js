@@ -101,3 +101,21 @@ describe("rollingPeriodWindows", () => {
     ]);
   });
 });
+
+describe("rolling windows across a DST transition", () => {
+  const { rollingDayWindows: rdw, rollingPeriodWindows: rpw } = require("./rollingWindow");
+  const args = { date: "2026-03-10", tzOffset: 240, timeZone: "America/New_York", days: 5 };
+
+  it("keeps contiguous windows with a 23h day", () => {
+    const windows = rdw(args);
+    expect(windows).toHaveLength(5);
+    windows.slice(1).forEach((w, i) => expect(w.start).toBe(windows[i].end));
+    expect(windows.map((w) => (new Date(w.end) - new Date(w.start)) / 3600000)).toEqual([24, 24, 23, 24, 24]);
+  });
+
+  it("keeps contiguous weekly windows", () => {
+    const windows = rpw({ ...args, days: 30, cadence: "weekly" });
+    windows.slice(1).forEach((w, i) => expect(w.start).toBe(windows[i].end));
+    expect(windows.some((w) => new Date(w.end) - new Date(w.start) === 167 * 3600000)).toBe(true);
+  });
+});

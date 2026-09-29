@@ -197,10 +197,10 @@ const listActiveJobsites = async (gcCompanyId, allowedJobsiteIds = null) => {
 // compliance status for the sub's current period: today for a daily cadence,
 // this Mon-Sun week for a weekly one. The roster is the accepted members, so
 // an accepted sub that never logged shows `missing`.
-const getOverview = async (gcCompanyId, { date, tzOffset, allowedJobsiteIds = null }) => {
+const getOverview = async (gcCompanyId, { date, tzOffset, timeZone, allowedJobsiteIds = null }) => {
   const windows = {
-    daily: windowFor("daily", { date, tzOffset }),
-    weekly: windowFor("weekly", { date, tzOffset }),
+    daily: windowFor("daily", { date, tzOffset, timeZone }),
+    weekly: windowFor("weekly", { date, tzOffset, timeZone }),
   };
 
   const [jobsiteRows, allProjects, unlocked] = await Promise.all([

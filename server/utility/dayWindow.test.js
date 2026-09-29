@@ -134,3 +134,45 @@ describe("weekWindow", () => {
     );
   });
 });
+
+describe("DST-exact windows with timeZone", () => {
+  const { dayWindow: dw, weekWindow: ww } = require("./dayWindow");
+  const NY = "America/New_York";
+  const hours = ({ start, end }) => (new Date(end) - new Date(start)) / 3600000;
+
+  it("makes the spring-forward day 23h and the fall-back day 25h", () => {
+    expect(hours(dw({ date: "2026-03-08", tzOffset: 300, timeZone: NY }))).toBe(23);
+    expect(hours(dw({ date: "2026-11-01", tzOffset: 240, timeZone: NY }))).toBe(25);
+    expect(dw({ date: "2026-03-08", tzOffset: 300, timeZone: NY }).start).toBe("2026-03-08T05:00:00.000Z");
+    expect(dw({ date: "2026-03-08", tzOffset: 300, timeZone: NY }).end).toBe("2026-03-09T04:00:00.000Z");
+  });
+
+  it("keeps an ordinary day at 24h", () => {
+    expect(hours(dw({ date: "2026-06-10", tzOffset: 240, timeZone: NY }))).toBe(24);
+  });
+
+  it("makes DST-spanning weeks 167h and 169h", () => {
+    expect(hours(ww({ date: "2026-03-08", tzOffset: 300, timeZone: NY }))).toBe(167);
+    expect(hours(ww({ date: "2026-11-01", tzOffset: 240, timeZone: NY }))).toBe(169);
+  });
+
+  it("supports other zones", () => {
+    expect(dw({ date: "2026-06-10", tzOffset: -330, timeZone: "Asia/Kolkata" }).start).toBe("2026-06-09T18:30:00.000Z");
+    expect(hours(dw({ date: "2026-03-29", tzOffset: -60, timeZone: "Europe/Berlin" }))).toBe(23);
+  });
+
+  it("handles a zone whose DST jump skips midnight", () => {
+    // Asia/Beirut springs forward at 00:00 on the last Sunday of March.
+    expect(hours(dw({ date: "2026-03-29", tzOffset: -120, timeZone: "Asia/Beirut" }))).toBe(23);
+  });
+
+  it("rejects an invalid timeZone with 400", () => {
+    expect(() => dw({ date: "2026-06-10", tzOffset: 0, timeZone: "Not/AZone" })).toThrow(
+      expect.objectContaining({ statusCode: 400 }),
+    );
+  });
+
+  it("falls back to flat tzOffset when timeZone is absent", () => {
+    expect(hours(dw({ date: "2026-03-08", tzOffset: 300 }))).toBe(24);
+  });
+});

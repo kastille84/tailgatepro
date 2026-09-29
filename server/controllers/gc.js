@@ -13,11 +13,12 @@ const { slugify } = require("../utility/pdfFilename");
 
 exports.getOverview = async (req, res, next) => {
   try {
-    const { date, tzOffset } = req.query;
+    const { date, tzOffset, timeZone } = req.query;
     const allowedJobsiteIds = await siteScopeService.getAllowedJobsiteIds(req.user);
     const data = await gcDashboardService.getOverview(req.user.companyId, {
       date,
       tzOffset: Number(tzOffset),
+      timeZone,
       allowedJobsiteIds,
     });
     return res.status(200).json({ success: true, data });
@@ -96,11 +97,12 @@ exports.verifyMeetingSeal = async (req, res, next) => {
 // throws a 403 PLAN_LIMIT otherwise.
 exports.listSubcontractorScorecards = async (req, res, next) => {
   try {
-    const { date, tzOffset } = req.query;
+    const { date, tzOffset, timeZone } = req.query;
     const allowedJobsiteIds = await siteScopeService.getAllowedJobsiteIds(req.user);
     const data = await scorecardsService.listSubcontractorScorecards(req.user.companyId, {
       date,
       tzOffset: Number(tzOffset),
+      timeZone,
       allowedJobsiteIds,
     });
     return res.status(200).json({ success: true, data });
@@ -113,12 +115,12 @@ exports.listSubcontractorScorecards = async (req, res, next) => {
 // score plus its per-jobsite breakdown.
 exports.getSubcontractorScorecard = async (req, res, next) => {
   try {
-    const { date, tzOffset } = req.query;
+    const { date, tzOffset, timeZone } = req.query;
     const allowedJobsiteIds = await siteScopeService.getAllowedJobsiteIds(req.user);
     const data = await scorecardsService.getSubcontractorScorecard(
       req.params.companyId,
       req.user.companyId,
-      { date, tzOffset: Number(tzOffset), allowedJobsiteIds },
+      { date, tzOffset: Number(tzOffset), timeZone, allowedJobsiteIds },
     );
     return res.status(200).json({ success: true, data });
   } catch (error) {
@@ -134,11 +136,12 @@ exports.getSubcontractorScorecard = async (req, res, next) => {
 // allowedJobsiteIds) may read this.
 exports.getPolicyPush = async (req, res, next) => {
   try {
-    const { date, tzOffset } = req.query;
+    const { date, tzOffset, timeZone } = req.query;
     const allowedJobsiteIds = await siteScopeService.getAllowedJobsiteIds(req.user);
     const data = await policyPushService.getComplianceRollup(req.user.companyId, {
       date,
       tzOffset: Number(tzOffset),
+      timeZone,
       allowedJobsiteIds,
     });
     return res.status(200).json({ success: true, data });

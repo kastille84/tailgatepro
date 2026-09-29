@@ -45,6 +45,11 @@ export interface GcMeetingsPage {
   hasMore: boolean;
 }
 
+/** Optional IANA zone (`America/New_York`) so the server can compute DST-exact
+ *  day/week boundaries; without it the server falls back to the flat `tzOffset`. */
+const timeZoneParam = (timeZone?: string) =>
+  timeZone ? `&timeZone=${encodeURIComponent(timeZone)}` : "";
+
 /** GET /api/gc/overview — per-sub compliance for the caller's linked jobsites
  *  on the given day. Both `date` (`YYYY-MM-DD`) and `tzOffset` (minutes, same
  *  sign as `Date#getTimezoneOffset()`) are required — the server never
@@ -53,9 +58,10 @@ export const getGcOverview = async (
   accessToken: string,
   date: string,
   tzOffset: number,
+  timeZone?: string,
 ): Promise<GcOverview> => {
   const res = await fetchWithTimeout(
-    `/api/gc/overview?date=${date}&tzOffset=${tzOffset}`,
+    `/api/gc/overview?date=${date}&tzOffset=${tzOffset}${timeZoneParam(timeZone)}`,
     {
       method: "GET",
       headers: authHeaders(accessToken),
@@ -178,9 +184,10 @@ export const getGcSubcontractorScorecards = async (
   accessToken: string,
   date: string,
   tzOffset: number,
+  timeZone?: string,
 ): Promise<GcSubScorecardSummary[]> => {
   const res = await fetchWithTimeout(
-    `/api/gc/subcontractors?date=${date}&tzOffset=${tzOffset}`,
+    `/api/gc/subcontractors?date=${date}&tzOffset=${tzOffset}${timeZoneParam(timeZone)}`,
     { method: "GET", headers: authHeaders(accessToken) },
   );
 
@@ -204,9 +211,10 @@ export const getGcSubcontractorScorecard = async (
   companyId: string,
   date: string,
   tzOffset: number,
+  timeZone?: string,
 ): Promise<GcSubScorecardDetail> => {
   const res = await fetchWithTimeout(
-    `/api/gc/subcontractors/${companyId}/scorecard?date=${date}&tzOffset=${tzOffset}`,
+    `/api/gc/subcontractors/${companyId}/scorecard?date=${date}&tzOffset=${tzOffset}${timeZoneParam(timeZone)}`,
     { method: "GET", headers: authHeaders(accessToken) },
   );
 
@@ -231,9 +239,10 @@ export const getGcPolicyPush = async (
   accessToken: string,
   date: string,
   tzOffset: number,
+  timeZone?: string,
 ): Promise<PolicyPushCompliance> => {
   const res = await fetchWithTimeout(
-    `/api/gc/policy-push?date=${date}&tzOffset=${tzOffset}`,
+    `/api/gc/policy-push?date=${date}&tzOffset=${tzOffset}${timeZoneParam(timeZone)}`,
     { method: "GET", headers: authHeaders(accessToken) },
   );
 

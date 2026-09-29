@@ -27,7 +27,11 @@ const getLocalDateAndTzOffset = () => {
   const year = now.getFullYear();
   const month = String(now.getMonth() + 1).padStart(2, "0");
   const day = String(now.getDate()).padStart(2, "0");
-  return { date: `${year}-${month}-${day}`, tzOffset: now.getTimezoneOffset() };
+  return {
+    date: `${year}-${month}-${day}`,
+    tzOffset: now.getTimezoneOffset(),
+    timeZone: Intl.DateTimeFormat().resolvedOptions().timeZone,
+  };
 };
 
 /** One subcontractor's rolling 30-day score plus its per-jobsite breakdown
@@ -40,11 +44,12 @@ export const GcSubcontractorDetail = () => {
   const { plan } = useCurrentUser();
   const isPortfolio = plan === "gc-portfolio";
 
-  const { date, tzOffset } = getLocalDateAndTzOffset();
+  const { date, tzOffset, timeZone } = getLocalDateAndTzOffset();
   const { scorecard, isLoading, isError, error } = useGcSubcontractorScorecard(
     isPortfolio ? (companyId ?? "") : "",
     date,
     tzOffset,
+    timeZone,
   );
   const notFound = error instanceof Error && error.message === "Subcontractor not found";
 

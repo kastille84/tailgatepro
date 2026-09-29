@@ -49,7 +49,7 @@ describe("useGcSubcontractorScorecard", () => {
     vi.mocked(apiGc.getGcSubcontractorScorecard).mockResolvedValue(detail);
 
     const { result } = renderHook(
-      () => useGcSubcontractorScorecard("sub-1", "2026-09-21", 300),
+      () => useGcSubcontractorScorecard("sub-1", "2026-09-21", 300, "America/New_York"),
       { wrapper },
     );
 
@@ -59,6 +59,7 @@ describe("useGcSubcontractorScorecard", () => {
       "sub-1",
       "2026-09-21",
       300,
+      "America/New_York",
     );
     expect(result.current.scorecard).toEqual(detail);
     expect(result.current.isError).toBe(false);

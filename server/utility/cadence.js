@@ -20,9 +20,9 @@ const effectiveCadence = (jobsiteCadence, subCadence) =>
     ? subCadence
     : jobsiteCadence;
 
-const windowFor = (cadence, { date, tzOffset }) =>
+const windowFor = (cadence, { date, tzOffset, timeZone }) =>
   cadence === "weekly"
-    ? weekWindow({ date, tzOffset })
-    : dayWindow({ date, tzOffset });
+    ? weekWindow({ date, tzOffset, timeZone })
+    : dayWindow({ date, tzOffset, timeZone });
 
 module.exports = { CADENCES, isStricterOrEqual, effectiveCadence, windowFor };

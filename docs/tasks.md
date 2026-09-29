@@ -1614,7 +1614,7 @@ Plan: `~/.claude/plans/let-s-wok-on-6e-jolly-goblet.md`.
   - A merged same-name/same-sub jobsite entry reports only the sub's **earliest** project id as `projectId`
     (what a drill-in would open) — one more concrete argument for the GC-owned canonical jobsite model later
 - [ ] Not in this pass, tracked not dropped: pagination for `GET /meetings` past 200 rows; a DST-transition day
-      is treated as a flat 24h window by `dayWindow.js` (same simplification `held_at`'s formatting already has
+      is treated as a flat 24h window by `dayWindow.js` (fixed in 11h) (same simplification `held_at`'s formatting already has
       per 6b2's known limitations)
 - [ ] Verify (user, needs live Supabase with the 6b/6b2/6c SQL and data applied, one `gc` account linked to at
       least two subcontractor projects — one with a completed talk today, one without):
@@ -2905,8 +2905,18 @@ they can be worked one at a time. Tick a box here **and** in its source phase wh
       See Phase 6e (~line 1573). Shipped: `limit`/`offset` (default 20, max 100) with a `hasMore` peek row and a
       stable `held_at, id` sort; client `useGcMeetings` is a `useInfiniteQuery` with "load more" in
       `SubMeetingsModal`. Server (gcDashboard, gc controller) and client (modal, hook, services) suites pass.
-- [ ] 11h. DST-transition day fix in `server/utility/dayWindow.js` (currently treats every day
-      as a flat 24h window). See Phase 6e (~line 1573).
+- [x] 11h. DST-transition day fix in `server/utility/dayWindow.js` (was a flat 24h window). See Phase 6e (~line 1573).
+  - The client now also sends its IANA `timeZone` (`Intl.DateTimeFormat().resolvedOptions().timeZone`) on the four
+    windowed GC endpoints (overview, subcontractors, scorecard, policy-push). `dayWindow`/`weekWindow` compute each
+    edge as a real local midnight via Intl, so a DST day is 23h/25h and a DST-spanning week 167h/169h. Zones whose
+    jump skips midnight (e.g. Asia/Beirut) resolve to the first valid instant of the day.
+  - `rollingWindow.js` now walks back by calendar days/weeks (`dayWindow(args, -i)`, `weekWindow(args, -k)`), not
+    flat 24h steps, so rolling ranges across a transition stay contiguous.
+  - `timeZone` is optional; without it (old clients) behavior is the flat `tzOffset` fallback. An invalid zone 400s.
+    Out of scope: `formatDate`/`heldAt`/`pdfFilename` (they use the offset stored per meeting).
+  - Tests: server 1135 passed (needs dummy Supabase env vars locally); touched client suites pass at 100%.
+  - Verify (user, needs live Supabase): in a US Eastern machine timezone, log a meeting at 11:30pm on a DST day
+    and confirm it counts for that day on the dashboard and scorecard (next transition: 2026-11-01).
 - [ ] 11i. Disable the "Link to GC" UI while a project's create is still queued in the offline
       outbox (currently 404s "Project not found" until it syncs). See Phase 6d (~line 1522).
 - [ ] 11j. GC-side duplicate-jobsite merge tool (e.g. "Project A" vs "Project_A" created via a

@@ -42,6 +42,31 @@ describe("apiGc", () => {
     vi.unstubAllGlobals();
   });
 
+  describe("timeZone query param", () => {
+    it("appends an encoded timeZone to every windowed GC endpoint when given", async () => {
+      const fetchMock = vi.fn().mockResolvedValue({
+        ok: true,
+        status: 200,
+        json: async () => ({ success: true, data: [] }),
+      });
+      vi.stubGlobal("fetch", fetchMock);
+      const tz = "America/New_York";
+
+      await getGcOverview("t", "2026-09-21", 300, tz);
+      await getGcSubcontractorScorecards("t", "2026-09-21", 300, tz);
+      await getGcSubcontractorScorecard("t", "sub-1", "2026-09-21", 300, tz);
+      await getGcPolicyPush("t", "2026-09-21", 300, tz);
+
+      const urls = fetchMock.mock.calls.map(([url]) => url);
+      expect(urls).toEqual([
+        "/api/gc/overview?date=2026-09-21&tzOffset=300&timeZone=America%2FNew_York",
+        "/api/gc/subcontractors?date=2026-09-21&tzOffset=300&timeZone=America%2FNew_York",
+        "/api/gc/subcontractors/sub-1/scorecard?date=2026-09-21&tzOffset=300&timeZone=America%2FNew_York",
+        "/api/gc/policy-push?date=2026-09-21&tzOffset=300&timeZone=America%2FNew_York",
+      ]);
+    });
+  });
+
   describe("getGcOverview", () => {
     it("GETs /api/gc/overview with the date and tzOffset query params", async () => {
       const fetchMock = vi.fn().mockResolvedValue({
