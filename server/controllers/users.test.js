@@ -1,8 +1,10 @@
 // Plain CommonJS — see requireAuth.test.js for why (nested require() sharing).
 const usersService = require("../services/users");
+const brandingService = require("../services/branding");
 const { createProfile, getCurrentUser } = require("./users");
 
 const createProfileSpy = vi.spyOn(usersService, "createProfile");
+const resolveBrandingAccessSpy = vi.spyOn(brandingService, "resolveBrandingAccess");
 
 describe("users controller: createProfile", () => {
   let req;
@@ -204,8 +206,13 @@ describe("users controller: createProfile (jobsite QR/join-link, Phase 9e)", () 
 });
 
 describe("users controller: getCurrentUser", () => {
-  it("should respond 200 with req.user plus the resolved plan and limits", () => {
-    const req = {
+  let req;
+  let res;
+  let next;
+
+  beforeEach(() => {
+    resolveBrandingAccessSpy.mockReset().mockResolvedValue(true);
+    req = {
       user: {
         id: "u1",
         companyId: "c1",
@@ -214,14 +221,42 @@ describe("users controller: getCurrentUser", () => {
         companyType: "subcontractor",
       },
     };
-    const res = { status: vi.fn().mockReturnThis(), json: vi.fn().mockReturnThis() };
+    res = { status: vi.fn().mockReturnThis(), json: vi.fn().mockReturnThis() };
+    next = vi.fn();
+  });
 
-    getCurrentUser(req, res);
+  it("should respond 200 with req.user plus the resolved plan, limits and hasBrandingAccess", async () => {
+    await getCurrentUser(req, res, next);
 
+    expect(resolveBrandingAccessSpy).toHaveBeenCalledWith({
+      companyId: "c1",
+      companyType: "subcontractor",
+      tier: "premium",
+    });
     expect(res.status).toHaveBeenCalledWith(200);
     const { success, data } = res.json.mock.calls[0][0];
     expect(success).toBe(true);
-    expect(data).toMatchObject({ ...req.user, plan: "trade-pro" });
+    expect(data).toMatchObject({ ...req.user, plan: "trade-pro", hasBrandingAccess: true });
     expect(data.limits.foremanSeats).toBe(8);
+    expect(next).not.toHaveBeenCalled();
+  });
+
+  it("should reflect a false hasBrandingAccess", async () => {
+    resolveBrandingAccessSpy.mockResolvedValue(false);
+
+    await getCurrentUser(req, res, next);
+
+    const { data } = res.json.mock.calls[0][0];
+    expect(data.hasBrandingAccess).toBe(false);
+  });
+
+  it("should forward a resolveBrandingAccess failure to next instead of responding", async () => {
+    const error = new Error("boom");
+    resolveBrandingAccessSpy.mockRejectedValue(error);
+
+    await getCurrentUser(req, res, next);
+
+    expect(next).toHaveBeenCalledWith(error);
+    expect(res.status).not.toHaveBeenCalled();
   });
 });

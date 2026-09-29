@@ -11,12 +11,14 @@ const TRANSLATION_TIERS = ["premium", "enterprise"];
 
 const hasTranslationAccess = (tier) => TRANSLATION_TIERS.includes(tier);
 
-// Custom PDF branding (upload logo, remove the free-tier watermark) is the
-// same Trade Pro/Enterprise paywall (client/src/data/plans.ts,
-// docs/pricing-and-positioning-strategy_V2.md) — reuses the identical tier
-// list rather than a separate constant, since both gates draw the exact same
-// line today.
-const hasBrandingAccess = (tier) => TRANSLATION_TIERS.includes(tier);
+// Custom PDF branding (upload logo, remove the free-tier watermark) is gated
+// per-plan via PLAN_LIMITS.brandingAccess below (Phase 11c), not a literal
+// alias of hasTranslationAccess's tier list anymore -- Trade Pro/Enterprise
+// and GC Portfolio get it from their company tier; GC Site Pro grants it too,
+// but that's a per-jobsite purchase (jobsites.plan), which this pure helper
+// can't see -- server/services/branding.js's resolveBrandingAccess is the
+// real entry point for a GC caller and folds that case in.
+const hasBrandingAccess = (companyType, tier) => getLimits(companyType, tier).brandingAccess;
 
 // --- Plan model (Phase 9b) -------------------------------------------------
 // The DB enum has three values, the pricing page six plans. The plan is
@@ -35,6 +37,7 @@ const PLAN_LIMITS = {
     historyDays: 30,
     archiveYears: 0,
     libraryAccess: "core",
+    brandingAccess: false,
   },
   "subcontractor:premium": {
     planId: "trade-pro",
@@ -44,6 +47,7 @@ const PLAN_LIMITS = {
     historyDays: null,
     archiveYears: 5,
     libraryAccess: "full",
+    brandingAccess: true,
   },
   "subcontractor:enterprise": {
     planId: "trade-enterprise",
@@ -53,6 +57,7 @@ const PLAN_LIMITS = {
     historyDays: null,
     archiveYears: 5,
     libraryAccess: "full",
+    brandingAccess: true,
   },
   "gc:basic": {
     planId: "gc-free",
@@ -62,6 +67,11 @@ const PLAN_LIMITS = {
     historyDays: null,
     archiveYears: 0,
     libraryAccess: "full",
+    // Company-tier branding is false here, but a GC Free company can still
+    // earn it by owning an active Site Pro jobsite -- see
+    // server/services/branding.js's resolveBrandingAccess, the real gate any
+    // GC caller goes through.
+    brandingAccess: false,
   },
   // premium = Portfolio up to 10 sites, enterprise = Portfolio unlimited.
   "gc:premium": {
@@ -72,6 +82,7 @@ const PLAN_LIMITS = {
     historyDays: null,
     archiveYears: null,
     libraryAccess: "full",
+    brandingAccess: true,
   },
   "gc:enterprise": {
     planId: "gc-portfolio",
@@ -81,6 +92,7 @@ const PLAN_LIMITS = {
     historyDays: null,
     archiveYears: null,
     libraryAccess: "full",
+    brandingAccess: true,
   },
 };
 

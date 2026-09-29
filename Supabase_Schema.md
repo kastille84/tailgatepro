@@ -39,7 +39,7 @@
 | `status` | Enum | Default `active` | `active`, `completed` |
 | `archived_at` | Timestamptz | Nullable | `NULL` = live; a timestamp = archived (hidden from the default list, still restorable). Orthogonal to `status`. |
 | `created_at` | Timestamptz | Default `now()` | |
-| **CHECK** `check_gc_info` | | `gc_company_id IS NOT NULL OR gc_name_custom IS NOT NULL` | At least one GC identifier must be present |
+| **CHECK** `check_gc_info` | | `gc_company_id IS NOT NULL OR NULLIF(TRIM(gc_name_custom), '') IS NOT NULL` | At least one GC identifier must be present; a blank/whitespace-only `gc_name_custom` does not count (Phase 11b) |
 
 > The Phase 6 `project_subcontractors` junction table was dropped in Phase 8d-h; its role is played by `jobsite_subcontractors` (below).
 

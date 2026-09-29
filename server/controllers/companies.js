@@ -1,11 +1,17 @@
 const companiesService = require("../services/companies");
 const storageService = require("../services/storage");
+const brandingService = require("../services/branding");
 const { AppError } = require("../utility/AppError");
-const { hasBrandingAccess } = require("../utility/entitlements");
 
 const LOGO_BUCKET = "company-logos";
 const LOGO_URL_TTL_SECONDS = 300;
-const UPGRADE_MESSAGE = "Upgrade to Trade Pro to upload a company logo";
+
+// GC Site Pro is the GC-side equivalent upgrade -- Trade Pro doesn't apply to
+// a GC account, so the upsell message has to match which company type asked.
+const upgradeMessage = (companyType) =>
+  companyType === "gc"
+    ? "Upgrade to GC Site Pro to upload a company logo"
+    : "Upgrade to Trade Pro to upload a company logo";
 
 // Deterministic, extension-free path so a re-upload always upserts the same
 // object (mirrors crewPhotoPath/signaturePath's fixed-name convention) —
@@ -20,8 +26,13 @@ const logoPath = (companyId) => `${companyId}/logo`;
 // not the parsed JSON object every other controller in this file's siblings see.
 exports.uploadLogo = async (req, res, next) => {
   try {
-    if (!hasBrandingAccess(req.user.tier)) {
-      throw new AppError(UPGRADE_MESSAGE, 403);
+    const entitled = await brandingService.resolveBrandingAccess({
+      companyId: req.user.companyId,
+      companyType: req.user.companyType,
+      tier: req.user.tier,
+    });
+    if (!entitled) {
+      throw new AppError(upgradeMessage(req.user.companyType), 403);
     }
     const path = logoPath(req.user.companyId);
     await storageService.uploadBlob(LOGO_BUCKET, path, req.body, req.get("Content-Type"));

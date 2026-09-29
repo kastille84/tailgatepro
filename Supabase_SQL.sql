@@ -72,9 +72,11 @@ CREATE TABLE projects (
   -- a timestamp = archived (hidden from the default list, still restorable).
   archived_at TIMESTAMPTZ,
   created_at TIMESTAMPTZ DEFAULT NOW(),
-  -- Ensure either a registered GC ID or a custom GC name is provided
+  -- Ensure either a registered GC ID or a non-blank custom GC name is provided.
+  -- NULLIF(TRIM(...), '') closes the '' / whitespace-only loophole a plain
+  -- IS NOT NULL check leaves open (Postgres treats '' as NOT NULL).
   CONSTRAINT check_gc_info CHECK (
-    gc_company_id IS NOT NULL OR gc_name_custom IS NOT NULL
+    gc_company_id IS NOT NULL OR NULLIF(TRIM(gc_name_custom), '') IS NOT NULL
   )
 );
 
@@ -85,6 +87,11 @@ ALTER TABLE projects ENABLE ROW LEVEL SECURITY;
 -- If the table already exists from an earlier run, add the new column(s) instead:
 -- ALTER TABLE projects ADD COLUMN IF NOT EXISTS archived_at TIMESTAMPTZ;
 -- ALTER TABLE projects ADD COLUMN IF NOT EXISTS gc_contact_email TEXT;
+-- Phase 11b: tighten an existing check_gc_info to also reject blank/whitespace gc_name_custom:
+-- ALTER TABLE projects DROP CONSTRAINT check_gc_info;
+-- ALTER TABLE projects ADD CONSTRAINT check_gc_info CHECK (
+--   gc_company_id IS NOT NULL OR NULLIF(TRIM(gc_name_custom), '') IS NOT NULL
+-- );
 -- ALTER TABLE projects ENABLE ROW LEVEL SECURITY;
 
 -- 4. (Retired) project_subcontractors

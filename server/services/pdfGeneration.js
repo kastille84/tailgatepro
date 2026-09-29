@@ -100,7 +100,7 @@ const renderMeetingLogPdf = ({
     // Company logo — Trade Pro+ only, and only once one's been uploaded (a
     // Pro+ company with no logo yet gets neither a logo nor the watermark
     // below, never a placeholder).
-    if (hasBrandingAccess(company?.tier) && logoBuffer) {
+    if (hasBrandingAccess(company?.companyType, company?.tier) && logoBuffer) {
       ensureRoomFor(doc, 60);
       doc.image(logoBuffer, { fit: [120, 60] });
       doc.moveDown(0.5);
@@ -203,12 +203,13 @@ const renderMeetingLogPdf = ({
 
     // Static free-tier watermark (docs/pricing-and-positioning-strategy_V2.md:
     // Trade Free PDFs carry this, Trade Pro+ removes it and adds the
-    // company's own logo instead — gated on hasBrandingAccess(company?.tier)
-    // alone, independent of whether a logo has actually been uploaded, so a
+    // company's own logo instead — gated on
+    // hasBrandingAccess(company?.companyType, company?.tier) alone,
+    // independent of whether a logo has actually been uploaded, so a
     // paying Pro+ company never sees a "Free plan" watermark on its own
     // report just because it hasn't uploaded a logo yet). Uses pdfkit's
     // built-in Helvetica-Oblique standard font, no font file to embed.
-    if (!hasBrandingAccess(company?.tier)) {
+    if (!hasBrandingAccess(company?.companyType, company?.tier)) {
       doc
         .moveDown(0.5)
         .font("Helvetica-Oblique")

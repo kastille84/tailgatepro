@@ -57,8 +57,13 @@ deliberate copy decision, not made here.
 
 ## Tier-gating fact base
 
-- `server/utility/entitlements.js` has exactly two gates, `hasTranslationAccess` and `hasBrandingAccess`, both
-  reading `["premium", "enterprise"]`. The client mirrors them in `client/src/hooks/useCurrentUser.ts` (UI only).
+- `server/utility/entitlements.js` has `hasTranslationAccess`, still reading `["premium", "enterprise"]` directly.
+  **Update (11c):** `hasBrandingAccess` is no longer that same alias — it now reads a per-plan
+  `PLAN_LIMITS.brandingAccess` flag, and a GC's real answer is resolved by
+  `server/services/branding.js`'s `resolveBrandingAccess`, which also grants it when the GC owns
+  an active, paid Site Pro jobsite (`jobsites.plan`), not just on a Portfolio company tier. The
+  client mirrors `hasTranslationAccess` only, in `client/src/hooks/useCurrentUser.ts` (UI only);
+  `hasBrandingAccess` is server-resolved and returned by `GET /api/users/me`, not mirrored.
 - The `subscription_tier` enum is `basic | premium | enterprise` (`Supabase_SQL.sql`). It does not map to the plan
   names on the pricing page (Trade Free/Pro/Enterprise, GC Free/Site Pro/Portfolio). There is no GC tier value.
 - Signup hardcodes `tier: "basic"` (`server/services/users.js`). Nobody can reach a paid tier except by editing
@@ -100,6 +105,7 @@ deliberate copy decision, not made here.
 | GC Free — dashboard inbox for sub PDFs | Partial | `gcDashboard.js`, `features/gc-dashboard/*` | A per-sub meeting list with signed PDF links, capped at 200 (`MEETINGS_LIST_LIMIT`); not an "inbox"; ungated | Reword (9a) |
 | GC Free — basic sub roster overview | Partial | `JobsiteList.tsx`, `SubComplianceRow.tsx` | Exists, ungated for every GC | — |
 | GC Free — 1 sub unlocked, others blurred | Implemented (9d) | `utility/subLocking.js`, `services/subAccess.js`, `gcDashboard.js`, `SubComplianceRow.tsx` | Earliest-accepted sub (plus Site Pro subs) unlocked; locked subs are placeholders server-side and 403 on direct meeting/PDF calls | — |
+| Site Pro / Portfolio — custom company branding on PDFs | Implemented (11c) | `services/branding.js` `resolveBrandingAccess`, `services/jobsites.js` `hasActiveSitePro`, `controllers/companies.js` | Previously ungated for a GC without a Portfolio tier despite the pricing feature matrix promising it on Site Pro too (`docs/pricing-and-positioning-strategy_V2.md:117`); now true when the GC owns any active, paid `jobsites.plan = 'site_pro'` site | — |
 | Site Pro — sponsor unlimited subs on one site | Partial (9d) | `services/sponsorship.js`, `jobsites.plan` | A sub on a live `site_pro` jobsite resolves as Trade Pro; enforced, but no billing can set `jobsites.plan` yet, so still tagged "coming soon" | Defer (9f) |
 | Site Pro — SMS nudges, Mondays 7:00 AM | Missing | Only cron in `server.js` is a leftover 5am job | No SMS provider, phone storage or scheduler | Build (9e) |
 | Site Pro — Procore & Autodesk ACC sync | Missing | No code | Copy only | Defer (9f) |

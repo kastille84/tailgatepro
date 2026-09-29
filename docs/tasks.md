@@ -1156,12 +1156,40 @@ check on site`, `Discussion questions`, `Attendance & signatures`,
       `logo-url`) still needs a live session token, same as every prior
       sub-phase's manual-smoke item. Browser smoke (upload via `/settings`,
       confirm it flows into a completed meeting's PDF) also still owed.
-- [ ] **Not yet built** — full tier-gating of PDF branding by _plan name_
-      rather than raw `tier` (e.g. if Trade Enterprise ever needs a
-      different branding capability than Trade Pro, `hasBrandingAccess`
-      would need to stop being a literal alias of `hasTranslationAccess`).
-      Not needed today — flagging only because the two gates currently share
-      one array on purpose (`server/utility/entitlements.js`).
+- [x] Plan-name-based PDF branding gate (Phase 11c) · status: code complete,
+      manual/curl smoke pending (same live-Bearer-token caveat as every prior
+      phase). `hasBrandingAccess` is no longer a literal alias of
+      `hasTranslationAccess`: `PLAN_LIMITS` (`server/utility/entitlements.js`)
+      gained a `brandingAccess` boolean per plan, and `hasBrandingAccess`
+      reads it via `getLimits(companyType, tier)`, same shape as
+      `hasFullLibrary`. Tracing every call site surfaced a real bug beyond the
+      literal-alias smell: `Settings.tsx`'s GC upsell copy already promised
+      "Custom branding is a GC Site Pro feature", but GC Site Pro is a
+      per-jobsite purchase (`jobsites.plan`), not a company tier, and nothing
+      granted a GC's own company that entitlement from owning one — a real
+      GC Site Pro customer's tier stayed `basic`/`hasBrandingAccess: false`
+      forever. New `server/services/jobsites.js` `hasActiveSitePro(gcCompanyId)`
+      (mirrors `sponsorship.js`'s `isSponsored` shape, queries `jobsites`
+      directly) + new `server/services/branding.js` `resolveBrandingAccess`
+      (short-circuits on the plan-level check for subs/GC Portfolio, only
+      falls through to `hasActiveSitePro` for a GC without one — a new file
+      rather than added to `companies.js`, since `jobsites.js` already
+      requires `companiesService` and the reverse require would be circular).
+      `server/controllers/companies.js`'s `uploadLogo` and
+      `server/controllers/users.js`'s `getCurrentUser` (now async) both route
+      through it; `pdfGeneration.js`'s two call sites updated to the new
+      `(companyType, tier)` signature (no behavior change — only subs ever
+      generate a meeting-log PDF); `uploadLogo`'s upgrade message is now
+      GC/sub-aware ("Upgrade to GC Site Pro..." vs "...Trade Pro..."), closing
+      a matching message mismatch. Client: `apiUsers.ts`'s `CurrentUser`
+      gained `hasBrandingAccess: boolean`; `useCurrentUser.ts` now reads it
+      server-resolved from `GET /api/users/me` (like `plan`/`limits`) instead
+      of mirroring tier client-side — `Settings.tsx` needed no change, its
+      copy was already correct. `docs/pricing-promise-gaps.md`'s stale
+      "exactly two gates, both reading `[premium, enterprise]`" fact-base line
+      updated to match. New `server/services/branding.test.js`; test updates
+      in `entitlements.test.js`, `jobsites.test.js`, `companies.test.js`,
+      `users.test.js`, and client `useCurrentUser.test.tsx`.
 - [x] GC "1-Click OSHA Defense Bundle" ZIP export — shipped in Phase 9e; see
       that section for the full writeup. Design doc:
       `docs/osha-defense-bundle-design.md`.
@@ -1476,8 +1504,17 @@ design doc, which is updated to match):
       automated test added: this repo has no precedent for testing express-validator chains in isolation (no
       `supertest`, no `server/routes/*.test.js` files) — verification folds into the still-pending manual/curl
       smoke below (add `gcNameCustom: ""` → 400 to that pass)
-- [ ] Follow-up, not done here: the DB `check_gc_info` constraint only blocks `NULL`, not `''` — tighten it (e.g.
-      `NULLIF(TRIM(gc_name_custom), '') IS NOT NULL`) for real defense-in-depth beyond the validator fix above
+- [x] Follow-up (Phase 11b): tightened the DB `check_gc_info` constraint itself to
+      `gc_company_id IS NOT NULL OR NULLIF(TRIM(gc_name_custom), '') IS NOT NULL` — `Supabase_SQL.sql`
+      (+ `DROP`/`ADD CONSTRAINT` migration note for an existing DB) and `Supabase_Schema.md`. No
+      server/client/test changes needed: every writer of `gc_name_custom` already produces a real,
+      non-blank value (`create`'s `admission.gcName` or validator-checked `gcNameCustom`, `linkGc`'s
+      `gc.name`, `unlinkGc`'s untouched prior value, and the 6c `.trim().notEmpty()` PATCH validator
+      above) — confirmed by re-reading `server/services/projects.js` and
+      `docs/jobsite-design.md`'s independent note that the jobsite-accept path "still satisfies
+      `check_gc_info`" the same way. `server/services/projects.test.js`'s three `23514` tests mock
+      the Postgres error code directly, unaffected. Pre-req: apply the `ALTER TABLE` migration to
+      Supabase (non-prod first) before this is real defense-in-depth on a live DB.
 
 ### 6d — Client: identity + linking UI · status: code complete; happy-path smoke passed, edge cases pending
 
@@ -2807,13 +2844,13 @@ they can be worked one at a time. Tick a box here **and** in its source phase wh
 - [x] 11a. Fix the pre-existing `tsc` build failure blocking `npm run build` — `Input.tsx`
       referenced `theme.colors.concrete[300]` (not on the theme type) plus an `@types/react` 19
       `cloneElement`/`ReactElement` typing issue. Done — see Phase 1 (~line 81).
-- [ ] 11b. Tighten the `check_gc_info` DB constraint to reject blank/whitespace
-      `gc_name_custom`, not just `NULL` (e.g. `NULLIF(TRIM(gc_name_custom), '') IS NOT NULL`) —
+- [x] 11b. Tighten the `check_gc_info` DB constraint to reject blank/whitespace
+      `gc_name_custom`, not just `NULL` (`NULLIF(TRIM(gc_name_custom), '') IS NOT NULL`) —
       the validator-level fix already shipped in 6c; this is schema-level defense-in-depth.
-      See Phase 6c (~line 1472).
-- [ ] 11c. Full tier-gating of PDF branding by *plan name* instead of raw `tier` —
-      `hasBrandingAccess` is currently a literal alias of `hasTranslationAccess` in
-      `server/utility/entitlements.js`. See ~line 1152.
+      Done — see Phase 6c (~line 1479). Pre-req: apply the migration to Supabase.
+- [x] 11c. Full tier-gating of PDF branding by *plan name* instead of raw `tier`,
+      plus fixing GC branding to key off owning a Site Pro jobsite (not just GC
+      Portfolio tier). Done — see Phase 5e (~line 1159).
 - [ ] 11d. Store the foreman's timezone offset on a meeting log (e.g. `held_tz_offset`) so
       `held_at` formats in local time instead of UTC — fixes a late-evening West Coast talk
       printing the next calendar date on the PDF. See Phase 6b2 (~line 1409).

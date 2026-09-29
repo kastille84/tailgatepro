@@ -48,11 +48,11 @@ export const useCurrentUser = () => {
     plan: query.data?.plan ?? null,
     limits: query.data?.limits ?? null,
     hasTranslationAccess: tier !== null && TRANSLATION_TIERS.includes(tier),
-    // Custom PDF branding (upload logo, remove watermark) is the same
-    // Trade Pro/Enterprise paywall as translation — reuses the identical
-    // tier list, same reasoning as server/utility/entitlements.js's
-    // hasBrandingAccess.
-    hasBrandingAccess: tier !== null && TRANSLATION_TIERS.includes(tier),
+    // Server-resolved (like plan/limits above), not a tier mirror: a GC can
+    // earn this from owning a Site Pro jobsite, which isn't knowable from
+    // tier alone (server/services/branding.js's resolveBrandingAccess).
+    // Defaults to false until the profile loads, same as hasTranslationAccess.
+    hasBrandingAccess: query.data?.hasBrandingAccess ?? false,
     // Authoring company talks: every subcontractor plan, but a GC needs
     // Portfolio — mirrors server/utility/entitlements.js's
     // canAuthorCompanyTalks. Permissive while the profile is unknown (loading,

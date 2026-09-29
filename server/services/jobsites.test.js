@@ -14,6 +14,7 @@ const {
   previewJoinLink,
   acceptJoinLink,
   removeSubcontractor,
+  hasActiveSitePro,
 } = require("./jobsites");
 
 const JOBSITE_COLUMNS =
@@ -1342,6 +1343,53 @@ describe("jobsites service: removeSubcontractor", () => {
     await expect(removeSubcontractor(args)).rejects.toMatchObject({
       statusCode: 502,
       message: "Could not remove the subcontractor",
+    });
+  });
+});
+
+// Phase 11c. Mirrors sponsorship.test.js's isSponsored block, but this
+// queries jobsites directly (a GC's own sites), not jobsite_subcontractors.
+describe("jobsites service: hasActiveSitePro", () => {
+  const singleCountQuery = (result) => {
+    const query = {
+      then: (resolve, reject) => Promise.resolve(result).then(resolve, reject),
+    };
+    ["select", "eq", "is"].forEach((method) => {
+      query[method] = vi.fn(() => query);
+    });
+    return query;
+  };
+
+  it("is true when the GC owns a live, paid Site Pro jobsite", async () => {
+    // Arrange
+    const query = singleCountQuery({ count: 1, error: null });
+    fromSpy.mockReset().mockReturnValue(query);
+
+    // Act & Assert
+    await expect(hasActiveSitePro("gc-1")).resolves.toBe(true);
+    expect(fromSpy).toHaveBeenCalledWith("jobsites");
+    expect(query.eq).toHaveBeenCalledWith("gc_company_id", "gc-1");
+    expect(query.eq).toHaveBeenCalledWith("plan", "site_pro");
+    expect(query.eq).toHaveBeenCalledWith("status", "active");
+    expect(query.is).toHaveBeenCalledWith("archived_at", null);
+  });
+
+  it("is false when there is no such jobsite", async () => {
+    // Arrange
+    fromSpy.mockReset().mockReturnValue(singleCountQuery({ count: 0, error: null }));
+
+    // Act & Assert
+    await expect(hasActiveSitePro("gc-1")).resolves.toBe(false);
+  });
+
+  it("throws a 502 when the lookup fails", async () => {
+    // Arrange
+    fromSpy.mockReset().mockReturnValue(singleCountQuery({ count: null, error: { code: "X" } }));
+
+    // Act & Assert
+    await expect(hasActiveSitePro("gc-1")).rejects.toMatchObject({
+      statusCode: 502,
+      message: "Could not check your job site plan",
     });
   });
 });
