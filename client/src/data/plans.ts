@@ -56,12 +56,8 @@ export const SUB_PLANS: Plan[] = [
     features: [
       "Unlimited foremen & crews",
       "Procore, JobTread & QuickBooks sync",
-      "Multi-crew scheduling & equipment check-ins",
     ],
-    comingSoon: [
-      "Procore, JobTread & QuickBooks sync",
-      "Multi-crew scheduling & equipment check-ins",
-    ],
+    comingSoon: ["Procore, JobTread & QuickBooks sync"],
   },
 ];
 

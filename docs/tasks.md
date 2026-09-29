@@ -2704,7 +2704,12 @@ Costs one extra query per request for Free subs (`resolveEffectiveTier`) and per
     side.
 - [ ] AI Talk Builder and cloud AI voice (see ~1736-1741).
 - [ ] Grow the library toward 500+ (see ~1749-1754; currently 112).
-- [ ] Multi-crew scheduling and equipment check-ins (no tables or code).
+- [-] Multi-crew scheduling and equipment check-ins — **dropped** (2026-09-29). No tables or code existed.
+      Workforce scheduling and equipment inspection logging are scope outside TailgatePro's core toolbox-talk
+      compliance loop (run a talk → capture signatures → sealed PDF → GC visibility) and overlap dedicated
+      tools (Rhumbix/busybusy for scheduling, Procore Inspections for equipment) — the same reasoning that
+      already dropped Custom safety manual upload and deferred the form/manual builder above. Removed from
+      Trade Enterprise's pricing copy (`plans.ts`, the strategy doc, `docs/pricing-promise-gaps.md`).
 
 ### 9f — Integrations (blocked on billing; deferred)
 

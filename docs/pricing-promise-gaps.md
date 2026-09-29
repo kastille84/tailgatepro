@@ -90,7 +90,7 @@ deliberate copy decision, not made here.
 | Enterprise — unlimited foremen | Implemented (9c) | `PLAN_LIMITS` `foremanSeats: null` | No cap applied | — |
 | Enterprise — custom safety manual upload | Dropped (2026-09-28) | Only logo/photo/signature uploads exist | No document upload path, by decision: commodity file storage overlapping Procore/existing document tools; custom talks cover the "our own content" job | Dropped; copy removed from `plans.ts` and the strategy doc |
 | Enterprise — Procore, JobTread, QuickBooks sync | Missing | No code | Copy only | Defer (9f) |
-| Enterprise — multi-crew scheduling, equipment check-ins | Missing | No schedule/equipment tables | Not modelled | Build (9e) |
+| Enterprise — multi-crew scheduling, equipment check-ins | Dropped (2026-09-29) | No schedule/equipment tables | Scheduling and equipment inspection are workforce-management scope, not toolbox-talk compliance — overlaps dedicated tools (Rhumbix/busybusy, Procore Inspections) | Dropped; copy removed from `plans.ts` and the strategy doc |
 
 ## General contractor plans
 

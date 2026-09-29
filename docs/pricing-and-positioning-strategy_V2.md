@@ -84,7 +84,7 @@ Subcontractors need affordable plans focused on field speed, professional brandi
 | :--- | :--- | :--- | :--- | :--- |
 | **Trade Free** | **$0** / mo | **$0** / yr | Solo Foremen / Small Crews | • 1 Active Foreman / Supervisor<br>• Full offline PWA capabilities<br>• 30 core OSHA talk templates<br>• Digital signatures & photo proof<br>• Auto-email PDF exports to GCs<br>• *Limits:* 30-day in-app history lockout; app watermark |
 | **Trade Pro** *(Recommended)* | **$29** / mo | **$290** / yr ($24/mo) | Growing Specialty Subs (2–8 Foremen) | • **Up to 8 Foremen** under 1 account<br>• **5-Year Legal Archive** (OSHA audit protection)<br>• **1-Click OSHA Defense Bundle:** download every log as one indexed ZIP<br>• **Custom Branding:** Upload logo, remove watermark<br>• **500+ OSHA Library + AI Talk Builder**<br>• **AI Multi-Language Audio Playback** (10+ languages) |
-| **Trade Enterprise** | **$79** / mo | **$790** / yr ($65/mo) | Large Subcontractors (9+ Foremen) | • **Unlimited Foremen & Crews**<br>• **Procore, JobTread, & QuickBooks Sync**<br>• Multi-crew scheduling & equipment check-ins |
+| **Trade Enterprise** | **$79** / mo | **$790** / yr ($65/mo) | Large Subcontractors (9+ Foremen) | • **Unlimited Foremen & Crews**<br>• **Procore, JobTread, & QuickBooks Sync** |
 
 ---
 
@@ -101,7 +101,9 @@ General Contractors pay for site-wide compliance tracking, automated enforcement
 > **Note (2026-09-28):** the form & manual builder is deferred and no longer on the GC Portfolio pricing
 > card (it was reworded to shipped company talks). The Trade Enterprise "Custom Safety Manual upload" was
 > likewise dropped (2026-09-28): commodity file storage that overlaps Procore/existing document tools, with its
-> job covered by custom talks. See `docs/pricing-promise-gaps.md`.
+> job covered by custom talks. "Multi-crew scheduling & equipment check-ins" was also dropped (2026-09-29):
+> workforce/equipment-management scope that overlaps dedicated scheduling and inspection tools rather than
+> serving the core toolbox-talk compliance loop. See `docs/pricing-promise-gaps.md`.
 
 ---
 
