@@ -78,10 +78,17 @@ Full rationale and phase feasibility notes live in the plan at
       Meeting Logs / GC Compliance "coming soon"); test updated
 - [x] Confirm client coverage still ≥ 90% — `npx vitest run --coverage`: 261 tests pass, ~99.96%
 - [x] Verify: create/edit a project end-to-end; row lands in Supabase with client UUID (needs SQL applied)
-- [ ] `npm run build` clean — BLOCKED by a pre-existing `tsc` failure in
-      `client/src/ui_comps/form/Input.tsx` (`theme.colors.concrete[300]` doesn't exist;
-      `@types/react` 19 `cloneElement`/`ReactElement` unknown-typing). Unrelated to Phase 1;
-      needs its own fix. `npm run lint` is clean for the Phase 1 files.
+- [x] `npm run build` clean — fixed (see Phase 11a): `client/src/ui_comps/form/Input.tsx`'s
+      `theme.colors.concrete[300]` (a color scale value that doesn't exist anywhere in the
+      design system — every scale deliberately skips `300`) changed to `concrete[200]`,
+      matching the sibling `Label` component's `$onDark` treatment in the same file; the
+      `React.cloneElement`/`.props` reads on `children as React.ReactElement` (broken by
+      `@types/react` 19 defaulting `ReactElement`'s props generic to `unknown`) replaced with a
+      typed `React.isValidElement<ClonedChildProps>(children)` guard, dropping every `as`
+      cast. `npx tsc --noEmitOnError false` and `npm run build` both now exit 0; full client
+      suite still green with `Input.tsx` at 100% coverage; the 7 pre-existing
+      `react-refresh/only-export-components` lint warnings on this file are unrelated
+      (unchanged before/after, confirmed via `git stash`) and out of scope here.
 
 ## Phase 1d — Project delete / archive · status: code complete; end-to-end smoke pending (needs `archived_at` column applied)
 
@@ -2789,6 +2796,62 @@ seeded until they get topic-specific content. Feeds the "grow the library" item 
 - [ ] Update marketing/pricing copy that quotes the library size (was 34; now 112 seeded, see `docs/pricing-promise-gaps.md`)
 - [ ] Decide whether the 62 out-of-scope talks (quality, IT security, ethics, procurement) belong in a separate
       non-safety library
+
+## Phase 11 — No-cost backlog
+
+A cross-cutting index, not a move: every item below already lives in its own phase above with the
+full write-up; this phase just gathers the ones that need **no** paid third-party service (no
+Stripe, no Twilio, no Procore/ACC/QuickBooks, no paid AI, no purchased content) into one place so
+they can be worked one at a time. Tick a box here **and** in its source phase when done.
+
+- [x] 11a. Fix the pre-existing `tsc` build failure blocking `npm run build` — `Input.tsx`
+      referenced `theme.colors.concrete[300]` (not on the theme type) plus an `@types/react` 19
+      `cloneElement`/`ReactElement` typing issue. Done — see Phase 1 (~line 81).
+- [ ] 11b. Tighten the `check_gc_info` DB constraint to reject blank/whitespace
+      `gc_name_custom`, not just `NULL` (e.g. `NULLIF(TRIM(gc_name_custom), '') IS NOT NULL`) —
+      the validator-level fix already shipped in 6c; this is schema-level defense-in-depth.
+      See Phase 6c (~line 1472).
+- [ ] 11c. Full tier-gating of PDF branding by *plan name* instead of raw `tier` —
+      `hasBrandingAccess` is currently a literal alias of `hasTranslationAccess` in
+      `server/utility/entitlements.js`. See ~line 1152.
+- [ ] 11d. Store the foreman's timezone offset on a meeting log (e.g. `held_tz_offset`) so
+      `held_at` formats in local time instead of UTC — fixes a late-evening West Coast talk
+      printing the next calendar date on the PDF. See Phase 6b2 (~line 1409).
+- [ ] 11e. Regeneration path for already-completed PDFs, so a header/format fix can be reapplied
+      to historical logs, not just new ones. See Phase 6b2 (~line 1409).
+- [ ] 11f. Configurable meeting cadence (GC- or sub-defined, e.g. weekly instead of the
+      hardcoded daily rule) — `compliance.js`/`dayWindow.js` are already window-parameterized in
+      prep for this. See Phase 6 (~line 1657).
+- [ ] 11g. Pagination for `GET /api/gc/meetings` past the current 200-row cap.
+      See Phase 6e (~line 1573).
+- [ ] 11h. DST-transition day fix in `server/utility/dayWindow.js` (currently treats every day
+      as a flat 24h window). See Phase 6e (~line 1573).
+- [ ] 11i. Disable the "Link to GC" UI while a project's create is still queued in the offline
+      outbox (currently 404s "Project not found" until it syncs). See Phase 6d (~line 1522).
+- [ ] 11j. GC-side duplicate-jobsite merge tool (e.g. "Project A" vs "Project_A" created via a
+      sub's join-code link) — re-points `projects.jobsite_id` and roster rows.
+      See Phase 9d-2 (~line 2309).
+- [ ] 11k. Conversion-trigger upsell modals from the strategy doc §6 (2nd-foreman, 30-day
+      lockout, sub #2 blur, 4th-site "$447 vs $499" prompt, policy-push prompt, scorecard
+      prompt) — pure UI, no SMS/billing needed. See Phase 9g (~line 2720).
+- [ ] 11l. PDF footer CTA "Claim Your Free GC Portal" — the shipped watermark currently has no
+      CTA. See Phase 9g (~line 2723).
+- [ ] 11m. Basic tag/keyword search over the talk library — the strategy doc's "smart tagging"
+      implies NL search, but a non-AI keyword version needs no paid API.
+      See Phase 9g (~line 2724).
+- [ ] 11n. Update marketing/pricing copy still quoting the old "34 talks" library size (now 112
+      seeded). See Phase 10 (~line 2789).
+- [ ] 11o. Word-library content decisions: confirm authorship/license on the 220 imported talks,
+      verify CPWR "all rights reserved" PDFs (talks 010, 122, 139, 142, 144), decide whether
+      environmental-compliance talks 177/180 belong in the library, decide the "overlapping an
+      existing talk" list. See Phase 10 (~lines 2747-2790).
+- [ ] 11p. Grow the library further using the existing free-source agents
+      (`@safety-collector`/`@safety-structurer`/`@safety-auditor` against OSHA/NIOSH/CPWR)
+      toward the 500+ claim. See Phase 9g (~line 2706).
+
+**Excluded on purpose** (needs Stripe, Twilio, or another paid service — tracked in `## Deferred`
+and Phase 9e/9f instead): GC Site Pro sponsorship purchase flow, SMS nudges, AI Talk Builder /
+cloud AI voice, Procore/ACC/JobTread/QuickBooks sync, the purchased 300+-talk bundle.
 
 ## Deferred
 
