@@ -179,7 +179,7 @@ export const FieldHint = styled.p<{ $onDark?: boolean }>`
   font-weight: 500;
   line-height: 1.5;
   color: ${({ theme, $onDark }) =>
-    $onDark ? theme.colors.concrete[300] : theme.colors.navy[500]};
+    $onDark ? theme.colors.concrete[200] : theme.colors.navy[500]};
 `;
 
 interface FormFieldProps extends React.ComponentPropsWithoutRef<"div"> {
@@ -190,6 +190,17 @@ interface FormFieldProps extends React.ComponentPropsWithoutRef<"div"> {
   error?: string;
   onDark?: boolean;
   children: React.ReactNode;
+}
+
+// The subset of a child input's props FormField reads and overrides when
+// cloning it (id/hasError/aria-*). @types/react 19 defaults ReactElement's
+// props generic to `unknown`, so this is needed to type-check `.props`
+// access and the cloneElement props object below without `any`.
+interface ClonedChildProps {
+  id?: string;
+  hasError?: boolean;
+  "aria-invalid"?: boolean;
+  "aria-describedby"?: string;
 }
 
 export const FormField = ({
@@ -203,18 +214,15 @@ export const FormField = ({
   ...props
 }: FormFieldProps) => {
   const fieldErrorId = `${id}-error`;
-  const child = React.isValidElement(children)
-    ? React.cloneElement(children as React.ReactElement, {
-        id: (children as React.ReactElement).props.id ?? id,
-        hasError:
-          Boolean(error) ||
-          Boolean((children as React.ReactElement).props.hasError),
+  const child = React.isValidElement<ClonedChildProps>(children)
+    ? React.cloneElement(children, {
+        id: children.props.id ?? id,
+        hasError: Boolean(error) || Boolean(children.props.hasError),
         "aria-invalid":
-          Boolean(error) ||
-          Boolean((children as React.ReactElement).props["aria-invalid"]),
+          Boolean(error) || Boolean(children.props["aria-invalid"]),
         "aria-describedby":
           [
-            (children as React.ReactElement).props["aria-describedby"],
+            children.props["aria-describedby"],
             error ? fieldErrorId : undefined,
           ]
             .filter(Boolean)

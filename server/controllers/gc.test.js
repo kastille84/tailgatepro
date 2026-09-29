@@ -9,6 +9,7 @@ const {
   listMeetings,
   getMeeting,
   getMeetingPdfUrl,
+  verifyMeetingSeal,
   getDefenseBundle,
   listSubcontractorScorecards,
   getSubcontractorScorecard,
@@ -22,6 +23,7 @@ const getOverviewSpy = vi.spyOn(gcDashboardService, "getOverview");
 const listMeetingsSpy = vi.spyOn(gcDashboardService, "listMeetings");
 const getMeetingSpy = vi.spyOn(gcDashboardService, "getMeeting");
 const getMeetingPdfUrlSpy = vi.spyOn(gcDashboardService, "getMeetingPdfUrl");
+const verifySealSpy = vi.spyOn(gcDashboardService, "verifySeal");
 const getDefenseBundleEntriesSpy = vi.spyOn(gcDashboardService, "getDefenseBundleEntries");
 const streamJobsiteBundleSpy = vi.spyOn(zipBundleService, "streamBundle");
 const listSubcontractorScorecardsSpy = vi.spyOn(scorecardsService, "listSubcontractorScorecards");
@@ -42,6 +44,7 @@ describe("gc controller", () => {
     listMeetingsSpy.mockReset();
     getMeetingSpy.mockReset();
     getMeetingPdfUrlSpy.mockReset();
+    verifySealSpy.mockReset();
     getDefenseBundleEntriesSpy.mockReset();
     streamJobsiteBundleSpy.mockReset();
     listSubcontractorScorecardsSpy.mockReset();
@@ -126,7 +129,7 @@ describe("gc controller", () => {
     it("should pass query params through and respond with the service's data", async () => {
       // Arrange
       req.query = { projectId: "project-1", from: "2026-09-01", to: "2026-09-08" };
-      const data = [{ id: "meeting-1" }];
+      const data = { meetings: [{ id: "meeting-1" }], hasMore: false };
       listMeetingsSpy.mockResolvedValue(data);
 
       // Act
@@ -137,10 +140,31 @@ describe("gc controller", () => {
         projectId: "project-1",
         from: "2026-09-01",
         to: "2026-09-08",
+        limit: undefined,
+        offset: undefined,
         allowedJobsiteIds: null,
       });
       expect(res.status).toHaveBeenCalledWith(200);
       expect(res.json).toHaveBeenCalledWith({ success: true, data });
+    });
+
+    it("should convert limit/offset to numbers and pass them through", async () => {
+      // Arrange
+      req.query = { limit: "10", offset: "20" };
+      listMeetingsSpy.mockResolvedValue({ meetings: [], hasMore: false });
+
+      // Act
+      await listMeetings(req, res, next);
+
+      // Assert
+      expect(listMeetingsSpy).toHaveBeenCalledWith("gc-1", {
+        projectId: undefined,
+        from: undefined,
+        to: undefined,
+        limit: 10,
+        offset: 20,
+        allowedJobsiteIds: null,
+      });
     });
 
     it("should forward a service error to next", async () => {
@@ -210,6 +234,51 @@ describe("gc controller", () => {
 
       // Act
       await getMeetingPdfUrl(req, res, next);
+
+      // Assert
+      expect(next).toHaveBeenCalledWith(error);
+    });
+  });
+
+  describe("verifyMeetingSeal", () => {
+    it("should respond with the recompute-and-compare result from the service", async () => {
+      // Arrange
+      req.params.id = "meeting-1";
+      verifySealSpy.mockResolvedValue({ valid: true, sealedAt: "2026-09-21T14:05:00.000Z" });
+
+      // Act
+      await verifyMeetingSeal(req, res, next);
+
+      // Assert
+      expect(verifySealSpy).toHaveBeenCalledWith("meeting-1", "gc-1", null, "user-1");
+      expect(res.status).toHaveBeenCalledWith(200);
+      expect(res.json).toHaveBeenCalledWith({
+        success: true,
+        data: { valid: true, sealedAt: "2026-09-21T14:05:00.000Z" },
+      });
+    });
+
+    it("should scope a superintendent to their assigned jobsites", async () => {
+      // Arrange
+      req.params.id = "meeting-1";
+      req.user = { ...req.user, role: "superintendent", tier: "premium" };
+      getAllowedSpy.mockResolvedValue(["site-a"]);
+      verifySealSpy.mockResolvedValue({ valid: true, sealedAt: "now" });
+
+      // Act
+      await verifyMeetingSeal(req, res, next);
+
+      // Assert
+      expect(verifySealSpy).toHaveBeenCalledWith("meeting-1", "gc-1", ["site-a"], "user-1");
+    });
+
+    it("should forward a service error to next", async () => {
+      // Arrange
+      const error = new Error("boom");
+      verifySealSpy.mockRejectedValue(error);
+
+      // Act
+      await verifyMeetingSeal(req, res, next);
 
       // Assert
       expect(next).toHaveBeenCalledWith(error);

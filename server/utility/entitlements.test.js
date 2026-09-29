@@ -12,14 +12,26 @@ const {
   effectiveJobsiteLimit,
 } = require("./entitlements");
 
-describe("entitlements: existing gates", () => {
+describe("entitlements: hasTranslationAccess", () => {
   it.each([
     ["basic", false],
     ["premium", true],
     ["enterprise", true],
-  ])("tier %s -> translation/branding %s", (tier, expected) => {
+  ])("tier %s -> %s", (tier, expected) => {
     expect(hasTranslationAccess(tier)).toBe(expected);
-    expect(hasBrandingAccess(tier)).toBe(expected);
+  });
+});
+
+describe("entitlements: hasBrandingAccess", () => {
+  it.each([
+    ["subcontractor", "basic", false],
+    ["subcontractor", "premium", true],
+    ["subcontractor", "enterprise", true],
+    ["gc", "basic", false],
+    ["gc", "premium", true],
+    ["gc", "enterprise", true],
+  ])("%s + %s -> %s (Phase 11c: plan name, not a hasTranslationAccess alias)", (companyType, tier, expected) => {
+    expect(hasBrandingAccess(companyType, tier)).toBe(expected);
   });
 });
 

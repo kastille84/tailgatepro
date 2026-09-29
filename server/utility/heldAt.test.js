@@ -3,6 +3,7 @@
 
 const {
   resolveHeldAt,
+  resolveHeldTzOffset,
   HELD_AT_MAX_FUTURE_MS,
   HELD_AT_MAX_PAST_MS,
 } = require("./heldAt");
@@ -79,5 +80,23 @@ describe("resolveHeldAt", () => {
     // client's retry-forever outbox.
     expect(act).not.toThrow();
     expect(act()).toBe(now.toISOString());
+  });
+});
+
+describe("resolveHeldTzOffset", () => {
+  it("should pass through an integer offset within +/-14h", () => {
+    // Act & Assert
+    expect(resolveHeldTzOffset(420)).toBe(420);
+    expect(resolveHeldTzOffset(-840)).toBe(-840);
+    expect(resolveHeldTzOffset(0)).toBe(0);
+  });
+
+  it("should return null (display in UTC) for a missing, non-integer or out-of-range offset, never throwing", () => {
+    // Act & Assert
+    expect(resolveHeldTzOffset(undefined)).toBeNull();
+    expect(resolveHeldTzOffset(null)).toBeNull();
+    expect(resolveHeldTzOffset("420")).toBeNull();
+    expect(resolveHeldTzOffset(1.5)).toBeNull();
+    expect(resolveHeldTzOffset(841)).toBeNull();
   });
 });

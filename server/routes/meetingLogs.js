@@ -13,6 +13,7 @@ const {
   uploadCrewPhoto,
   getCrewPhotoUrl,
   getPdfUrl,
+  verifySeal,
   getDefenseBundle,
 } = require("../controllers/meetingLogs");
 const signaturesRoutes = require("./signatures");
@@ -121,6 +122,11 @@ router.patch(
       .optional()
       .isISO8601()
       .withMessage("heldAt must be an ISO 8601 timestamp"),
+    body("heldTzOffset")
+      .optional()
+      .isInt({ min: -840, max: 840 })
+      .withMessage("heldTzOffset must be minutes between -840 and 840")
+      .toInt(),
   ],
   validate,
   completeMeeting,
@@ -163,6 +169,18 @@ router.get(
   [param("id").isUUID().withMessage("A valid meeting id is required")],
   validate,
   getPdfUrl,
+);
+
+// GET /api/meetings/:id/verify-seal — recomputes and compares the meeting's
+// tamper-evidence content seal (Phase 9e, docs/tamper-evidence-design.md). No
+// plan gate — see the design doc's "Gating" section.
+router.get(
+  "/:id/verify-seal",
+  requireAuth,
+  loadUserContext,
+  [param("id").isUUID().withMessage("A valid meeting id is required")],
+  validate,
+  verifySeal,
 );
 
 // Nested under /api/meetings/:meetingId/signatures — see

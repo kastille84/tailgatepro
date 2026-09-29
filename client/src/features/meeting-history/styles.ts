@@ -114,6 +114,13 @@ export const StyledRowTitle = styled.p`
   color: ${({ theme }) => theme.colors.navy[700]};
 `;
 
+export const StyledRowActions = styled.div`
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 0.8rem;
+`;
+
 export const StyledRowMeta = styled.p`
   margin: 0;
   font-size: 1.4rem;

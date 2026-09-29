@@ -15,16 +15,21 @@ const { dayWindow } = require("../utility/dayWindow");
 const { computeCompliance } = require("../utility/compliance");
 const { buildPdfFilename } = require("../utility/pdfFilename");
 const { isSubLocked } = require("../utility/subLocking");
+const contentSeal = require("../utility/contentSeal");
 const companiesService = require("./companies");
 const subAccessService = require("./subAccess");
 const { isJobsiteAllowed } = require("./siteScope");
 const jobsitesService = require("./jobsites");
 const storageService = require("./storage");
+const auditLogService = require("./auditLog");
 const { PDF_BUCKET, PDF_URL_TTL_SECONDS } = require("./meetingLogs");
 
-// No pagination in v1 (docs/tasks.md) — a GC juggling many subs still gets a
-// bounded, readable response instead of an unbounded one.
-const MEETINGS_LIST_LIMIT = 200;
+// Default/ceiling page size for GET /meetings (docs/tasks.md's "pagination for
+// GET /meetings past 200 rows" follow-up). The caller may request a smaller
+// page via `limit` (validated 1-100 in the route); we never trust it past the
+// ceiling.
+const MEETINGS_PAGE_SIZE = 20;
+const MEETINGS_MAX_PAGE_SIZE = 100;
 
 const PROJECT_COLUMNS =
   "id, owner_company_id, jobsite_id, name, status, archived_at, created_at";
@@ -288,14 +293,27 @@ const toMeetingSummary = (row, { projectName, companyName }) => ({
   completedAt: row.completed_at,
   signerCount: (row.signatures ?? []).length,
   pdfReady: Boolean(row.final_pdf_url),
+  // Phase 9e tamper-evidence (docs/tamper-evidence-design.md): a derived
+  // boolean only, matching how pdfReady already exposes final_pdf_url
+  // without leaking the path itself — the raw content_seal never reaches a
+  // GC's response.
+  sealed: Boolean(row.content_seal),
 });
 
-// GET /api/gc/meetings?projectId&from&to — completed logs for the GC's
-// linked projects (optionally narrowed to one), newest-held first.
+// GET /api/gc/meetings?projectId&from&to&limit&offset — completed logs for
+// the GC's linked projects (optionally narrowed to one), newest-held first,
+// paginated in pages of up to `limit` (default/max clamped by
+// MEETINGS_PAGE_SIZE/MEETINGS_MAX_PAGE_SIZE). We ask Supabase for one extra
+// row past the page so `hasMore` can be derived without a separate count
+// query, matching the "peek" trick already used by meetingLogs.js's month
+// paging.
 const listMeetings = async (
   gcCompanyId,
-  { projectId, from, to, allowedJobsiteIds = null } = {},
+  { projectId, from, to, allowedJobsiteIds = null, limit, offset } = {},
 ) => {
+  const pageSize = Math.min(limit || MEETINGS_PAGE_SIZE, MEETINGS_MAX_PAGE_SIZE);
+  const pageOffset = offset || 0;
+
   let projectIds;
   let projectNameById;
 
@@ -315,12 +333,12 @@ const listMeetings = async (
     projectNameById = new Map(projects.map((project) => [project.id, project.name]));
   }
 
-  if (projectIds.length === 0) return [];
+  if (projectIds.length === 0) return { meetings: [], hasMore: false };
 
   let query = supabase
     .from("meeting_logs")
     .select(
-      "id, project_id, company_id, held_at, completed_at, final_pdf_url, toolbox_talks(title), signatures(id)",
+      "id, project_id, company_id, held_at, completed_at, final_pdf_url, content_seal, toolbox_talks(title), signatures(id)",
     )
     .in("project_id", projectIds)
     .not("completed_at", "is", null);
@@ -330,22 +348,29 @@ const listMeetings = async (
 
   const { data, error } = await query
     .order("held_at", { ascending: false })
-    .limit(MEETINGS_LIST_LIMIT);
+    // Tiebreaker for a stable sort across pages when held_at ties.
+    .order("id", { ascending: false })
+    .range(pageOffset, pageOffset + pageSize);
 
   if (error) {
     throw new AppError("Could not load meetings", 502, { cause: error });
   }
 
+  const hasMore = data.length > pageSize;
+  const pageRows = hasMore ? data.slice(0, pageSize) : data;
+
   const companyNamesById = await getCompanyNamesByIds(
-    data.map((row) => row.company_id),
+    pageRows.map((row) => row.company_id),
   );
 
-  return data.map((row) =>
+  const meetings = pageRows.map((row) =>
     toMeetingSummary(row, {
       projectName: projectNameById.get(row.project_id) ?? null,
       companyName: companyNamesById.get(row.company_id) ?? null,
     }),
   );
+
+  return { meetings, hasMore };
 };
 
 // Shared by getMeeting/getMeetingPdfUrl: loads a meeting_logs row and
@@ -356,7 +381,7 @@ const getCompletedLinkedMeeting = async (id, gcCompanyId, allowedJobsiteIds) => 
   const { data, error } = await supabase
     .from("meeting_logs")
     .select(
-      "id, project_id, company_id, talk_id, held_at, completed_at, final_pdf_url",
+      "id, project_id, company_id, talk_id, foreman_id, crew_photo_url, held_at, held_tz_offset, completed_at, final_pdf_url, content_seal, sealed_at",
     )
     .eq("id", id)
     .single();
@@ -442,6 +467,7 @@ const getMeetingPdfUrl = async (id, gcCompanyId, allowedJobsiteIds = null) => {
     projectName: project.name,
     meetingDate: row.held_at ?? row.completed_at,
     meetingLogId: row.id,
+    tzOffset: row.held_tz_offset,
   });
 
   return storageService.getSignedUrl(
@@ -450,6 +476,58 @@ const getMeetingPdfUrl = async (id, gcCompanyId, allowedJobsiteIds = null) => {
     PDF_URL_TTL_SECONDS,
     filename,
   );
+};
+
+// GET /api/gc/meetings/:id/verify-seal — same recompute-and-compare as
+// meetingLogs.js's own verifySeal (Phase 9e, docs/tamper-evidence-design.md),
+// scoped through the GC's linked-project authorization instead of company
+// ownership. No plan gate — see the design doc's "Gating" section.
+const verifySeal = async (id, gcCompanyId, allowedJobsiteIds = null, actorId = null) => {
+  const { row } = await getCompletedLinkedMeeting(id, gcCompanyId, allowedJobsiteIds);
+
+  if (!row.content_seal) {
+    throw new AppError("This meeting hasn't been sealed yet", 404);
+  }
+
+  const { data: signatures, error } = await supabase
+    .from("signatures")
+    .select("id, worker_name, quiz_score, quiz_passed")
+    .eq("meeting_id", id);
+  if (error) {
+    throw new AppError("Could not verify the meeting's signatures", 502, { cause: error });
+  }
+
+  const expectedSeal = contentSeal.computeSeal(
+    contentSeal.buildCanonicalPayload({
+      meetingLog: {
+        id: row.id,
+        projectId: row.project_id,
+        talkId: row.talk_id,
+        companyId: row.company_id,
+        foremanId: row.foreman_id,
+        crewPhotoUrl: row.crew_photo_url,
+        heldAt: row.held_at,
+        completedAt: row.completed_at,
+      },
+      signatures: signatures.map((s) => ({
+        id: s.id,
+        workerName: s.worker_name,
+        quizScore: s.quiz_score,
+        quizPassed: s.quiz_passed,
+      })),
+    }),
+  );
+
+  const valid = contentSeal.sealsMatch(expectedSeal, row.content_seal);
+
+  await auditLogService.record({
+    meetingLogId: id,
+    eventType: "seal_verified",
+    actorId,
+    metadata: { valid, via: "gc" },
+  });
+
+  return { valid, sealedAt: row.sealed_at };
 };
 
 // GET /api/gc/jobsites/:id/defense-bundle (Phase 9e,
@@ -486,7 +564,7 @@ const getDefenseBundleEntries = async (jobsiteId, gcCompanyId, allowedJobsiteIds
 
   const { data, error } = await supabase
     .from("meeting_logs")
-    .select("id, project_id, company_id, held_at, completed_at, final_pdf_url, toolbox_talks(title)")
+    .select("id, project_id, company_id, held_at, held_tz_offset, completed_at, final_pdf_url, toolbox_talks(title)")
     .in("project_id", projectIds)
     .not("completed_at", "is", null)
     .order("held_at", { ascending: true });
@@ -514,6 +592,7 @@ const getDefenseBundleEntries = async (jobsiteId, gcCompanyId, allowedJobsiteIds
         projectName,
         meetingDate: heldAt,
         meetingLogId: row.id,
+        tzOffset: row.held_tz_offset,
       }),
       companyName,
       projectName,
@@ -531,6 +610,7 @@ module.exports = {
   listMeetings,
   getMeeting,
   getMeetingPdfUrl,
+  verifySeal,
   getDefenseBundleEntries,
   // Exported for services/scorecards.js and services/policyPush.js (Phase 9e)
   // to reuse rather than re-querying -- no logic change, just widening this

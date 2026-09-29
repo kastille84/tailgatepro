@@ -78,10 +78,17 @@ Full rationale and phase feasibility notes live in the plan at
       Meeting Logs / GC Compliance "coming soon"); test updated
 - [x] Confirm client coverage still ≥ 90% — `npx vitest run --coverage`: 261 tests pass, ~99.96%
 - [x] Verify: create/edit a project end-to-end; row lands in Supabase with client UUID (needs SQL applied)
-- [ ] `npm run build` clean — BLOCKED by a pre-existing `tsc` failure in
-      `client/src/ui_comps/form/Input.tsx` (`theme.colors.concrete[300]` doesn't exist;
-      `@types/react` 19 `cloneElement`/`ReactElement` unknown-typing). Unrelated to Phase 1;
-      needs its own fix. `npm run lint` is clean for the Phase 1 files.
+- [x] `npm run build` clean — fixed (see Phase 11a): `client/src/ui_comps/form/Input.tsx`'s
+      `theme.colors.concrete[300]` (a color scale value that doesn't exist anywhere in the
+      design system — every scale deliberately skips `300`) changed to `concrete[200]`,
+      matching the sibling `Label` component's `$onDark` treatment in the same file; the
+      `React.cloneElement`/`.props` reads on `children as React.ReactElement` (broken by
+      `@types/react` 19 defaulting `ReactElement`'s props generic to `unknown`) replaced with a
+      typed `React.isValidElement<ClonedChildProps>(children)` guard, dropping every `as`
+      cast. `npx tsc --noEmitOnError false` and `npm run build` both now exit 0; full client
+      suite still green with `Input.tsx` at 100% coverage; the 7 pre-existing
+      `react-refresh/only-export-components` lint warnings on this file are unrelated
+      (unchanged before/after, confirmed via `git stash`) and out of scope here.
 
 ## Phase 1d — Project delete / archive · status: code complete; end-to-end smoke pending (needs `archived_at` column applied)
 
@@ -1149,12 +1156,40 @@ check on site`, `Discussion questions`, `Attendance & signatures`,
       `logo-url`) still needs a live session token, same as every prior
       sub-phase's manual-smoke item. Browser smoke (upload via `/settings`,
       confirm it flows into a completed meeting's PDF) also still owed.
-- [ ] **Not yet built** — full tier-gating of PDF branding by _plan name_
-      rather than raw `tier` (e.g. if Trade Enterprise ever needs a
-      different branding capability than Trade Pro, `hasBrandingAccess`
-      would need to stop being a literal alias of `hasTranslationAccess`).
-      Not needed today — flagging only because the two gates currently share
-      one array on purpose (`server/utility/entitlements.js`).
+- [x] Plan-name-based PDF branding gate (Phase 11c) · status: code complete,
+      manual/curl smoke pending (same live-Bearer-token caveat as every prior
+      phase). `hasBrandingAccess` is no longer a literal alias of
+      `hasTranslationAccess`: `PLAN_LIMITS` (`server/utility/entitlements.js`)
+      gained a `brandingAccess` boolean per plan, and `hasBrandingAccess`
+      reads it via `getLimits(companyType, tier)`, same shape as
+      `hasFullLibrary`. Tracing every call site surfaced a real bug beyond the
+      literal-alias smell: `Settings.tsx`'s GC upsell copy already promised
+      "Custom branding is a GC Site Pro feature", but GC Site Pro is a
+      per-jobsite purchase (`jobsites.plan`), not a company tier, and nothing
+      granted a GC's own company that entitlement from owning one — a real
+      GC Site Pro customer's tier stayed `basic`/`hasBrandingAccess: false`
+      forever. New `server/services/jobsites.js` `hasActiveSitePro(gcCompanyId)`
+      (mirrors `sponsorship.js`'s `isSponsored` shape, queries `jobsites`
+      directly) + new `server/services/branding.js` `resolveBrandingAccess`
+      (short-circuits on the plan-level check for subs/GC Portfolio, only
+      falls through to `hasActiveSitePro` for a GC without one — a new file
+      rather than added to `companies.js`, since `jobsites.js` already
+      requires `companiesService` and the reverse require would be circular).
+      `server/controllers/companies.js`'s `uploadLogo` and
+      `server/controllers/users.js`'s `getCurrentUser` (now async) both route
+      through it; `pdfGeneration.js`'s two call sites updated to the new
+      `(companyType, tier)` signature (no behavior change — only subs ever
+      generate a meeting-log PDF); `uploadLogo`'s upgrade message is now
+      GC/sub-aware ("Upgrade to GC Site Pro..." vs "...Trade Pro..."), closing
+      a matching message mismatch. Client: `apiUsers.ts`'s `CurrentUser`
+      gained `hasBrandingAccess: boolean`; `useCurrentUser.ts` now reads it
+      server-resolved from `GET /api/users/me` (like `plan`/`limits`) instead
+      of mirroring tier client-side — `Settings.tsx` needed no change, its
+      copy was already correct. `docs/pricing-promise-gaps.md`'s stale
+      "exactly two gates, both reading `[premium, enterprise]`" fact-base line
+      updated to match. New `server/services/branding.test.js`; test updates
+      in `entitlements.test.js`, `jobsites.test.js`, `companies.test.js`,
+      `users.test.js`, and client `useCurrentUser.test.tsx`.
 - [x] GC "1-Click OSHA Defense Bundle" ZIP export — shipped in Phase 9e; see
       that section for the full writeup. Design doc:
       `docs/osha-defense-bundle-design.md`.
@@ -1406,10 +1441,9 @@ completion row is enqueued), so `MeetingWizard.tsx` and its tests are unchanged.
       `meeting_logs.held_at` is set; the PDF header reads `Meeting held: …` and its footer `Generated …`; the
       downloaded filename and the email carry the held date. Then `curl` `PATCH …/complete` with no body →
       `held_at` = `completed_at`; and with a `heldAt` ~10 days old → still completes, `held_at` = server time
-- [ ] Known limitations, tracked not dropped: (1) already-generated PDFs keep the old "Completed" header — no
-      regeneration path exists; (2) `formatDate` prints UTC and `held_at` keeps no timezone, so a late-evening
-      West Coast talk can show the next calendar date on the PDF — a real fix stores the foreman's tz offset
-      (e.g. `held_tz_offset`) and formats with it; (3) a client-supplied time can be backdated (bounded to 7
+- [ ] Known limitations, tracked not dropped: (1) already-generated PDFs keep the old "Completed" header until
+      re-rendered with `scripts/regenerate-pdfs.js` (Phase 11e); (2) ~~`formatDate` printed UTC, so a late-evening West Coast talk could show
+      the next calendar date on the PDF~~ — fixed in Phase 11d (`held_tz_offset`); (3) a client-supplied time can be backdated (bounded to 7
       days, and `completed_at` is kept as server-side evidence), so 6e/6f show both `heldAt` and `completedAt`
       on the GC detail view; (4) `heldAt` is stamped when the completion row is enqueued, so a save resumed after
       an interruption stamps the resume time rather than the first Save tap
@@ -1469,8 +1503,17 @@ design doc, which is updated to match):
       automated test added: this repo has no precedent for testing express-validator chains in isolation (no
       `supertest`, no `server/routes/*.test.js` files) — verification folds into the still-pending manual/curl
       smoke below (add `gcNameCustom: ""` → 400 to that pass)
-- [ ] Follow-up, not done here: the DB `check_gc_info` constraint only blocks `NULL`, not `''` — tighten it (e.g.
-      `NULLIF(TRIM(gc_name_custom), '') IS NOT NULL`) for real defense-in-depth beyond the validator fix above
+- [x] Follow-up (Phase 11b): tightened the DB `check_gc_info` constraint itself to
+      `gc_company_id IS NOT NULL OR NULLIF(TRIM(gc_name_custom), '') IS NOT NULL` — `Supabase_SQL.sql`
+      (+ `DROP`/`ADD CONSTRAINT` migration note for an existing DB) and `Supabase_Schema.md`. No
+      server/client/test changes needed: every writer of `gc_name_custom` already produces a real,
+      non-blank value (`create`'s `admission.gcName` or validator-checked `gcNameCustom`, `linkGc`'s
+      `gc.name`, `unlinkGc`'s untouched prior value, and the 6c `.trim().notEmpty()` PATCH validator
+      above) — confirmed by re-reading `server/services/projects.js` and
+      `docs/jobsite-design.md`'s independent note that the jobsite-accept path "still satisfies
+      `check_gc_info`" the same way. `server/services/projects.test.js`'s three `23514` tests mock
+      the Postgres error code directly, unaffected. Pre-req: apply the `ALTER TABLE` migration to
+      Supabase (non-prod first) before this is real defense-in-depth on a live DB.
 
 ### 6d — Client: identity + linking UI · status: code complete; happy-path smoke passed, edge cases pending
 
@@ -2159,7 +2202,7 @@ from the dashboard, so run the 8d-g backfill first.
 - [x] GC links a sub company to a project (`project_subcontractors`) — done: slim version (GC join code)
       shipped in Phase 6b–6d, superseded by 8d above
 
-## Phase 9 — Pricing-promise gaps · status: audited 2026-09-24; 9a (copy fixes) and 9b (entitlement foundation) done, 9c done (seat caps, history window, library split, archive, PDF-link re-issue), 9d code complete (including 9d-2 roles/scoping — run the `Supabase_SQL.sql` ALTERs), 9e in progress (the GC per-jobsite and subcontractor's own OSHA Defense Bundle ZIPs, cross-project sub safety scorecards, and top-down corporate policy push all shipped; code complete, manual verify pending; other 9e items not started), 9f–9g not started
+## Phase 9 — Pricing-promise gaps · status: audited 2026-09-24; 9a (copy fixes) and 9b (entitlement foundation) done, 9c done (seat caps, history window, library split, archive, PDF-link re-issue), 9d code complete (including 9d-2 roles/scoping — run the `Supabase_SQL.sql` ALTERs), 9e in progress (the GC per-jobsite and subcontractor's own OSHA Defense Bundle ZIPs, cross-project sub safety scorecards, top-down corporate policy push, QR-code jobsite join, and the tamper-evidence content seal + audit log all shipped; code complete, manual verify pending; other 9e items not started), 9f–9g not started
 
 Audit of the pricing page (`client/src/data/plans.ts`, `Pricing.tsx` FAQ/callout) and landing page copy against
 the code. Full evidence table, statuses and per-gap resolution live in `docs/pricing-promise-gaps.md` — every
@@ -2646,11 +2689,70 @@ Costs one extra query per request for Free subs (`resolveEffectiveTier`) and per
     this job site" instead of erroring; confirm a foreman/GC account sees the right blocked state;
     confirm a brand-new sub can sign up straight from the link and lands already joined; confirm
     Remove still works on a QR-joined sub.
-- [ ] Tamper-evidence: a content hash/seal on the PDF + audit log, and GPS capture if the "GPS-verified" claim
-      stays; otherwise remove both claims in 9a.
+- [x] Tamper-evidence: a content hash/seal on the PDF + audit log · status: code complete, manual verify pending
+
+  Design doc: `docs/tamper-evidence-design.md`. Scope decided: an HMAC-SHA256 content seal (server-only
+  secret, not a plain hash — a plain hash wouldn't close the "service-role writes bypass it" gap
+  `docs/pricing-promise-gaps.md` flagged) computed atomically at completion, plus a `meeting_logs`-scoped
+  audit trail and a small client-facing Verify affordance. No plan gate — the one 9e feature that
+  deliberately isn't gated (baseline record integrity, not a premium capability). GPS capture dropped by
+  decision, not built: no live copy claims it anymore (9a already reworded `CompliancePdfCard.tsx`/
+  `ComparisonTable.tsx`), and the aspirational strategy-doc line was reworded instead of building capture.
+
+  - Server: new `meeting_logs.content_seal`/`sealed_at` columns; new `meeting_log_audit_events` table
+    (`created`/`completed`/`pdf_generated`/`seal_verified`, server-generated `uuidv4()` id, soft-fail
+    writes). New `server/utility/contentSeal.js` (`buildCanonicalPayload`, `computeSeal`, `sealsMatch`,
+    `shortSeal` — pure, HMAC-SHA256 keyed by the new `MEETING_LOG_SEAL_SECRET` env var). New
+    `server/services/auditLog.js`. `meetingLogs.js`'s `complete()` now seals the row in the same update
+    that stamps `completed_at`/`held_at`, and gained `verifySeal`; `assertNotCompleted` extended to hand
+    back the fields the seal payload needs. `pdfGenerationQueue.js` records a `pdf_generated` audit event.
+    `pdfGeneration.js`'s footer prints a short seal fragment (`Content seal: ...`) when one exists. New
+    `GET /api/meetings/:id/verify-seal` (`routes/meetingLogs.js` + `controllers/meetingLogs.js`) and its
+    GC-side twin `GET /api/gc/meetings/:id/verify-seal` (`gcDashboard.js`'s new `verifySeal`,
+    `controllers/gc.js`, `routes/gc.js`) — `toMeetingSummary` gained a derived `sealed` boolean, never the
+    raw seal.
+  - Server tests: new `contentSeal.test.js` (12), `auditLog.test.js` (4); `meetingLogs.test.js` +30-ish
+    across `complete`/`assertNotCompleted`/new `verifySeal`; `gcDashboard.test.js` +new `verifySeal`
+    describe + `sealed` assertions; `pdfGeneration.test.js` +2; `pdfGenerationQueue.test.js` +2;
+    `controllers/meetingLogs.test.js` + `controllers/gc.test.js` updated/extended. Full
+    `npm run test:server`: 62 suites / 1042 tests passing.
+  - Client: `interfaces/meetingLog.ts` gained `contentSeal`/`sealedAt` + new `SealVerification`;
+    `interfaces/gcDashboard.ts`'s `GcMeetingSummary` gained `sealed`. `apiMeetingLogs.ts`/`apiGc.ts` gained
+    `verifyMeetingSeal`/`verifyGcMeetingSeal`. New `hooks/useVerifyMeetingSeal.ts` +
+    `useVerifyGcMeetingSeal.ts` (mirror the existing PDF-URL hooks' "fetch on click, shared across a list"
+    shape, plus a `verifyingId` so one row's result can't flash on every row). New
+    `features/meeting-shared/SealBadge.tsx` — a neutral "Sealed" pill + a Verify button that turns
+    green/red once checked — wired into `MonthMeetings.tsx` and `SubMeetingsModal.tsx`.
+  - Client tests: new `SealBadge.test.tsx` (9), `useVerifyMeetingSeal.test.tsx` (4),
+    `useVerifyGcMeetingSeal.test.tsx` (4); `apiMeetingLogs.test.ts` +3, `apiGc.test.ts` +3;
+    `MonthMeetings.test.tsx` +2, `SubMeetingsModal.test.tsx` +2. Full client suite: 181 files / 1490 tests
+    passing, 100% coverage except the two pre-existing, unrelated gaps in
+    `MeetingWizard.tsx`/`PhotoCapture.tsx` under `src/features/meeting-flow` (confirmed untouched logic,
+    same as every prior 9e feature's note).
+  - Copy: `docs/pricing-promise-gaps.md`'s "Tamper-evident signatures" row flipped to Implemented; its
+    "GPS-verified" row flipped to Resolved (dropped); `docs/pricing-and-positioning-strategy_V2.md`'s PDF
+    Engine Quality row reworded from "GPS-verified" to "HMAC-sealed".
+  - Known v1 limitations (see the design doc): no backfill for pre-feature meetings; no blob-content
+    hashing (paths/ids only, not image bytes); the printed PDF fragment is a human receipt, not a
+    self-contained checksum; the audit log has no viewer UI yet (write-only); no GPS, by decision.
+  - **To ship:** run the new `ALTER TABLE`/`CREATE TABLE` statements in Supabase (`Supabase_SQL.sql`:
+    `meeting_logs.content_seal`/`sealed_at`, `meeting_log_audit_events`) and set
+    `MEETING_LOG_SEAL_SECRET`/`MEETING_LOG_SEAL_SECRET_PROD` before deploying.
+  - Verify: manual pass pending — run the Supabase migration and set `MEETING_LOG_SEAL_SECRET`, then as a
+    sub complete a meeting log and confirm `content_seal`/`sealed_at` are populated, the PDF footer shows
+    the seal line, and `meeting_log_audit_events` gets `created`/`completed`/`pdf_generated` rows; click
+    Verify on the Meeting History page and confirm "Verified"; as a linked GC, click Verify on the same
+    meeting and confirm "Verified" there too; hand-edit a sealed row's field in Supabase and confirm Verify
+    now returns "Tampered" on both sides; confirm a pre-feature meeting (no seal) shows no badge on either
+    side.
 - [ ] AI Talk Builder and cloud AI voice (see ~1736-1741).
 - [ ] Grow the library toward 500+ (see ~1749-1754; currently 112).
-- [ ] Multi-crew scheduling and equipment check-ins (no tables or code).
+- [-] Multi-crew scheduling and equipment check-ins — **dropped** (2026-09-29). No tables or code existed.
+      Workforce scheduling and equipment inspection logging are scope outside TailgatePro's core toolbox-talk
+      compliance loop (run a talk → capture signatures → sealed PDF → GC visibility) and overlap dedicated
+      tools (Rhumbix/busybusy for scheduling, Procore Inspections for equipment) — the same reasoning that
+      already dropped Custom safety manual upload and deferred the form/manual builder above. Removed from
+      Trade Enterprise's pricing copy (`plans.ts`, the strategy doc, `docs/pricing-promise-gaps.md`).
 
 ### 9f — Integrations (blocked on billing; deferred)
 
@@ -2730,6 +2832,86 @@ seeded until they get topic-specific content. Feeds the "grow the library" item 
 - [ ] Update marketing/pricing copy that quotes the library size (was 34; now 112 seeded, see `docs/pricing-promise-gaps.md`)
 - [ ] Decide whether the 62 out-of-scope talks (quality, IT security, ethics, procurement) belong in a separate
       non-safety library
+
+## Phase 11 — No-cost backlog
+
+A cross-cutting index, not a move: every item below already lives in its own phase above with the
+full write-up; this phase just gathers the ones that need **no** paid third-party service (no
+Stripe, no Twilio, no Procore/ACC/QuickBooks, no paid AI, no purchased content) into one place so
+they can be worked one at a time. Tick a box here **and** in its source phase when done.
+
+- [x] 11a. Fix the pre-existing `tsc` build failure blocking `npm run build` — `Input.tsx`
+      referenced `theme.colors.concrete[300]` (not on the theme type) plus an `@types/react` 19
+      `cloneElement`/`ReactElement` typing issue. Done — see Phase 1 (~line 81).
+- [x] 11b. Tighten the `check_gc_info` DB constraint to reject blank/whitespace
+      `gc_name_custom`, not just `NULL` (`NULLIF(TRIM(gc_name_custom), '') IS NOT NULL`) —
+      the validator-level fix already shipped in 6c; this is schema-level defense-in-depth.
+      Done — see Phase 6c (~line 1479). Pre-req: apply the migration to Supabase.
+- [x] 11c. Full tier-gating of PDF branding by *plan name* instead of raw `tier`,
+      plus fixing GC branding to key off owning a Site Pro jobsite (not just GC
+      Portfolio tier). Done — see Phase 5e (~line 1159).
+- [x] 11d. Store the foreman's timezone offset on a meeting log (e.g. `held_tz_offset`) so
+      `held_at` formats in local time instead of UTC — fixes a late-evening West Coast talk
+      printing the next calendar date on the PDF. See Phase 6b2 (~line 1409).
+      Done · status: code complete, live smoke pending (apply the `ALTER TABLE` first). New nullable
+      `meeting_logs.held_tz_offset SMALLINT` (`Date#getTimezoneOffset()` minutes; `Supabase_SQL.sql` +
+      `Supabase_Schema.md`, no backfill — NULL keeps UTC output, so existing PDFs/filenames are unchanged).
+      Client sends `heldTzOffset` with `heldAt` (hook payload → replay handler → `completeMeeting`); the route
+      validates it as an optional int ±840, and `resolveHeldTzOffset` nulls anything invalid rather than
+      rejecting (same retry-forever-outbox reasoning as `heldAt`). `formatDate(iso, tzOffset?)` prints local time
+      with a `UTC-7`/`UTC+5:30` label; `buildPdfFilename` takes `tzOffset` and files under the local date — wired
+      into the PDF header, the email `completedDate`, and every filename path (`getPdfUrl`, sub/GC defense
+      bundles, GC `getMeetingPdfUrl`, the emailed link) so they all agree. **Deliberately not in the content
+      seal**: adding a key would invalidate every already-sealed meeting, and the instant (`held_at`) is still
+      sealed. Server 1078/1078; the 3 touched client suites pass with the changed files at 100%.
+- [x] 11e. Regeneration path for already-completed PDFs, so a header/format fix can be reapplied
+      to historical logs, not just new ones. See Phase 6b2 (~line 1409).
+  - `pdfGenerationQueue.js`: fetch → render → upload → `setFinalPdfUrl` extracted into `renderAndStore`;
+    `enqueue()` unchanged in behavior (soft-fail, audit, GC email); new exported `regenerate(id, companyId)`
+    reuses it, audits `pdf_generated` with `metadata.regenerated: true` (no CHECK-constraint migration), never
+    emails, and throws so callers can report per row. Overwrites the same `<id>/report.pdf`, so old emailed
+    signed links keep working. The seal is unaffected (covers ids/timestamps/signature fields, not PDF bytes).
+  - Operator script `scripts/regenerate-pdfs.js` (dry-run default, `--apply`, `--id`, `--company`, `--since`,
+    `--limit`; continues past per-meeting failures, exit 1 if any failed) + pure `scripts/lib/regeneratePlan.js`.
+    Deliberately no HTTP endpoint (no platform-admin role). Only completed meetings that already have a PDF.
+  - Tests: `regeneratePlan.test.js` (11) + 2 `regenerate` cases in `pdfGenerationQueue.test.js`; server suite
+    1091 passed / 3 skipped.
+  - Verify (user, needs live Supabase): `node scripts/regenerate-pdfs.js --id <id>` dry run lists it; with
+    `--apply` the downloaded PDF shows the current header/local-time format and the same seal fragment, Verify
+    still says "Verified", an audit row has `regenerated: true`, and the GC gets no email.
+- [ ] 11f. Configurable meeting cadence (GC- or sub-defined, e.g. weekly instead of the
+      hardcoded daily rule) — `compliance.js`/`dayWindow.js` are already window-parameterized in
+      prep for this. See Phase 6 (~line 1657).
+- [ ] 11g. Pagination for `GET /api/gc/meetings` past the current 200-row cap.
+      See Phase 6e (~line 1573).
+- [ ] 11h. DST-transition day fix in `server/utility/dayWindow.js` (currently treats every day
+      as a flat 24h window). See Phase 6e (~line 1573).
+- [ ] 11i. Disable the "Link to GC" UI while a project's create is still queued in the offline
+      outbox (currently 404s "Project not found" until it syncs). See Phase 6d (~line 1522).
+- [ ] 11j. GC-side duplicate-jobsite merge tool (e.g. "Project A" vs "Project_A" created via a
+      sub's join-code link) — re-points `projects.jobsite_id` and roster rows.
+      See Phase 9d-2 (~line 2309).
+- [ ] 11k. Conversion-trigger upsell modals from the strategy doc §6 (2nd-foreman, 30-day
+      lockout, sub #2 blur, 4th-site "$447 vs $499" prompt, policy-push prompt, scorecard
+      prompt) — pure UI, no SMS/billing needed. See Phase 9g (~line 2720).
+- [ ] 11l. PDF footer CTA "Claim Your Free GC Portal" — the shipped watermark currently has no
+      CTA. See Phase 9g (~line 2723).
+- [ ] 11m. Basic tag/keyword search over the talk library — the strategy doc's "smart tagging"
+      implies NL search, but a non-AI keyword version needs no paid API.
+      See Phase 9g (~line 2724).
+- [ ] 11n. Update marketing/pricing copy still quoting the old "34 talks" library size (now 112
+      seeded). See Phase 10 (~line 2789).
+- [ ] 11o. Word-library content decisions: confirm authorship/license on the 220 imported talks,
+      verify CPWR "all rights reserved" PDFs (talks 010, 122, 139, 142, 144), decide whether
+      environmental-compliance talks 177/180 belong in the library, decide the "overlapping an
+      existing talk" list. See Phase 10 (~lines 2747-2790).
+- [ ] 11p. Grow the library further using the existing free-source agents
+      (`@safety-collector`/`@safety-structurer`/`@safety-auditor` against OSHA/NIOSH/CPWR)
+      toward the 500+ claim. See Phase 9g (~line 2706).
+
+**Excluded on purpose** (needs Stripe, Twilio, or another paid service — tracked in `## Deferred`
+and Phase 9e/9f instead): GC Site Pro sponsorship purchase flow, SMS nudges, AI Talk Builder /
+cloud AI voice, Procore/ACC/JobTread/QuickBooks sync, the purchased 300+-talk bundle.
 
 ## Deferred
 

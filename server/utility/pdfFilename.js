@@ -26,11 +26,28 @@ const slugify = (text) =>
 // `meetingDate` is an ISO timestamp for when the meeting was held (the meeting
 // log's `heldAt`, not the server-receipt `completedAt` — an offline meeting
 // synced the next day must be filed under the day it actually happened). Its
-// first 10 characters are the UTC calendar date.
-const buildPdfFilename = ({ companyName, projectName, meetingDate, meetingLogId }) => {
+// first 10 characters are the UTC calendar date, unless `tzOffset` (minutes,
+// the sign of `Date#getTimezoneOffset()`) is given — then it's the foreman's
+// local calendar date, so a late-evening West Coast talk isn't filed under the
+// next day.
+const buildPdfFilename = ({
+  companyName,
+  projectName,
+  meetingDate,
+  meetingLogId,
+  tzOffset,
+}) => {
   const companySlug = slugify(companyName) || "company";
   const projectSlug = slugify(projectName) || "project";
-  const date = meetingDate ? meetingDate.slice(0, 10) : "undated";
+  const localMs =
+    meetingDate && Number.isInteger(tzOffset)
+      ? new Date(meetingDate).getTime() - tzOffset * 60 * 1000
+      : NaN;
+  const date = meetingDate
+    ? Number.isNaN(localMs)
+      ? meetingDate.slice(0, 10)
+      : new Date(localMs).toISOString().slice(0, 10)
+    : "undated";
   const shortId = meetingLogId.replace(/-/g, "").slice(0, 8);
   return `${companySlug}-${projectSlug}-${date}-${shortId}.pdf`;
 };

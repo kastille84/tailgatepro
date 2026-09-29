@@ -13,6 +13,7 @@ const {
   uploadCrewPhoto,
   getCrewPhotoUrl,
   getPdfUrl,
+  verifySeal,
   getDefenseBundle,
 } = require("./meetingLogs");
 
@@ -25,6 +26,7 @@ const completeSpy = vi.spyOn(meetingLogsService, "complete");
 const uploadCrewPhotoSpy = vi.spyOn(meetingLogsService, "uploadCrewPhoto");
 const getCrewPhotoUrlSpy = vi.spyOn(meetingLogsService, "getCrewPhotoUrl");
 const getPdfUrlSpy = vi.spyOn(meetingLogsService, "getPdfUrl");
+const verifySealSpy = vi.spyOn(meetingLogsService, "verifySeal");
 const getDefenseBundleEntriesSpy = vi.spyOn(meetingLogsService, "getDefenseBundleEntries");
 const streamBundleSpy = vi.spyOn(zipBundleService, "streamBundle");
 const getCompanySpy = vi.spyOn(companiesService, "getById");
@@ -60,6 +62,7 @@ describe("meetingLogs controller", () => {
     uploadCrewPhotoSpy.mockReset();
     getCrewPhotoUrlSpy.mockReset();
     getPdfUrlSpy.mockReset();
+    verifySealSpy.mockReset();
     getDefenseBundleEntriesSpy.mockReset();
     streamBundleSpy.mockReset();
     getTalkSpy.mockReset().mockResolvedValue({ id: "talk-1" });
@@ -420,6 +423,7 @@ describe("meetingLogs controller", () => {
       expect(completeSpy).toHaveBeenCalledWith({
         id: "meeting-1",
         companyId: "company-1",
+        actorId: "user-1",
       });
       expect(res.status).toHaveBeenCalledWith(200);
       expect(res.json).toHaveBeenCalledWith({ success: true, data: completed });
@@ -440,7 +444,38 @@ describe("meetingLogs controller", () => {
         id: "meeting-1",
         companyId: "company-1",
         heldAt: "2026-09-20T22:30:00.000Z",
+        actorId: "user-1",
       });
+    });
+
+    it("should forward the client-reported req.body.heldTzOffset to the service", async () => {
+      // Arrange
+      req.params = { id: "meeting-1" };
+      req.body = { heldAt: "2026-09-20T22:30:00.000Z", heldTzOffset: 420 };
+      completeSpy.mockResolvedValue(meeting);
+
+      // Act
+      await completeMeeting(req, res, next);
+
+      // Assert
+      expect(completeSpy).toHaveBeenCalledWith(
+        expect.objectContaining({ heldTzOffset: 420 }),
+      );
+    });
+
+    it("should always pass the caller's own id as actorId, never from the request body", async () => {
+      // Arrange
+      req.params = { id: "meeting-1" };
+      req.body = { actorId: "someone-elses-id" };
+      completeSpy.mockResolvedValue(meeting);
+
+      // Act
+      await completeMeeting(req, res, next);
+
+      // Assert
+      expect(completeSpy).toHaveBeenCalledWith(
+        expect.objectContaining({ actorId: "user-1" }),
+      );
     });
 
     it("should pass an undefined heldAt (not throw) when the request has no body at all", async () => {
@@ -593,6 +628,40 @@ describe("meetingLogs controller", () => {
 
       // Act
       await getPdfUrl(req, res, next);
+
+      // Assert
+      expect(next).toHaveBeenCalledWith(error);
+      expect(res.status).not.toHaveBeenCalled();
+    });
+  });
+
+  describe("verifySeal", () => {
+    it("should call the service with req.params.id + the caller's companyId + the caller's own id and respond 200", async () => {
+      // Arrange
+      req.params = { id: "meeting-1" };
+      verifySealSpy.mockResolvedValue({ valid: true, sealedAt: "2026-09-14T01:00:00.000Z" });
+
+      // Act
+      await verifySeal(req, res, next);
+
+      // Assert
+      expect(verifySealSpy).toHaveBeenCalledWith("meeting-1", "company-1", "user-1");
+      expect(res.status).toHaveBeenCalledWith(200);
+      expect(res.json).toHaveBeenCalledWith({
+        success: true,
+        data: { valid: true, sealedAt: "2026-09-14T01:00:00.000Z" },
+      });
+      expect(next).not.toHaveBeenCalled();
+    });
+
+    it("should forward a service error to next() (e.g. the not-yet-sealed 404 case)", async () => {
+      // Arrange
+      req.params = { id: "meeting-1" };
+      const error = new Error("This meeting hasn't been sealed yet");
+      verifySealSpy.mockRejectedValue(error);
+
+      // Act
+      await verifySeal(req, res, next);
 
       // Assert
       expect(next).toHaveBeenCalledWith(error);

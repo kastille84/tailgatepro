@@ -29,6 +29,10 @@ const { buildPdfFilename } = require("../utility/pdfFilename");
 // the top level, unlike meetingLogsService/signaturesService below.
 const emailService = require("./email");
 const envUtils = require("../utility/envUtils");
+// auditLog.js has no reverse dependency (only supabase/uuid), so — like
+// companiesService/emailService above — it's safe to require at the top
+// level, unlike meetingLogsService/signaturesService below.
+const auditLogService = require("./auditLog");
 
 const PDF_BUCKET = "meeting-pdfs";
 const CREW_PHOTO_BUCKET = "crew-photos";
@@ -61,104 +65,121 @@ const resolveGcContactEmail = async (project) => {
   return project.gcContactEmail ?? null;
 };
 
+// Fetches every input, renders the PDF, uploads it to its deterministic path
+// (overwriting any previous render) and records the path on meeting_logs.
+// Throws on any failure — enqueue() soft-fails around it, regenerate() lets
+// it propagate. Returns what enqueue()'s email step needs.
+const renderAndStore = async (meetingLogId, companyId) => {
+  // meetingLogs.js and signatures.js are required lazily, not at module
+  // top-level: meetingLogs.js requires this file too (to call enqueue from
+  // complete()), and signatures.js requires meetingLogs.js — so a
+  // top-level require of either here closes a circular-require loop. This
+  // codebase's `module.exports = {...}` style (reassignment, not
+  // incremental `exports.x =`) means whichever module in a cycle finishes
+  // loading second hands the other a stale, empty exports object.
+  // Requiring inside the function runs after every module has finished
+  // loading, so the cache always returns the real, fully-populated module.
+  const meetingLogsService = require("./meetingLogs");
+  const signaturesService = require("./signatures");
+
+  const meetingLog = await meetingLogsService.getById(meetingLogId, companyId);
+
+  const [project, talk, signatures, company] = await Promise.all([
+    projectsService.getById(meetingLog.projectId, companyId),
+    meetingLog.talkId
+      ? talksService.getById(meetingLog.talkId, companyId)
+      : null,
+    signaturesService.listForMeeting(meetingLogId, companyId),
+    companiesService.getById(companyId),
+  ]);
+
+  let crewPhotoBuffer = null;
+  if (meetingLog.crewPhotoUrl) {
+    try {
+      crewPhotoBuffer = await storageService.downloadBlob(
+        CREW_PHOTO_BUCKET,
+        meetingLog.crewPhotoUrl,
+      );
+    } catch (photoError) {
+      // A photo we can't download degrades to "no crew photo on file" in
+      // the rendered PDF (see pdfGeneration.js) rather than aborting the
+      // whole report.
+      console.error(
+        `pdfGenerationQueue: could not download crew photo for meeting ${meetingLogId}`,
+        photoError,
+      );
+    }
+  }
+
+  // The company's uploaded logo, downloaded the same best-effort way as
+  // the crew photo: a failed/missing logo degrades to no logo (and the
+  // watermark is gated on tier alone, not logo presence — see
+  // pdfGeneration.js), it never aborts the whole PDF.
+  let logoBuffer = null;
+  if (company?.logoPath) {
+    try {
+      logoBuffer = await storageService.downloadBlob(
+        LOGO_BUCKET,
+        company.logoPath,
+      );
+    } catch (logoError) {
+      console.error(
+        `pdfGenerationQueue: could not download company logo for meeting ${meetingLogId}`,
+        logoError,
+      );
+    }
+  }
+
+  // Each signature's own drawn-image blob, downloaded the same
+  // best-effort way as the crew photo: one signature's image failing to
+  // download doesn't abort the whole PDF, it just prints without that
+  // signer's image (see pdfGeneration.js's "(signature image
+  // unavailable)" fallback).
+  const signaturesWithImages = await Promise.all(
+    signatures.map(async (signature) => {
+      try {
+        const imageBuffer = await storageService.downloadBlob(
+          SIGNATURE_BUCKET,
+          signature.signaturePath,
+        );
+        return { ...signature, imageBuffer };
+      } catch (signatureError) {
+        console.error(
+          `pdfGenerationQueue: could not download a signature image for meeting ${meetingLogId}`,
+          signatureError,
+        );
+        return { ...signature, imageBuffer: null };
+      }
+    }),
+  );
+
+  const pdfBuffer = await pdfGeneration.renderMeetingLogPdf({
+    meetingLog,
+    project,
+    talk,
+    signatures: signaturesWithImages,
+    crewPhotoBuffer,
+    company,
+    logoBuffer,
+  });
+
+  const path = meetingLogsService.pdfPath(meetingLogId);
+  await storageService.uploadBlob(PDF_BUCKET, path, pdfBuffer, "application/pdf");
+  await meetingLogsService.setFinalPdfUrl(meetingLogId, companyId, path);
+  return { path, meetingLog, project, company };
+};
+
 const enqueue = async (meetingLogId, companyId) => {
   try {
-    // meetingLogs.js and signatures.js are required lazily, not at module
-    // top-level: meetingLogs.js requires this file too (to call enqueue from
-    // complete()), and signatures.js requires meetingLogs.js — so a
-    // top-level require of either here closes a circular-require loop. This
-    // codebase's `module.exports = {...}` style (reassignment, not
-    // incremental `exports.x =`) means whichever module in a cycle finishes
-    // loading second hands the other a stale, empty exports object.
-    // Requiring inside the function runs after every module has finished
-    // loading, so the cache always returns the real, fully-populated module.
-    const meetingLogsService = require("./meetingLogs");
-    const signaturesService = require("./signatures");
-
-    const meetingLog = await meetingLogsService.getById(meetingLogId, companyId);
-
-    const [project, talk, signatures, company] = await Promise.all([
-      projectsService.getById(meetingLog.projectId, companyId),
-      meetingLog.talkId
-        ? talksService.getById(meetingLog.talkId, companyId)
-        : null,
-      signaturesService.listForMeeting(meetingLogId, companyId),
-      companiesService.getById(companyId),
-    ]);
-
-    let crewPhotoBuffer = null;
-    if (meetingLog.crewPhotoUrl) {
-      try {
-        crewPhotoBuffer = await storageService.downloadBlob(
-          CREW_PHOTO_BUCKET,
-          meetingLog.crewPhotoUrl,
-        );
-      } catch (photoError) {
-        // A photo we can't download degrades to "no crew photo on file" in
-        // the rendered PDF (see pdfGeneration.js) rather than aborting the
-        // whole report.
-        console.error(
-          `pdfGenerationQueue: could not download crew photo for meeting ${meetingLogId}`,
-          photoError,
-        );
-      }
-    }
-
-    // The company's uploaded logo, downloaded the same best-effort way as
-    // the crew photo: a failed/missing logo degrades to no logo (and the
-    // watermark is gated on tier alone, not logo presence — see
-    // pdfGeneration.js), it never aborts the whole PDF.
-    let logoBuffer = null;
-    if (company?.logoPath) {
-      try {
-        logoBuffer = await storageService.downloadBlob(
-          LOGO_BUCKET,
-          company.logoPath,
-        );
-      } catch (logoError) {
-        console.error(
-          `pdfGenerationQueue: could not download company logo for meeting ${meetingLogId}`,
-          logoError,
-        );
-      }
-    }
-
-    // Each signature's own drawn-image blob, downloaded the same
-    // best-effort way as the crew photo: one signature's image failing to
-    // download doesn't abort the whole PDF, it just prints without that
-    // signer's image (see pdfGeneration.js's "(signature image
-    // unavailable)" fallback).
-    const signaturesWithImages = await Promise.all(
-      signatures.map(async (signature) => {
-        try {
-          const imageBuffer = await storageService.downloadBlob(
-            SIGNATURE_BUCKET,
-            signature.signaturePath,
-          );
-          return { ...signature, imageBuffer };
-        } catch (signatureError) {
-          console.error(
-            `pdfGenerationQueue: could not download a signature image for meeting ${meetingLogId}`,
-            signatureError,
-          );
-          return { ...signature, imageBuffer: null };
-        }
-      }),
+    const { path, meetingLog, project, company } = await renderAndStore(
+      meetingLogId,
+      companyId,
     );
-
-    const pdfBuffer = await pdfGeneration.renderMeetingLogPdf({
-      meetingLog,
-      project,
-      talk,
-      signatures: signaturesWithImages,
-      crewPhotoBuffer,
-      company,
-      logoBuffer,
+    await auditLogService.record({
+      meetingLogId,
+      eventType: "pdf_generated",
+      metadata: { path },
     });
-
-    const path = meetingLogsService.pdfPath(meetingLogId);
-    await storageService.uploadBlob(PDF_BUCKET, path, pdfBuffer, "application/pdf");
-    await meetingLogsService.setFinalPdfUrl(meetingLogId, companyId, path);
 
     // Silently skip when neither a linked GC admin nor gc_contact_email
     // resolves to anything (see resolveGcContactEmail above), per docs/tasks.md
@@ -171,6 +192,7 @@ const enqueue = async (meetingLogId, companyId) => {
         projectName: project.name,
         meetingDate: meetingLog.heldAt,
         meetingLogId: meetingLog.id,
+        tzOffset: meetingLog.heldTzOffset,
       });
 
       const pdfUrl = await storageService.getSignedUrl(
@@ -189,6 +211,7 @@ const enqueue = async (meetingLogId, companyId) => {
         // GC Report page mints a fresh signed URL for a logged-in GC.
         reportUrl: `${envUtils.keysBasedOnEnv().clientUrl}/gc/meetings/${meetingLogId}/report`,
         meetingDate: meetingLog.heldAt,
+        meetingTzOffset: meetingLog.heldTzOffset,
       });
     }
   } catch (error) {
@@ -199,4 +222,19 @@ const enqueue = async (meetingLogId, companyId) => {
   }
 };
 
-module.exports = { enqueue };
+// Re-renders an already-completed meeting's PDF with the current renderer
+// (docs/tasks.md 11e), for scripts/regenerate-pdfs.js. Overwrites the same
+// path, so previously emailed signed links keep working. Never emails, and
+// never touches the seal: content_seal covers ids/timestamps/signature fields,
+// not PDF bytes or final_pdf_url. Throws so the caller can report per row.
+const regenerate = async (meetingLogId, companyId) => {
+  const { path } = await renderAndStore(meetingLogId, companyId);
+  await auditLogService.record({
+    meetingLogId,
+    eventType: "pdf_generated",
+    metadata: { path, regenerated: true },
+  });
+  return path;
+};
+
+module.exports = { enqueue, regenerate };

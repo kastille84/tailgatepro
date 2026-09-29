@@ -15,6 +15,7 @@ vi.mock("../../../src/context/online-status", () => ({
   useOnlineStatus: () => mockUseOnlineStatus(),
 }));
 
+const mockFetchNextPage = vi.fn();
 const mockUseGcMeetings = vi.fn();
 vi.mock("../../../src/hooks/useGcMeetings", () => ({
   useGcMeetings: (...args: unknown[]) => mockUseGcMeetings(...args),
@@ -24,6 +25,12 @@ const mockOpenPdf = vi.fn();
 const mockUseGcMeetingPdfUrl = vi.fn();
 vi.mock("../../../src/hooks/useGcMeetingPdfUrl", () => ({
   useGcMeetingPdfUrl: () => mockUseGcMeetingPdfUrl(),
+}));
+
+const mockVerifySeal = vi.fn();
+const mockUseVerifyGcMeetingSeal = vi.fn();
+vi.mock("../../../src/hooks/useVerifyGcMeetingSeal", () => ({
+  useVerifyGcMeetingSeal: () => mockUseVerifyGcMeetingSeal(),
 }));
 
 const sub: GcSubCompliance = {
@@ -46,6 +53,7 @@ const meeting: GcMeetingSummary = {
   completedAt: "2026-09-21T13:05:00.000Z",
   signerCount: 2,
   pdfReady: true,
+  sealed: true,
 };
 
 const renderModal = (
@@ -65,10 +73,19 @@ describe("SubMeetingsModal", () => {
       meetings: [meeting],
       isLoading: false,
       isError: false,
+      hasNextPage: false,
+      isFetchingNextPage: false,
+      fetchNextPage: mockFetchNextPage,
     });
     mockUseGcMeetingPdfUrl.mockReturnValue({
       openPdf: mockOpenPdf,
       isPending: false,
+    });
+    mockUseVerifyGcMeetingSeal.mockReturnValue({
+      verifySeal: mockVerifySeal,
+      result: undefined,
+      isPending: false,
+      verifyingId: undefined,
     });
   });
 
@@ -159,12 +176,65 @@ describe("SubMeetingsModal", () => {
     expect(button).toHaveProperty("disabled", true);
   });
 
+  it("shows the seal badge and verifies a meeting's content seal on click", () => {
+    renderModal();
+    fireEvent.click(screen.getByRole("button", { name: "Verify" }));
+    expect(mockVerifySeal).toHaveBeenCalledWith("meeting-1");
+  });
+
+  it("hides the seal badge for a meeting with no seal yet", () => {
+    mockUseGcMeetings.mockReturnValue({
+      meetings: [{ ...meeting, sealed: false }],
+      isLoading: false,
+      isError: false,
+    });
+    renderModal();
+    expect(screen.queryByText("Sealed")).toBeNull();
+  });
+
   it("shows an offline note and disables Open PDF while offline", () => {
     mockUseOnlineStatus.mockReturnValue({ isOnline: false });
     renderModal();
 
     expect(screen.getByText(/you're offline/i)).toBeDefined();
     const button = screen.getByRole("button", { name: /open pdf/i });
+    expect(button).toHaveProperty("disabled", true);
+  });
+
+  it("hides the Load more button when there is no next page", () => {
+    renderModal();
+    expect(screen.queryByRole("button", { name: /load more/i })).toBeNull();
+  });
+
+  it("shows a Load more button and fetches the next page on click", () => {
+    mockUseGcMeetings.mockReturnValue({
+      meetings: [meeting],
+      isLoading: false,
+      isError: false,
+      hasNextPage: true,
+      isFetchingNextPage: false,
+      fetchNextPage: mockFetchNextPage,
+    });
+    renderModal();
+
+    const button = screen.getByRole("button", { name: /load more/i });
+    fireEvent.click(button);
+    expect(mockFetchNextPage).toHaveBeenCalled();
+  });
+
+  it("disables Load more while offline", () => {
+    mockUseOnlineStatus.mockReturnValue({ isOnline: false });
+    mockUseGcMeetings.mockReturnValue({
+      meetings: [meeting],
+      isLoading: false,
+      isError: false,
+      hasNextPage: true,
+      isFetchingNextPage: false,
+      fetchNextPage: mockFetchNextPage,
+    });
+    renderModal();
+
+    const button = screen.getByRole("button", { name: /load more/i });
     expect(button).toHaveProperty("disabled", true);
   });
 });

@@ -47,6 +47,7 @@ describe("useCurrentUser", () => {
       companyType: "subcontractor",
       plan: "trade-free",
       limits: LIMITS,
+      hasBrandingAccess: true,
     });
 
     const { result } = renderHook(() => useCurrentUser(), { wrapper });
@@ -69,6 +70,7 @@ describe("useCurrentUser", () => {
       companyType: "subcontractor",
       plan: "trade-free",
       limits: LIMITS,
+      hasBrandingAccess: true,
     });
 
     const { result } = renderHook(() => useCurrentUser(), { wrapper });
@@ -87,6 +89,7 @@ describe("useCurrentUser", () => {
       companyType: "subcontractor",
       plan: "trade-free",
       limits: LIMITS,
+      hasBrandingAccess: false,
     });
 
     const { result } = renderHook(() => useCurrentUser(), { wrapper });
@@ -94,6 +97,24 @@ describe("useCurrentUser", () => {
     await waitFor(() => expect(result.current.tier).toBe("basic"));
     expect(result.current.hasTranslationAccess).toBe(false);
     expect(result.current.hasBrandingAccess).toBe(false);
+  });
+
+  it("reports hasBrandingAccess true for a GC Free company with a Site Pro jobsite (server-resolved, not tier-derived)", async () => {
+    vi.mocked(apiUsers.getCurrentUser).mockResolvedValue({
+      id: "user-1",
+      companyId: "company-1",
+      role: "admin",
+      tier: "basic",
+      companyType: "gc",
+      plan: "gc-free",
+      limits: LIMITS,
+      hasBrandingAccess: true,
+    });
+
+    const { result } = renderHook(() => useCurrentUser(), { wrapper });
+
+    await waitFor(() => expect(result.current.plan).toBe("gc-free"));
+    expect(result.current.hasBrandingAccess).toBe(true);
   });
 
   it("exposes role, companyId and companyType, flagging a subcontractor company", async () => {
@@ -105,6 +126,7 @@ describe("useCurrentUser", () => {
       companyType: "subcontractor",
       plan: "trade-free",
       limits: LIMITS,
+      hasBrandingAccess: false,
     });
 
     const { result } = renderHook(() => useCurrentUser(), { wrapper });
@@ -125,6 +147,7 @@ describe("useCurrentUser", () => {
       companyType: "gc",
       plan: "trade-free",
       limits: LIMITS,
+      hasBrandingAccess: false,
     });
 
     const { result } = renderHook(() => useCurrentUser(), { wrapper });
@@ -147,6 +170,7 @@ describe("useCurrentUser", () => {
       ...profile,
       companyType: "subcontractor",
       plan: "trade-free",
+      hasBrandingAccess: true,
     });
     const sub = renderHook(() => useCurrentUser(), { wrapper });
     await waitFor(() => expect(sub.result.current.companyType).toBe("subcontractor"));
@@ -156,6 +180,7 @@ describe("useCurrentUser", () => {
       ...profile,
       companyType: "gc",
       plan: "gc-portfolio",
+      hasBrandingAccess: true,
     });
     queryClient.clear();
     const portfolio = renderHook(() => useCurrentUser(), { wrapper });
@@ -167,6 +192,7 @@ describe("useCurrentUser", () => {
       tier: "basic",
       companyType: "gc",
       plan: "gc-free",
+      hasBrandingAccess: false,
     });
     queryClient.clear();
     const free = renderHook(() => useCurrentUser(), { wrapper });
@@ -188,6 +214,7 @@ describe("useCurrentUser", () => {
       companyType: "gc",
       plan: "gc-portfolio",
       limits: LIMITS,
+      hasBrandingAccess: true,
     });
 
     const { result } = renderHook(() => useCurrentUser(), { wrapper });

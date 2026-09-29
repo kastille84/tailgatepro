@@ -39,7 +39,7 @@
 | `status` | Enum | Default `active` | `active`, `completed` |
 | `archived_at` | Timestamptz | Nullable | `NULL` = live; a timestamp = archived (hidden from the default list, still restorable). Orthogonal to `status`. |
 | `created_at` | Timestamptz | Default `now()` | |
-| **CHECK** `check_gc_info` | | `gc_company_id IS NOT NULL OR gc_name_custom IS NOT NULL` | At least one GC identifier must be present |
+| **CHECK** `check_gc_info` | | `gc_company_id IS NOT NULL OR NULLIF(TRIM(gc_name_custom), '') IS NOT NULL` | At least one GC identifier must be present; a blank/whitespace-only `gc_name_custom` does not count (Phase 11b) |
 
 > The Phase 6 `project_subcontractors` junction table was dropped in Phase 8d-h; its role is played by `jobsite_subcontractors` (below).
 
@@ -87,7 +87,10 @@
 | `final_pdf_url` | Text | Nullable | Supabase Storage path for GC |
 | `completed_at` | Timestamptz| Nullable | Set once >=1 signature exists; locks the record and triggers Phase 5 PDF generation. Stamped at **server receipt** — an audit stamp, not the time the meeting happened |
 | `held_at` | Timestamptz| Nullable | Phase 6: when the meeting was actually held, as reported by the client at completion (the wizard's local time). Drives GC compliance windows and the PDF's meeting date/filename; backfilled from `completed_at` for existing rows. See `docs/gc-dashboard-design.md` |
+| `held_tz_offset` | Smallint | Nullable | Phase 11d: the foreman's `Date#getTimezoneOffset()` (minutes, UTC minus local; 420 = UTC-7) at completion, so `held_at` prints in local time on the PDF, email and filename. Display-only, not covered by `content_seal`; NULL (older meetings) = UTC |
 | `synced_at` | Timestamptz| Nullable | Used for offline-sync tracking |
+| `content_seal` | Text | Nullable | Phase 9e (`docs/tamper-evidence-design.md`): HMAC-SHA256 seal over this row's immutable-post-completion fields plus its signatures, keyed by the server-only `MEETING_LOG_SEAL_SECRET`. Set once, atomically, in the same update that stamps `completed_at`. `NULL` while in progress, and for every meeting completed before this feature shipped (not backfilled) |
+| `sealed_at` | Timestamptz | Nullable | When `content_seal` was computed — always equal to `completed_at` for a meeting sealed by this feature |
 
 > RLS: enabled with no policies (server-brokered, deny-all) — see `docs/data-access.md`.
 
@@ -179,5 +182,23 @@ both states instead of a union across an invites table and a roster table. Disti
 `company_invites` (Phase 8c), which is a *person* joining an *existing* company at a *role* —
 this table is a *company* joining another company's *jobsite*, with no role at all. Supersedes
 the Phase 6 `project_subcontractors` table, dropped in 8d-h.
+
+> RLS: enabled with no policies (server-brokered, deny-all) — see `docs/data-access.md`.
+
+### 8. Tamper-Evidence Audit Log (Phase 9e)
+
+Full design: `docs/tamper-evidence-design.md`.
+
+| Table: `meeting_log_audit_events` | Type | Constraints | Description |
+| :--- | :--- | :--- | :--- |
+| `id` | UUID | Primary Key | Server-generated UUID (not an offline record — every event here originates from an authenticated server-side step) |
+| `meeting_log_id` | UUID | Not Null, FK -> `meeting_logs.id` (ON DELETE CASCADE) | The meeting log this event describes |
+| `event_type` | Text | Not Null, CHECK in (`created`, `completed`, `pdf_generated`, `seal_verified`) | The lifecycle event |
+| `actor_id` | UUID | Nullable, FK -> `users.id` (ON DELETE SET NULL) | The acting user, or `NULL` for a system-triggered event (`pdf_generated`) |
+| `metadata` | JSONB | Nullable | Event-specific detail, e.g. `{ valid, via }` on `seal_verified` |
+| `created_at` | Timestamptz | Default `now()` | |
+
+A lifecycle trail scoped to `meeting_logs` only, not a general system-wide audit log — write-only
+in v1 (no admin UI reads it yet).
 
 > RLS: enabled with no policies (server-brokered, deny-all) — see `docs/data-access.md`.

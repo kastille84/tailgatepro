@@ -62,6 +62,26 @@ const toJobsiteWithRoster = (row, unlocked) => ({
   }),
 });
 
+// Whether the caller's GC company owns at least one live (active, not
+// archived), paid Site Pro jobsite (Phase 11c) -- GC Site Pro is a per-site
+// purchase (jobsites.plan), not a company-level tier, so this is the only
+// way to answer "does this GC have Site Pro" at all. Mirrors sponsorship.js's
+// isSponsored shape, but queries jobsites directly (the GC's own sites)
+// rather than jobsite_subcontractors (a sub's membership on someone else's).
+const hasActiveSitePro = async (gcCompanyId) => {
+  const count = await countRows(
+    supabase
+      .from("jobsites")
+      .select("id", { count: "exact", head: true })
+      .eq("gc_company_id", gcCompanyId)
+      .eq("plan", "site_pro")
+      .eq("status", "active")
+      .is("archived_at", null),
+    "Could not check your job site plan",
+  );
+  return count > 0;
+};
+
 // Throws a 403 PLAN_LIMIT when the GC already has as many live (active, not
 // archived) jobsites as its plan allows (Phase 9d). GC Free gets 1 plus one per
 // paid Site Pro site; Portfolio has its own cap (`effectiveJobsiteLimit`).
@@ -593,4 +613,5 @@ module.exports = {
   acceptJoinLink,
   removeSubcontractor,
   getOwnedJobsite,
+  hasActiveSitePro,
 };

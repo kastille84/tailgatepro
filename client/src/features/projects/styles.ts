@@ -63,9 +63,7 @@ export const StyledStatusBadge = styled.span<{ $status: ProjectStatus }>`
   font-weight: 700;
   text-transform: capitalize;
   color: ${({ theme, $status }) =>
-    $status === "active"
-      ? theme.colors.green[700]
-      : theme.colors.navy[600]};
+    $status === "active" ? theme.colors.green[700] : theme.colors.navy[600]};
   background-color: ${({ theme, $status }) =>
     $status === "active"
       ? theme.colors.green[100]
@@ -95,15 +93,17 @@ export const StyledLinkedBadge = styled.span`
 `;
 
 export const StyledOriginBadge = styled.span`
+  display: inline-block;
   flex-shrink: 0;
   align-self: flex-start;
   padding: 0.4rem 0.9rem;
   border-radius: ${({ theme }) => theme.borderRadius.sm};
   font-size: 1.2rem;
   font-weight: 700;
-  color: ${({ theme }) => theme.colors.navy[700]};
+  color: ${({ theme }) => theme.colors.green[700]};
   background-color: ${({ theme }) => theme.colors.concrete[200]};
   border: 0.1rem solid ${({ theme }) => theme.colors.navy[200]};
+  margin-bottom: 0.8rem;
 `;
 
 export const StyledEmpty = styled.p`

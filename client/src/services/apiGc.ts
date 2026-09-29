@@ -5,6 +5,7 @@ import type {
   GcMeetingSummary,
   GcMeetingDetail,
 } from "../interfaces/gcDashboard";
+import type { SealVerification } from "../interfaces/meetingLog";
 import type {
   GcSubScorecardSummary,
   GcSubScorecardDetail,
@@ -32,6 +33,16 @@ export interface GcMeetingsFilters {
   projectId?: string;
   from?: string;
   to?: string;
+  limit?: number;
+  offset?: number;
+}
+
+/** One page of `GET /api/gc/meetings` — `hasMore` tells the caller whether a
+ *  further page exists past this one, so a "Load more" button knows when to
+ *  disappear. */
+export interface GcMeetingsPage {
+  meetings: GcMeetingSummary[];
+  hasMore: boolean;
 }
 
 /** GET /api/gc/overview — per-sub compliance for the caller's linked jobsites
@@ -62,15 +73,18 @@ export const getGcOverview = async (
 
 /** GET /api/gc/meetings — completed logs for the caller's linked projects,
  *  newest held-at first, optionally narrowed to one project and/or a
- *  held-at range. */
+ *  held-at range. Paginated: `limit`/`offset` select the page, and the
+ *  response's `hasMore` says whether another page exists. */
 export const getGcMeetings = async (
   accessToken: string,
   filters: GcMeetingsFilters = {},
-): Promise<GcMeetingSummary[]> => {
+): Promise<GcMeetingsPage> => {
   const params = new URLSearchParams();
   if (filters.projectId) params.set("projectId", filters.projectId);
   if (filters.from) params.set("from", filters.from);
   if (filters.to) params.set("to", filters.to);
+  if (filters.limit !== undefined) params.set("limit", String(filters.limit));
+  if (filters.offset !== undefined) params.set("offset", String(filters.offset));
   const query = params.toString();
 
   const res = await fetchWithTimeout(
@@ -87,7 +101,7 @@ export const getGcMeetings = async (
     throw new Error(body?.error ?? GENERIC_ERROR);
   }
 
-  return body.data as GcMeetingSummary[];
+  return body.data as GcMeetingsPage;
 };
 
 /** GET /api/gc/meetings/:id — detail + signers for one completed meeting
@@ -131,6 +145,28 @@ export const getGcMeetingPdfUrl = async (
   }
 
   return body.data.url as string;
+};
+
+/** GET /api/gc/meetings/:id/verify-seal — recomputes the meeting's
+ *  tamper-evidence content seal from current server state and compares it to
+ *  what was stored at completion (Phase 9e). 404s if the meeting isn't
+ *  sealed yet. */
+export const verifyGcMeetingSeal = async (
+  accessToken: string,
+  id: string,
+): Promise<SealVerification> => {
+  const res = await fetchWithTimeout(`/api/gc/meetings/${id}/verify-seal`, {
+    method: "GET",
+    headers: authHeaders(accessToken),
+  });
+
+  const body = await res.json().catch(() => null);
+
+  if (!res.ok || !body?.success) {
+    throw new Error(body?.error ?? GENERIC_ERROR);
+  }
+
+  return body.data as SealVerification;
 };
 
 /** GET /api/gc/subcontractors — every distinct sub across the caller's active

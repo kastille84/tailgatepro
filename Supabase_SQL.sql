@@ -72,9 +72,11 @@ CREATE TABLE projects (
   -- a timestamp = archived (hidden from the default list, still restorable).
   archived_at TIMESTAMPTZ,
   created_at TIMESTAMPTZ DEFAULT NOW(),
-  -- Ensure either a registered GC ID or a custom GC name is provided
+  -- Ensure either a registered GC ID or a non-blank custom GC name is provided.
+  -- NULLIF(TRIM(...), '') closes the '' / whitespace-only loophole a plain
+  -- IS NOT NULL check leaves open (Postgres treats '' as NOT NULL).
   CONSTRAINT check_gc_info CHECK (
-    gc_company_id IS NOT NULL OR gc_name_custom IS NOT NULL
+    gc_company_id IS NOT NULL OR NULLIF(TRIM(gc_name_custom), '') IS NOT NULL
   )
 );
 
@@ -85,6 +87,11 @@ ALTER TABLE projects ENABLE ROW LEVEL SECURITY;
 -- If the table already exists from an earlier run, add the new column(s) instead:
 -- ALTER TABLE projects ADD COLUMN IF NOT EXISTS archived_at TIMESTAMPTZ;
 -- ALTER TABLE projects ADD COLUMN IF NOT EXISTS gc_contact_email TEXT;
+-- Phase 11b: tighten an existing check_gc_info to also reject blank/whitespace gc_name_custom:
+-- ALTER TABLE projects DROP CONSTRAINT check_gc_info;
+-- ALTER TABLE projects ADD CONSTRAINT check_gc_info CHECK (
+--   gc_company_id IS NOT NULL OR NULLIF(TRIM(gc_name_custom), '') IS NOT NULL
+-- );
 -- ALTER TABLE projects ENABLE ROW LEVEL SECURITY;
 
 -- 4. (Retired) project_subcontractors
@@ -194,7 +201,24 @@ CREATE TABLE meeting_logs (
   -- completed_at stays as the server-side audit stamp. NULL = still in
   -- progress. See docs/gc-dashboard-design.md.
   held_at TIMESTAMPTZ,
+  -- Phase 11d: the foreman's Date#getTimezoneOffset() (minutes, UTC minus
+  -- local; 420 = UTC-7) at completion, so held_at can be printed in local time
+  -- on the PDF/email/filename instead of UTC. Display-only and NOT covered by
+  -- content_seal. NULL (older meetings) = display in UTC.
+  held_tz_offset SMALLINT,
   synced_at TIMESTAMPTZ,
+  -- Phase 9e tamper-evidence (docs/tamper-evidence-design.md): an
+  -- HMAC-SHA256 seal over this row's immutable-post-completion fields plus
+  -- its signatures, keyed by a server-only secret (MEETING_LOG_SEAL_SECRET,
+  -- never stored here or sent to the client) so a DB-only tamperer (a
+  -- service-role write that bypasses the app entirely) can't forge a valid
+  -- seal without also having the secret. Computed once, atomically, in the
+  -- same UPDATE that stamps completed_at/held_at in complete() -- a
+  -- completed meeting can never exist unsealed. NULL for a meeting still in
+  -- progress, and for every meeting completed before this feature shipped
+  -- (not backfilled).
+  content_seal TEXT,
+  sealed_at TIMESTAMPTZ,
   created_at TIMESTAMPTZ DEFAULT NOW()
 );
 
@@ -206,6 +230,9 @@ ALTER TABLE meeting_logs ENABLE ROW LEVEL SECURITY;
 -- ALTER TABLE meeting_logs ADD COLUMN IF NOT EXISTS company_id UUID REFERENCES companies(id);
 -- ALTER TABLE meeting_logs ADD COLUMN IF NOT EXISTS completed_at TIMESTAMPTZ;
 -- ALTER TABLE meeting_logs ADD COLUMN IF NOT EXISTS held_at TIMESTAMPTZ;
+-- ALTER TABLE meeting_logs ADD COLUMN IF NOT EXISTS held_tz_offset SMALLINT;  -- Phase 11d
+-- ALTER TABLE meeting_logs ADD COLUMN IF NOT EXISTS content_seal TEXT;  -- Phase 9e
+-- ALTER TABLE meeting_logs ADD COLUMN IF NOT EXISTS sealed_at TIMESTAMPTZ;  -- Phase 9e
 -- ALTER TABLE meeting_logs ENABLE ROW LEVEL SECURITY;
 -- UPDATE meeting_logs SET company_id = (SELECT owner_company_id FROM projects WHERE projects.id = meeting_logs.project_id) WHERE company_id IS NULL;
 -- Backfill (Phase 6): existing completed meetings keep the date they have today.
@@ -407,3 +434,31 @@ CREATE INDEX IF NOT EXISTS idx_jobsite_members_user ON jobsite_members (user_id)
 ALTER TABLE companies ADD COLUMN IF NOT EXISTS required_talk_id UUID REFERENCES toolbox_talks(id) ON DELETE SET NULL;
 ALTER TABLE companies ADD COLUMN IF NOT EXISTS required_talk_pushed_at TIMESTAMPTZ;
 ALTER TABLE companies ADD COLUMN IF NOT EXISTS required_talk_pushed_by UUID REFERENCES users(id) ON DELETE SET NULL;
+
+-- 16. Meeting Log Audit Events (Phase 9e, docs/tamper-evidence-design.md) — a
+-- lifecycle trail scoped to meeting_logs only (not a general system-wide
+-- audit log): created / completed / pdf_generated / seal_verified. `id` is
+-- server-generated (uuidv4(), server/services/auditLog.js), the same
+-- offline-sync exception jobsites.id/company_invites.id already carry --
+-- every event here originates from an authenticated server-side step, never
+-- an offline client write. `actor_id` is nullable: a pdf_generated event has
+-- no human actor (the async PDF queue produced it), and any actor's account
+-- could later be deleted without invalidating the historical event.
+CREATE TABLE meeting_log_audit_events (
+  id UUID PRIMARY KEY,
+  meeting_log_id UUID NOT NULL REFERENCES meeting_logs(id) ON DELETE CASCADE,
+  event_type TEXT NOT NULL CHECK (event_type IN ('created', 'completed', 'pdf_generated', 'seal_verified')),
+  actor_id UUID REFERENCES users(id) ON DELETE SET NULL,
+  metadata JSONB,
+  created_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+-- Server-only table: enable RLS with NO policies so the public anon key is
+-- denied all access. The server's service-role key bypasses RLS and still works.
+ALTER TABLE meeting_log_audit_events ENABLE ROW LEVEL SECURITY;
+
+CREATE INDEX idx_meeting_log_audit_events_meeting_log_id ON meeting_log_audit_events (meeting_log_id);
+
+-- If the table already exists from an earlier run:
+-- CREATE INDEX IF NOT EXISTS idx_meeting_log_audit_events_meeting_log_id ON meeting_log_audit_events (meeting_log_id);
+-- ALTER TABLE meeting_log_audit_events ENABLE ROW LEVEL SECURITY;

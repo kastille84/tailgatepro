@@ -31,8 +31,20 @@ const resolveHeldAt = ({ heldAt, now }) => {
   return new Date(reported).toISOString();
 };
 
+// The foreman's `Date#getTimezoneOffset()` at completion, stored as
+// `held_tz_offset` purely so `held_at` can be displayed in local time. Same
+// never-throw rule as resolveHeldAt: anything that isn't an integer within
+// +/-14h (dayWindow's bound) becomes null, meaning "display in UTC".
+const MAX_TZ_OFFSET_MINUTES = 14 * 60;
+
+const resolveHeldTzOffset = (tzOffset) =>
+  Number.isInteger(tzOffset) && Math.abs(tzOffset) <= MAX_TZ_OFFSET_MINUTES
+    ? tzOffset
+    : null;
+
 module.exports = {
   resolveHeldAt,
+  resolveHeldTzOffset,
   HELD_AT_MAX_FUTURE_MS,
   HELD_AT_MAX_PAST_MS,
 };

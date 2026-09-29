@@ -1,6 +1,6 @@
 import { fetchWithTimeout } from "../utils/fetchWithTimeout";
 import { PlanLimitError } from "../utils/PlanLimitError";
-import type { MeetingLog } from "../interfaces/meetingLog";
+import type { MeetingLog, SealVerification } from "../interfaces/meetingLog";
 
 const GENERIC_ERROR = "Something went wrong. Please try again.";
 const DEFAULT_BUNDLE_FILENAME = "defense-bundle.zip";
@@ -58,12 +58,14 @@ export const createMeetingLog = async (
  * falls back to its own receipt time. A retried complete against a meeting
  * that already landed 409s with a message the offline queue's `flush()`
  * recognizes as "already synced" rather than a real failure — see
- * `utils/db/outbox.ts`.
+ * `utils/db/outbox.ts`. `heldTzOffset` (`Date#getTimezoneOffset()` minutes)
+ * rides along in the same body so the server can format `heldAt` in local time.
  */
 export const completeMeeting = async (
   accessToken: string,
   meetingId: string,
   heldAt?: string,
+  heldTzOffset?: number,
 ): Promise<MeetingLog> => {
   const res = await fetchWithTimeout(`/api/meetings/${meetingId}/complete`, {
     method: "PATCH",
@@ -71,7 +73,12 @@ export const completeMeeting = async (
       Authorization: `Bearer ${accessToken}`,
       ...(heldAt && { "Content-Type": "application/json" }),
     },
-    ...(heldAt && { body: JSON.stringify({ heldAt }) }),
+    ...(heldAt && {
+      body: JSON.stringify({
+        heldAt,
+        ...(heldTzOffset !== undefined && { heldTzOffset }),
+      }),
+    }),
   });
 
   const body = await res.json().catch(() => null);
@@ -217,6 +224,28 @@ export const getMeetingPdfUrl = async (
   }
 
   return body.data.url as string;
+};
+
+/** GET /api/meetings/:meetingId/verify-seal — recomputes the meeting's
+ *  tamper-evidence content seal from current server state and compares it to
+ *  what was stored at completion (Phase 9e). 404s if the meeting isn't
+ *  sealed yet (still in progress, or completed before this feature shipped). */
+export const verifyMeetingSeal = async (
+  accessToken: string,
+  meetingId: string,
+): Promise<SealVerification> => {
+  const res = await fetchWithTimeout(`/api/meetings/${meetingId}/verify-seal`, {
+    method: "GET",
+    headers: authHeaders(accessToken),
+  });
+
+  const body = await res.json().catch(() => null);
+
+  if (!res.ok || !body?.success) {
+    throw new Error(body?.error ?? GENERIC_ERROR);
+  }
+
+  return body.data as SealVerification;
 };
 
 /** GET /api/meetings/defense-bundle — the caller's own OSHA Defense Bundle: a

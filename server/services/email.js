@@ -41,7 +41,8 @@ const getMailgunClient = () => {
  * gc_contact_email on file) must not call this at all.
  *
  * @param {{ to: string, projectName: string, companyName: string,
- *   pdfUrl: string, reportUrl: string, meetingDate: string }} params `reportUrl` is the in-app
+ *   pdfUrl: string, reportUrl: string, meetingDate: string, meetingTzOffset?: number|null }} params
+ *   `meetingTzOffset` is the foreman's stored `held_tz_offset` (null/omitted renders UTC). `reportUrl` is the in-app
  *   page that re-issues a fresh PDF link once the signed `pdfUrl` has expired. `meetingDate` is when the meeting was held
  *   (the meeting log's `heldAt`), rendered into the template's `completedDate` variable — that
  *   variable name is fixed by the live Mailgun template, so it isn't renamed to match.
@@ -53,6 +54,7 @@ const sendMeetingLogEmail = async ({
   pdfUrl,
   reportUrl,
   meetingDate,
+  meetingTzOffset,
 }) => {
   const subject = `New Toolbox Talk Report: ${companyName} — ${projectName}`;
 
@@ -64,7 +66,7 @@ const sendMeetingLogEmail = async ({
     projectName,
     pdfUrl,
     reportUrl,
-    completedDate: formatDate(meetingDate),
+    completedDate: formatDate(meetingDate, meetingTzOffset),
   };
 
   if (!mg) {

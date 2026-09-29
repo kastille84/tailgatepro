@@ -102,7 +102,25 @@ exports.completeMeeting = async (req, res, next) => {
       id: req.params.id,
       companyId: req.user.companyId,
       heldAt: req.body?.heldAt,
+      heldTzOffset: req.body?.heldTzOffset,
+      actorId: req.user.id,
     });
+    return res.status(200).json({ success: true, data });
+  } catch (error) {
+    return next(error);
+  }
+};
+
+// GET /api/meetings/:id/verify-seal — recomputes the meeting's tamper-evidence
+// HMAC-SHA256 content seal from current server state and compares it to what
+// was stored at completion (Phase 9e, docs/tamper-evidence-design.md).
+exports.verifySeal = async (req, res, next) => {
+  try {
+    const data = await meetingLogsService.verifySeal(
+      req.params.id,
+      req.user.companyId,
+      req.user.id,
+    );
     return res.status(200).json({ success: true, data });
   } catch (error) {
     return next(error);

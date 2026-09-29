@@ -1,6 +1,7 @@
 // Plain CommonJS — see requireAuth.test.js for why (nested require() sharing).
 const companiesService = require("../services/companies");
 const storageService = require("../services/storage");
+const brandingService = require("../services/branding");
 const { uploadLogo, getLogoUrl, getJoinCode, getMe } = require("./companies");
 
 const updateLogoSpy = vi.spyOn(companiesService, "updateLogo");
@@ -8,6 +9,7 @@ const getByIdSpy = vi.spyOn(companiesService, "getById");
 const getOrCreateJoinCodeSpy = vi.spyOn(companiesService, "getOrCreateJoinCode");
 const uploadBlobSpy = vi.spyOn(storageService, "uploadBlob");
 const getSignedUrlSpy = vi.spyOn(storageService, "getSignedUrl");
+const resolveBrandingAccessSpy = vi.spyOn(brandingService, "resolveBrandingAccess");
 
 const company = {
   id: "company-1",
@@ -28,10 +30,18 @@ describe("companies controller", () => {
     getOrCreateJoinCodeSpy.mockReset();
     uploadBlobSpy.mockReset();
     getSignedUrlSpy.mockReset();
+    // Entitled by default so tests unrelated to the branding gate itself
+    // (storage/service failure forwarding) don't need to think about it.
+    resolveBrandingAccessSpy.mockReset().mockResolvedValue(true);
     req = {
       params: {},
       body: Buffer.from("png-bytes"),
-      user: { id: "user-1", companyId: "company-1", tier: "premium" },
+      user: {
+        id: "user-1",
+        companyId: "company-1",
+        companyType: "subcontractor",
+        tier: "premium",
+      },
       get: vi.fn().mockReturnValue("image/png"),
     };
     res = {
@@ -42,7 +52,7 @@ describe("companies controller", () => {
   });
 
   describe("uploadLogo", () => {
-    it("uploads the raw body to Storage and persists the path for a premium-tier caller", async () => {
+    it("uploads the raw body to Storage and persists the path for an entitled caller", async () => {
       // Arrange
       uploadBlobSpy.mockResolvedValue(undefined);
       updateLogoSpy.mockResolvedValue(company);
@@ -51,6 +61,11 @@ describe("companies controller", () => {
       await uploadLogo(req, res, next);
 
       // Assert
+      expect(resolveBrandingAccessSpy).toHaveBeenCalledWith({
+        companyId: "company-1",
+        companyType: "subcontractor",
+        tier: "premium",
+      });
       expect(uploadBlobSpy).toHaveBeenCalledWith(
         "company-logos",
         "company-1/logo",
@@ -63,23 +78,10 @@ describe("companies controller", () => {
       expect(next).not.toHaveBeenCalled();
     });
 
-    it("uploads for an enterprise-tier caller", async () => {
-      // Arrange
-      req.user.tier = "enterprise";
-      uploadBlobSpy.mockResolvedValue(undefined);
-      updateLogoSpy.mockResolvedValue(company);
-
-      // Act
-      await uploadLogo(req, res, next);
-
-      // Assert
-      expect(uploadBlobSpy).toHaveBeenCalled();
-      expect(res.status).toHaveBeenCalledWith(200);
-    });
-
-    it("rejects with a 403 AppError, without calling storage or the service, for a basic-tier caller", async () => {
+    it("rejects with a 403 AppError, without calling storage or the service, for a non-entitled subcontractor caller", async () => {
       // Arrange
       req.user.tier = "basic";
+      resolveBrandingAccessSpy.mockResolvedValue(false);
 
       // Act
       await uploadLogo(req, res, next);
@@ -91,6 +93,25 @@ describe("companies controller", () => {
         expect.objectContaining({
           statusCode: 403,
           message: "Upgrade to Trade Pro to upload a company logo",
+        }),
+      );
+    });
+
+    it("rejects with the GC-specific 403 message for a non-entitled GC caller", async () => {
+      // Arrange
+      req.user.companyType = "gc";
+      req.user.tier = "basic";
+      resolveBrandingAccessSpy.mockResolvedValue(false);
+
+      // Act
+      await uploadLogo(req, res, next);
+
+      // Assert
+      expect(uploadBlobSpy).not.toHaveBeenCalled();
+      expect(next).toHaveBeenCalledWith(
+        expect.objectContaining({
+          statusCode: 403,
+          message: "Upgrade to GC Site Pro to upload a company logo",
         }),
       );
     });

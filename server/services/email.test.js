@@ -111,6 +111,19 @@ describe("email service: sendMeetingLogEmail", () => {
     expect(consoleErrorSpy).not.toHaveBeenCalled();
   });
 
+  it("renders completedDate in the foreman's local time when meetingTzOffset is given", async () => {
+    const create = vi.fn().mockResolvedValue({ id: "<msg-1>", message: "Queued" });
+    clientSpy.mockReturnValue({
+      client: { messages: { create } },
+      domain: "mg.example.com",
+    });
+
+    await sendMeetingLogEmail({ ...params, meetingTzOffset: 420 });
+
+    const variables = JSON.parse(create.mock.calls[0][1]["h:X-Mailgun-Variables"]);
+    expect(variables.completedDate).toBe("September 13, 2026 at 6:00 PM UTC-7");
+  });
+
   it("catches and logs a Mailgun send failure instead of throwing", async () => {
     const create = vi.fn().mockRejectedValue(new Error("Mailgun 500"));
     clientSpy.mockReturnValue({

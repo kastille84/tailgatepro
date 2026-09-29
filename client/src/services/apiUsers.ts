@@ -30,6 +30,11 @@ export interface CurrentUser {
    *  (e.g. "trade-pro"); GC Site Pro is per jobsite, not reported here. */
   plan: string;
   limits: PlanLimits;
+  /** Server-resolved, like plan/limits above — not a client-side tier mirror.
+   *  A GC can earn this from owning a Site Pro jobsite, not just from its
+   *  company tier, which the client has no other way to know
+   *  (server/services/branding.js's resolveBrandingAccess). */
+  hasBrandingAccess: boolean;
 }
 
 /** GET /api/users/me — the caller's own resolved identity, including their

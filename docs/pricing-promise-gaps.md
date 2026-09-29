@@ -57,8 +57,13 @@ deliberate copy decision, not made here.
 
 ## Tier-gating fact base
 
-- `server/utility/entitlements.js` has exactly two gates, `hasTranslationAccess` and `hasBrandingAccess`, both
-  reading `["premium", "enterprise"]`. The client mirrors them in `client/src/hooks/useCurrentUser.ts` (UI only).
+- `server/utility/entitlements.js` has `hasTranslationAccess`, still reading `["premium", "enterprise"]` directly.
+  **Update (11c):** `hasBrandingAccess` is no longer that same alias — it now reads a per-plan
+  `PLAN_LIMITS.brandingAccess` flag, and a GC's real answer is resolved by
+  `server/services/branding.js`'s `resolveBrandingAccess`, which also grants it when the GC owns
+  an active, paid Site Pro jobsite (`jobsites.plan`), not just on a Portfolio company tier. The
+  client mirrors `hasTranslationAccess` only, in `client/src/hooks/useCurrentUser.ts` (UI only);
+  `hasBrandingAccess` is server-resolved and returned by `GET /api/users/me`, not mirrored.
 - The `subscription_tier` enum is `basic | premium | enterprise` (`Supabase_SQL.sql`). It does not map to the plan
   names on the pricing page (Trade Free/Pro/Enterprise, GC Free/Site Pro/Portfolio). There is no GC tier value.
 - Signup hardcodes `tier: "basic"` (`server/services/users.js`). Nobody can reach a paid tier except by editing
@@ -90,7 +95,7 @@ deliberate copy decision, not made here.
 | Enterprise — unlimited foremen | Implemented (9c) | `PLAN_LIMITS` `foremanSeats: null` | No cap applied | — |
 | Enterprise — custom safety manual upload | Dropped (2026-09-28) | Only logo/photo/signature uploads exist | No document upload path, by decision: commodity file storage overlapping Procore/existing document tools; custom talks cover the "our own content" job | Dropped; copy removed from `plans.ts` and the strategy doc |
 | Enterprise — Procore, JobTread, QuickBooks sync | Missing | No code | Copy only | Defer (9f) |
-| Enterprise — multi-crew scheduling, equipment check-ins | Missing | No schedule/equipment tables | Not modelled | Build (9e) |
+| Enterprise — multi-crew scheduling, equipment check-ins | Dropped (2026-09-29) | No schedule/equipment tables | Scheduling and equipment inspection are workforce-management scope, not toolbox-talk compliance — overlaps dedicated tools (Rhumbix/busybusy, Procore Inspections) | Dropped; copy removed from `plans.ts` and the strategy doc |
 
 ## General contractor plans
 
@@ -100,6 +105,7 @@ deliberate copy decision, not made here.
 | GC Free — dashboard inbox for sub PDFs | Partial | `gcDashboard.js`, `features/gc-dashboard/*` | A per-sub meeting list with signed PDF links, capped at 200 (`MEETINGS_LIST_LIMIT`); not an "inbox"; ungated | Reword (9a) |
 | GC Free — basic sub roster overview | Partial | `JobsiteList.tsx`, `SubComplianceRow.tsx` | Exists, ungated for every GC | — |
 | GC Free — 1 sub unlocked, others blurred | Implemented (9d) | `utility/subLocking.js`, `services/subAccess.js`, `gcDashboard.js`, `SubComplianceRow.tsx` | Earliest-accepted sub (plus Site Pro subs) unlocked; locked subs are placeholders server-side and 403 on direct meeting/PDF calls | — |
+| Site Pro / Portfolio — custom company branding on PDFs | Implemented (11c) | `services/branding.js` `resolveBrandingAccess`, `services/jobsites.js` `hasActiveSitePro`, `controllers/companies.js` | Previously ungated for a GC without a Portfolio tier despite the pricing feature matrix promising it on Site Pro too (`docs/pricing-and-positioning-strategy_V2.md:117`); now true when the GC owns any active, paid `jobsites.plan = 'site_pro'` site | — |
 | Site Pro — sponsor unlimited subs on one site | Partial (9d) | `services/sponsorship.js`, `jobsites.plan` | A sub on a live `site_pro` jobsite resolves as Trade Pro; enforced, but no billing can set `jobsites.plan` yet, so still tagged "coming soon" | Defer (9f) |
 | Site Pro — SMS nudges, Mondays 7:00 AM | Missing | Only cron in `server.js` is a leftover 5am job | No SMS provider, phone storage or scheduler | Build (9e) |
 | Site Pro — Procore & Autodesk ACC sync | Missing | No code | Copy only | Defer (9f) |
@@ -118,8 +124,8 @@ deliberate copy decision, not made here.
 | Project-specific QR codes/links for GC sponsorship | Pricing FAQ, GcSection | Implemented (9e) | A new per-jobsite `jobsites.join_token` (standing, no expiry) — self-service join, no GC approval, available on every jobsite regardless of plan; the company-wide `join_code` and per-jobsite email invites are unchanged, additive paths. Manual verify pending | — |
 | "Every subcontractor gets full access for $0" | Pricing callout | Partial (9d) | Enforced via effective tier (see Site Pro row); unbuyable until billing, copy still says coming soon | Defer (9f) |
 | "Emailed PDFs stay in your inbox forever" | Pricing FAQ | Partial, misleading | The email carries a signed link expiring after 30 days (`EMAIL_PDF_URL_TTL_SECONDS`), not an attachment | Resolved: copy reworded (9a); a GC can re-open an expired link via the in-app report page (9c) |
-| "Tamper-evident signatures" / tamper-evident PDF | Pricing hero, ComparisonTable | Partial | App-level lock only; no hash/HMAC/seal/audit log; service-role writes bypass it | Build (9e) or Reword |
-| "GPS-verified" PDF seal | ComparisonTable, `CompliancePdfCard.tsx:74`, HowItWorks | Missing | No GPS capture in client, server or SQL | Reword (9a) or Build (9e) |
+| "Tamper-evident signatures" / tamper-evident PDF | Pricing hero, ComparisonTable | Implemented (9e) | An HMAC-SHA256 content seal (server-only secret) is computed atomically at completion, stored on `meeting_logs.content_seal`, printed on the PDF footer, and independently recomputable via `GET /api/meetings/:id/verify-seal` (sub) and the GC-side equivalent — closing the "no hash/HMAC/seal" gap; a `meeting_log_audit_events` trail records created/completed/pdf_generated/seal_verified. See `docs/tamper-evidence-design.md`. Known v1 gap: signature/crew-photo image bytes aren't hashed, only their DB paths | — |
+| "GPS-verified" PDF seal | ComparisonTable, HowItWorks; `pricing-and-positioning-strategy_V2.md` | Resolved (dropped) | No GPS capture in client, server or SQL, and none is planned — a field crew's location isn't core to the OSHA-record use case and raises privacy/consent questions this product doesn't need to take on. The live landing/pricing copy already carried no GPS claim (9a); the strategy doc's aspirational wording is now reworded too (9e) | Reword (done) |
 | "Can't be back-dated" | Landing | Partial | `held_at` plumbing exists (`utility/heldAt.js`); server clamping not verified | Verify (9a) |
 | Auto-SMS nudges every Monday | GcSection | Missing | See above | Reword (9a) |
 | "AI topic generator" / "generate a custom hazard talk" | ComparisonTable, HowItWorks | Missing | No AI generation | Reword (9a) |

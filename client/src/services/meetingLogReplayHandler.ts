@@ -59,11 +59,16 @@ registerReplayHandler(
  * enqueue time so a completion synced days later still records the real
  * time; rows queued before it existed have an empty payload, so it's
  * `undefined` there and the server falls back to its own receipt time.
+ * `heldTzOffset` is the foreman's timezone offset at that moment (so the PDF
+ * can print local time); likewise `undefined` for older rows.
  */
 registerReplayHandler(
   "meeting_completion",
   async (accessToken: string, row: OutboxRow): Promise<void> => {
-    const { heldAt } = row.payload as { heldAt?: string };
-    await completeMeeting(accessToken, row.entityId, heldAt);
+    const { heldAt, heldTzOffset } = row.payload as {
+      heldAt?: string;
+      heldTzOffset?: number;
+    };
+    await completeMeeting(accessToken, row.entityId, heldAt, heldTzOffset);
   },
 );

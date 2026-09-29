@@ -56,6 +56,9 @@ export interface GcMeetingSummary {
   completedAt: string;
   signerCount: number;
   pdfReady: boolean;
+  /** Phase 9e tamper-evidence: whether the meeting has a content seal. A
+   *  derived boolean only — the raw seal is never exposed to a GC. */
+  sealed: boolean;
 }
 
 export interface GcMeetingSigner {
