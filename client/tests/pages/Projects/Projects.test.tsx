@@ -23,6 +23,9 @@ vi.mock("../../../src/hooks/useJobsiteMemberships", () => ({
 vi.mock("../../../src/hooks/useProjects", () => ({
   useProjects: (...args: unknown[]) => mockUseProjects(...args),
 }));
+vi.mock("../../../src/hooks/useUnsyncedProjectIds", () => ({
+  useUnsyncedProjectIds: () => new Set(["queued-1", "queued-2"]),
+}));
 
 // The feature components have their own tests; stub them so the page test
 // stays focused on page state (guards, loading/error, opening the form).
@@ -32,14 +35,17 @@ vi.mock("../../../src/features/projects", () => ({
     onEdit,
     onLinkGc,
     cadenceByJobsiteId,
+    unsyncedProjectIds,
   }: {
     projects: { id: string }[];
     onEdit: (p: { id: string }) => void;
     onLinkGc?: (p: { id: string }) => void;
     cadenceByJobsiteId?: Map<string, unknown>;
+    unsyncedProjectIds?: Set<string>;
   }) => (
     <div data-testid="project-list">
       {projects.length} projects
+      <span data-testid="unsynced-count">{unsyncedProjectIds?.size}</span>
       <span data-testid="cadence-count">{cadenceByJobsiteId?.size}</span>
       <button type="button" onClick={() => onEdit({ id: "p1" })}>
         stub-edit
@@ -116,6 +122,12 @@ describe("Projects page", () => {
 
     expect(mockUseJobsiteMemberships).toHaveBeenCalledWith({ enabled: true });
     expect(screen.getByTestId("cadence-count").textContent).toBe("2");
+  });
+
+  it("passes the ids of still-queued (unsynced) projects to the project list", () => {
+    renderPage();
+
+    expect(screen.getByTestId("unsynced-count").textContent).toBe("2");
   });
 
   it("does not load memberships for a GC", () => {

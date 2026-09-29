@@ -2917,8 +2917,16 @@ they can be worked one at a time. Tick a box here **and** in its source phase wh
   - Tests: server 1135 passed (needs dummy Supabase env vars locally); touched client suites pass at 100%.
   - Verify (user, needs live Supabase): in a US Eastern machine timezone, log a meeting at 11:30pm on a DST day
     and confirm it counts for that day on the dashboard and scorecard (next transition: 2026-11-01).
-- [ ] 11i. Disable the "Link to GC" UI while a project's create is still queued in the offline
+- [x] 11i. Disable the "Link to GC" UI while a project's create is still queued in the offline
       outbox (currently 404s "Project not found" until it syncs). See Phase 6d (~line 1522).
+  - New `useUnsyncedProjectIds` hook (Dexie `liveQuery` over the outbox: `project` + `create` rows, so it
+    re-enables the moment the flush deletes the row; no new dependency). `Projects.tsx` passes the set to
+    `ProjectList`, which disables that card's link button (`aria-describedby`) and shows a visible
+    "Syncing — GC linking is available once this project is saved." line. Edit stays enabled.
+  - Tests: new hook suite + `ProjectList`/`Projects` cases pass. `tsc -b` shows two errors in
+    `AcceptInvite.tsx` / `JoinJobsite.tsx` that predate this change (untouched files).
+  - Verify (user, browser): DevTools offline → create a project → its "Link to GC" is disabled with the
+    hint; go online → row syncs and the button enables without a reload.
 - [ ] 11j. GC-side duplicate-jobsite merge tool (e.g. "Project A" vs "Project_A" created via a
       sub's join-code link) — re-points `projects.jobsite_id` and roster rows.
       See Phase 9d-2 (~line 2309).

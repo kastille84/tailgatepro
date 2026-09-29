@@ -25,6 +25,9 @@ interface ProjectListProps {
   /** The sub's memberships keyed by jobsite id. A live project linked to one
    *  of these gets its own talk-cadence control. */
   cadenceByJobsiteId?: Map<string, JobsiteMembership>;
+  /** Projects whose create is still queued offline. Linking one would 404
+   *  ("Project not found") until it syncs, so its link action is disabled. */
+  unsyncedProjectIds?: Set<string>;
 }
 
 /** Presentational list of project cards. The page owns the data and the
@@ -34,6 +37,7 @@ export const ProjectList = ({
   onEdit,
   onLinkGc,
   cadenceByJobsiteId,
+  unsyncedProjectIds,
 }: ProjectListProps) => {
   if (projects.length === 0) {
     return (
@@ -48,6 +52,8 @@ export const ProjectList = ({
     <StyledList>
       {projects.map((project) => {
         const linkLabel = project.gcCompanyId ? "Unlink GC" : "Link to GC";
+        const isUnsynced = unsyncedProjectIds?.has(project.id) ?? false;
+        const showLinkAction = Boolean(onLinkGc) && !project.archivedAt;
         const membership =
           project.jobsiteId && !project.archivedAt
             ? cadenceByJobsiteId?.get(project.jobsiteId)
@@ -58,6 +64,11 @@ export const ProjectList = ({
             <StyledCardMain>
               <StyledName>{project.name}</StyledName>
               <StyledMeta>GC: {project.gcNameCustom ?? "—"}</StyledMeta>
+              {showLinkAction && isUnsynced && (
+                <StyledMeta id={`unsynced-${project.id}`}>
+                  Syncing — GC linking is available once this project is saved.
+                </StyledMeta>
+              )}
             </StyledCardMain>
             <StyledCardActions>
               {project.gcCompanyId && (
@@ -75,6 +86,10 @@ export const ProjectList = ({
                   variant="outline"
                   size="sm"
                   onClick={() => onLinkGc(project)}
+                  disabled={isUnsynced}
+                  aria-describedby={
+                    isUnsynced ? `unsynced-${project.id}` : undefined
+                  }
                   aria-label={`${linkLabel} for ${project.name}`}
                 >
                   {linkLabel}

@@ -163,6 +163,37 @@ describe("ProjectList", () => {
       expect(onLinkGc).toHaveBeenCalledWith(linked);
     });
 
+    it("disables the link action, with a visible reason, while the project's create is still queued", () => {
+      const onLinkGc = vi.fn();
+      renderList({
+        onLinkGc,
+        unsyncedProjectIds: new Set(["p1"]),
+      });
+
+      const queued = screen.getByRole("button", {
+        name: /link to gc for downtown highrise/i,
+      }) as HTMLButtonElement;
+      expect(queued.disabled).toBe(true);
+      expect(queued.getAttribute("aria-describedby")).toBe("unsynced-p1");
+      expect(document.getElementById("unsynced-p1")?.textContent).toMatch(
+        /syncing/i,
+      );
+      fireEvent.click(queued);
+      expect(onLinkGc).not.toHaveBeenCalled();
+
+      const synced = screen.getByRole("button", {
+        name: /link to gc for airport expansion/i,
+      }) as HTMLButtonElement;
+      expect(synced.disabled).toBe(false);
+      expect(synced.getAttribute("aria-describedby")).toBeNull();
+    });
+
+    it("shows no syncing hint when there is no link action to disable", () => {
+      renderList({ unsyncedProjectIds: new Set(["p1"]) });
+
+      expect(screen.queryByText(/syncing/i)).toBeNull();
+    });
+
     it("hides the link action for an archived project", () => {
       renderList({
         projects: [{ ...projects[0], archivedAt: "2026-09-09T00:00:00.000Z" }],
