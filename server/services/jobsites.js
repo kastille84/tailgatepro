@@ -2,7 +2,7 @@ const { v4: uuidv4 } = require("uuid");
 const { supabase } = require("../utility/supabaseClient");
 const { AppError } = require("../utility/AppError");
 const { generateInviteToken, getInviteExpiry } = require("../utility/inviteToken");
-const { effectiveJobsiteLimit } = require("../utility/entitlements");
+const { effectiveJobsiteLimit, hasSiteProAccess } = require("../utility/entitlements");
 const { countRows } = require("../utility/countRows");
 const projectsService = require("./projects");
 const { isSubLocked } = require("../utility/subLocking");
@@ -30,6 +30,10 @@ const toJobsite = (row) => ({
   // per-jobsite paid features (e.g. the 9e Defense Bundle) without a second
   // round trip; the server is still the actual authority on every such route.
   plan: row.plan,
+  // Effective Site Pro access: the site's own plan, or its company's GC
+  // Portfolio (which covers every site). Needs the embedded `companies(tier)`;
+  // without it (create/update responses) it reflects the site's own plan only.
+  sitePro: hasSiteProAccess({ sitePlan: row.plan, companyTier: row.companies?.tier }),
   // 'daily' | 'weekly' -- the GC's default meeting cadence for this site; a
   // sub may tighten it for itself (setMyCadence). A row that predates the
   // column reads as daily, the original hardcoded rule.
@@ -146,7 +150,7 @@ const listForGc = async (gcCompanyId, allowedJobsiteIds = null) => {
   let query = supabase
     .from("jobsites")
     .select(
-      `${JOBSITE_COLUMNS}, jobsite_subcontractors(id, sub_company_id, invited_email, accepted_at, companies(name))`,
+      `${JOBSITE_COLUMNS}, companies(tier), jobsite_subcontractors(id, sub_company_id, invited_email, accepted_at, companies(name))`,
     )
     .eq("gc_company_id", gcCompanyId);
   if (allowedJobsiteIds !== null) query = query.in("id", allowedJobsiteIds);
@@ -225,7 +229,7 @@ const getOwnedJobsite = async (id, gcCompanyId, allowedJobsiteIds = null) => {
 
   const { data, error } = await supabase
     .from("jobsites")
-    .select(`${JOBSITE_COLUMNS}, companies(name)`)
+    .select(`${JOBSITE_COLUMNS}, companies(name, tier)`)
     .eq("id", id)
     .eq("gc_company_id", gcCompanyId)
     .single();

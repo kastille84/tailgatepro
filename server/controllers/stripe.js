@@ -30,6 +30,22 @@ exports.createCheckoutSession = async (req, res, next) => {
   }
 };
 
+// POST /api/stripe/site-checkout-session -- Checkout URL for one jobsite's Site Pro.
+exports.createSiteCheckoutSession = async (req, res, next) => {
+  try {
+    const data = await stripeService.createSiteCheckoutSession({
+      companyId: req.user.companyId,
+      companyType: req.user.companyType,
+      email: req.userEmail,
+      jobsiteId: req.body.jobsiteId,
+      interval: req.body.interval,
+    });
+    return res.status(200).json({ success: true, data });
+  } catch (error) {
+    return next(error);
+  }
+};
+
 // POST /api/stripe/portal-session -- returns the Customer Portal URL.
 exports.createPortalSession = async (req, res, next) => {
   try {

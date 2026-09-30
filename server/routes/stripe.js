@@ -10,6 +10,7 @@ const { STRIPE_PLANS, INTERVALS } = require("../utility/stripePlans");
 const {
   getBilling,
   createCheckoutSession,
+  createSiteCheckoutSession,
   createPortalSession,
 } = require("../controllers/stripe");
 
@@ -40,6 +41,20 @@ router.post(
   ],
   validate,
   createCheckoutSession,
+);
+
+// POST /api/stripe/site-checkout-session — start Checkout for one jobsite's Site Pro.
+router.post(
+  "/site-checkout-session",
+  requireAuth,
+  loadUserContext,
+  requireRole(...MANAGER_ROLES),
+  [
+    body("jobsiteId").isUUID().withMessage("Invalid jobsite"),
+    body("interval").isIn(INTERVALS).withMessage("Invalid billing interval"),
+  ],
+  validate,
+  createSiteCheckoutSession,
 );
 
 // POST /api/stripe/portal-session — open the Stripe Customer Portal.

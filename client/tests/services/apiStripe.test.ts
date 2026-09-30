@@ -3,6 +3,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import {
   createCheckoutSession,
   createPortalSession,
+  createSiteCheckoutSession,
   getBillingSummary,
 } from "../../src/services/apiStripe";
 import { AlreadySubscribedError } from "../../src/utils/AlreadySubscribedError";
@@ -157,6 +158,50 @@ describe("apiStripe", () => {
         ),
       );
       await expect(createPortalSession("t")).rejects.toThrow("No billing account yet");
+    });
+  });
+  describe("createSiteCheckoutSession", () => {
+    it("POSTs the jobsite id and interval with the bearer token", async () => {
+      const fetchMock = vi
+        .fn()
+        .mockResolvedValue(okResponse({ url: "https://checkout.stripe.com/s" }));
+      vi.stubGlobal("fetch", fetchMock);
+
+      await expect(
+        createSiteCheckoutSession("token-123", "site-1", "annual"),
+      ).resolves.toEqual({ url: "https://checkout.stripe.com/s" });
+      expect(fetchMock).toHaveBeenCalledWith(
+        "/api/stripe/site-checkout-session",
+        expect.objectContaining({
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: "Bearer token-123",
+          },
+          body: JSON.stringify({ jobsiteId: "site-1", interval: "annual" }),
+        }),
+      );
+    });
+
+    it("rejects with the backend error message", async () => {
+      vi.stubGlobal(
+        "fetch",
+        vi.fn().mockResolvedValue(
+          errorResponse(409, { success: false, error: "This jobsite is already on Site Pro" }),
+        ),
+      );
+
+      await expect(createSiteCheckoutSession("t", "site-1", "monthly")).rejects.toThrow(
+        "This jobsite is already on Site Pro",
+      );
+    });
+
+    it("falls back to a generic message when the response is not JSON", async () => {
+      vi.stubGlobal("fetch", vi.fn().mockResolvedValue(badJsonResponse));
+
+      await expect(createSiteCheckoutSession("t", "site-1", "monthly")).rejects.toThrow(
+        GENERIC,
+      );
     });
   });
 });

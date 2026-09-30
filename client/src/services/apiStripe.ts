@@ -50,6 +50,21 @@ export const createCheckoutSession = async (
   return unwrap<{ url: string }>(res);
 };
 
+/** POST /api/stripe/site-checkout-session — Checkout URL for one jobsite's
+ *  GC Site Pro subscription. */
+export const createSiteCheckoutSession = async (
+  accessToken: string,
+  jobsiteId: string,
+  interval: Billing,
+): Promise<{ url: string }> => {
+  const res = await fetchWithTimeout("/api/stripe/site-checkout-session", {
+    method: "POST",
+    headers: authHeaders(accessToken),
+    body: JSON.stringify({ jobsiteId, interval }),
+  });
+  return unwrap<{ url: string }>(res);
+};
+
 /** POST /api/stripe/portal-session — returns the Customer Portal URL. */
 export const createPortalSession = async (
   accessToken: string,

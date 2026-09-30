@@ -71,7 +71,10 @@ describe("companies service: getById", () => {
   it("should report a sponsored Free subcontractor's effective tier as premium", async () => {
     // Arrange: a Free sub holding an accepted row on a live Site Pro jobsite
     single.mockResolvedValue({ data: { ...dbRow, tier: "basic" }, error: null });
-    const sponsorQuery = { then: (resolve) => Promise.resolve({ count: 1, error: null }).then(resolve) };
+    const sponsorQuery = {
+      then: (resolve) =>
+        Promise.resolve({ data: [{ jobsites: { plan: "site_pro" } }], error: null }).then(resolve),
+    };
     ["select", "eq", "not", "is"].forEach((method) => {
       sponsorQuery[method] = vi.fn(() => sponsorQuery);
     });

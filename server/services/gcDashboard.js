@@ -574,14 +574,15 @@ const verifySeal = async (id, gcCompanyId, allowedJobsiteIds = null, actorId = n
 
 // GET /api/gc/jobsites/:id/defense-bundle (Phase 9e,
 // docs/osha-defense-bundle-design.md) — every completed log's PDF for one
-// jobsite, indexed. Gated per-jobsite on `jobsites.plan === "site_pro"`, not
+// jobsite, indexed. Gated per-jobsite on Site Pro access (the site's own
+// `jobsites.plan === "site_pro"`, or its company's GC Portfolio), not
 // blended with the caller's own company tier (see the design doc's "Gating"
 // section for why). Unlike listMeetings, this has no MEETINGS_LIST_LIMIT and
 // no from/to range — it's a full legal export, not a dashboard page.
 const getDefenseBundleEntries = async (jobsiteId, gcCompanyId, allowedJobsiteIds = null) => {
   const jobsite = await jobsitesService.getOwnedJobsite(jobsiteId, gcCompanyId, allowedJobsiteIds);
 
-  if (jobsite.plan !== "site_pro") {
+  if (!jobsite.sitePro) {
     throw new AppError(
       "Upgrade this job site to Site Pro to download its OSHA Defense Bundle",
       403,

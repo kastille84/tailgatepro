@@ -10,7 +10,22 @@ const {
   canAuthorCompanyTalks,
   seatRoleFor,
   effectiveJobsiteLimit,
+  hasSiteProAccess,
 } = require("./entitlements");
+
+describe("entitlements: hasSiteProAccess", () => {
+  it.each([
+    ["site_pro", "basic", true],
+    ["free", "basic", false],
+    ["free", "premium", true],
+    ["free", "enterprise", true],
+    ["site_pro", "premium", true],
+    ["free", undefined, false],
+    [null, "basic", false],
+  ])("site plan %s on company tier %s -> %s", (sitePlan, companyTier, expected) => {
+    expect(hasSiteProAccess({ sitePlan, companyTier })).toBe(expected);
+  });
+});
 
 describe("entitlements: hasTranslationAccess", () => {
   it.each([

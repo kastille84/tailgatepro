@@ -167,7 +167,11 @@ still its own row, now optionally pointed at one of these via `jobsite_id` (see 
 | `name` | Text | Not Null | E.g., "Riverside Tower" |
 | `status` | Enum | Default `active` | `active`, `completed` — reuses `project_status` |
 | `archived_at` | Timestamptz | Nullable | `NULL` = live; a timestamp = archived |
-| `plan` | Text | Not Null, Default `'free'`, CHECK in (`free`, `site_pro`) | Phase 9b: per-site GC plan. `site_pro` = a paid GC Site Pro site (see `server/utility/entitlements.js`). Not yet enforced or written (9d) |
+| `plan` | Text | Not Null, Default `'free'`, CHECK in (`free`, `site_pro`) | Phase 9b: per-site GC plan. `site_pro` = a paid GC Site Pro site (see `server/utility/entitlements.js`). Enforced by the entitlement checks (9d); written only by the Stripe webhook (12h) |
+| `stripe_subscription_id` | Text | Unique (Nullable) | Phase 12h: the jobsite's own Site Pro subscription, set by the Stripe webhook. Separate from `companies.stripe_subscription_id` so a Site Pro purchase never touches the company's plan |
+| `site_pro_status` | Text | Nullable | Stripe status of that subscription (`active`, `trialing`, `past_due`, `canceled`, ...) |
+| `site_pro_interval` | Text | Nullable, CHECK in (`monthly`, `annual`) | Billing interval of the Site Pro subscription |
+| `site_pro_period_end` | Timestamptz | Nullable | Current period end of the Site Pro subscription |
 | `origin` | Text | Nullable, CHECK in (`gc`, `subcontractor`) | Who created the jobsite: `gc` via `POST /api/jobsites`, `subcontractor` when a join-code link find-or-created it. `NULL` = created before this column existed (origin unknown, never guessed). Server-written only; drives the "Created by subcontractor" badge |
 | `join_token` | Text | Unique (Nullable) | Phase 9e (`docs/jobsite-qr-join-design.md`): this jobsite's own standing QR/join link, created lazily on first `GET /api/jobsites/:id/join-link`. Never expires, unlike `jobsite_subcontractors.token` below — meant to be publicly displayed (a QR code, a printed poster), the same trust model `companies.join_code` has |
 | `meeting_cadence` | Text | Not Null, Default `'daily'`, CHECK in (`daily`, `weekly`) | Phase 11f: how often subs on this site must log a talk — the GC's default. A sub may tighten it for itself via `jobsite_subcontractors.meeting_cadence`, never relax it. Weekly = Monday–Sunday in the viewer's timezone |

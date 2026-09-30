@@ -15,6 +15,8 @@ const CHECKOUT_OPTIONS: Record<string, { key: CheckoutPlanKey; label?: string }[
   ],
 };
 
+const SITE_PRO_PLAN_ID = "gc-site-pro";
+
 const FREE_PLAN_IDS = ["trade-free", "gc-free"];
 
 export interface PricingCtaContext {
@@ -48,8 +50,22 @@ export const getPlanCtas = (
       : [{ label: "Get started free", to: "/signup" }];
   }
 
+  // GC Site Pro is billed per jobsite, so it has no plan-level checkout: the
+  // purchase starts from a specific job site on the Projects page.
+  if (planId === SITE_PRO_PLAN_ID) {
+    if (!signedIn) return [{ label: "Get started", to: "/signup" }];
+    if (!companyType) return [{ label: "Loading…", disabled: true }];
+    if (companyType !== "gc") {
+      return [{ label: "Not available for your account type", disabled: true }];
+    }
+    if (!isManager) {
+      return [{ label: "Ask your admin to upgrade", disabled: true }];
+    }
+    return [{ label: "Upgrade a job site", to: "/projects" }];
+  }
+
   const options = CHECKOUT_OPTIONS[planId];
-  // Not purchasable yet (GC Site Pro, billed per jobsite).
+  // Plans with no checkout option (none today) fall back to the waitlist.
   if (!options) return [{ label: "Join the waitlist", waitlist: true }];
 
   if (!signedIn) {

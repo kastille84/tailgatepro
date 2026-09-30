@@ -38,15 +38,51 @@ describe("getPlanCtas", () => {
     });
   });
 
-  describe("GC Site Pro (not purchasable yet)", () => {
-    it("always shows the waitlist", () => {
+  describe("GC Site Pro (bought per jobsite)", () => {
+    const signedInGc = (overrides: Partial<PricingCtaContext> = {}) =>
+      ctx({
+        signedIn: true,
+        companyType: "gc",
+        isManager: true,
+        currentPlanId: "gc-free",
+        ...overrides,
+      });
+
+    it("sends a visitor to signup", () => {
       expect(getPlanCtas("gc-site-pro", ctx())).toEqual([
-        { label: "Join the waitlist", waitlist: true },
-      ]);
-      expect(getPlanCtas("gc-site-pro", signedInSub())).toEqual([
-        { label: "Join the waitlist", waitlist: true },
+        { label: "Get started", to: "/signup" },
       ]);
     });
+
+    it("waits for the profile to load", () => {
+      expect(getPlanCtas("gc-site-pro", ctx({ signedIn: true }))).toEqual([
+        { label: "Loading…", disabled: true },
+      ]);
+    });
+
+    it("is unavailable to a subcontractor account", () => {
+      expect(getPlanCtas("gc-site-pro", signedInSub())).toEqual([
+        { label: "Not available for your account type", disabled: true },
+      ]);
+    });
+
+    it("asks a non-manager GC user to get their admin", () => {
+      expect(getPlanCtas("gc-site-pro", signedInGc({ isManager: false }))).toEqual([
+        { label: "Ask your admin to upgrade", disabled: true },
+      ]);
+    });
+
+    it("sends a GC manager to their job sites to pick the site to upgrade", () => {
+      expect(getPlanCtas("gc-site-pro", signedInGc())).toEqual([
+        { label: "Upgrade a job site", to: "/projects" },
+      ]);
+    });
+  });
+
+  it("falls back to the waitlist for a plan with no checkout", () => {
+    expect(getPlanCtas("unknown-plan", ctx())).toEqual([
+      { label: "Join the waitlist", waitlist: true },
+    ]);
   });
 
   describe("visitors on a paid plan", () => {

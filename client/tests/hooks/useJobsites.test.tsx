@@ -51,6 +51,17 @@ describe("useJobsites", () => {
     expect(result.current.isError).toBe(false);
   });
 
+  it("refetches on an interval only while polling", async () => {
+    vi.mocked(apiJobsites.listJobsites).mockResolvedValue([jobsite]);
+
+    renderHook(() => useJobsites({ poll: true }), { wrapper });
+
+    await waitFor(() => expect(apiJobsites.listJobsites).toHaveBeenCalledTimes(1));
+    await waitFor(() => expect(apiJobsites.listJobsites).toHaveBeenCalledTimes(2), {
+      timeout: 5000,
+    });
+  });
+
   it("returns an empty list and does not fetch without a session", () => {
     mockUseAuth.mockReturnValue({ session: null });
 

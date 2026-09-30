@@ -32,6 +32,10 @@ export interface Jobsite {
   /** Per-jobsite GC plan (Phase 9b/9e) — `site_pro` unlocks the Defense
    *  Bundle ZIP export. Not blended with the GC company's own tier. */
   plan: "free" | "site_pro";
+  /** Effective Site Pro access: the site's own `plan`, or its company being on
+   *  GC Portfolio (which covers every site). Gate features on this, not `plan`;
+   *  `plan` only says whether the site pays for itself. */
+  sitePro: boolean;
   /** The GC's default cadence for this jobsite; a sub may tighten it for
    *  itself but never relax it. */
   meetingCadence: MeetingCadence;

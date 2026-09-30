@@ -2,7 +2,12 @@ const Stripe = require("stripe");
 const { supabase } = require("../utility/supabaseClient");
 const { AppError } = require("../utility/AppError");
 const { keysBasedOnEnv } = require("../utility/envUtils");
-const { STRIPE_PLANS, getPriceId } = require("../utility/stripePlans");
+const { hasSiteProAccess } = require("../utility/entitlements");
+const {
+  STRIPE_PLANS,
+  SITE_PLAN_KEY,
+  getPriceId,
+} = require("../utility/stripePlans");
 
 // Phase 12 billing (docs/billing-design.md). This service only *starts* a
 // purchase and opens the portal -- it never writes `companies.tier`. The
@@ -26,7 +31,7 @@ const getBillingState = async (companyId) => {
   const { data, error } = await supabase
     .from("companies")
     .select(
-      "name, stripe_customer_id, stripe_subscription_id, subscription_status, billing_interval, current_period_end",
+      "name, tier, stripe_customer_id, stripe_subscription_id, subscription_status, billing_interval, current_period_end",
     )
     .eq("id", companyId)
     .single();
@@ -40,6 +45,7 @@ const getBillingState = async (companyId) => {
 
   return {
     name: data.name,
+    tier: data.tier,
     customerId: data.stripe_customer_id,
     subscriptionId: data.stripe_subscription_id,
     subscriptionStatus: data.subscription_status,
@@ -85,6 +91,22 @@ const callStripe = async (message, fn) => {
   }
 };
 
+// The company's Stripe customer, created on first purchase. Company and Site
+// Pro subscriptions share it so one Customer Portal manages all of them.
+const ensureCustomerId = async ({ companyId, email, billing }, stripe) => {
+  if (billing.customerId) return billing.customerId;
+
+  const customer = await callStripe("Could not create the billing account", () =>
+    stripe.customers.create({
+      email,
+      name: billing.name,
+      metadata: { companyId },
+    }),
+  );
+  await saveCustomerId(companyId, customer.id);
+  return customer.id;
+};
+
 const createCheckoutSession = async (
   { companyId, companyType, email, planKey, interval },
   stripe = getStripe(),
@@ -111,18 +133,10 @@ const createCheckoutSession = async (
     );
   }
 
-  let customerId = billing.customerId;
-  if (!customerId) {
-    const customer = await callStripe("Could not create the billing account", () =>
-      stripe.customers.create({
-        email,
-        name: billing.name,
-        metadata: { companyId },
-      }),
-    );
-    customerId = customer.id;
-    await saveCustomerId(companyId, customerId);
-  }
+  const customerId = await ensureCustomerId(
+    { companyId, email, billing },
+    stripe,
+  );
 
   const { clientUrl } = keysBasedOnEnv();
   const session = await callStripe("Could not start checkout", () =>
@@ -135,6 +149,74 @@ const createCheckoutSession = async (
       allow_promotion_codes: true,
       success_url: `${clientUrl}/settings?checkout=success`,
       cancel_url: `${clientUrl}/settings?checkout=cancel`,
+    }),
+  );
+
+  return { url: session.url };
+};
+
+// GC Site Pro: one subscription per jobsite. Unlike the company checkout there
+// is no ALREADY_SUBSCRIBED guard, but a GC already on Portfolio is refused
+// (COVERED_BY_PORTFOLIO). The jobsite id rides in the subscription metadata so
+// the webhook can flip that one site's plan.
+const createSiteCheckoutSession = async (
+  { companyId, companyType, email, jobsiteId, interval },
+  stripe = getStripe(),
+) => {
+  if (companyType !== "gc") {
+    throw new AppError("Site Pro is only available for general contractors", 403);
+  }
+
+  const price = getPriceId(SITE_PLAN_KEY, interval);
+  if (!price) {
+    throw new AppError("Billing is not configured for Site Pro", 500);
+  }
+
+  const { data: jobsite, error } = await supabase
+    .from("jobsites")
+    .select("id, plan, status, archived_at")
+    .eq("id", jobsiteId)
+    .eq("gc_company_id", companyId)
+    .maybeSingle();
+
+  if (error) {
+    throw new AppError("Could not load the jobsite", 502, { cause: error });
+  }
+  if (!jobsite) {
+    throw new AppError("Jobsite not found", 404);
+  }
+  if (jobsite.archived_at || jobsite.status !== "active") {
+    throw new AppError("Only active jobsites can be upgraded", 409);
+  }
+  if (jobsite.plan === "site_pro") {
+    throw new AppError("This jobsite is already on Site Pro", 409, {
+      data: { code: "ALREADY_SITE_PRO" },
+    });
+  }
+
+  const billing = await getBillingState(companyId);
+  // Portfolio already includes Site Pro on every site; selling one would bill
+  // the GC twice for the same thing.
+  if (hasSiteProAccess({ sitePlan: null, companyTier: billing.tier })) {
+    throw new AppError("GC Portfolio already covers this jobsite", 409, {
+      data: { code: "COVERED_BY_PORTFOLIO" },
+    });
+  }
+  const customerId = await ensureCustomerId({ companyId, email, billing }, stripe);
+
+  const { clientUrl } = keysBasedOnEnv();
+  const session = await callStripe("Could not start checkout", () =>
+    stripe.checkout.sessions.create({
+      mode: "subscription",
+      customer: customerId,
+      line_items: [{ price, quantity: 1 }],
+      client_reference_id: companyId,
+      subscription_data: {
+        metadata: { companyId, jobsiteId, kind: "site_pro" },
+      },
+      allow_promotion_codes: true,
+      success_url: `${clientUrl}/projects?siteCheckout=success&jobsiteId=${jobsiteId}`,
+      cancel_url: `${clientUrl}/projects?siteCheckout=cancel`,
     }),
   );
 
@@ -163,5 +245,6 @@ module.exports = {
   getBillingState,
   getBillingSummary,
   createCheckoutSession,
+  createSiteCheckoutSession,
   createPortalSession,
 };

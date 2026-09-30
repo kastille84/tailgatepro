@@ -40,6 +40,10 @@ exports.keysBasedOnEnv = () => {
           process.env.STRIPE_PRICE_GC_PORTFOLIO_UNLIMITED_SITES_MONTHLY_PROD,
         price_gc_portfolio_unlimited_sites_annual:
           process.env.STRIPE_PRICE_GC_PORTFOLIO_UNLIMITED_SITES_ANNUAL_PROD,
+        price_gc_site_pro_monthly:
+          process.env.STRIPE_PRICE_GC_SITE_PRO_MONTHLY_PROD,
+        price_gc_site_pro_annual:
+          process.env.STRIPE_PRICE_GC_SITE_PRO_ANNUAL_PROD,
         webhookSecret: process.env.STRIPE_WEBHOOK_SECRET_PROD,
       },
       // Google Cloud Translation API -- premium/enterprise-tier custom talk
@@ -97,6 +101,8 @@ exports.keysBasedOnEnv = () => {
           process.env.STRIPE_PRICE_GC_PORTFOLIO_UNLIMITED_SITES_MONTHLY,
         price_gc_portfolio_unlimited_sites_annual:
           process.env.STRIPE_PRICE_GC_PORTFOLIO_UNLIMITED_SITES_ANNUAL,
+        price_gc_site_pro_monthly: process.env.STRIPE_PRICE_GC_SITE_PRO_MONTHLY,
+        price_gc_site_pro_annual: process.env.STRIPE_PRICE_GC_SITE_PRO_ANNUAL,
         webhookSecret: process.env.STRIPE_WEBHOOK_SECRET,
       },
       // Google Cloud Translation API -- see the prod branch's comment.

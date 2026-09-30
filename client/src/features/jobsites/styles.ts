@@ -162,3 +162,15 @@ export const StyledToolbar = styled.div`
   gap: 1.6rem;
   margin-bottom: 2.4rem;
 `;
+
+/** Monthly / annual buttons in the Site Pro checkout modal. */
+export const StyledSiteProActions = styled.div`
+  display: flex;
+  flex-direction: column;
+  gap: 1.2rem;
+  margin-top: 1.6rem;
+
+  @media (min-width: ${({ theme }) => theme.breakpoints.sm}) {
+    flex-direction: row;
+  }
+`;

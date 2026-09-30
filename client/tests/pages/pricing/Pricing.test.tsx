@@ -144,14 +144,14 @@ describe("Pricing page", () => {
     expect(screen.queryByRole("heading", { name: "GC Site Pro" })).toBeNull();
   });
 
-  it("always renders the Site Pro waitlist form", () => {
+  it("keeps a waitlist form for the features that are not built yet", () => {
     renderPricing();
 
     const waitlist = screen.getByTestId("waitlist-form");
     expect(waitlist.getAttribute("data-audience")).toBe("gc");
     expect(waitlist.getAttribute("data-plan-interest")).toBe("gc-site-pro");
     expect(
-      screen.getByRole("heading", { name: /gc site pro is coming soon/i }),
+      screen.getByRole("heading", { name: /sms nudges and procore sync are coming soon/i }),
     ).toBeTruthy();
   });
 
@@ -192,7 +192,7 @@ describe("Pricing page", () => {
       expect(hrefOf("Get started")).toBe("/signup?plan=trade-pro&interval=annual");
     });
 
-    it("offers both GC Portfolio sizes and the Site Pro waitlist", () => {
+    it("offers both GC Portfolio sizes and sends Site Pro to signup", () => {
       renderPricing("/pricing?audience=gc");
 
       expect(hrefOf("Get started: up to 10 sites")).toBe(
@@ -201,7 +201,7 @@ describe("Pricing page", () => {
       expect(hrefOf("Get started: unlimited sites")).toBe(
         "/signup?plan=gc-portfolio-unlimited&interval=monthly",
       );
-      expect(hrefOf("Join the waitlist")).toBe("#pricing-waitlist");
+      expect(hrefOf("Get started")).toBe("/signup");
     });
   });
 

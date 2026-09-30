@@ -355,6 +355,12 @@ CREATE TABLE jobsites (
   archived_at TIMESTAMPTZ,
   -- Phase 9b: per-site GC plan; 'site_pro' = paid GC Site Pro site.
   plan TEXT NOT NULL DEFAULT 'free' CHECK (plan IN ('free', 'site_pro')),
+  -- Phase 12h: Site Pro billing. Written only by the Stripe webhook
+  -- (server/services/stripeWebhook.js), like companies.tier; NULL until bought.
+  stripe_subscription_id TEXT UNIQUE,
+  site_pro_status TEXT,
+  site_pro_interval TEXT CHECK (site_pro_interval IN ('monthly', 'annual')),
+  site_pro_period_end TIMESTAMPTZ,
   -- Who originated the row: 'gc' (POST /api/jobsites) or 'subcontractor'
   -- (join-code link find-or-create). NULL = legacy/unknown, never guessed.
   origin TEXT CHECK (origin IN ('gc', 'subcontractor')),
@@ -381,6 +387,10 @@ CREATE INDEX idx_jobsites_gc_company ON jobsites (gc_company_id);
 -- ALTER TABLE jobsites ENABLE ROW LEVEL SECURITY;
 -- CREATE INDEX IF NOT EXISTS idx_jobsites_gc_company ON jobsites (gc_company_id);
 -- ALTER TABLE jobsites ADD COLUMN IF NOT EXISTS plan TEXT NOT NULL DEFAULT 'free' CHECK (plan IN ('free', 'site_pro'));  -- Phase 9b
+-- ALTER TABLE jobsites ADD COLUMN IF NOT EXISTS stripe_subscription_id TEXT UNIQUE;  -- Phase 12h
+-- ALTER TABLE jobsites ADD COLUMN IF NOT EXISTS site_pro_status TEXT;  -- Phase 12h
+-- ALTER TABLE jobsites ADD COLUMN IF NOT EXISTS site_pro_interval TEXT CHECK (site_pro_interval IN ('monthly', 'annual'));  -- Phase 12h
+-- ALTER TABLE jobsites ADD COLUMN IF NOT EXISTS site_pro_period_end TIMESTAMPTZ;  -- Phase 12h
 -- ALTER TABLE jobsites ADD COLUMN IF NOT EXISTS origin TEXT CHECK (origin IN ('gc', 'subcontractor'));  -- who created the jobsite; NULL = unknown
 -- ALTER TABLE jobsites ADD COLUMN IF NOT EXISTS join_token TEXT UNIQUE;  -- Phase 9e
 -- ALTER TABLE jobsites ADD COLUMN IF NOT EXISTS meeting_cadence TEXT NOT NULL DEFAULT 'daily' CHECK (meeting_cadence IN ('daily', 'weekly'));  -- Phase 11f

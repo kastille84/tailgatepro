@@ -71,15 +71,15 @@ const FAQ: { q: string; a: string }[] = [
   },
   {
     q: "How does a general contractor sponsor subcontractors for free?",
-    a: "Sponsoring subcontractors at zero cost to them is coming soon on GC Site Pro and GC Portfolio. Today, a GC invites subcontractors to a jobsite by email or shares a company join code, and their talks show up on the GC's dashboard.",
+    a: "A GC invites subcontractors to a jobsite by email or shares a company join code, and their talks show up on the GC's dashboard. On a GC Site Pro site or any GC Portfolio site, every subcontractor on the job gets full Trade Pro access at no cost to them.",
   },
   {
     q: "What's the difference between GC Site Pro and GC Portfolio?",
-    a: "GC Site Pro covers a single jobsite at $149/site/mo. GC Portfolio is flat-rate multi-site — $499/mo for up to 10 sites, $799/mo unlimited — and adds multi-manager roles (assign Superintendents to specific job sites; Safety Directors and Admins still see every site), cross-project subcontractor safety scorecards, and top-down corporate policy push (push a mandatory safety topic across every active site at once).",
+    a: "GC Site Pro covers a single jobsite at $149/site/mo. GC Portfolio is flat-rate multi-site — $499/mo for up to 10 sites, $799/mo unlimited — and adds multi-manager roles (assign Superintendents to specific job sites; Safety Directors and Admins still see every site), cross-project subcontractor safety scorecards, and top-down corporate policy push (push a mandatory safety topic across every active site at once). Already paying for Site Pro sites? Switching to GC Portfolio covers them all, cancels the per-site subscriptions right away and credits the unused time.",
   },
   {
     q: "When can I actually sign up?",
-    a: "Right now. Start on a free plan, or pick Trade Pro, Trade Enterprise or GC Portfolio and we'll take you through sign-up to secure checkout. GC Site Pro (billed per jobsite) is coming soon � join the waitlist and we'll let you know the moment it's live.",
+    a: "Right now. Start on a free plan, or pick Trade Pro, Trade Enterprise or GC Portfolio and we'll take you through sign-up to secure checkout. GC Site Pro is bought per jobsite: sign up, open your job sites and choose Upgrade to Site Pro on the site you want.",
   },
 ];
 
@@ -237,8 +237,7 @@ export const Pricing = () => {
               <strong>
                 subcontractors on your job never pay a seat fee
               </strong>{" "}
-              — no app-store downloads and no user-billing disputes. Full
-              sponsored access for every sub is coming soon.
+              — no app-store downloads and no user-billing disputes.
             </StyledCalloutText>
           </StyledCallout>
         </StyledContainer>
@@ -268,12 +267,12 @@ export const Pricing = () => {
       >
         <StyledCtaInner>
           <StyledSectionTitle id="pricing-cta-heading">
-            GC Site Pro is coming soon
+            SMS nudges and Procore sync are coming soon
           </StyledSectionTitle>
           <StyledSectionLede>
-            Per-site billing isn&apos;t live yet. Join the waitlist and
-            we&apos;ll let you know the moment you can put a single jobsite on
-            GC Site Pro.
+            Automated SMS nudges and Procore &amp; Autodesk ACC sync aren&apos;t
+            live yet. Join the waitlist and we&apos;ll let you know the moment
+            they are.
           </StyledSectionLede>
           <WaitlistForm
             idPrefix="pricing"

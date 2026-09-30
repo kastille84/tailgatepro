@@ -23,8 +23,12 @@ interface JobsiteListProps {
   /** Present ⇒ each card gets a Team button (GC Portfolio manager only —
    *  Phase 9d-2, assigns superintendents to this job site). */
   onManageMembers?: (jobsite: Jobsite) => void;
+  /** Present ⇒ an active, non-Site-Pro jobsite shows "Upgrade to Site Pro"
+   *  (Phase 12h; manager only, since the server 403s anyone else) instead of
+   *  the disabled Defense Bundle button. */
+  onUpgrade?: (jobsite: Jobsite) => void;
   /** Always provided — visibility isn't gated per-caller like `onManageMembers`,
-   *  since the Defense Bundle (Phase 9e) is gated per-jobsite (`jobsite.plan`),
+   *  since the Defense Bundle (Phase 9e) is gated per-jobsite (`jobsite.sitePro`),
    *  not per-company-role. A non-Site-Pro jobsite renders an upgrade link
    *  instead of a working button, so the paid feature stays visible. */
   onDownloadBundle: (jobsite: Jobsite) => void;
@@ -52,6 +56,7 @@ export const JobsiteList = ({
   onEdit,
   onManageSubs,
   onManageMembers,
+  onUpgrade,
   onDownloadBundle,
   isDownloadingBundle = false,
   isOnline,
@@ -73,6 +78,9 @@ export const JobsiteList = ({
             <StyledMeta>{describeRoster(jobsite)}</StyledMeta>
             {jobsite.createdBySub && (
               <StyledOriginBadge>Created by subcontractor</StyledOriginBadge>
+            )}
+            {jobsite.sitePro && jobsite.plan !== "site_pro" && (
+              <StyledOriginBadge>Covered by GC Portfolio</StyledOriginBadge>
             )}
           </StyledCardMain>
           <StyledCardActions>
@@ -101,7 +109,7 @@ export const JobsiteList = ({
                 Team
               </Button>
             )}
-            {jobsite.plan === "site_pro" ? (
+            {jobsite.sitePro ? (
               <Button
                 variant="outline"
                 size="sm"
@@ -113,6 +121,16 @@ export const JobsiteList = ({
                 title={`Download OSHA Defense Bundle for ${jobsite.name}`}
               >
                 Defense Bundle
+              </Button>
+            ) : onUpgrade && !jobsite.archivedAt && jobsite.status === "active" ? (
+              <Button
+                variant="primary"
+                size="sm"
+                disabled={!isOnline}
+                onClick={() => onUpgrade(jobsite)}
+                aria-label={`Upgrade ${jobsite.name} to Site Pro`}
+              >
+                Upgrade to Site Pro
               </Button>
             ) : (
               <Button

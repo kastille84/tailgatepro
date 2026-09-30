@@ -21,7 +21,7 @@ const {
 
 const JOBSITE_COLUMNS =
   "id, gc_company_id, name, status, archived_at, origin, plan, meeting_cadence, created_at";
-const LIST_SELECT = `${JOBSITE_COLUMNS}, jobsite_subcontractors(id, sub_company_id, invited_email, accepted_at, companies(name))`;
+const LIST_SELECT = `${JOBSITE_COLUMNS}, companies(tier), jobsite_subcontractors(id, sub_company_id, invited_email, accepted_at, companies(name))`;
 const ROSTER_COLUMNS =
   "id, jobsite_id, sub_company_id, invited_email, token, expires_at, accepted_at";
 
@@ -44,6 +44,7 @@ const mappedJobsite = {
   archivedAt: null,
   createdBySub: false,
   plan: "free",
+  sitePro: false,
   meetingCadence: "daily",
   createdAt: "2026-01-01T00:00:00.000Z",
 };
@@ -242,6 +243,21 @@ describe("jobsites service: listForGc", () => {
     expect(eq).toHaveBeenCalledWith("gc_company_id", "gc-1");
     expect(order).toHaveBeenCalledWith("created_at", { ascending: false });
     expect(result).toEqual([{ ...mappedJobsite, subcontractors: [] }]);
+  });
+
+  it("should mark a free-plan jobsite sitePro when its GC is on Portfolio", async () => {
+    // Arrange
+    order.mockResolvedValue({
+      data: [{ ...dbRow, companies: { tier: "premium" } }],
+      error: null,
+    });
+
+    // Act
+    const [jobsite] = await listForGc("gc-1");
+
+    // Assert: the stored plan is untouched, the derived flag is on
+    expect(jobsite.plan).toBe("free");
+    expect(jobsite.sitePro).toBe(true);
   });
 
   it("should list only a site-scoped user's assigned jobsites", async () => {

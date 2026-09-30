@@ -10,11 +10,13 @@ import { useOnlineStatus } from "../../context/online-status";
 import { useCurrentUser } from "../../hooks/useCurrentUser";
 import { useDownloadDefenseBundle } from "../../hooks/useDownloadDefenseBundle";
 import { useJobsites } from "../../hooks/useJobsites";
+import { useSiteCheckoutReturn } from "../../hooks/useSiteCheckoutReturn";
 import type { Jobsite } from "../../interfaces/jobsite";
 import { JobsiteForm } from "./JobsiteForm";
 import { JobsiteList } from "./JobsiteList";
 import { JobsiteMembersModal } from "./JobsiteMembersModal";
 import { JobsiteRosterModal } from "./JobsiteRosterModal";
+import { SiteProCheckoutModal } from "./SiteProCheckoutModal";
 import { StyledNote, StyledToolbar } from "./styles";
 
 /** Server-enforced (`requireRole(...MANAGER_ROLES)`); mirrored here only to
@@ -32,6 +34,7 @@ export const JobsiteManager = () => {
 
   const { downloadBundle, isPending: isDownloadingBundle } = useDownloadDefenseBundle();
   const upgrade = useUpgradeModal();
+  useSiteCheckoutReturn();
 
   const [showArchived, setShowArchived] = useState(false);
   const { jobsites, isLoading, isError } = useJobsites();
@@ -47,6 +50,8 @@ export const JobsiteManager = () => {
   const rosterJobsite = jobsites.find((jobsite) => jobsite.id === rosterId);
   const [membersId, setMembersId] = useState<string | undefined>(undefined);
   const membersJobsite = jobsites.find((jobsite) => jobsite.id === membersId);
+  const [siteProId, setSiteProId] = useState<string | undefined>(undefined);
+  const siteProJobsite = jobsites.find((jobsite) => jobsite.id === siteProId);
 
   const openCreate = () => {
     setEditing(undefined);
@@ -96,6 +101,7 @@ export const JobsiteManager = () => {
           onEdit={canManage ? openEdit : undefined}
           onManageSubs={(jobsite) => setRosterId(jobsite.id)}
           onManageMembers={canManageMembers ? (jobsite) => setMembersId(jobsite.id) : undefined}
+          onUpgrade={canManage ? (jobsite) => setSiteProId(jobsite.id) : undefined}
           onDownloadBundle={downloadBundle}
           isDownloadingBundle={isDownloadingBundle}
           isOnline={isOnline}
@@ -114,6 +120,12 @@ export const JobsiteManager = () => {
       />
 
       <UpgradeModal trigger={upgrade.trigger} onClose={upgrade.close} />
+
+      <SiteProCheckoutModal
+        jobsite={siteProJobsite ?? null}
+        isOnline={isOnline}
+        onClose={() => setSiteProId(undefined)}
+      />
 
       {rosterJobsite && (
         <JobsiteRosterModal

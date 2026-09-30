@@ -1217,7 +1217,12 @@ describe("gcDashboard service: getDefenseBundleEntries", () => {
     getOwnedJobsiteSpy = vi
       .spyOn(jobsitesService, "getOwnedJobsite")
       .mockReset()
-      .mockResolvedValue({ id: "jobsite-1", name: "Riverside Tower", plan: "site_pro" });
+      .mockResolvedValue({
+        id: "jobsite-1",
+        name: "Riverside Tower",
+        plan: "site_pro",
+        sitePro: true,
+      });
 
     projectsOrder = vi.fn().mockResolvedValue({ data: [linkedProject()], error: null });
     projectsEq = vi.fn(() => ({ order: projectsOrder }));
@@ -1270,7 +1275,12 @@ describe("gcDashboard service: getDefenseBundleEntries", () => {
 
   it("should throw a 403 PLAN_LIMIT when the jobsite isn't on Site Pro, without querying anything else", async () => {
     // Arrange
-    getOwnedJobsiteSpy.mockResolvedValue({ id: "jobsite-1", name: "Riverside Tower", plan: "free" });
+    getOwnedJobsiteSpy.mockResolvedValue({
+      id: "jobsite-1",
+      name: "Riverside Tower",
+      plan: "free",
+      sitePro: false,
+    });
 
     // Act & Assert
     await expect(getDefenseBundleEntries("jobsite-1", "gc-1")).rejects.toMatchObject({
