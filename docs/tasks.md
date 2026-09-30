@@ -2745,7 +2745,7 @@ Costs one extra query per request for Free subs (`resolveEffectiveTier`) and per
     now returns "Tampered" on both sides; confirm a pre-feature meeting (no seal) shows no badge on either
     side.
 - [ ] AI Talk Builder and cloud AI voice (see ~1736-1741).
-- [ ] Grow the library toward 500+ (see ~1749-1754; currently 112).
+- [ ] Grow the library toward 500+ (see ~1749-1754; currently 134 after 11p).
 - [-] Multi-crew scheduling and equipment check-ins — **dropped** (2026-09-29). No tables or code existed.
       Workforce scheduling and equipment inspection logging are scope outside TailgatePro's core toolbox-talk
       compliance loop (run a talk → capture signatures → sealed PDF → GC visibility) and overlap dedicated
@@ -2788,8 +2788,9 @@ seeded until they get topic-specific content. Feeds the "grow the library" item 
       ("Driving & Transportation"); trade filter options are derived from data, no client change needed
 - [x] OSHA citations independently checked by `safety-auditor`; general-industry 1910 cites replaced with 1926
       counterparts (1910.1030 and 1910.1200 kept as HazCom / bloodborne-pathogen references)
-- [ ] Confirm who authored/licensed the Word library (`attribution.license` is `owner-provided-unverified`; the
-      docx has no author or source) before any of it is published
+- [x] Confirm who authored/licensed the Word library (`attribution.license` is `owner-provided-unverified`; the
+      docx has no author or source) — not confirmed; owner accepted the risk for the 3 remaining talks on 2026-09-30
+      (see 11o)
 - [x] Agency-source pass (government + CPWR only, per user): `@safety-collector` TBT replacement mode found sources for 67
       talks, `@safety-structurer` rebuilt 63 (4 rejected as unfit), `@safety-auditor` approved 50 and sent 13 back;
       16 more turned out to duplicate original talks. Ledger: `data/raw/_tbt-source-matches.json`
@@ -2819,18 +2820,21 @@ seeded until they get topic-specific content. Feeds the "grow the library" item 
       overlaps, no readable source) are dropped, not written. Placeholder files deleted; `build-tbt-talks.js` no longer
       writes unverified Word talks and lists them under "Dropped by decision" in the import report. Nothing in Supabase
       changes (none was seeded). Revisit only if an HVAC installer pack (259, 260, 021) is wanted, as a new sourced effort
-- [ ] Check CPWR reuse terms: several CPWR PDFs say "All rights reserved" / "verify reuse terms" (talks 010, 122, 139,
-      142, 144 were flagged); confirm they fall under the free-use-with-attribution basis in `docs/content-attribution.md`
-- [ ] Decide whether environmental-compliance talks 177 (pollution prevention) and 180 (drain protection) belong in a
-      worker-safety library (their legal basis is Clean Water Act / EPA, not OSHA)
+- [x] Check CPWR reuse terms — decided 2026-09-30: accepted as-is. Of the flagged talks, 122 (Noise) is NIOSH public
+      domain; 010, 139, 142, 144 are CPWR "all rights reserved" and stay under the free-use-with-attribution basis in
+      `docs/content-attribution.md` (no standalone resale, attribution and notice shown, no endorsement). No written
+      CPWR permission was requested; revisit if CPWR objects
+- [x] Environmental-compliance talks 177 (pollution prevention) and 180 (drain protection) — decided 2026-09-30: keep
+      both (EPA public domain; GCs face stormwater/CWA liability). Not OSHA-based, so they cite the General Duty Clause
 - [ ] (superseded by the two items above) Write topic-specific content for the 217 `needs_revision` talks (start with trades customers use most:
       general-construction, electrical, carpentry), then re-run `@safety-auditor` per trade
-- [ ] Decide the "imported but overlapping an existing talk" list in the report (delete the JSON to drop one)
+- [x] "Imported but overlapping an existing talk" list — decided 2026-09-30: 14 of the 15 were already dropped in the
+      126-talk cut; the one left, 037 Safe Isolation Verification, is kept (different angle from `equipment-safety-maintenance`)
 - [x] Seeded 2026-09-25 to both the non-prod and prod Supabase projects (`npm run seed:talks`, `NODE_ENV=production` for
       prod): 92 global talks in each (58 added to the 34 already there), verified row-by-row; the 34 originals were
       unchanged. Rollback if ever needed: delete `toolbox_talks` rows where `is_global` and `slug` is one of the 58
       new slugs (the 34 originals excluded). `docs/content-attribution.md` counts updated
-- [ ] Update marketing/pricing copy that quotes the library size (was 34; now 112 seeded, see `docs/pricing-promise-gaps.md`)
+- [x] Update marketing/pricing copy that quotes the library size (was 34; now 112 seeded, see `docs/pricing-promise-gaps.md`) — done as 11n
 - [ ] Decide whether the 62 out-of-scope talks (quality, IT security, ethics, procurement) belong in a separate
       non-safety library
 
@@ -2995,15 +2999,26 @@ they can be worked one at a time. Tick a box here **and** in its source phase wh
       summary (multi-word AND, title matches ranked first), wired through `useTalkFilters` so the
       Content Library and the meeting wizard's talk picker both get it. NL search stays deferred.
       See Phase 9g (~line 2724).
-- [ ] 11n. Update marketing/pricing copy still quoting the old "34 talks" library size (now 112
-      seeded). See Phase 10 (~line 2789).
-- [ ] 11o. Word-library content decisions: confirm authorship/license on the 220 imported talks,
-      verify CPWR "all rights reserved" PDFs (talks 010, 122, 139, 142, 144), decide whether
-      environmental-compliance talks 177/180 belong in the library, decide the "overlapping an
-      existing talk" list. See Phase 10 (~lines 2747-2790).
-- [ ] 11p. Grow the library further using the existing free-source agents
+- [x] 11n. Update marketing/pricing copy still quoting the old "34 talks" library size (now 112
+      seeded). Verified the live client copy (`plans.ts`, `ComparisonTable.tsx`, `LandingFaq.tsx`) states
+      no library count, so nothing changed there; only `docs/pricing-promise-gaps.md` still said 34 and
+      is now updated to 112 (~22% of the 500+ claim). See Phase 10 (~line 2789).
+- [x] 11o. Word-library content decisions — all resolved 2026-09-30: CPWR "all rights reserved" talks accepted
+      as-is, 177/180 kept, overlap list resolved (037 kept). Word-library authorship is **unverified and accepted as
+      a known risk**: 3 talks remain (`safe-isolation-verification`, `manual-material-handling-and-lifting`,
+      `vacuum-pumps-and-evacuation`, license `owner-provided-unverified`). If anyone raises a claim, drop them:
+      delete the JSON files and the `toolbox_talks` rows (by slug) in both Supabase projects. See Phase 10.
+- [x] 11p. Grow the library further using the existing free-source agents
       (`@safety-collector`/`@safety-structurer`/`@safety-auditor` against OSHA/NIOSH/CPWR)
-      toward the 500+ claim. See Phase 9g (~line 2706).
+      toward the 500+ claim. First batch done 2026-09-30: 22 talks (112 → 134), all auditor-approved and
+      seeded to non-prod and prod. Six new trades (framing, steel-erection, concrete-formwork, demolition,
+      painting-coatings, flooring) plus additions to roofing, excavation, electrical, welding, plumbing.
+      Sources: OSHA, CPWR, and one Massachusetts FACE alert (`license: copy-freely-per-source`, non-blocking
+      auditor flag — accept the risk or confirm with MA FACE). Rollback: delete `toolbox_talks` rows by slug
+      for the 22 new files (those with audit dated 2026-09-30). Still `no-source` on free agency sites:
+      formwork/shoring, concrete pumping, rebar impalement, masonry scaffold, drywall dust (NIOSH 99-113 PDF
+      blocked to scripted fetch), stilts, pipe cutting/threading, glazing, kneeling ergonomics. Remaining gap
+      to 500+ is ~366 talks; further batches are still open work.
 
 **Excluded on purpose** (needs Stripe, Twilio, or another paid service — tracked in `## Deferred`
 and Phase 9e/9f instead): GC Site Pro sponsorship purchase flow, SMS nudges, AI Talk Builder /

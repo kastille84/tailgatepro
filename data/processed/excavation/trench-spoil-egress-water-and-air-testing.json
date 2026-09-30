@@ -1,0 +1,57 @@
+{
+  "id": "trench-spoil-egress-water-and-air-testing",
+  "title": "Trenching: Spoil Piles, Ladders, Water, and Air Testing",
+  "primary_trade": "Excavation",
+  "trade_tags": [
+    "Excavation",
+    "General Construction"
+  ],
+  "osha_standards": [
+    "29 CFR 1926.651",
+    "29 CFR 1926.652"
+  ],
+  "estimated_minutes": 5,
+  "summary": "Cave-ins are the biggest risk in a trench, but falling spoil, water, bad air, and no way out also kill. Keep spoil back, provide a way out, and check the trench every shift.",
+  "talking_points": [
+    "One cubic yard of soil can weigh as much as a car. Enter a trench only after protection against cave-ins is in place: sloping or benching, support systems, or a shield.",
+    "Keep spoil piles, materials, and equipment at least 2 feet from the edge, or use a retaining device so they cannot fall or roll in. Keep heavy equipment away from the edge.",
+    "Trenches 4 feet deep or more need a ladder, steps, ramp, or other safe way out within 25 feet of lateral travel for workers.",
+    "Stay out of a trench where water is collecting unless protections are taken, such as special support or shield systems, water removal, or a harness and lifeline. A competent person must monitor water removal equipment.",
+    "Test the air before entering a trench deeper than 4 feet where low oxygen or a hazardous atmosphere could be present, such as near landfills or stored hazardous substances. Keep rescue equipment ready and attended if hazards are present or expected.",
+    "Never work under loads handled by lifting or digging equipment. Stand away from trucks being loaded or unloaded. Use a warning system, such as barricades or signals, when mobile equipment works near the edge and the operator cannot see it clearly.",
+    "Do not work on the face of a sloped or benched trench above other workers unless those below are protected from falling material.",
+    "A competent person inspects the trench, nearby areas, and protective systems daily before work starts and as needed during the shift, and after rainstorms or other events that change conditions. If a hazard is found, workers leave the area until it is fixed."
+  ],
+  "site_hazards_to_check": [
+    "Spoil piles or equipment closer than 2 feet to the trench edge",
+    "No ladder or ramp within 25 feet of workers in a trench 4 feet or deeper",
+    "Standing water or water collecting in the trench",
+    "Possible low oxygen or toxic gases in a trench more than 4 feet deep",
+    "Loose rock or soil on the trench face",
+    "Mobile equipment working near the edge with no warning system",
+    "Workers under raised loads or working above others on a sloped face"
+  ],
+  "discussion_questions": [
+    "Where is our spoil pile, and is it at least 2 feet back?",
+    "How do we get out of this trench in an emergency, and is a ladder close to everyone?",
+    "Did anyone check the air and the water in the trench before we went in today?"
+  ],
+  "attribution": {
+    "source": "OSHA",
+    "publisher": "Occupational Safety and Health Administration (OSHA)",
+    "copyright": "U.S. Government work — public domain.",
+    "license": "public-domain",
+    "source_url": "https://www.osha.gov/sites/default/files/publications/OSHA2226.pdf",
+    "notice": "Adapted from OSHA Publication 2226, Trenching and Excavation Safety (2015). Reproduced with attribution for jobsite safety training; not an endorsement by OSHA."
+  },
+  "audit": {
+    "status": "approved",
+    "audited_at": "2026-09-30T14:01:48.440Z",
+    "osha_accuracy_verified": true,
+    "flags": [
+      "Verified against data/raw/osha-trenching-and-excavation-safety.md (OSHA 2226): 2 ft spoil setback or retaining device, 4 ft egress within 25 ft lateral travel, water accumulation precautions and competent-person monitoring, atmospheric testing over 4 ft depth (landfill/hazardous substances), rescue equipment attended, no work under loads, stand away from vehicles, warning system, faces of sloped/benched excavations, daily inspection incl. after rainstorms and clear the area. 1926.651 and .652 are the governing sections.",
+      "Non-blocking: talk does not state the 5 ft protective-system trigger (only \"enter after protection is in place\"), which is conservative.",
+      "Harwood check: OSHA-authored."
+    ]
+  }
+}

@@ -1,0 +1,56 @@
+{
+  "id": "silica-dust-floor-grinders-and-milling-machines",
+  "title": "Silica Dust Control for Floor Grinders and Milling Machines",
+  "primary_trade": "Flooring",
+  "trade_tags": [
+    "Flooring",
+    "Masonry",
+    "General Construction"
+  ],
+  "osha_standards": [
+    "29 CFR 1926.1153"
+  ],
+  "estimated_minutes": 5,
+  "summary": "Grinding or milling concrete and other silica-containing floors makes respirable crystalline silica dust that can permanently damage your lungs. Use water or a vacuum dust collection system.",
+  "talking_points": [
+    "Walk-behind milling machines and floor grinders can make respirable silica dust. Breathing it can irreversibly damage your lungs.",
+    "Control the dust with wet methods (a built-in water system that feeds water to the cutting surface all the time) or a vacuum dust collection system.",
+    "Wet methods: check that hoses are tight and not cracked, aim nozzles at the grinding surface, keep the water supply up, and use enough water to keep visible dust down.",
+    "Clean up slurry before it dries and puts silica back in the air. Use shovels or a wet vacuum with a HEPA filter.",
+    "Use GFCIs and watertight, sealable connectors on electric tools when you work with water.",
+    "Vacuum systems: use the hood and vacuum the tool maker recommends, with a 99 percent efficient filter. Keep the hose clear of kinks. Avoid dust when you change bags and filters.",
+    "Do not use compressed air or blowers to clean surfaces, clothing, or filters unless a ventilation system captures the dust cloud. Use a HEPA vacuum or wet methods.",
+    "Indoors or in enclosed areas, vacuum loose dust with a HEPA vacuum between passes and add ventilation such as exhaust fans or ducts that move dust away from your breathing zone."
+  ],
+  "site_hazards_to_check": [
+    "Grinder or mill with no working water system or vacuum dust collection",
+    "Cracked hoses, clogged nozzles, or low water supply",
+    "Dry slurry or dust piles on the floor",
+    "Electric cords and tools wet with no GFCI",
+    "Enclosed areas where dust can build up",
+    "Anyone using compressed air or a blower to clean dust"
+  ],
+  "discussion_questions": [
+    "Are we using water or a vacuum system on this machine, and is it working right now?",
+    "Where does the slurry go, and who cleans it up before it dries?",
+    "Is there enough ventilation for this room to keep dust away from us?"
+  ],
+  "attribution": {
+    "source": "OSHA",
+    "publisher": "Occupational Safety and Health Administration (OSHA)",
+    "copyright": "U.S. Government work — public domain.",
+    "license": "public-domain",
+    "source_url": "https://www.osha.gov/sites/default/files/publications/OSHA3932.pdf",
+    "notice": "Adapted from OSHA Fact Sheet FS-3932, Control of Silica Dust in Construction: Walk-Behind Milling Machines and Floor Grinders (2017). Reproduced with attribution for jobsite safety training; not an endorsement by OSHA."
+  },
+  "audit": {
+    "status": "approved",
+    "audited_at": "2026-09-30T14:01:48.440Z",
+    "osha_accuracy_verified": true,
+    "flags": [
+      "Verified against data/raw/osha-silica-walk-behind-milling-machines-floor-grinders.md (OSHA FS-3932): wet methods vs VDCS, hose/nozzle/water checks, slurry cleanup with shovel or HEPA wet vac, GFCI and watertight connectors, 99 percent filter, hose kinks, compressed air ban, HEPA vacuum between passes indoors, extra ventilation. 29 CFR 1926.1153 (Table 1) is the standard the fact sheet cites.",
+      "Non-blocking: source also says Table 1 needs no respirator when wet method/VDCS is used properly; talk is silent (not misleading). Talk covers grinders/mills only, not tile cutting.",
+      "Harwood check: OSHA-authored fact sheet."
+    ]
+  }
+}

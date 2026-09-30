@@ -1,0 +1,57 @@
+{
+  "id": "arc-flash-hazards-low-voltage",
+  "title": "Arc Flash: Low Voltage Is Not Low Risk",
+  "primary_trade": "Electrical",
+  "trade_tags": [
+    "Electrical",
+    "General Construction"
+  ],
+  "osha_standards": [
+    "29 CFR 1910.333",
+    "29 CFR 1910.269",
+    "29 CFR 1926.417"
+  ],
+  "estimated_minutes": 5,
+  "summary": "An arc flash is an electrical explosion that can burn skin, ignite clothing, and kill, even at 120/208 volts. Treat equipment as energized until it is locked out, and wear arc-rated gear correctly.",
+  "talking_points": [
+    "Arc flashes happen at low voltage. Even 120/208 volts can make an arc with enough energy to burn exposed skin, ignite flammable clothing, and cause fatal injuries. Low voltage does not justify energized work.",
+    "Voltage has little effect on how dangerous an arc flash is. Incident energy depends mostly on amperage, cycle time, and how far you are from the arc.",
+    "An arc is an electrical explosion. Temperatures can exceed 35,000 degrees F, nearly four times the heat of the sun's surface, with a loud blast, concussive force, and super-heated shrapnel.",
+    "Most arc flash burns come from the arc setting flammable clothing on fire, not from the arc itself.",
+    "OSHA's general industry rule (1910.333) says equipment that is de-energized but not locked out or tagged must be treated as energized. On construction sites, tagging is required by 29 CFR 1926.417. Good practice: follow all lockout/tagout steps and verify de-energized, or plan the work as energized and use arc flash gear.",
+    "Wearing meltable or flammable undergarments is dangerous. OSHA's electric power standard (1910.269) prohibits it, and 1926.960(g) has the same rule for power line construction. Some undergarments can melt or catch fire even under arc-rated outer clothing.",
+    "Wear arc-rated PPE correctly. An untucked shirt, rolled-up sleeves, or unbuttoned clothing can let undergarments melt or catch fire.",
+    "Good practice: do not work on energized equipment unless you are qualified and your employer has told you what arc-rated PPE the task needs."
+  ],
+  "site_hazards_to_check": [
+    "Equipment treated as de-energized when it is not locked out or tagged",
+    "Work on or near energized panels, even at 120/208 volts",
+    "Workers in nylon, polyester, or other meltable clothing or undergarments",
+    "Arc-rated clothing worn with sleeves rolled up, shirt untucked, or buttons open",
+    "No one has checked the amperage and clearing time of the equipment"
+  ],
+  "discussion_questions": [
+    "Is this equipment locked out and tagged, or are we only assuming it is off?",
+    "What are we wearing under our arc-rated gear, and is it worn correctly?",
+    "Why does low voltage not mean low risk?"
+  ],
+  "attribution": {
+    "source": "OSHA",
+    "publisher": "Occupational Safety and Health Administration (OSHA)",
+    "copyright": "U.S. Government work — public domain.",
+    "license": "public-domain",
+    "source_url": "https://www.osha.gov/electrical/flash-hazards",
+    "notice": "Adapted from OSHA Electrical Topics page, Electric-Arc Flash Hazards. Reproduced with attribution for jobsite safety training; not an endorsement by OSHA."
+  },
+  "audit": {
+    "status": "approved",
+    "audited_at": "2026-09-30T14:01:48.440Z",
+    "osha_accuracy_verified": true,
+    "flags": [
+      "Verified against data/raw/osha-electric-arc-flash-hazards.md (OSHA page): 120/208 V arcs, incident energy depends on amperage/cycle time/distance not voltage, 35,000 F (\"nearly four times the sun's surface\"), blast/shrapnel, most burns from ignited clothing, meltable undergarments, untucked/rolled/unbuttoned clothing.",
+      "Edited for scope: source cites 1910.333 (general industry) and 1910.269 (electric power work; its (a)(1)(ii)(A) excludes construction except line-clearance tree trimming and generation work). 1926.417 (verified) only requires tagging and says nothing about \"treated as energized\". Wording now attributes each rule to its scope, points construction to 1926.417 and 1926.960(g) (verified: no clothing that could melt or ignite for employees exposed to arcs), and the \"treat as energized\" safeguard for construction is labeled \"Good practice\". osha_standards left as 1910.333, 1910.269, 1926.417 (all now used with correct scope).",
+      "Non-blocking: there is no general construction (Subpart K) arc-flash clothing rule; talk does not claim one. Talk tells only qualified workers to do energized work.",
+      "Harwood check: OSHA-authored page."
+    ]
+  }
+}

@@ -1,0 +1,59 @@
+{
+  "id": "epoxy-resin-systems-hazards",
+  "title": "Epoxy Resin Systems: Protect Your Skin and Lungs",
+  "primary_trade": "Flooring",
+  "trade_tags": [
+    "Flooring",
+    "Painting & Coatings",
+    "General Construction"
+  ],
+  "osha_standards": [
+    "29 CFR 1926.59",
+    "29 CFR 1926.95",
+    "29 CFR 1926.103"
+  ],
+  "estimated_minutes": 5,
+  "summary": "Epoxies can cause skin rashes and allergies, asthma, and lung problems. Use ventilation, the right PPE, and good hygiene every time you mix, apply, or spray them.",
+  "talking_points": [
+    "Epoxy resin systems are strong, durable coatings and adhesives used in many trades, including protective coatings on steel structures. They are dangerous on your skin and if you breathe vapors, mists, or particles.",
+    "Health effects include painful or itchy skin rashes, allergy (sensitization), asthma, lung inflammation, and lower lung function. Some chemicals may also affect hormones. See a doctor if you have symptoms.",
+    "Use ventilation. Local exhaust, like dust collectors on power tools, captures contaminants at the source. Fans or natural air movement help in enclosed or covered spaces.",
+    "Wear a long-sleeved shirt, polyethylene or polypropylene coveralls, and eye protection.",
+    "Wear thick nitrile or butyl rubber gloves. Never use cotton or latex gloves because they can hold the chemicals against your skin.",
+    "Respirators: a NIOSH-approved powered air-purifying respirator with particulate filter and organic vapor cartridge when spraying in enclosed spaces, and a half facepiece with organic vapor cartridge for mixing and roller or brush work. Keep 10 feet or more from workers using epoxy products, or wear a respirator if you work close by.",
+    "Wash with pH neutral soap and warm water before and after gloves and after any splash. Clean tools and reusable gloves after each use, and bag dirty clothes to wash separately.",
+    "Change into clean clothes before you leave, shower when you get home, keep work and storage areas clean, and keep containers tightly covered. Your employer must train you and give you safety data sheets and PPE."
+  ],
+  "site_hazards_to_check": [
+    "Spraying or mixing epoxy in an enclosed or covered space with poor air movement",
+    "Workers wearing cotton or latex gloves",
+    "Missing coveralls, eye protection, or respirators",
+    "No handwashing station near the work",
+    "Open or uncovered chemical containers",
+    "Other workers within 10 feet of epoxy application without a respirator"
+  ],
+  "discussion_questions": [
+    "What gloves and respirator do we need for this epoxy job?",
+    "Where can we wash up during and after the work?",
+    "Has anyone had a rash or breathing trouble from epoxies, and what did they do?"
+  ],
+  "attribution": {
+    "source": "CPWR",
+    "publisher": "CPWR — The Center for Construction Research and Training",
+    "copyright": "© 2023 CPWR — The Center for Construction Research and Training. All rights reserved.",
+    "license": "free-use-with-attribution",
+    "source_url": "https://www.cpwr.com/wp-content/uploads/HA-Epoxy_Resin_Systems.pdf",
+    "notice": "Adapted from a CPWR/NIOSH Hazard Alert, produced under NIOSH cooperative agreement OH 009762. Reproduced with attribution for jobsite safety training; not an endorsement by CPWR or NIOSH."
+  },
+  "audit": {
+    "status": "approved",
+    "audited_at": "2026-09-30T14:01:48.440Z",
+    "osha_accuracy_verified": true,
+    "flags": [
+      "Verified against data/raw/cpwr-epoxy-resin-systems.md: health effects, ventilation, PPE (thick nitrile/butyl, no cotton/latex), PAPR vs half facepiece, pH-neutral soap, hygiene, employer duties.",
+      "Edited: the 10-foot distance was narrowed to \"spraying\"; source says workers \"using epoxy-based products\". Reworded (talking point and hazard item).",
+      "Edited osha_standards: 1910.1200 -> 29 CFR 1926.59, 1910.134 -> 29 CFR 1926.103; 1926.95 (PPE criteria, construction) is correct and kept.",
+      "Provenance (non-blocking): CPWR content is copyrighted ('All rights reserved'); attribution block carries the (c) line, NIOSH cooperative-agreement credit and 'not an endorsement by CPWR or NIOSH' notice, matching docs/content-attribution.md. Keep the reminder that reuse remains under CPWR's free-use conditions (no standalone resale, attribution kept, no implied endorsement)."
+    ]
+  }
+}

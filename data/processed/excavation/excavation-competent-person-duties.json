@@ -1,0 +1,59 @@
+{
+  "id": "excavation-competent-person-duties",
+  "title": "Excavation Competent Person: What They Must Do",
+  "primary_trade": "Excavation",
+  "trade_tags": [
+    "Excavation",
+    "General Construction"
+  ],
+  "osha_standards": [
+    "29 CFR 1926.651",
+    "29 CFR 1926.652",
+    "29 CFR 1926 Subpart P Appendix A",
+    "29 CFR 1926 Subpart P Appendix B"
+  ],
+  "estimated_minutes": 5,
+  "summary": "Trench work depends on a competent person who can spot hazards and has the authority to fix them fast. Know what they check, and know that they can pull you out of the trench.",
+  "talking_points": [
+    "A competent person can identify existing and predictable hazards and working conditions that are unsanitary, hazardous, or dangerous, and has authority to take prompt action to eliminate them.",
+    "They determine the cave-in potential and whether shoring or another protective system is needed.",
+    "They classify soil and rock, by visual analysis and testing, and re-classify when conditions change.",
+    "They decide the slope of an excavation so it will not collapse from loads such as stored material, operating equipment, adjacent structures, or traffic, and make sure that slope is achieved.",
+    "They monitor water removal equipment and inspect excavations exposed to runoff from heavy rain to decide if diversion ditches, dikes, or other protection are needed.",
+    "They examine damaged protective system material or equipment to decide if it can still be used.",
+    "They can order workers out of the hazardous area right away when there is evidence of a possible cave-in, protective system failure, a hazardous atmosphere, or other hazardous conditions.",
+    "They design structural ramps used only by workers for getting in and out. Ramps for equipment must be designed by a competent person qualified in structural design."
+  ],
+  "site_hazards_to_check": [
+    "No competent person named for the excavation",
+    "Signs of a possible cave-in, such as cracks or sloughing",
+    "Protective system parts that are bent, cracked, or damaged",
+    "Water removal equipment running with no one monitoring it",
+    "Runoff from heavy rain reaching the excavation",
+    "Stored material, equipment, or traffic close enough to load the trench walls",
+    "Homemade ramps used for getting in and out"
+  ],
+  "discussion_questions": [
+    "Who is the competent person on this job today, and how do we reach them?",
+    "What would make you stop work and get out of the trench right now?",
+    "What has changed since the last inspection that they need to see?"
+  ],
+  "attribution": {
+    "source": "OSHA",
+    "publisher": "Occupational Safety and Health Administration (OSHA)",
+    "copyright": "U.S. Government work — public domain.",
+    "license": "public-domain",
+    "source_url": "https://www.osha.gov/etools/construction/trenching/competent-person",
+    "notice": "Adapted from OSHA Construction eTool, Trenches and Excavations: Competent Person. Reproduced with attribution for jobsite safety training; not an endorsement by OSHA."
+  },
+  "audit": {
+    "status": "approved",
+    "audited_at": "2026-09-30T14:01:48.440Z",
+    "osha_accuracy_verified": true,
+    "flags": [
+      "Verified against data/raw/osha-excavation-competent-person.md (OSHA eTool): definition and each duty with its paragraph (651(h)(2),(h)(3),(k)(2), 652(a)(1), 652(d)(3), 651(c)(1)(i), Appendix A, Appendix B (c)(3)(iii)) match the talk. Standards listed are exactly those used.",
+      "Non-blocking: overlaps the soil-classification talk on re-classification only; distinct focus.",
+      "Harwood check: OSHA eTool."
+    ]
+  }
+}

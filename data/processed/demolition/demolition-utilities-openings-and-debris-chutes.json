@@ -1,0 +1,58 @@
+{
+  "id": "demolition-utilities-openings-and-debris-chutes",
+  "title": "Demolition Quick Card: Utilities, Openings, and Debris Chutes",
+  "primary_trade": "Demolition",
+  "trade_tags": [
+    "Demolition",
+    "General Construction"
+  ],
+  "osha_standards": [
+    "29 CFR 1926.850",
+    "29 CFR 1926.852",
+    "29 CFR 1926.853",
+    "29 CFR 1926.854"
+  ],
+  "estimated_minutes": 5,
+  "summary": "Before you swing a hammer, shut off the utilities and guard every opening. Lead paint, sharp objects, and asbestos add to the usual construction hazards in demolition.",
+  "talking_points": [
+    "Expect extra hazards in demolition: lead-based paint, sharp or protruding objects, and asbestos-containing material.",
+    "Shut off or cap all electric, gas, water, steam, sewer, and other service lines. Notify the utility companies.",
+    "Inspect your PPE before use, and wear the right PPE for the task.",
+    "Inspect all stairs, passageways, and ladders, and light all stairways.",
+    "Guard wall openings to a height of 42 inches. Cover and secure floor openings with material that can hold the loads that will be put on it.",
+    "Floor openings used to drop debris must not be more than 25 percent of the total floor area. Use enclosed chutes with gates at the discharge end to drop material to the ground or into debris containers.",
+    "Take exterior walls and floors down from the top of the structure to the bottom. Do not cut or remove load-supporting members on a floor until all stories above it are removed.",
+    "Remove roof cornices and ornamental stonework before pulling walls down. No one works where collapse hazards exist until they are fixed by shoring, bracing, or other effective means."
+  ],
+  "site_hazards_to_check": [
+    "Live electric, gas, water, steam, or sewer lines that are not shut off or capped",
+    "Unguarded wall openings and uncovered floor openings",
+    "Debris dropped through floor openings with no chute or enclosure",
+    "Chutes with no gate at the discharge end",
+    "Lead paint, sharp objects, or asbestos-containing material",
+    "Ornamental stone or cornices still in place above a wall to be pulled down"
+  ],
+  "discussion_questions": [
+    "Which utilities feed this building, and who confirmed each one is shut off or capped?",
+    "Which openings on this level are not yet guarded or covered?",
+    "Where does our debris go, and is the chute in good shape?"
+  ],
+  "attribution": {
+    "source": "OSHA",
+    "publisher": "Occupational Safety and Health Administration (OSHA)",
+    "copyright": "U.S. Government work — public domain.",
+    "license": "public-domain",
+    "source_url": "https://www.osha.gov/sites/default/files/publications/demolition_safety_tips.pdf",
+    "notice": "Adapted from OSHA Quick Card, Demolition Safety (OSHA 3290). Reproduced with attribution for jobsite safety training; not an endorsement by OSHA."
+  },
+  "audit": {
+    "status": "approved",
+    "audited_at": "2026-09-30T14:01:48.440Z",
+    "osha_accuracy_verified": true,
+    "flags": [
+      "Verified against data/raw/osha-demolition-safety-quick-card.md (OSHA 3290): utilities shut off/capped and utilities notified, 42-inch wall opening guarding (1926.850(g)), floor opening 25% limit, enclosed chutes with gates, top-down (850(j)), load-supporting members, cornices, shoring. Standards 1926.850, .852 (chutes), .853 (floor openings), .854 are the correct Subpart T sections.",
+      "Non-blocking: about half the points repeat the sibling talk demolition-engineering-survey-and-structural-hazards (top-down, load-bearing members, cornices, shoring, stairs, PPE). Sources are different OSHA products so approved; consider spacing them apart in scheduling.",
+      "Harwood check: OSHA-authored quick card."
+    ]
+  }
+}

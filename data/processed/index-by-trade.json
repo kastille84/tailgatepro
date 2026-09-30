@@ -1,6 +1,6 @@
 {
-  "last_updated": "2026-09-25T20:53:47Z",
-  "total_talks": 112,
+  "last_updated": "2026-09-30T13:52:33Z",
+  "total_talks": 134,
   "trades": {
     "Carpentry": [
       {
@@ -112,6 +112,38 @@
           "29 CFR 1926.1052"
         ],
         "source": "TailgatePro"
+      },
+      {
+        "id": "residential-framing-fall-protection",
+        "title": "Fall Protection Through Each Stage of Residential Framing",
+        "file_path": "data/processed/framing/residential-framing-fall-protection.json",
+        "osha_standards": [
+          "29 CFR 1926.501(b)(13)",
+          "29 CFR 1926.502",
+          "29 CFR 1926.502(k)"
+        ],
+        "source": "OSHA"
+      },
+      {
+        "id": "roof-truss-installation-fall-protection",
+        "title": "Roof Trusses: Staying Safe Until They Are Braced",
+        "file_path": "data/processed/framing/roof-truss-installation-fall-protection.json",
+        "osha_standards": [
+          "29 CFR 1926.501(b)(13)",
+          "29 CFR 1926.502(d)",
+          "29 CFR 1926.502(k)",
+          "29 CFR 1926.453"
+        ],
+        "source": "OSHA"
+      },
+      {
+        "id": "raising-heavy-framed-walls",
+        "title": "Raising Tall Framed Walls Without a Collapse",
+        "file_path": "data/processed/framing/raising-heavy-framed-walls.json",
+        "osha_standards": [
+          "OSH Act Section 5(a)(1) General Duty Clause"
+        ],
+        "source": "OSHA"
       }
     ],
     "Driving & Transportation": [
@@ -269,6 +301,45 @@
           "29 CFR 1926.1053(b)(12)"
         ],
         "source": "NIOSH"
+      },
+      {
+        "id": "lockout-tagout-electrically-powered-equipment",
+        "title": "Lockout/Tagout for Electrically Powered Equipment",
+        "file_path": "data/processed/electrical/lockout-tagout-electrically-powered-equipment.json",
+        "osha_standards": [
+          "29 CFR 1926.417"
+        ],
+        "source": "CPWR"
+      },
+      {
+        "id": "arc-flash-hazards-low-voltage",
+        "title": "Arc Flash: Low Voltage Is Not Low Risk",
+        "file_path": "data/processed/electrical/arc-flash-hazards-low-voltage.json",
+        "osha_standards": [
+          "29 CFR 1910.333",
+          "29 CFR 1910.269",
+          "29 CFR 1926.417"
+        ],
+        "source": "OSHA"
+      },
+      {
+        "id": "assured-equipment-grounding-conductor-program",
+        "title": "Assured Equipment Grounding Conductor Program: Cord Checks and Tests",
+        "file_path": "data/processed/electrical/assured-equipment-grounding-conductor-program.json",
+        "osha_standards": [
+          "29 CFR 1926.404(b)(1)(iii)",
+          "29 CFR 1926.404(b)(1)"
+        ],
+        "source": "OSHA"
+      },
+      {
+        "id": "pvc-cpvc-cement-thf-hazards",
+        "title": "PVC and CPVC Cement: Tetrahydrofuran (THF) Hazards",
+        "file_path": "data/processed/plumbing/pvc-cpvc-cement-thf-hazards.json",
+        "osha_standards": [
+          "29 CFR 1910.1200"
+        ],
+        "source": "CPWR"
       }
     ],
     "Excavation": [
@@ -320,6 +391,38 @@
           "29 CFR 1926.200",
           "29 CFR 1926.201",
           "29 CFR 1926.56"
+        ],
+        "source": "OSHA"
+      },
+      {
+        "id": "soil-classification-for-trenches",
+        "title": "Trench Soil Classification: Type A, B, and C",
+        "file_path": "data/processed/excavation/soil-classification-for-trenches.json",
+        "osha_standards": [
+          "29 CFR 1926.652",
+          "29 CFR 1926 Subpart P Appendix A"
+        ],
+        "source": "OSHA"
+      },
+      {
+        "id": "trench-spoil-egress-water-and-air-testing",
+        "title": "Trenching: Spoil Piles, Ladders, Water, and Air Testing",
+        "file_path": "data/processed/excavation/trench-spoil-egress-water-and-air-testing.json",
+        "osha_standards": [
+          "29 CFR 1926.651",
+          "29 CFR 1926.652"
+        ],
+        "source": "OSHA"
+      },
+      {
+        "id": "excavation-competent-person-duties",
+        "title": "Excavation Competent Person: What They Must Do",
+        "file_path": "data/processed/excavation/excavation-competent-person-duties.json",
+        "osha_standards": [
+          "29 CFR 1926.651",
+          "29 CFR 1926.652",
+          "29 CFR 1926 Subpart P Appendix A",
+          "29 CFR 1926 Subpart P Appendix B"
         ],
         "source": "OSHA"
       }
@@ -1351,6 +1454,210 @@
           "29 CFR 1926.21"
         ],
         "source": "TailgatePro"
+      },
+      {
+        "id": "raising-heavy-framed-walls",
+        "title": "Raising Tall Framed Walls Without a Collapse",
+        "file_path": "data/processed/framing/raising-heavy-framed-walls.json",
+        "osha_standards": [
+          "OSH Act Section 5(a)(1) General Duty Clause"
+        ],
+        "source": "OSHA"
+      },
+      {
+        "id": "steel-erection-stability-decking-bolting",
+        "title": "Steel Erection: Keeping Columns, Joists, and Decking Stable",
+        "file_path": "data/processed/steel-erection/steel-erection-stability-decking-bolting.json",
+        "osha_standards": [
+          "29 CFR 1926.754",
+          "29 CFR 1926.755",
+          "29 CFR 1926.756",
+          "29 CFR 1926.757"
+        ],
+        "source": "OSHA"
+      },
+      {
+        "id": "concrete-masonry-wall-bracing-rebar",
+        "title": "Concrete and Masonry: Wall Bracing, Limited Access Zones, and Rebar Caps",
+        "file_path": "data/processed/concrete-formwork/concrete-masonry-wall-bracing-rebar.json",
+        "osha_standards": [
+          "29 CFR 1926.701(b)",
+          "29 CFR 1926.706(a)(1)",
+          "29 CFR 1926.706(b)",
+          "29 CFR 1926.703(a)(2)"
+        ],
+        "source": "OSHA"
+      },
+      {
+        "id": "demolition-engineering-survey-and-structural-hazards",
+        "title": "Demolition: Survey First, Then Take It Down Top to Bottom",
+        "file_path": "data/processed/demolition/demolition-engineering-survey-and-structural-hazards.json",
+        "osha_standards": [
+          "29 CFR 1926.850",
+          "29 CFR 1926.854",
+          "29 CFR 1926.858",
+          "29 CFR 1926.859"
+        ],
+        "source": "OSHA"
+      },
+      {
+        "id": "demolition-utilities-openings-and-debris-chutes",
+        "title": "Demolition Quick Card: Utilities, Openings, and Debris Chutes",
+        "file_path": "data/processed/demolition/demolition-utilities-openings-and-debris-chutes.json",
+        "osha_standards": [
+          "29 CFR 1926.850",
+          "29 CFR 1926.852",
+          "29 CFR 1926.853",
+          "29 CFR 1926.854"
+        ],
+        "source": "OSHA"
+      },
+      {
+        "id": "lead-exposure-paint-removal",
+        "title": "Lead Exposure During Paint Removal",
+        "file_path": "data/processed/painting-coatings/lead-exposure-paint-removal.json",
+        "osha_standards": [
+          "29 CFR 1926.62"
+        ],
+        "source": "CPWR"
+      },
+      {
+        "id": "isocyanates-paints-and-coatings",
+        "title": "Isocyanates in Paints, Glues, and Spray Foam",
+        "file_path": "data/processed/painting-coatings/isocyanates-paints-and-coatings.json",
+        "osha_standards": [
+          "29 CFR 1910.1200",
+          "29 CFR 1910.134"
+        ],
+        "source": "CPWR"
+      },
+      {
+        "id": "ladder-safety-for-painters",
+        "title": "Ladder Safety for Painters: Prep Before You Step",
+        "file_path": "data/processed/painting-coatings/ladder-safety-for-painters.json",
+        "osha_standards": [
+          "29 CFR 1926.1053"
+        ],
+        "source": "MA FACE"
+      },
+      {
+        "id": "silica-dust-floor-grinders-and-milling-machines",
+        "title": "Silica Dust Control for Floor Grinders and Milling Machines",
+        "file_path": "data/processed/flooring/silica-dust-floor-grinders-and-milling-machines.json",
+        "osha_standards": [
+          "29 CFR 1926.1153"
+        ],
+        "source": "OSHA"
+      },
+      {
+        "id": "epoxy-resin-systems-hazards",
+        "title": "Epoxy Resin Systems: Protect Your Skin and Lungs",
+        "file_path": "data/processed/flooring/epoxy-resin-systems-hazards.json",
+        "osha_standards": [
+          "29 CFR 1910.1200",
+          "29 CFR 1926.95",
+          "29 CFR 1910.134"
+        ],
+        "source": "CPWR"
+      },
+      {
+        "id": "roofing-fall-protection-systems",
+        "title": "Roofing Fall Protection: Harnesses, Anchors, Guardrails, and Warning Lines",
+        "file_path": "data/processed/roofing/roofing-fall-protection-systems.json",
+        "osha_standards": [
+          "29 CFR 1926.501(b)(10)",
+          "29 CFR 1926.501(b)(11)",
+          "29 CFR 1926.502(d)",
+          "29 CFR 1926.502(b)",
+          "29 CFR 1926.502(f)",
+          "29 CFR 1926.502(i)",
+          "29 CFR 1926.150"
+        ],
+        "source": "OSHA"
+      },
+      {
+        "id": "skylight-and-roof-hole-falls",
+        "title": "Preventing Falls Through Skylights and Holes",
+        "file_path": "data/processed/roofing/skylight-and-roof-hole-falls.json",
+        "osha_standards": [
+          "29 CFR 1926.501(b)(4)",
+          "29 CFR 1926.502(b)",
+          "29 CFR 1926.502(d)",
+          "29 CFR 1926.502(i)"
+        ],
+        "source": "CPWR"
+      },
+      {
+        "id": "soil-classification-for-trenches",
+        "title": "Trench Soil Classification: Type A, B, and C",
+        "file_path": "data/processed/excavation/soil-classification-for-trenches.json",
+        "osha_standards": [
+          "29 CFR 1926.652",
+          "29 CFR 1926 Subpart P Appendix A"
+        ],
+        "source": "OSHA"
+      },
+      {
+        "id": "trench-spoil-egress-water-and-air-testing",
+        "title": "Trenching: Spoil Piles, Ladders, Water, and Air Testing",
+        "file_path": "data/processed/excavation/trench-spoil-egress-water-and-air-testing.json",
+        "osha_standards": [
+          "29 CFR 1926.651",
+          "29 CFR 1926.652"
+        ],
+        "source": "OSHA"
+      },
+      {
+        "id": "excavation-competent-person-duties",
+        "title": "Excavation Competent Person: What They Must Do",
+        "file_path": "data/processed/excavation/excavation-competent-person-duties.json",
+        "osha_standards": [
+          "29 CFR 1926.651",
+          "29 CFR 1926.652",
+          "29 CFR 1926 Subpart P Appendix A",
+          "29 CFR 1926 Subpart P Appendix B"
+        ],
+        "source": "OSHA"
+      },
+      {
+        "id": "lockout-tagout-electrically-powered-equipment",
+        "title": "Lockout/Tagout for Electrically Powered Equipment",
+        "file_path": "data/processed/electrical/lockout-tagout-electrically-powered-equipment.json",
+        "osha_standards": [
+          "29 CFR 1926.417"
+        ],
+        "source": "CPWR"
+      },
+      {
+        "id": "arc-flash-hazards-low-voltage",
+        "title": "Arc Flash: Low Voltage Is Not Low Risk",
+        "file_path": "data/processed/electrical/arc-flash-hazards-low-voltage.json",
+        "osha_standards": [
+          "29 CFR 1910.333",
+          "29 CFR 1910.269",
+          "29 CFR 1926.417"
+        ],
+        "source": "OSHA"
+      },
+      {
+        "id": "assured-equipment-grounding-conductor-program",
+        "title": "Assured Equipment Grounding Conductor Program: Cord Checks and Tests",
+        "file_path": "data/processed/electrical/assured-equipment-grounding-conductor-program.json",
+        "osha_standards": [
+          "29 CFR 1926.404(b)(1)(iii)",
+          "29 CFR 1926.404(b)(1)"
+        ],
+        "source": "OSHA"
+      },
+      {
+        "id": "fire-watch-hot-work-safety",
+        "title": "Fire Watch Duties During Hot Work",
+        "file_path": "data/processed/welding/fire-watch-hot-work-safety.json",
+        "osha_standards": [
+          "29 CFR 1926.352",
+          "29 CFR 1915.504"
+        ],
+        "source": "OSHA"
       }
     ],
     "Heavy Equipment": [
@@ -1591,6 +1898,15 @@
           "29 CFR 1910.212(a)(5)"
         ],
         "source": "OSHA"
+      },
+      {
+        "id": "pvc-cpvc-cement-thf-hazards",
+        "title": "PVC and CPVC Cement: Tetrahydrofuran (THF) Hazards",
+        "file_path": "data/processed/plumbing/pvc-cpvc-cement-thf-hazards.json",
+        "osha_standards": [
+          "29 CFR 1910.1200"
+        ],
+        "source": "CPWR"
       }
     ],
     "Masonry": [
@@ -1659,6 +1975,27 @@
         "osha_standards": [
           "29 CFR 1926.451",
           "29 CFR 1926.454"
+        ],
+        "source": "OSHA"
+      },
+      {
+        "id": "concrete-masonry-wall-bracing-rebar",
+        "title": "Concrete and Masonry: Wall Bracing, Limited Access Zones, and Rebar Caps",
+        "file_path": "data/processed/concrete-formwork/concrete-masonry-wall-bracing-rebar.json",
+        "osha_standards": [
+          "29 CFR 1926.701(b)",
+          "29 CFR 1926.706(a)(1)",
+          "29 CFR 1926.706(b)",
+          "29 CFR 1926.703(a)(2)"
+        ],
+        "source": "OSHA"
+      },
+      {
+        "id": "silica-dust-floor-grinders-and-milling-machines",
+        "title": "Silica Dust Control for Floor Grinders and Milling Machines",
+        "file_path": "data/processed/flooring/silica-dust-floor-grinders-and-milling-machines.json",
+        "osha_standards": [
+          "29 CFR 1926.1153"
         ],
         "source": "OSHA"
       }
@@ -1740,6 +2077,15 @@
           "29 CFR 1926.106"
         ],
         "source": "TailgatePro"
+      },
+      {
+        "id": "pvc-cpvc-cement-thf-hazards",
+        "title": "PVC and CPVC Cement: Tetrahydrofuran (THF) Hazards",
+        "file_path": "data/processed/plumbing/pvc-cpvc-cement-thf-hazards.json",
+        "osha_standards": [
+          "29 CFR 1910.1200"
+        ],
+        "source": "CPWR"
       }
     ],
     "Roofing": [
@@ -1834,6 +2180,56 @@
           "29 CFR 1926.502"
         ],
         "source": "CPWR"
+      },
+      {
+        "id": "residential-framing-fall-protection",
+        "title": "Fall Protection Through Each Stage of Residential Framing",
+        "file_path": "data/processed/framing/residential-framing-fall-protection.json",
+        "osha_standards": [
+          "29 CFR 1926.501(b)(13)",
+          "29 CFR 1926.502",
+          "29 CFR 1926.502(k)"
+        ],
+        "source": "OSHA"
+      },
+      {
+        "id": "roof-truss-installation-fall-protection",
+        "title": "Roof Trusses: Staying Safe Until They Are Braced",
+        "file_path": "data/processed/framing/roof-truss-installation-fall-protection.json",
+        "osha_standards": [
+          "29 CFR 1926.501(b)(13)",
+          "29 CFR 1926.502(d)",
+          "29 CFR 1926.502(k)",
+          "29 CFR 1926.453"
+        ],
+        "source": "OSHA"
+      },
+      {
+        "id": "roofing-fall-protection-systems",
+        "title": "Roofing Fall Protection: Harnesses, Anchors, Guardrails, and Warning Lines",
+        "file_path": "data/processed/roofing/roofing-fall-protection-systems.json",
+        "osha_standards": [
+          "29 CFR 1926.501(b)(10)",
+          "29 CFR 1926.501(b)(11)",
+          "29 CFR 1926.502(d)",
+          "29 CFR 1926.502(b)",
+          "29 CFR 1926.502(f)",
+          "29 CFR 1926.502(i)",
+          "29 CFR 1926.150"
+        ],
+        "source": "OSHA"
+      },
+      {
+        "id": "skylight-and-roof-hole-falls",
+        "title": "Preventing Falls Through Skylights and Holes",
+        "file_path": "data/processed/roofing/skylight-and-roof-hole-falls.json",
+        "osha_standards": [
+          "29 CFR 1926.501(b)(4)",
+          "29 CFR 1926.502(b)",
+          "29 CFR 1926.502(d)",
+          "29 CFR 1926.502(i)"
+        ],
+        "source": "CPWR"
       }
     ],
     "Welding": [
@@ -1896,6 +2292,167 @@
           "29 CFR 1926.103"
         ],
         "source": "OSHA"
+      },
+      {
+        "id": "fire-watch-hot-work-safety",
+        "title": "Fire Watch Duties During Hot Work",
+        "file_path": "data/processed/welding/fire-watch-hot-work-safety.json",
+        "osha_standards": [
+          "29 CFR 1926.352",
+          "29 CFR 1915.504"
+        ],
+        "source": "OSHA"
+      }
+    ],
+    "Framing": [
+      {
+        "id": "residential-framing-fall-protection",
+        "title": "Fall Protection Through Each Stage of Residential Framing",
+        "file_path": "data/processed/framing/residential-framing-fall-protection.json",
+        "osha_standards": [
+          "29 CFR 1926.501(b)(13)",
+          "29 CFR 1926.502",
+          "29 CFR 1926.502(k)"
+        ],
+        "source": "OSHA"
+      },
+      {
+        "id": "roof-truss-installation-fall-protection",
+        "title": "Roof Trusses: Staying Safe Until They Are Braced",
+        "file_path": "data/processed/framing/roof-truss-installation-fall-protection.json",
+        "osha_standards": [
+          "29 CFR 1926.501(b)(13)",
+          "29 CFR 1926.502(d)",
+          "29 CFR 1926.502(k)",
+          "29 CFR 1926.453"
+        ],
+        "source": "OSHA"
+      },
+      {
+        "id": "raising-heavy-framed-walls",
+        "title": "Raising Tall Framed Walls Without a Collapse",
+        "file_path": "data/processed/framing/raising-heavy-framed-walls.json",
+        "osha_standards": [
+          "OSH Act Section 5(a)(1) General Duty Clause"
+        ],
+        "source": "OSHA"
+      }
+    ],
+    "Steel Erection": [
+      {
+        "id": "steel-erection-stability-decking-bolting",
+        "title": "Steel Erection: Keeping Columns, Joists, and Decking Stable",
+        "file_path": "data/processed/steel-erection/steel-erection-stability-decking-bolting.json",
+        "osha_standards": [
+          "29 CFR 1926.754",
+          "29 CFR 1926.755",
+          "29 CFR 1926.756",
+          "29 CFR 1926.757"
+        ],
+        "source": "OSHA"
+      }
+    ],
+    "Concrete & Formwork": [
+      {
+        "id": "concrete-masonry-wall-bracing-rebar",
+        "title": "Concrete and Masonry: Wall Bracing, Limited Access Zones, and Rebar Caps",
+        "file_path": "data/processed/concrete-formwork/concrete-masonry-wall-bracing-rebar.json",
+        "osha_standards": [
+          "29 CFR 1926.701(b)",
+          "29 CFR 1926.706(a)(1)",
+          "29 CFR 1926.706(b)",
+          "29 CFR 1926.703(a)(2)"
+        ],
+        "source": "OSHA"
+      }
+    ],
+    "Demolition": [
+      {
+        "id": "demolition-engineering-survey-and-structural-hazards",
+        "title": "Demolition: Survey First, Then Take It Down Top to Bottom",
+        "file_path": "data/processed/demolition/demolition-engineering-survey-and-structural-hazards.json",
+        "osha_standards": [
+          "29 CFR 1926.850",
+          "29 CFR 1926.854",
+          "29 CFR 1926.858",
+          "29 CFR 1926.859"
+        ],
+        "source": "OSHA"
+      },
+      {
+        "id": "demolition-utilities-openings-and-debris-chutes",
+        "title": "Demolition Quick Card: Utilities, Openings, and Debris Chutes",
+        "file_path": "data/processed/demolition/demolition-utilities-openings-and-debris-chutes.json",
+        "osha_standards": [
+          "29 CFR 1926.850",
+          "29 CFR 1926.852",
+          "29 CFR 1926.853",
+          "29 CFR 1926.854"
+        ],
+        "source": "OSHA"
+      }
+    ],
+    "Painting & Coatings": [
+      {
+        "id": "lead-exposure-paint-removal",
+        "title": "Lead Exposure During Paint Removal",
+        "file_path": "data/processed/painting-coatings/lead-exposure-paint-removal.json",
+        "osha_standards": [
+          "29 CFR 1926.62"
+        ],
+        "source": "CPWR"
+      },
+      {
+        "id": "isocyanates-paints-and-coatings",
+        "title": "Isocyanates in Paints, Glues, and Spray Foam",
+        "file_path": "data/processed/painting-coatings/isocyanates-paints-and-coatings.json",
+        "osha_standards": [
+          "29 CFR 1910.1200",
+          "29 CFR 1910.134"
+        ],
+        "source": "CPWR"
+      },
+      {
+        "id": "ladder-safety-for-painters",
+        "title": "Ladder Safety for Painters: Prep Before You Step",
+        "file_path": "data/processed/painting-coatings/ladder-safety-for-painters.json",
+        "osha_standards": [
+          "29 CFR 1926.1053"
+        ],
+        "source": "MA FACE"
+      },
+      {
+        "id": "epoxy-resin-systems-hazards",
+        "title": "Epoxy Resin Systems: Protect Your Skin and Lungs",
+        "file_path": "data/processed/flooring/epoxy-resin-systems-hazards.json",
+        "osha_standards": [
+          "29 CFR 1910.1200",
+          "29 CFR 1926.95",
+          "29 CFR 1910.134"
+        ],
+        "source": "CPWR"
+      }
+    ],
+    "Flooring": [
+      {
+        "id": "silica-dust-floor-grinders-and-milling-machines",
+        "title": "Silica Dust Control for Floor Grinders and Milling Machines",
+        "file_path": "data/processed/flooring/silica-dust-floor-grinders-and-milling-machines.json",
+        "osha_standards": [
+          "29 CFR 1926.1153"
+        ],
+        "source": "OSHA"
+      },
+      {
+        "id": "epoxy-resin-systems-hazards",
+        "title": "Epoxy Resin Systems: Protect Your Skin and Lungs",
+        "file_path": "data/processed/flooring/epoxy-resin-systems-hazards.json",
+        "osha_standards": [
+          "29 CFR 1910.1200",
+          "29 CFR 1926.95",
+          "29 CFR 1910.134"
+        ],
+        "source": "CPWR"
       }
     ]
   }

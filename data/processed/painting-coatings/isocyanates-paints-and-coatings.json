@@ -1,0 +1,56 @@
+{
+  "id": "isocyanates-paints-and-coatings",
+  "title": "Isocyanates in Paints, Glues, and Spray Foam",
+  "primary_trade": "Painting & Coatings",
+  "trade_tags": [
+    "Painting & Coatings",
+    "General Construction"
+  ],
+  "osha_standards": [
+    "29 CFR 1926.59",
+    "29 CFR 1926.103"
+  ],
+  "estimated_minutes": 5,
+  "summary": "Isocyanates in paints, glues, and spray foam can cause asthma and skin rashes. Once you are sensitized, even a small amount can trigger an attack.",
+  "talking_points": [
+    "Isocyanates are in many construction products, including paints, glues, and spray polyurethane foam. Breathing the vapor or mist can cause asthma, and skin contact can cause a rash.",
+    "Some workers become sensitized. After that, even small amounts can cause an asthma attack or skin rash, and serious reactions can lead to disability or death.",
+    "Make sure the work area is ventilated and the ventilation equipment works.",
+    "Wear coveralls, chemical-resistant gloves, and eye protection.",
+    "Wear a supplied-air respirator when spraying indoors. Wear an air-purifying respirator with an organic vapor cartridge and P100 filter when spraying outside or working nearby.",
+    "Do not take your respirator off right after spraying.",
+    "If the product gets on your skin, wash right away with soap and water. Wash your hands before eating and drinking, and take off protective clothing before breaks and before going home.",
+    "Clean up the work area and store products properly. Ask for training. OSHA requires employers to train you, give you safety data sheets, and label products."
+  ],
+  "site_hazards_to_check": [
+    "Spraying isocyanate products in an area with poor ventilation",
+    "Ventilation equipment that is off or not working",
+    "Workers without the right respirator, gloves, coveralls, or eye protection",
+    "Unlabeled products or no safety data sheet on site",
+    "Open containers or messy storage of coatings, glues, or foam"
+  ],
+  "discussion_questions": [
+    "Which products here contain isocyanates, and where are the safety data sheets?",
+    "What respirator do we need for this task, and who has been fit tested?",
+    "What symptoms should make us stop work and see a doctor?"
+  ],
+  "attribution": {
+    "source": "CPWR",
+    "publisher": "CPWR — The Center for Construction Research and Training",
+    "copyright": "© 2018 CPWR — The Center for Construction Research and Training. All rights reserved.",
+    "license": "free-use-with-attribution",
+    "source_url": "https://www.cpwr.com/wp-content/uploads/TT-Isocyanates.pdf",
+    "notice": "Adapted from a CPWR/NIOSH Toolbox Talk, produced under NIOSH cooperative agreement OH 009762. Reproduced with attribution for jobsite safety training; not an endorsement by CPWR or NIOSH."
+  },
+  "audit": {
+    "status": "approved",
+    "audited_at": "2026-09-30T14:01:48.440Z",
+    "osha_accuracy_verified": true,
+    "flags": [
+      "Verified against data/raw/cpwr-isocyanates.md: ventilation, PPE list, supplied-air indoors / APR with OVC and P100 outdoors or nearby, do not remove respirator immediately, hygiene, training/SDS/labels are all in the source.",
+      "Edited osha_standards: 1910.1200 and 1910.134 (structurer additions, general industry) replaced with construction citations 29 CFR 1926.59 (hazard communication; osha.gov states it is identical to 1910.1200) and 29 CFR 1926.103 (respiratory protection; identical to 1910.134). Both verified on osha.gov.",
+      "Non-blocking: respirator use requires a program, medical evaluation and fit testing (1926.103/1910.134); talk raises fit testing only in a discussion question.",
+      "Provenance (non-blocking): CPWR content is copyrighted ('All rights reserved'); attribution block carries the (c) line, NIOSH cooperative-agreement credit and 'not an endorsement by CPWR or NIOSH' notice, matching docs/content-attribution.md. Keep the reminder that reuse remains under CPWR's free-use conditions (no standalone resale, attribution kept, no implied endorsement)."
+    ]
+  }
+}

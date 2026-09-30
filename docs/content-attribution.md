@@ -92,7 +92,9 @@ Talks imported from `data/300_Toolbox_Talks_Library.docx` (see
 `docs/toolbox-library-import-report.md`) are not CPWR/NIOSH content and carry no agency copyright. Their
 `attribution` is `source: "TailgatePro Library"`, `license: "owner-provided-unverified"`, `source_url: null`,
 `source_ref: "TBT-NNN"`, with a `notice` that makes no CPWR/NIOSH claim. The source document names no author or
-license, so **confirm rights before publishing** (tracked in `docs/tasks.md` Phase 10). The "notice ends with *not
+license, so rights are **unverified; the owner accepted this as a known risk on 2026-09-30** (3 talks remain:
+`safe-isolation-verification`, `manual-material-handling-and-lifting`, `vacuum-pumps-and-evacuation`). If anyone raises a
+claim, delete their JSON files and their `toolbox_talks` rows (by slug) in both Supabase projects (`docs/tasks.md` 11o). The "notice ends with *not
 an endorsement by CPWR or NIOSH*" rule above applies to CPWR/NIOSH talks only.
 
 ## Rule for future harvests

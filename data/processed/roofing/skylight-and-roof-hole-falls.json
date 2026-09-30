@@ -1,0 +1,55 @@
+{
+  "id": "skylight-and-roof-hole-falls",
+  "title": "Preventing Falls Through Skylights and Holes",
+  "primary_trade": "Roofing",
+  "trade_tags": [
+    "Roofing",
+    "General Construction"
+  ],
+  "osha_standards": [
+    "29 CFR 1926.501(b)(4)",
+    "29 CFR 1926.502(b)",
+    "29 CFR 1926.502(d)",
+    "29 CFR 1926.502(i)"
+  ],
+  "estimated_minutes": 5,
+  "summary": "From 2011 to 2016, 165 workers died after falling through a skylight or hole. Guard or cover every skylight and hole, and never sit, step, or lean on a skylight.",
+  "talking_points": [
+    "165 workers died after falling through a skylight or hole from 2011 to 2016.",
+    "Never sit, step on, or lean against a skylight.",
+    "Guard or cover any existing skylights.",
+    "If you create, uncover, or notice a hole, guard it or cover it securely, and label the cover \"hole\" or \"cover.\"",
+    "Always use one of these: covers or screens, railings or guardrails, or a personal fall arrest system such as a full-body harness.",
+    "Good practice: tell the crew and the supervisor when you find a hole or skylight that is not protected, so it is fixed before anyone works near it."
+  ],
+  "site_hazards_to_check": [
+    "Skylights with no cover, screen, or guardrail",
+    "Holes with no cover or guardrail",
+    "Covers that are not marked \"hole\" or \"cover\"",
+    "Covers that are loose or not secured",
+    "Openings created or uncovered during the job and left unprotected"
+  ],
+  "discussion_questions": [
+    "Where are the skylights and holes on this roof, and what is protecting each one?",
+    "Who will guard or cover any new hole we open today?",
+    "What will you do if you see someone stand on or lean against a skylight?"
+  ],
+  "attribution": {
+    "source": "CPWR",
+    "publisher": "CPWR — The Center for Construction Research and Training",
+    "copyright": "© 2018 CPWR — The Center for Construction Research and Training. All rights reserved.",
+    "license": "free-use-with-attribution",
+    "source_url": "https://www.cpwr.com/wp-content/uploads/CPWR2018skylights.pdf",
+    "notice": "Adapted from a CPWR/NIOSH infographic on preventing falls through skylights and holes (2018), produced under NIOSH cooperative agreement OH 009762. Reproduced with attribution for jobsite safety training; not an endorsement by CPWR or NIOSH."
+  },
+  "audit": {
+    "status": "approved",
+    "audited_at": "2026-09-30T14:01:48.440Z",
+    "osha_accuracy_verified": true,
+    "flags": [
+      "Verified against data/raw/cpwr-preventing-falls-through-skylights-and-holes.md (about 135-word infographic). Every non-\"Good practice\" line maps to a source line: 165 deaths 2011-2016; never sit, step on, lean against; guard or cover existing skylights; create/uncover/notice hole -> guard or securely cover, label \"hole\"/\"cover\"; use covers or screens, railings or guardrails, or PFAS such as full-body harness. Summary and hazard checklist add no numbers or requirements beyond these. The single extra line is prefixed \"Good practice:\" with no numbers or regulatory claim.",
+      "Standards: 1926.501(b)(4) is cited by the source; 1926.502(b) guardrails, 502(d) PFAS, 502(i) covers are the correct criteria sections (confirmed in OSHA 3755); talk makes no numeric claim from them.",
+      "Provenance (non-blocking): CPWR content is copyrighted ('All rights reserved'); attribution block carries the (c) line, NIOSH cooperative-agreement credit and 'not an endorsement by CPWR or NIOSH' notice, matching docs/content-attribution.md. Keep the reminder that reuse remains under CPWR's free-use conditions (no standalone resale, attribution kept, no implied endorsement)."
+    ]
+  }
+}

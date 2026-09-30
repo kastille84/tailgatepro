@@ -1,0 +1,53 @@
+{
+  "id": "lead-exposure-paint-removal",
+  "title": "Lead Exposure During Paint Removal",
+  "primary_trade": "Painting & Coatings",
+  "trade_tags": [
+    "Painting & Coatings",
+    "General Construction"
+  ],
+  "osha_standards": [
+    "29 CFR 1926.62"
+  ],
+  "estimated_minutes": 5,
+  "summary": "Blasting, sanding, scraping, or torch-cutting old paint can create lead dust and fumes that damage the lungs, brain, and liver and can follow you home on your clothes.",
+  "talking_points": [
+    "Removing lead paint by blasting, sanding, scraping, or torch-cutting creates lead fumes and dust. Lead dust can settle on your clothes and hands and get into food and drink.",
+    "Lead can travel home on clothing, lunch pails, and shoes and harm the people you live with, especially children.",
+    "Never blast, sand, or cut with a torch any surface that might contain lead until it has been tested for lead.",
+    "If the surface has lead, your employer should give you a vacuum attachment for your equipment to capture the dust.",
+    "Using a chemical stripper: read the label and wear the PPE it calls for, such as coveralls, gloves, disposable shoe covers, vented goggles or a face shield with goggles, and a respirator.",
+    "Wash your hands and face before you eat, drink, or use tobacco. Never eat, drink, or use tobacco in the work area.",
+    "OSHA requires your employer to give you training, the right tools, and PPE. If you work around high lead levels, they must also test your blood.",
+    "In one story, a bridge worker removing lead paint for months ended up in the hospital with vomiting, weight loss, and trouble concentrating, and had high lead in his blood. Good practice: if you have symptoms like these, tell a doctor you work with lead and ask about a blood test."
+  ],
+  "site_hazards_to_check": [
+    "Old painted surfaces that have not been tested for lead",
+    "Blasting, sanding, scraping, or torch work on painted surfaces",
+    "No vacuum attachment on sanders or grinders",
+    "Eating, drinking, or smoking in the work area",
+    "Lead dust on clothes, shoes, or lunch areas"
+  ],
+  "discussion_questions": [
+    "Has this surface been tested for lead, and where are the results?",
+    "What are we using to capture dust, and what PPE do we wear for this job?",
+    "How do we keep lead dust from going home with us?"
+  ],
+  "attribution": {
+    "source": "CPWR",
+    "publisher": "CPWR — The Center for Construction Research and Training",
+    "copyright": "© 2017 CPWR — The Center for Construction Research and Training. All rights reserved.",
+    "license": "free-use-with-attribution",
+    "source_url": "https://www.cpwr.com/wp-content/uploads/TT-Lead_Exposure.pdf",
+    "notice": "Adapted from a CPWR/NIOSH Toolbox Talk, produced under NIOSH cooperative agreement OH 009762. Reproduced with attribution for jobsite safety training; not an endorsement by CPWR or NIOSH."
+  },
+  "audit": {
+    "status": "approved",
+    "audited_at": "2026-09-30T14:01:48.440Z",
+    "osha_accuracy_verified": true,
+    "flags": [
+      "Verified against data/raw/cpwr-lead-exposure.md: every non-\"Good practice\" claim (test before blasting/sanding/torch, vacuum attachment, chemical stripper PPE list, hygiene, training/tools/PPE and blood testing for high lead levels, Diego story) is in the source. 29 CFR 1926.62 is the correct construction lead standard and is the one the source cites. The symptoms/doctor sentence is prefixed \"Good practice:\" and carries no numbers.",
+      "Provenance (non-blocking): CPWR content is copyrighted ('All rights reserved'); attribution block carries the (c) line, NIOSH cooperative-agreement credit and 'not an endorsement by CPWR or NIOSH' notice, matching docs/content-attribution.md. Keep the reminder that reuse remains under CPWR's free-use conditions (no standalone resale, attribution kept, no implied endorsement)."
+    ]
+  }
+}

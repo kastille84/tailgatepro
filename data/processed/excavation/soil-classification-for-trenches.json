@@ -1,0 +1,57 @@
+{
+  "id": "soil-classification-for-trenches",
+  "title": "Trench Soil Classification: Type A, B, and C",
+  "primary_trade": "Excavation",
+  "trade_tags": [
+    "Excavation",
+    "General Construction"
+  ],
+  "osha_standards": [
+    "29 CFR 1926.652",
+    "29 CFR 1926 Subpart P Appendix A",
+    "29 CFR 1926.651(k)"
+  ],
+  "estimated_minutes": 5,
+  "summary": "Soil type decides which protective system a trench needs. A competent person classifies the soil by a visual check and by tests, and repeats it when conditions change.",
+  "talking_points": [
+    "Trenching kills about 40 construction workers a year. One cubic yard of soil can weigh as much as a car, about 3,000 pounds.",
+    "A protective system is required for trenches 5 feet deep or more, unless dug in stable rock. Trenches under 5 feet need one if a competent person sees signs of a possible cave-in.",
+    "A competent person determines the soil type and must inspect the excavation every day and when conditions change. Excavations deeper than 20 feet need a protective system approved by a professional engineer.",
+    "Type A is the most stable: cohesive, 1.5 tons per square foot or more, like clay. Type B is between 0.5 and 1.5 tons per square foot, like angular gravel and silt. Type C is the least stable: 0.5 or less, granular soils like sand and gravel, and any soil with water seeping through it.",
+    "Soil cannot be Type A if it is fissured, was disturbed before, has water seeping through it, or is near vibration such as heavy traffic or pile drivers. A trench can cut through more than one soil type.",
+    "Do a visual check first. Does the soil come out in clumps (cohesive) or as granules? Look for vibration, old utility lines, seepage, and cracks or crumbling on the wall.",
+    "Tests: the plasticity test (roll a thread 1/8 inch thick and 2 inches long). The thumb test (thumb sinks in: Type A only with great effort, Type B to the thumbnail, Type C all the way). The pocket penetrometer (may give false readings with rocks or pebbles). Use more than one test.",
+    "Take typical samples from a fresh pile or the wall, take more as the trench gets deeper, and test soon, because results change as soil dries."
+  ],
+  "site_hazards_to_check": [
+    "Fissured, cracked, or crumbling trench walls",
+    "Water seeping into the trench",
+    "Vibration from traffic, equipment, or pile driving near the trench",
+    "Previously disturbed soil, such as around utility lines",
+    "Soil type not tested or not written down for this trench",
+    "Trench 5 feet or deeper with no protective system"
+  ],
+  "discussion_questions": [
+    "Who is the competent person for this trench, and what soil type did they find?",
+    "What did the visual check and the tests show, and how often will we check again?",
+    "What changed today, such as rain or nearby traffic, that could change the soil type?"
+  ],
+  "attribution": {
+    "source": "OSHA",
+    "publisher": "Occupational Safety and Health Administration (OSHA)",
+    "copyright": "U.S. Government work — public domain.",
+    "license": "public-domain",
+    "source_url": "https://www.osha.gov/vtools/construction/soil-testing-fnl-eng-web-transcript",
+    "notice": "Adapted from OSHA video transcript, Soil Classification. Reproduced with attribution for jobsite safety training; not an endorsement by OSHA."
+  },
+  "audit": {
+    "status": "approved",
+    "audited_at": "2026-09-30T14:01:48.440Z",
+    "osha_accuracy_verified": true,
+    "flags": [
+      "Verified against data/raw/osha-soil-classification-transcript.md (OSHA video transcript): 40 deaths a year, 3,000 lb per cubic yard, 5 ft rule and stable rock, under 5 ft with cave-in signs, competent person, 20 ft PE rule, daily and changing-condition inspection, Type A/B/C strengths and examples, Type A exclusions, Type C seepage, visual check, plasticity 1/8 x 2 in, thumb test, penetrometer rock caveat, sampling.",
+      "Edited: units added to Type B strength for clarity; added 1926.651(k) (daily competent-person inspection, which the talk states) to osha_standards.",
+      "Harwood check: OSHA video transcript, OSHA-authored."
+    ]
+  }
+}
