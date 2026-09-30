@@ -8,7 +8,10 @@ import { Select, type SelectOption } from "../../ui_comps/select";
 import { useOnlineStatus } from "../../context/online-status";
 import { useCurrentUser } from "../../hooks/useCurrentUser";
 import { useInviteTeammate } from "../../hooks/useInviteTeammate";
+import { useUpgradeModal } from "../../hooks/useUpgradeModal";
 import type { InviteRole } from "../../interfaces/companyInvite";
+import { UpgradeModal } from "../../ui_comps/upgrade-modal";
+import { PlanLimitError } from "../../utils/PlanLimitError";
 import {
   StyledInviteFields,
   StyledInviteNote,
@@ -59,6 +62,8 @@ export const InviteTeammateForm = () => {
   const { isOnline } = useOnlineStatus();
   const { isGc } = useCurrentUser();
   const { inviteTeammate, isInviting, planLimitError } = useInviteTeammate();
+  const upgrade = useUpgradeModal();
+  const openUpgrade = upgrade.open;
   // Offered on every GC plan, not just Portfolio: picking it on GC Free/Site
   // Pro still submits, and the server's 403 PLAN_LIMIT surfaces below as the
   // same inline upgrade prompt a jobsite-cap rejection uses — no need to
@@ -83,8 +88,11 @@ export const InviteTeammateForm = () => {
     try {
       await inviteTeammate({ email: values.email, role: values.role as InviteRole });
       reset({ email: "", role: "foreman" });
-    } catch {
-      // useInviteTeammate already surfaces the failure as a toast.
+    } catch (error) {
+      // useInviteTeammate already surfaces the failure as a toast / inline
+      // prompt. A subcontractor hitting the foreman-seat cap also gets the
+      // "2nd foreman" upsell modal (strategy doc §6.1).
+      if (error instanceof PlanLimitError && !isGc) openUpgrade("second-foreman");
     }
   };
 
@@ -140,6 +148,8 @@ export const InviteTeammateForm = () => {
           Send invite
         </Button>
       </Form>
+
+      <UpgradeModal trigger={upgrade.trigger} onClose={upgrade.close} />
     </>
   );
 };

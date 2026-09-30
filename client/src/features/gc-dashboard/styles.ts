@@ -109,10 +109,14 @@ export const StyledLockedText = styled.span`
   user-select: none;
 `;
 
-export const StyledUnlockLink = styled(Link)`
+export const StyledUnlockButton = styled.button`
   display: inline-flex;
   align-items: center;
   min-height: 4.8rem;
+  padding: 0;
+  border: 0;
+  background: none;
+  cursor: pointer;
   font-size: 1.4rem;
   font-weight: 700;
   color: ${({ theme }) => theme.colors.orange[600]};

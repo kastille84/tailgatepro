@@ -1,6 +1,7 @@
 import React from "react";
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { render, screen, fireEvent } from "@testing-library/react";
+import { MemoryRouter } from "react-router-dom";
 import { ThemeProvider } from "styled-components";
 
 import { JobsiteManager } from "../../../src/features/jobsites/JobsiteManager";
@@ -74,16 +75,21 @@ vi.mock("../../../src/features/jobsites/JobsiteForm", () => ({
     isOpen,
     onClose,
     jobsite,
+    onPlanLimit,
   }: {
     isOpen: boolean;
     onClose: () => void;
     jobsite?: Jobsite;
+    onPlanLimit?: () => void;
   }) =>
     isOpen ? (
       <div role="dialog">
         {jobsite ? `edit ${jobsite.id}` : "new"}
         <button type="button" onClick={onClose}>
           stub-form-close
+        </button>
+        <button type="button" onClick={onPlanLimit}>
+          stub-form-plan-limit
         </button>
       </div>
     ) : null,
@@ -142,9 +148,11 @@ const jobsite = (over: Partial<Jobsite>): Jobsite => ({
 
 const renderManager = () =>
   render(
-    <ThemeProvider theme={theme}>
-      <JobsiteManager />
-    </ThemeProvider>,
+    <MemoryRouter>
+      <ThemeProvider theme={theme}>
+        <JobsiteManager />
+      </ThemeProvider>
+    </MemoryRouter>,
   );
 
 describe("JobsiteManager", () => {
@@ -213,6 +221,17 @@ describe("JobsiteManager", () => {
 
     fireEvent.click(screen.getByRole("button", { name: /stub-form-close/i }));
     expect(screen.queryByRole("dialog")).toBeNull();
+  });
+
+  it("swaps the create form for the 4th-site upsell when the plan's site cap is hit", () => {
+    renderManager();
+
+    fireEvent.click(screen.getByRole("button", { name: /new job site/i }));
+    fireEvent.click(screen.getByRole("button", { name: /stub-form-plan-limit/i }));
+
+    expect(screen.getByText(/currently paying \$447\/mo for 3 individual sites/i)).toBeDefined();
+    fireEvent.click(screen.getByRole("button", { name: "Not now" }));
+    expect(screen.queryByText(/currently paying/i)).toBeNull();
   });
 
   it("opens the form in edit mode from a row", () => {

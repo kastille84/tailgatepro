@@ -176,6 +176,19 @@ describe("MeetingHistory page", () => {
     expect(screen.queryByText(/kept for/i)).toBeNull();
   });
 
+  it("opens the 30-day lockout upsell from the banner's unlock button", () => {
+    mockUseCurrentUser.mockReturnValue({ limits: { archiveYears: 0 } });
+    mockUseMeetingMonths.mockReturnValue(months({ hiddenCount: 2, historyDays: 30 }));
+    renderPage();
+
+    fireEvent.click(screen.getByRole("button", { name: "Unlock full archive" }));
+    expect(screen.getByRole("dialog")).toBeDefined();
+    expect(screen.getByText(/unlock your full 5-year legal cloud archive for \$29\/mo/i)).toBeDefined();
+
+    fireEvent.click(screen.getByRole("button", { name: "Not now" }));
+    expect(screen.queryByRole("dialog")).toBeNull();
+  });
+
   it("uses the singular wording for one hidden meeting", () => {
     mockUseCurrentUser.mockReturnValue({ limits: undefined });
     mockUseMeetingMonths.mockReturnValue(

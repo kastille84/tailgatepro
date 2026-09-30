@@ -147,6 +147,34 @@ describe("InviteTeammateForm", () => {
     );
   });
 
+  it("opens the 2nd-foreman upsell when a subcontractor hits the seat cap", async () => {
+    mockInvite.mockRejectedValue(new PlanLimitError("Seat limit reached", 1));
+    renderForm();
+
+    fireEvent.change(screen.getByLabelText(/email/i), {
+      target: { value: "second@example.com" },
+    });
+    fireEvent.click(screen.getByRole("button", { name: /send invite/i }));
+
+    expect(await screen.findByText(/manage up to 8 foremen/i)).toBeDefined();
+    fireEvent.click(screen.getByRole("button", { name: "Not now" }));
+    expect(screen.queryByRole("dialog")).toBeNull();
+  });
+
+  it("does not open the foreman upsell for a GC's plan-limit rejection", async () => {
+    mockUseCurrentUser.mockReturnValue({ isGc: true });
+    mockInvite.mockRejectedValue(new PlanLimitError("Portfolio only", 1));
+    renderForm();
+
+    fireEvent.change(screen.getByLabelText(/email/i), {
+      target: { value: "super@example.com" },
+    });
+    fireEvent.click(screen.getByRole("button", { name: /send invite/i }));
+
+    await waitFor(() => expect(mockInvite).toHaveBeenCalled());
+    expect(screen.queryByRole("dialog")).toBeNull();
+  });
+
   it("shows the Send invite button as busy while inviting", () => {
     mockUseInviteTeammate.mockReturnValue({
       inviteTeammate: mockInvite,

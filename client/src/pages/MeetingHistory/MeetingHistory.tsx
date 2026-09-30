@@ -6,6 +6,7 @@ import { useOnlineStatus } from "../../context/online-status";
 import { useCurrentUser } from "../../hooks/useCurrentUser";
 import { useDownloadOwnBundle } from "../../hooks/useDownloadOwnBundle";
 import { useMeetingMonths } from "../../hooks/useMeetingMonths";
+import { useUpgradeModal } from "../../hooks/useUpgradeModal";
 import {
   isValidMonth,
   MonthCards,
@@ -14,6 +15,7 @@ import {
 import { Button } from "../../ui_comps/button";
 import { Footer } from "../../ui_comps/footer";
 import { ProgressModal } from "../../ui_comps/progress-modal";
+import { UpgradeModal } from "../../ui_comps/upgrade-modal";
 import { Spinner } from "../../ui_comps/spinner";
 import {
   StyledBundleRow,
@@ -49,6 +51,7 @@ export const MeetingHistory = () => {
     useMeetingMonths();
   const { downloadBundle, isPending: isDownloadingBundle } = useDownloadOwnBundle();
   const [searchParams, setSearchParams] = useSearchParams();
+  const upgrade = useUpgradeModal();
 
   if (loading) {
     return (
@@ -103,6 +106,13 @@ export const MeetingHistory = () => {
                 <Link to="/pricing">Upgrade to Trade Pro</Link> to unlock your
                 full 5-year legal cloud archive.
               </StyledUpgradeBody>
+              <Button
+                variant="primary"
+                size="sm"
+                onClick={() => upgrade.open("history-lockout")}
+              >
+                Unlock full archive
+              </Button>
             </StyledUpgradeBanner>
           )}
           {archiveYears > 0 && (
@@ -163,6 +173,8 @@ export const MeetingHistory = () => {
       </StyledSection>
 
       <Footer />
+
+      <UpgradeModal trigger={upgrade.trigger} onClose={upgrade.close} />
 
       <ProgressModal
         isOpen={isDownloadingBundle}

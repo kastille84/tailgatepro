@@ -9,6 +9,7 @@ import { Select } from "../../ui_comps/select";
 import { useCreateJobsite } from "../../hooks/useCreateJobsite";
 import { useUpdateJobsite } from "../../hooks/useUpdateJobsite";
 import type { Jobsite } from "../../interfaces/jobsite";
+import { PlanLimitError } from "../../utils/PlanLimitError";
 import {
   StyledActions,
   StyledUpgradeLink,
@@ -35,11 +36,13 @@ interface JobsiteFormProps {
   /** Present ⇒ edit mode; absent ⇒ create mode. The manager gives this
    *  component a `key` so it remounts (and re-seeds) when the target changes. */
   jobsite?: Jobsite;
+  /** Called when creating a site is rejected by the plan's site cap. */
+  onPlanLimit?: () => void;
 }
 
 /** Create / rename / change-status / archive-restore a GC-owned jobsite.
  *  Archiving is reversible, so it takes no confirm dialog. */
-export const JobsiteForm = ({ isOpen, onClose, jobsite }: JobsiteFormProps) => {
+export const JobsiteForm = ({ isOpen, onClose, jobsite, onPlanLimit }: JobsiteFormProps) => {
   const isEdit = Boolean(jobsite);
   const isArchived = Boolean(jobsite?.archivedAt);
   const { createJobsite, isCreating, planLimitError: createLimitError } = useCreateJobsite();
@@ -75,8 +78,10 @@ export const JobsiteForm = ({ isOpen, onClose, jobsite }: JobsiteFormProps) => {
         await createJobsite({ name: values.name });
       }
       onClose();
-    } catch {
+    } catch (error) {
       // useCreateJobsite / useUpdateJobsite already surface the failure as a toast.
+      // Hitting the site cap on create also hands off to the upsell modal.
+      if (!jobsite && error instanceof PlanLimitError) onPlanLimit?.();
     }
   };
 

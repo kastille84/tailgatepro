@@ -7,6 +7,7 @@ import { MemoryRouter } from "react-router-dom";
 import { JobsiteForm } from "../../../src/features/jobsites/JobsiteForm";
 import theme from "../../../src/styles/theme";
 import type { Jobsite } from "../../../src/interfaces/jobsite";
+import { PlanLimitError } from "../../../src/utils/PlanLimitError";
 
 const mockCreate = vi.fn();
 const mockUpdate = vi.fn();
@@ -104,6 +105,30 @@ describe("JobsiteForm", () => {
 
     await waitFor(() => expect(mockCreate).toHaveBeenCalled());
     expect(onClose).not.toHaveBeenCalled();
+  });
+
+  it("calls onPlanLimit when creating hits the plan's site cap", async () => {
+    mockCreate.mockRejectedValue(new PlanLimitError("Site cap", 1));
+    const onPlanLimit = vi.fn();
+    renderForm({ onPlanLimit });
+
+    fireEvent.change(screen.getByLabelText(/job site name/i), {
+      target: { value: "Riverside" },
+    });
+    fireEvent.click(screen.getByRole("button", { name: /create job site/i }));
+
+    await waitFor(() => expect(onPlanLimit).toHaveBeenCalledTimes(1));
+  });
+
+  it("does not call onPlanLimit for a plan-limit error while editing", async () => {
+    mockUpdate.mockRejectedValue(new PlanLimitError("Site cap", 1));
+    const onPlanLimit = vi.fn();
+    renderForm({ jobsite, onPlanLimit });
+
+    fireEvent.click(screen.getByRole("button", { name: /save/i }));
+
+    await waitFor(() => expect(mockUpdate).toHaveBeenCalled());
+    expect(onPlanLimit).not.toHaveBeenCalled();
   });
 
   it("prefills and saves an edit with name and status", async () => {

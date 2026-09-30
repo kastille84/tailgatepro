@@ -2930,9 +2930,57 @@ they can be worked one at a time. Tick a box here **and** in its source phase wh
 - [ ] 11j. GC-side duplicate-jobsite merge tool (e.g. "Project A" vs "Project_A" created via a
       sub's join-code link) — re-points `projects.jobsite_id` and roster rows.
       See Phase 9d-2 (~line 2309).
-- [ ] 11k. Conversion-trigger upsell modals from the strategy doc §6 (2nd-foreman, 30-day
+  - **DEFERRED — build only when a real duplicate jobsite shows up in production.** The QR join link
+    (`docs/jobsite-qr-join-design.md`) already prevents new duplicates (it attaches by jobsite id), so this
+    may rarely be needed. The review below is done; start from here.
+  - **Tamper-evidence is safe.** The seal (`server/utility/contentSeal.js:46-62`) covers only meeting-log
+    fields, including the sub's `projectId`. `jobsite_id`, jobsite name and `gc_company_id` are not sealed, so a
+    re-point can't break verification. Never merge or delete the sub's *project* rows; only move their jobsite pointer.
+  - **Risks to handle:**
+    1. Roster collisions on `jobsite_subs_company_unique` / `jobsite_subs_email_unique` (placeholder emails,
+       pending invites). Dedupe by `sub_company_id`, keep the earliest `accepted_at` (drives GC Free unlock
+       order), and pick the cadence override (must stay stricter-or-equal to the target's).
+    2. Plan mismatch (`site_pro` vs `free`) changes sponsorship. Block the merge or require an explicit choice.
+    3. `projects.gc_company_id` is denormalized and is the auth column: update it with `jobsite_id`, and require
+       both sites to belong to the caller's GC (`getOwnedJobsite`, 404 otherwise).
+    4. `jobsite_members`: upsert onto the target so site-scoped superintendents keep access; check the caller's
+       scope on both sites.
+    5. `projects.name` drift: subs can't rename GC-attached projects, so rewrite it in the merge or accept the
+       old name on PDFs/emails.
+    6. An archived source keeps a live `join_token` (QR poster) and pending invite tokens. Decide how to
+       neutralize them.
+    7. No cross-table transactions in supabase-js. Prefer a Postgres RPC, or ordered idempotent steps (roster
+       first, then projects).
+    8. No general audit table (`meeting_log_audit_events` is meeting-log-only). Add a merge audit table.
+  - **Design shape:** validate → merge roster by `sub_company_id` → upsert `jobsite_members` → update `projects`
+    (`jobsite_id`, `gc_company_id`, optionally `name`) → archive the source (don't delete: deleting cascades the
+    roster and members and nulls `projects.jobsite_id`) → write an audit row.
+  - **Reuse:** the `createdBySub` badge (`GET /api/jobsites`, `GET /api/gc/overview`) to pre-select the source;
+    `scripts/backfill-jobsites.js` / `scripts/lib/backfillPlan.js` as idempotent, dry-run-first prior art;
+    `findOrCreateJobsite` at `server/services/projects.js:341-368`.
+- [x] 11k. Conversion-trigger upsell modals from the strategy doc §6 (2nd-foreman, 30-day
       lockout, sub #2 blur, 4th-site "$447 vs $499" prompt, policy-push prompt, scorecard
-      prompt) — pure UI, no SMS/billing needed. See Phase 9g (~line 2720).
+      prompt) — pure UI, no SMS/billing needed. See Phase 9g (~line 2720). · status: code complete, manual verify pending
+  - Modals **complement** the existing inline banners (banners untouched). New generic
+    `ui_comps/upgrade-modal/UpgradeModal.tsx` (on `Modal`; "Not now" + `/pricing` CTA),
+    `hooks/useUpgradeModal.ts`, and copy map `constants/upgradeTriggers.ts` (`getUpgradeCopy`; the 4th-site
+    "$447"/"$499" are derived from `data/plans.ts`, not hardcoded).
+  - Wired: 2nd foreman → `InviteTeammateForm` (sub company + `PlanLimitError`); 30-day lockout →
+    `MeetingHistory` banner's new "Unlock full archive" button; sub #2 blur → `SubComplianceRow` locked row is now
+    a button (`onUnlock`), owned by `JobsiteList` (site name + sub count); 4th site → `JobsiteForm`'s new
+    `onPlanLimit` (create only), `JobsiteManager` swaps the form for the modal; policy push →
+    `PolicyPushUpgradeNotice` "Push Required Safety Topic to All Active Sites" button; scorecard →
+    `SubScorecardUpgradeNotice` "Unlock scorecards" button.
+  - Deliberately no client-side site-count pre-check for the 4th-site prompt: the server's
+    `effectiveJobsiteLimit` (free = 1 + paid Site Pro sites) isn't on `/me`, so the 403 `PLAN_LIMIT` is the trigger.
+    Foreman-seat count is likewise 403-driven.
+  - Tests: new `UpgradeModal.test.tsx`, `useUpgradeModal.test.tsx`; extended `InviteTeammateForm`, `JobsiteForm`,
+    `JobsiteManager`, `JobsiteList`, `SubComplianceRow`, `MeetingHistory`, `PolicyPushUpgradeNotice`,
+    `SubScorecardUpgradeNotice`. Full client suite: 187 files / 1548 tests passing. `tsc -b` shows only the two
+    pre-existing `AcceptInvite.tsx` / `JoinJobsite.tsx` errors.
+  - Verify (user, browser): free sub invites a 2nd foreman → modal; Meeting History on Free → "Unlock full
+    archive"; free GC with 2+ subs clicks a locked row → modal with site name/count; free GC creates a site past
+    the cap → modal replaces the form; non-Portfolio GC clicks the policy-push and scorecard buttons.
 - [ ] 11l. PDF footer CTA "Claim Your Free GC Portal" — the shipped watermark currently has no
       CTA. See Phase 9g (~line 2723).
 - [ ] 11m. Basic tag/keyword search over the talk library — the strategy doc's "smart tagging"
