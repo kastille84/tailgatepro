@@ -33,6 +33,7 @@ const ROLE_LABELS: Record<InviteRole, string> = {
   admin: "Admin",
   safety_manager: "Safety Manager",
   foreman: "Foreman",
+  superintendent: "Superintendent",
 };
 
 const acceptInviteSchema = z.object({

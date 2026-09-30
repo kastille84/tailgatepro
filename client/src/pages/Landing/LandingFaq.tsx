@@ -34,8 +34,8 @@ const FAQ: FaqEntry[] = [
     a: "A GC invites subcontractors to a jobsite by email or shares a company join code, and their talks land on the GC's dashboard with no seat fee for the subs. Full sponsored access on paid GC plans is coming soon.",
   },
   {
-    q: "When can I actually sign up?",
-    a: "We're onboarding subcontractors and general contractors for launch now. Join the waitlist and we'll set you up on the right plan the moment we go live.",
+    q: "When can I sign up?",
+    a: "Right now. Create a free account in a minute — no credit card — and upgrade from Settings or the pricing page when you need more foremen, branding or a longer archive.",
   },
 ];
 

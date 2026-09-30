@@ -23,7 +23,7 @@ describe("LandingFaq", () => {
       "Does it work with no signal?",
       "What does it cost the subcontractor?",
       "How does a GC sponsor subcontractors for free?",
-      "When can I actually sign up?",
+      "When can I sign up?",
     ];
 
     questions.forEach((q) => {

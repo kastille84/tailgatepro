@@ -1,12 +1,15 @@
 import { useState } from "react";
-import { useSearchParams } from "react-router-dom";
+import { Link, useSearchParams } from "react-router-dom";
 import { HiCheck } from "react-icons/hi2";
 
+import { useAuth } from "../../context/auth";
+import { useCurrentUser } from "../../hooks/useCurrentUser";
 import { WaitlistForm } from "../Landing/WaitlistForm";
 import { SegmentedToggle } from "../../ui_comps/segmented-toggle";
 import { Footer } from "../../ui_comps/footer";
 import { SUB_PLANS, GC_PLANS } from "../../data/plans";
 import { planCadence } from "../../utils/pricing";
+import { getPlanCtas } from "../../utils/pricingCtas";
 import type { Audience, Billing } from "../../interfaces/plan";
 import {
   StyledPage,
@@ -19,7 +22,6 @@ import {
   StyledContainer,
   StyledControls,
   StyledSaveHint,
-  StyledSelectedNote,
   StyledPlanGrid,
   StyledPlanCard,
   StyledBadge,
@@ -32,6 +34,7 @@ import {
   StyledFeatureList,
   StyledFeatureItem,
   StyledSoonTag,
+  StyledPlanCtaGroup,
   StyledPlanCta,
   StyledCallout,
   StyledCalloutTitle,
@@ -76,7 +79,7 @@ const FAQ: { q: string; a: string }[] = [
   },
   {
     q: "When can I actually sign up?",
-    a: "We're onboarding subcontractors and general contractors for launch now. Join the waitlist and we'll set you up on the right plan the moment we go live.",
+    a: "Right now. Start on a free plan, or pick Trade Pro, Trade Enterprise or GC Portfolio and we'll take you through sign-up to secure checkout. GC Site Pro (billed per jobsite) is coming soon — join the waitlist and we'll let you know the moment it's live.",
   },
 ];
 
@@ -89,18 +92,10 @@ export const Pricing = () => {
     searchParams.get("audience") === "gc" ? "gc" : "sub",
   );
   const [billing, setBilling] = useState<Billing>("monthly");
-  const [selectedPlan, setSelectedPlan] = useState<string | null>(
-    searchParams.get("plan"),
-  );
+  const { user } = useAuth();
+  const { companyType, isManagerRole, plan: currentPlanId } = useCurrentUser();
 
   const plans = audience === "sub" ? SUB_PLANS : GC_PLANS;
-  const selectedPlanName =
-    plans.find((plan) => plan.id === selectedPlan)?.name ?? null;
-
-  const changeAudience = (next: Audience) => {
-    setAudience(next);
-    setSelectedPlan(null);
-  };
 
   return (
     <StyledPage>
@@ -136,7 +131,7 @@ export const Pricing = () => {
             <SegmentedToggle<Audience>
               options={AUDIENCE_OPTIONS}
               value={audience}
-              onChange={changeAudience}
+              onChange={setAudience}
               ariaLabel="Choose your audience"
             />
             <SegmentedToggle<Billing>
@@ -183,13 +178,50 @@ export const Pricing = () => {
                     ))}
                   </StyledFeatureList>
 
-                  <StyledPlanCta
-                    href={WAITLIST_ANCHOR}
-                    $featured={plan.featured}
-                    onClick={() => setSelectedPlan(plan.id)}
-                  >
-                    Join the waitlist
-                  </StyledPlanCta>
+                  <StyledPlanCtaGroup>
+                    {getPlanCtas(plan.id, {
+                      signedIn: !!user,
+                      companyType,
+                      isManager: isManagerRole,
+                      currentPlanId,
+                      billing,
+                    }).map((cta) => {
+                      if (cta.disabled) {
+                        return (
+                          <StyledPlanCta
+                            key={cta.label}
+                            as="span"
+                            aria-disabled="true"
+                            $disabled
+                            $featured={plan.featured}
+                          >
+                            {cta.label}
+                          </StyledPlanCta>
+                        );
+                      }
+                      if (cta.to) {
+                        return (
+                          <StyledPlanCta
+                            key={cta.label}
+                            as={Link}
+                            to={cta.to}
+                            $featured={plan.featured}
+                          >
+                            {cta.label}
+                          </StyledPlanCta>
+                        );
+                      }
+                      return (
+                        <StyledPlanCta
+                          key={cta.label}
+                          href={WAITLIST_ANCHOR}
+                          $featured={plan.featured}
+                        >
+                          {cta.label}
+                        </StyledPlanCta>
+                      );
+                    })}
+                  </StyledPlanCtaGroup>
                 </StyledPlanCard>
               );
             })}
@@ -236,22 +268,18 @@ export const Pricing = () => {
       >
         <StyledCtaInner>
           <StyledSectionTitle id="pricing-cta-heading">
-            Lock in your plan for launch
+            GC Site Pro is coming soon
           </StyledSectionTitle>
           <StyledSectionLede>
-            Pricing goes live when we launch. Join the waitlist and we&apos;ll
-            be in touch to get you set up on the plan you picked.
+            Per-site billing isn&apos;t live yet. Join the waitlist and
+            we&apos;ll let you know the moment you can put a single jobsite on
+            GC Site Pro.
           </StyledSectionLede>
-          {selectedPlanName && (
-            <StyledSelectedNote>
-              Selected plan: <strong>{selectedPlanName}</strong>
-            </StyledSelectedNote>
-          )}
           <WaitlistForm
             idPrefix="pricing"
             tone="onDark"
-            audience={audience}
-            planInterest={selectedPlan ?? undefined}
+            audience="gc"
+            planInterest="gc-site-pro"
           />
         </StyledCtaInner>
       </StyledCtaSection>

@@ -3032,10 +3032,11 @@ Stripe-hosted Checkout (redirect), not embedded. Design doc: `docs/billing-desig
 
 - [x] 12a. Stripe account setup (manual): test-mode account, branding, 8 recurring prices, Customer Portal, Stripe CLI, keys in `.env` (keys in `.env` done; Customer Portal + Stripe CLI not yet confirmed)
 - [x] 12b. Config + schema (`server/utility/stripePlans.js`; **run the commented `ALTER TABLE` + `CREATE TABLE stripe_events` from `Supabase_SQL.sql` on the live DB**): replace stale `STRIPE_PRICE_*` env keys, price-to-tier map, `companies` billing columns, `stripe_events` table
-- [ ] 12c. Server checkout + portal endpoints (`POST /api/stripe/checkout-session`, `/portal-session`) with tests
-- [ ] 12d. Webhook `POST /webhook/stripe` (raw body, signature check, idempotency, tier sync, downgrade on cancel) with tests
-- [ ] 12e. Client: `apiStripe`, `useCheckout`, `useBillingPortal`, Pricing/UpgradeModal CTAs, Settings Billing section, return handling
-- [ ] 12f. Cleanup: `plans.ts` `comingSoon`, `docs/pricing-promise-gaps.md`, schema docs
+- [x] 12c. Server checkout + portal endpoints (`POST /api/stripe/checkout-session`, `/portal-session`) with tests (manager-only; 409 `ALREADY_SUBSCRIBED` sends existing subscribers to the portal; never writes `companies.tier`, that is 12d)
+- [x] 12d. Webhook `POST /webhook/stripe` (raw body, signature check, idempotency, tier sync, downgrade on cancel) with tests (design in `docs/billing-design.md`; not yet exercised against real Stripe events)
+- [x] 12e. Client: `apiStripe`, `useCheckout`, `useBillingPortal`, `useBillingStatus`, `/checkout` page, Pricing CTAs (signup then checkout; GC Portfolio has two size buttons; Site Pro stays waitlist), Signup/Login carry the chosen plan, Settings Billing section, `?checkout=success|cancel` return handling; plus `GET /api/stripe/billing` (not yet exercised end to end against real Stripe; `UpgradeModal` still just links to `/pricing`)
+- [x] 12f. Cleanup (done: `plans.ts` comment, promise-gaps doc, Landing waitlist -> signup CTAs, tsc errors fixed via `JobsiteJoinProfile` + `superintendent` label; `comingSoon` entries kept since they are still unbuilt; schema docs already current): `plans.ts` `comingSoon`, `docs/pricing-promise-gaps.md`, schema docs, Landing page waitlist copy (`Landing.tsx`, `LandingFaq.tsx` still say waitlist / "launch"), two pre-existing `tsc` errors in `AcceptInvite.tsx` / `JoinJobsite.tsx`
+- [ ] 12g. Go live (full checklist in `docs/billing-design.md` -> "Going live"): **register the live webhook endpoint in the Stripe Dashboard** (`https://<api-domain>/webhook/stripe`, 5 events) and put its `whsec_` in `STRIPE_WEBHOOK_SECRET_PROD`; live secret key; 4 products / 8 prices in live mode with the `_PROD` price vars; live Customer Portal; production DB migration; `NODE_ENV=production`; Dashboard test event; one real purchase, then cancel and refund
 
 ## Deferred
 

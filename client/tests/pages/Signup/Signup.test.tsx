@@ -6,6 +6,7 @@ import { MemoryRouter, Route, Routes } from "react-router-dom";
 
 import { Signup } from "../../../src/pages/Signup/Signup";
 import theme from "../../../src/styles/theme";
+import { readPendingCheckout } from "../../../src/utils/pendingCheckout";
 
 const mockUseAuth = vi.fn();
 vi.mock("../../../src/context/auth", () => ({
@@ -33,10 +34,10 @@ vi.mock("react-hot-toast", () => ({
 
 import toast from "react-hot-toast";
 
-const renderSignup = () =>
+const renderSignup = (route = "/signup") =>
   render(
     <ThemeProvider theme={theme}>
-      <MemoryRouter initialEntries={["/signup"]}>
+      <MemoryRouter initialEntries={[route]}>
         <Routes>
           <Route path="/signup" element={<Signup />} />
         </Routes>
@@ -64,6 +65,7 @@ describe("Signup page", () => {
 
   beforeEach(() => {
     vi.clearAllMocks();
+    localStorage.clear();
     signUpWithEmail = vi.fn();
     mockUseAuth.mockReturnValue({ signUpWithEmail });
     mockUseCreateProfile.mockReturnValue({
@@ -146,6 +148,62 @@ describe("Signup page", () => {
       });
       expect(mockNavigate).toHaveBeenCalledWith("/dashboard");
     });
+  });
+
+  it("goes to checkout instead of the dashboard when a plan was chosen on /pricing", async () => {
+    signUpWithEmail.mockResolvedValue({
+      session: { access_token: "token-123" },
+    });
+    mockCreateProfile.mockResolvedValue({ id: "user-1" });
+
+    renderSignup("/signup?plan=trade-pro&interval=annual");
+    fillRequiredFields();
+    fireEvent.click(
+      screen.getByRole("button", { name: /create account/i }),
+    );
+
+    await waitFor(() => {
+      expect(mockNavigate).toHaveBeenCalledWith(
+        "/checkout?plan=trade-pro&interval=annual",
+      );
+    });
+    expect(mockNavigate).not.toHaveBeenCalledWith("/dashboard");
+  });
+
+  it("remembers the chosen plan for login when email confirmation is required", async () => {
+    signUpWithEmail.mockResolvedValue({ session: null });
+
+    renderSignup("/signup?plan=gc-portfolio-10&interval=monthly");
+    fillRequiredFields();
+    fireEvent.click(
+      screen.getByRole("button", { name: /create account/i }),
+    );
+
+    await waitFor(() => {
+      expect(screen.getByText(/check your email/i)).toBeDefined();
+    });
+    expect(readPendingCheckout()).toEqual({
+      plan: "gc-portfolio-10",
+      interval: "monthly",
+    });
+  });
+
+  it("ignores an invalid plan in the query string", async () => {
+    signUpWithEmail.mockResolvedValue({
+      session: { access_token: "token-123" },
+    });
+    mockCreateProfile.mockResolvedValue({ id: "user-1" });
+
+    renderSignup("/signup?plan=nope&interval=annual");
+    fillRequiredFields();
+    fireEvent.click(
+      screen.getByRole("button", { name: /create account/i }),
+    );
+
+    await waitFor(() => {
+      expect(mockNavigate).toHaveBeenCalledWith("/dashboard");
+    });
+    expect(readPendingCheckout()).toBeNull();
   });
 
   it("shows a check-your-email panel and skips profile creation when no session is returned", async () => {

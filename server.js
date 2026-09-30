@@ -24,7 +24,8 @@ const gcRoutes = require("./server/routes/gc");
 // const assetRoutes = require("./server/routes/assets");
 // const moderateRoutes = require("./server/routes/moderate");
 // const emailRoutes = require("./server/routes/emails");
-// const stripeRoutes = require("./server/routes/stripe");
+const stripeRoutes = require("./server/routes/stripe");
+const stripeWebhookRoutes = require("./server/routes/stripeWebhook");
 // const {
 //   deleteFlaggedFlyers,
 //   deleteExpiredFlyers,
@@ -49,8 +50,9 @@ if ((process.env.NODE_ENV || "").toLowerCase() === "production") {
   app.use(cors());
 }
 
-// for handling stripe webhooks
-// app.use("/webhook", stripeRoutes);
+// for handling stripe webhooks -- must stay above bodyParser.json(): the
+// signature check needs the raw request body.
+app.use("/webhook/stripe", stripeWebhookRoutes);
 
 app.use(bodyParser.json());
 app.use(express.urlencoded({ extended: false }));
@@ -68,7 +70,7 @@ app.use("/api/gc", gcRoutes);
 // app.use("/api/assets", assetRoutes);
 // app.use("/api/moderate", moderateRoutes);
 // app.use("/api/email", emailRoutes);
-// app.use("/api/stripe", stripeRoutes);
+app.use("/api/stripe", stripeRoutes);
 
 /****  C R O N   J O B S *****/
 // cron jobs - delete flagged flyers

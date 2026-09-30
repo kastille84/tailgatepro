@@ -6,6 +6,7 @@ import { MemoryRouter, Route, Routes } from "react-router-dom";
 
 import { Login } from "../../../src/pages/Login/Login";
 import theme from "../../../src/styles/theme";
+import { savePendingCheckout } from "../../../src/utils/pendingCheckout";
 
 const mockUseAuth = vi.fn();
 vi.mock("../../../src/context/auth", () => ({
@@ -75,6 +76,7 @@ describe("Login page", () => {
 
   beforeEach(() => {
     vi.clearAllMocks();
+    localStorage.clear();
     loginWithGoogle = vi.fn().mockResolvedValue(undefined);
     loginWithEmail = vi
       .fn()
@@ -257,6 +259,34 @@ describe("Login page", () => {
     it("ignores a non-string state.email", () => {
       renderWithEmail(42);
       expect((screen.getByLabelText(/^email$/i) as HTMLInputElement).value).toBe("");
+    });
+  });
+
+  describe("resuming a plan chosen on /pricing", () => {
+    it("goes to checkout for the remembered plan after login", async () => {
+      savePendingCheckout({ plan: "trade-pro", interval: "annual" });
+      renderLogin();
+
+      fillCredentials();
+      fireEvent.click(screen.getByRole("button", { name: /^sign in$/i }));
+
+      await waitFor(() =>
+        expect(mockNavigate).toHaveBeenCalledWith(
+          "/checkout?plan=trade-pro&interval=annual",
+        ),
+      );
+    });
+
+    it("prefers an explicit state.from over the remembered plan", async () => {
+      savePendingCheckout({ plan: "trade-pro", interval: "annual" });
+      renderLoginFrom("/jobsite-invite/abc");
+
+      fillCredentials();
+      fireEvent.click(screen.getByRole("button", { name: /^sign in$/i }));
+
+      await waitFor(() =>
+        expect(mockNavigate).toHaveBeenCalledWith("/jobsite-invite/abc"),
+      );
     });
   });
 

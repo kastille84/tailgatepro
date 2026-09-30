@@ -10,8 +10,9 @@ import {
   HiCheck,
 } from "react-icons/hi2";
 import type { IconType } from "react-icons";
+import { Link } from "react-router-dom";
 
-import { WaitlistForm } from "./WaitlistForm";
+import { Button } from "../../ui_comps/button";
 import { PricingTeaser } from "./PricingTeaser";
 import { HowItWorks } from "./HowItWorks";
 import { ProductShowcase } from "./ProductShowcase";
@@ -27,6 +28,8 @@ import {
   StyledHeadline,
   StyledLede,
   StyledFormWrap,
+  StyledCtaRow,
+  StyledCtaLink,
   StyledFootnote,
   StyledHeroFigure,
   StyledHeroImage,
@@ -103,7 +106,7 @@ const SOLUTION_CARDS: InfoCard[] = [
 const REASSURANCES = [
   "No credit card, no app to install.",
   "Crews start free — keep your signed PDFs.",
-  "One email when we launch. No spam.",
+  "Start free, upgrade anytime.",
 ];
 
 export const Landing = () => {
@@ -132,9 +135,18 @@ export const Landing = () => {
               the GC the moment you hit send.
             </StyledLede>
             <StyledFormWrap>
-              <WaitlistForm idPrefix="hero" tone="onDark" />
+              <StyledCtaRow>
+                <StyledCtaLink as={Link} to="/signup">
+                  <Button size="lg">Get started free</Button>
+                </StyledCtaLink>
+                <StyledCtaLink as={Link} to="/pricing">
+                  <Button size="lg" variant="outline">
+                    See pricing
+                  </Button>
+                </StyledCtaLink>
+              </StyledCtaRow>
               <StyledFootnote>
-                Join the launch waitlist. No spam — one email when we go live.
+                Free plans need no credit card. Upgrade when your crew grows.
               </StyledFootnote>
             </StyledFormWrap>
           </StyledHeroCopy>
@@ -219,11 +231,14 @@ export const Landing = () => {
             Be ready on day one
           </StyledSectionTitle>
           <StyledSectionLede>
-            We're onboarding subcontractors and general contractors for launch.
-            Add your name and we'll set you up on the right plan the day we go
-            live.
+            Create your free account and run your first talk today — on the
+            right plan for your crew or your jobsites.
           </StyledSectionLede>
-          <WaitlistForm idPrefix="cta" tone="onDark" />
+          <StyledCtaRow>
+            <StyledCtaLink as={Link} to="/signup">
+              <Button size="lg">Get started free</Button>
+            </StyledCtaLink>
+          </StyledCtaRow>
           <StyledReassureList>
             {REASSURANCES.map((item) => (
               <StyledReassureItem key={item}>

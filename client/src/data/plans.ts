@@ -3,7 +3,9 @@ import type { Plan } from "../interfaces/plan";
 /**
  * Pricing tiers from docs/pricing-and-positioning-strategy_V2.md (§4.1 / §4.2).
  * Shared by the /pricing page and the homepage pricing teaser so the two never
- * drift. Prices are display strings, not numbers — there is no checkout yet.
+ * drift. Prices are display strings, not numbers — the Stripe price ids live
+ * server-side (`server/utility/stripePlans.js`) and the client maps plans to
+ * checkout keys in `data/checkoutPlans.ts`.
  *
  * `comingSoon` lists the features (exact `features` strings) that are promised
  * but not built yet — see docs/pricing-promise-gaps.md and Phase 9 in

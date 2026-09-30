@@ -55,6 +55,11 @@ page. Self-service, no GC approval, available on every jobsite regardless of pla
 by this update — reintroducing the QR wording on the Pricing FAQ/GcSection/HowItWorks pages is a separate,
 deliberate copy decision, not made here.
 
+**Update (Phase 12 billing shipped):** company plans (Trade Pro/Enterprise, GC Portfolio) are now purchasable
+through Stripe Checkout; the webhook writes `companies.tier` (see `docs/billing-design.md`). The landing page
+waitlist was replaced with signup CTAs. **GC Site Pro stays unbuyable** (per-jobsite `jobsites.plan` billing is
+deferred), so its `comingSoon` tags remain. Not yet exercised against live Stripe (12g).
+
 ## Tier-gating fact base
 
 - `server/utility/entitlements.js` has `hasTranslationAccess`, still reading `["premium", "enterprise"]` directly.
@@ -66,8 +71,8 @@ deliberate copy decision, not made here.
   `hasBrandingAccess` is server-resolved and returned by `GET /api/users/me`, not mirrored.
 - The `subscription_tier` enum is `basic | premium | enterprise` (`Supabase_SQL.sql`). It does not map to the plan
   names on the pricing page (Trade Free/Pro/Enterprise, GC Free/Site Pro/Portfolio). There is no GC tier value.
-- Signup hardcodes `tier: "basic"` (`server/services/users.js`). Nobody can reach a paid tier except by editing
-  the row in the database. Stripe/billing is deferred and `/api/stripe` is commented out in `server.js`.
+- Signup hardcodes `tier: "basic"` (`server/services/users.js`). **Update (Phase 12):** a paid company tier is now
+  set by the Stripe webhook after checkout (`/api/stripe`, `/webhook/stripe`); per-jobsite Site Pro still has no billing.
 - **Update (9b):** the plan is now resolved from `tier` + `company_type` (`PLAN_LIMITS` in
   `entitlements.js`); GC Site Pro is per jobsite (`jobsites.plan`). Limits are defined and returned by
   `/api/users/me` but not yet enforced (9c/9d).
@@ -131,7 +136,7 @@ deliberate copy decision, not made here.
 | "AI topic generator" / "generate a custom hazard talk" | ComparisonTable, HowItWorks | Missing | No AI generation | Reword (9a) |
 | "500+ OSHA talks" | ComparisonTable | Missing | 134 talks; live copy no longer states a count (reworded in 9a) | Reword (done, 11n) |
 | "30-second field start", "rollout 1-4 weeks" | ComparisonTable | Unverifiable | Not measured anywhere | Reword (9a) |
-| Flat per-site pricing / no seat fees | Pricing | Missing | Display only; no billing | Defer |
+| Flat per-site pricing / no seat fees | Pricing | Partial (Phase 12) | Company plans bill via Stripe Checkout; per-site Site Pro billing still deferred | Defer |
 | Text + AI audio in 10+ languages | ComparisonTable | Partial | See the Trade Pro row | Reword (9a) |
 
 Note: the "45 seconds" claim appears only in `docs/pricing-and-positioning-strategy_V2.md` (lines 16, 33, 55,
