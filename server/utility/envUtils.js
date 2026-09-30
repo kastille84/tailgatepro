@@ -25,9 +25,21 @@ exports.keysBasedOnEnv = () => {
       // Stripe
       stripe: {
         secretKey: process.env.STRIPE_SECRET_KEY_PROD,
-        price_garden: process.env.STRIPE_PRICE_GARDEN_PROD,
-        price_grove: process.env.STRIPE_PRICE_GROVE_PROD,
-        price_forest: process.env.STRIPE_PRICE_FOREST_PROD,
+        price_trade_pro_monthly:
+          process.env.STRIPE_PRICE_TRADE_PRO_MONTHLY_PROD,
+        price_trade_pro_annual: process.env.STRIPE_PRICE_TRADE_PRO_ANNUAL_PROD,
+        price_trade_enterprise_monthly:
+          process.env.STRIPE_PRICE_TRADE_ENTERPRISE_MONTHLY_PROD,
+        price_trade_enterprise_annual:
+          process.env.STRIPE_PRICE_TRADE_ENTERPRISE_ANNUAL_PROD,
+        price_gc_portfolio_10_sites_monthly:
+          process.env.STRIPE_PRICE_GC_PORTFOLIO_10_SITES_MONTHLY_PROD,
+        price_gc_portfolio_10_sites_annual:
+          process.env.STRIPE_PRICE_GC_PORTFOLIO_10_SITES_ANNUAL_PROD,
+        price_gc_portfolio_unlimited_sites_monthly:
+          process.env.STRIPE_PRICE_GC_PORTFOLIO_UNLIMITED_SITES_MONTHLY_PROD,
+        price_gc_portfolio_unlimited_sites_annual:
+          process.env.STRIPE_PRICE_GC_PORTFOLIO_UNLIMITED_SITES_ANNUAL_PROD,
         webhookSecret: process.env.STRIPE_WEBHOOK_SECRET_PROD,
       },
       // Google Cloud Translation API -- premium/enterprise-tier custom talk
@@ -71,9 +83,20 @@ exports.keysBasedOnEnv = () => {
       // Stripe
       stripe: {
         secretKey: process.env.STRIPE_SECRET_KEY_TEST,
-        price_garden: process.env.STRIPE_PRICE_GARDEN,
-        price_grove: process.env.STRIPE_PRICE_GROVE,
-        price_forest: process.env.STRIPE_PRICE_FOREST,
+        price_trade_pro_monthly: process.env.STRIPE_PRICE_TRADE_PRO_MONTHLY,
+        price_trade_pro_annual: process.env.STRIPE_PRICE_TRADE_PRO_ANNUAL,
+        price_trade_enterprise_monthly:
+          process.env.STRIPE_PRICE_TRADE_ENTERPRISE_MONTHLY,
+        price_trade_enterprise_annual:
+          process.env.STRIPE_PRICE_TRADE_ENTERPRISE_ANNUAL,
+        price_gc_portfolio_10_sites_monthly:
+          process.env.STRIPE_PRICE_GC_PORTFOLIO_10_SITES_MONTHLY,
+        price_gc_portfolio_10_sites_annual:
+          process.env.STRIPE_PRICE_GC_PORTFOLIO_10_SITES_ANNUAL,
+        price_gc_portfolio_unlimited_sites_monthly:
+          process.env.STRIPE_PRICE_GC_PORTFOLIO_UNLIMITED_SITES_MONTHLY,
+        price_gc_portfolio_unlimited_sites_annual:
+          process.env.STRIPE_PRICE_GC_PORTFOLIO_UNLIMITED_SITES_ANNUAL,
         webhookSecret: process.env.STRIPE_WEBHOOK_SECRET,
       },
       // Google Cloud Translation API -- see the prod branch's comment.

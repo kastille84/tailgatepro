@@ -24,6 +24,15 @@ CREATE TABLE companies (
   -- GET /api/companies/join-code. NULL = not generated yet (and always NULL
   -- for a subcontractor). See docs/gc-dashboard-design.md.
   join_code TEXT UNIQUE,
+  -- Stripe billing (Phase 12, docs/billing-design.md). Written ONLY by the
+  -- Stripe webhook / checkout service, never from client input. All NULL for a
+  -- company that has never subscribed (tier stays 'basic').
+  stripe_customer_id TEXT UNIQUE,
+  stripe_subscription_id TEXT UNIQUE,
+  -- Stripe subscription status: active, trialing, past_due, canceled, ...
+  subscription_status TEXT,
+  billing_interval TEXT CHECK (billing_interval IN ('monthly', 'annual')),
+  current_period_end TIMESTAMPTZ,
   created_at TIMESTAMPTZ DEFAULT NOW(),
   CONSTRAINT check_join_code_gc_only CHECK (
     join_code IS NULL OR company_type = 'gc'
@@ -39,6 +48,26 @@ ALTER TABLE companies ENABLE ROW LEVEL SECURITY;
 -- ALTER TABLE companies ADD COLUMN IF NOT EXISTS join_code TEXT UNIQUE;
 -- ALTER TABLE companies ADD CONSTRAINT check_join_code_gc_only CHECK (join_code IS NULL OR company_type = 'gc');
 -- ALTER TABLE companies ENABLE ROW LEVEL SECURITY;
+-- Existing database (Phase 12, Stripe billing): add the billing columns + events table:
+-- ALTER TABLE companies ADD COLUMN IF NOT EXISTS stripe_customer_id TEXT UNIQUE;
+-- ALTER TABLE companies ADD COLUMN IF NOT EXISTS stripe_subscription_id TEXT UNIQUE;
+-- ALTER TABLE companies ADD COLUMN IF NOT EXISTS subscription_status TEXT;
+-- ALTER TABLE companies ADD COLUMN IF NOT EXISTS billing_interval TEXT CHECK (billing_interval IN ('monthly', 'annual'));
+-- ALTER TABLE companies ADD COLUMN IF NOT EXISTS current_period_end TIMESTAMPTZ;
+
+-- 1b. Stripe webhook events (Phase 12): idempotency ledger. `id` is Stripe's
+-- own event id (evt_...), NOT a client-generated UUID -- the one deliberate
+-- exception to the offline-sync UUID rule, since this table is server-only
+-- and never written offline. The webhook inserts the id before handling an
+-- event; a duplicate insert means Stripe is retrying an event already handled.
+CREATE TABLE stripe_events (
+  id TEXT PRIMARY KEY,
+  type TEXT NOT NULL,
+  processed_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+-- Server-only table: RLS enabled with NO policies (service-role key only).
+ALTER TABLE stripe_events ENABLE ROW LEVEL SECURITY;
 
 -- 2. Users
 CREATE TABLE users (

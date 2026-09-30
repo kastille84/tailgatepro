@@ -12,6 +12,11 @@
 | `tier` | Enum | Not Null | `basic`, `premium`, `enterprise` |
 | `logo_path` | Text | Nullable | Storage path of the uploaded company logo (`company-logos` bucket); embedded in generated PDFs and removes the free-tier watermark for Trade Pro+ tiers |
 | `join_code` | Text | Unique (Nullable) | GC-only (Phase 6): the 8-character code a subcontractor enters to link a project to this GC. Generated server-side on the GC's first `GET /api/companies/join-code`; always `NULL` for a subcontractor (**CHECK** `check_join_code_gc_only`: `join_code IS NULL OR company_type = 'gc'`). See `docs/gc-dashboard-design.md` |
+| `stripe_customer_id` | Text | Unique (Nullable) | Phase 12 billing: the company's Stripe customer (`cus_...`). Created on first checkout; written server-side only |
+| `stripe_subscription_id` | Text | Unique (Nullable) | Phase 12: the active Stripe subscription (`sub_...`). Set/cleared by the Stripe webhook |
+| `subscription_status` | Text | Nullable | Phase 12: mirrors Stripe's subscription status (`active`, `trialing`, `past_due`, `canceled`, ...) |
+| `billing_interval` | Text | Nullable | Phase 12: `monthly` or `annual` (**CHECK**) |
+| `current_period_end` | Timestamptz | Nullable | Phase 12: end of the paid period, for display in Settings → Billing |
 | `required_talk_id` | UUID | FK → `toolbox_talks.id`, `ON DELETE SET NULL`, Nullable | GC-only (Phase 9e, GC Portfolio, `docs/policy-push-design.md`): the GC's current top-down policy push — one global toolbox talk pushed as required reading across every active jobsite. `NULL` = no push currently active. Cleared/replaced by the GC only; never auto-expires |
 | `required_talk_pushed_at` | Timestamptz | Nullable | When the current `required_talk_id` was pushed |
 | `required_talk_pushed_by` | UUID | FK → `users.id`, `ON DELETE SET NULL`, Nullable | Which user pushed the current `required_talk_id` |
@@ -23,7 +28,13 @@
 | `role` | Enum | Not Null | `admin`, `safety_manager`, `foreman` |
 | `name` | Text | Not Null | User's full name |
 
-> RLS: enabled with no policies (server-brokered, deny-all) on `companies` and `users` — see `docs/data-access.md`.
+| Table: `stripe_events` | Type | Constraints | Description |
+| :--- | :--- | :--- | :--- |
+| `id` | Text | Primary Key | Stripe's event id (`evt_...`), **not** a client-generated UUID (server-only table, never written offline). Inserted before an event is handled; a duplicate means a Stripe retry and is skipped |
+| `type` | Text | Not Null | Stripe event type, e.g. `customer.subscription.updated` |
+| `processed_at` | Timestamptz | Default `NOW()` | When the event was recorded |
+
+> RLS: enabled with no policies (server-brokered, deny-all) on `companies`, `users` and `stripe_events` — see `docs/data-access.md`.
 
 ### 2. Projects & Access
 

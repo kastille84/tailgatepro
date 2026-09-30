@@ -3024,8 +3024,21 @@ they can be worked one at a time. Tick a box here **and** in its source phase wh
 and Phase 9e/9f instead): GC Site Pro sponsorship purchase flow, SMS nudges, AI Talk Builder /
 cloud AI voice, Procore/ACC/JobTread/QuickBooks sync, the purchased 300+-talk bundle.
 
+## Phase 12: Stripe billing (milestone 1: company plans, hosted Checkout)
+
+Scope: Trade Pro, Trade Enterprise, GC Portfolio (10 / unlimited sites), monthly + annual, writing
+`companies.tier`. Per-jobsite GC Site Pro (`jobsites.plan`), SMS nudges and integrations stay deferred.
+Stripe-hosted Checkout (redirect), not embedded. Design doc: `docs/billing-design.md`.
+
+- [x] 12a. Stripe account setup (manual): test-mode account, branding, 8 recurring prices, Customer Portal, Stripe CLI, keys in `.env` (keys in `.env` done; Customer Portal + Stripe CLI not yet confirmed)
+- [x] 12b. Config + schema (`server/utility/stripePlans.js`; **run the commented `ALTER TABLE` + `CREATE TABLE stripe_events` from `Supabase_SQL.sql` on the live DB**): replace stale `STRIPE_PRICE_*` env keys, price-to-tier map, `companies` billing columns, `stripe_events` table
+- [ ] 12c. Server checkout + portal endpoints (`POST /api/stripe/checkout-session`, `/portal-session`) with tests
+- [ ] 12d. Webhook `POST /webhook/stripe` (raw body, signature check, idempotency, tier sync, downgrade on cancel) with tests
+- [ ] 12e. Client: `apiStripe`, `useCheckout`, `useBillingPortal`, Pricing/UpgradeModal CTAs, Settings Billing section, return handling
+- [ ] 12f. Cleanup: `plans.ts` `comingSoon`, `docs/pricing-promise-gaps.md`, schema docs
+
 ## Deferred
 
-- [-] Stripe billing (needs multi-user/site concepts; `companies.tier` enum reconciled in 9b) — see Phase 9b
+- [-] Stripe billing, per-jobsite Site Pro purchase (`jobsites.plan`) — company plans are Phase 12; Site Pro follows it
 - [-] Procore integration — also JobTread, QuickBooks, Autodesk ACC (see Phase 9f)
 - [-] SMS nudges (9e) — provider decided (Twilio, Toll-Free Verified number); waiting on Stripe billing first
