@@ -1,0 +1,66 @@
+{
+  "id": "roofing-fall-protection-systems",
+  "title": "Roofing Fall Protection: Harnesses, Anchors, Guardrails, and Warning Lines",
+  "primary_trade": "Roofing",
+  "trade_tags": [
+    "Roofing",
+    "General Construction"
+  ],
+  "osha_standards": [
+    "29 CFR 1926.501(b)(10)",
+    "29 CFR 1926.501(b)(11)",
+    "29 CFR 1926.502(d)",
+    "29 CFR 1926.502(b)",
+    "29 CFR 1926.502(f)",
+    "29 CFR 1926.502(i)",
+    "29 CFR 1926.150",
+    "29 CFR 1926.501(b)(4)",
+    "29 CFR 1926.1053"
+  ],
+  "estimated_minutes": 5,
+  "summary": "Falls are the leading cause of death for roofers, and falls from roofs caused nearly 1,200 deaths from 2003 to 2013. Fall protection is required at 6 feet or more, and the right setup depends on the roof and the task.",
+  "talking_points": [
+    "Plan, provide, train. Know the roof pitch: low slope is 4:12 or less (29 CFR 1926.501(b)(10)), and steep is above 4:12 (1926.501(b)(11)). Check that the roof can support workers before you start.",
+    "A personal fall arrest system (PFAS) has an anchor, a full-body harness, and a lifeline or lanyard. Fit the harness snug, with the D-ring between your shoulder blades. Body belts are not acceptable.",
+    "An anchor must hold 5,000 pounds per worker, or be set up under a qualified person with a safety factor of at least two. Do not anchor to sheathing alone, single trusses, or most guardrails. Fasten through the sheathing into the rafter or truss, and follow the manufacturer's instructions.",
+    "Set up the system so you cannot free fall more than 6 feet or hit a lower level. Figure the fall clearance before work begins. Put the anchor above your work area to cut swing-fall risk. Equipment that stopped a fall comes out of service until a competent person inspects it. Have a rescue plan.",
+    "Guardrails: top rail 39 to 45 inches high, with a midrail or screen unless a parapet at least 21 inches high is there. Top rails must hold 200 pounds, and midrails must hold 150 pounds.",
+    "Warning lines on low-slope roofs: at least 6 feet from the edge (10 feet with mechanical equipment), flagged every 6 feet, and 34 to 39 inches high. A warning line is used together with a guardrail, safety net, personal fall arrest system, or safety monitor. A safety monitor must be a competent person, and monitoring alone is allowed only on roofs 50 feet wide or less.",
+    "Cover skylights and holes with covers that hold at least twice the load, are secured against wind and equipment, and are color coded or marked \"HOLE\" or \"COVER.\" On ladders, use a 1:4 angle, extend 3 feet above the roof, and never carry items that could make you lose your balance.",
+    "Hot tar at about 500 degrees F causes severe burns, and a kettle can catch fire or explode if the tar reaches its flash point. Wear gloves, boots, long-sleeve cotton shirts, cotton pants without cuffs, and eye or face protection. Where more than 5 gallons of flammable or combustible liquid or 5 pounds of flammable gas are in use, keep an extinguisher rated at least 10B within 50 feet."
+  ],
+  "site_hazards_to_check": [
+    "Workers within 6 feet of a roof edge with no guardrail, warning line, or fall arrest",
+    "Anchors attached to sheathing, a single truss, or a guardrail",
+    "Harness that does not fit or a full-body harness not used",
+    "Fall clearance not figured, or swing hazards near the anchor",
+    "Uncovered or unmarked skylights and roof holes",
+    "Ladders that do not reach 3 feet above the roof or are not on stable, level footing",
+    "Hot tar kettles with no extinguisher nearby or workers without burn protection"
+  ],
+  "discussion_questions": [
+    "What fall protection are we using on this roof, and is the anchor rated for it?",
+    "How far would you fall from where you are working, and will you clear the lower level?",
+    "What is our rescue plan if someone is hanging in a harness?"
+  ],
+  "attribution": {
+    "source": "OSHA",
+    "publisher": "Occupational Safety and Health Administration (OSHA)",
+    "copyright": "U.S. Government work — public domain.",
+    "license": "public-domain",
+    "source_url": "https://www.osha.gov/Publications/OSHA3755.pdf",
+    "notice": "Adapted from OSHA Publication 3755-05, Protecting Roofing Workers (2015). Reproduced with attribution for jobsite safety training; not an endorsement by OSHA."
+  },
+  "audit": {
+    "status": "approved",
+    "audited_at": "2026-09-30T14:01:48.440Z",
+    "osha_accuracy_verified": true,
+    "flags": [
+      "Verified against data/raw/osha-protecting-roofing-workers.md (OSHA 3755-05): about 1,200 roof-fall deaths 2003-2013, 4:12 pitch split, PFAS parts, D-ring, body belts, 5,000 lb per worker, sheathing/truss/guardrail anchor warning, 6 ft free fall, swing fall, out-of-service after a fall, rescue, guardrail 39-45 in / 21 in parapet / 200 lb / 150 lb, warning line 6 ft / 10 ft / 6 ft flags / 34-39 in, monitor is competent person and 50 ft roofs, covers, 1:4 ladder and 3 ft, hot tar at 500 F, flash point, PPE list.",
+      "Hot-tar point (item 8) is supported by the Built-up Roofing section (fire/explosion at flash point, PPE list, 10B extinguisher within 50 ft per 1926.150(c)(1)(vi)). Edited: extinguisher line now carries the source condition (over 5 gal flammable/combustible liquid or 5 lb flammable gas).",
+      "Edited: added that warning lines are used with another system (source: \"combination of warning line system and ...\"), to avoid implying a warning line alone protects workers between it and the edge.",
+      "Edited: covers \"color coded or marked\" (1926.502(i)(4)); added 1926.501(b)(4) and 1926.1053 to osha_standards since the talk uses them.",
+      "Source is a guidance publication; not presented as new regulation. Harwood check: OSHA-authored."
+    ]
+  }
+}

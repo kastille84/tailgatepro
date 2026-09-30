@@ -159,6 +159,7 @@ still its own row, now optionally pointed at one of these via `jobsite_id` (see 
 | `plan` | Text | Not Null, Default `'free'`, CHECK in (`free`, `site_pro`) | Phase 9b: per-site GC plan. `site_pro` = a paid GC Site Pro site (see `server/utility/entitlements.js`). Not yet enforced or written (9d) |
 | `origin` | Text | Nullable, CHECK in (`gc`, `subcontractor`) | Who created the jobsite: `gc` via `POST /api/jobsites`, `subcontractor` when a join-code link find-or-created it. `NULL` = created before this column existed (origin unknown, never guessed). Server-written only; drives the "Created by subcontractor" badge |
 | `join_token` | Text | Unique (Nullable) | Phase 9e (`docs/jobsite-qr-join-design.md`): this jobsite's own standing QR/join link, created lazily on first `GET /api/jobsites/:id/join-link`. Never expires, unlike `jobsite_subcontractors.token` below — meant to be publicly displayed (a QR code, a printed poster), the same trust model `companies.join_code` has |
+| `meeting_cadence` | Text | Not Null, Default `'daily'`, CHECK in (`daily`, `weekly`) | Phase 11f: how often subs on this site must log a talk — the GC's default. A sub may tighten it for itself via `jobsite_subcontractors.meeting_cadence`, never relax it. Weekly = Monday–Sunday in the viewer's timezone |
 | `created_at` | Timestamptz | Default `now()` | |
 
 > RLS: enabled with no policies (server-brokered, deny-all) — see `docs/data-access.md`.
@@ -172,6 +173,7 @@ still its own row, now optionally pointed at one of these via `jobsite_id` (see 
 | `token` | Text | Unique (Nullable) | Server-generated 64-hex secret (`server/utility/inviteToken.js`, shared with `company_invites`); `NULL` once accepted |
 | `expires_at` | Timestamptz | Nullable | 7-day TTL; `NULL` once accepted |
 | `accepted_at` | Timestamptz | Nullable | `NULL` = still pending; set = this is now a live membership row |
+| `meeting_cadence` | Text | Nullable, CHECK in (`daily`, `weekly`) | Phase 11f: this sub company's own cadence override; `NULL` = inherit `jobsites.meeting_cadence`. Only ever tightens it (enforced in `services/jobsites.js`); the effective cadence is the stricter of the two (`server/utility/cadence.js`) |
 | `created_at` | Timestamptz | Default `now()` | |
 | **UNIQUE** `jobsite_subs_email_unique` | | `(jobsite_id, invited_email)` | Re-inviting the same email upserts this row while still pending; re-inviting an already-accepted sub is a `409` instead (service-layer rule — the accept guard means this constraint alone can't distinguish the two) |
 | **UNIQUE (partial)** `jobsite_subs_company_unique` | | `(jobsite_id, sub_company_id) WHERE sub_company_id IS NOT NULL` | One membership per company per jobsite once accepted |

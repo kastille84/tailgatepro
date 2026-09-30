@@ -83,7 +83,7 @@ describe("JobsiteList", () => {
     expect(screen.getByText("Apex Plumbing")).toBeDefined();
   });
 
-  it("renders a locked sub as a placeholder with an upgrade link", () => {
+  it("opens the sub-blur upsell with the site name and sub count from a locked row", () => {
     renderList({
       jobsites: [
         {
@@ -113,7 +113,15 @@ describe("JobsiteList", () => {
       ],
     });
 
-    expect(screen.getAllByRole("link", { name: /unlock on site pro/i })).toHaveLength(2);
+    const unlockButtons = screen.getAllByRole("button", { name: /unlock on site pro/i });
+    expect(unlockButtons).toHaveLength(2);
+
+    fireEvent.click(unlockButtons[0]);
+    expect(
+      screen.getByText(/2 Subcontractors are actively logging safety talks on Locked Site/),
+    ).toBeDefined();
+    fireEvent.click(screen.getByRole("button", { name: "Not now" }));
+    expect(screen.queryByRole("dialog")).toBeNull();
   });
 
   it("calls onSelectSub with the clicked sub", () => {

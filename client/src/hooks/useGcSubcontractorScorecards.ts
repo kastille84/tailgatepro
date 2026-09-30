@@ -15,12 +15,12 @@ import { getGcSubcontractorScorecards } from "../services/apiGc";
  * TanStack's default `networkMode` ("online") so the query pauses while
  * offline and resumes on reconnect.
  */
-export const useGcSubcontractorScorecards = (date: string, tzOffset: number) => {
+export const useGcSubcontractorScorecards = (date: string, tzOffset: number, timeZone?: string) => {
   const { session } = useAuth();
 
   const query = useQuery({
-    queryKey: ["gcSubcontractorScorecards", { date, tzOffset }],
-    queryFn: () => getGcSubcontractorScorecards(session!.access_token, date, tzOffset),
+    queryKey: ["gcSubcontractorScorecards", { date, tzOffset, timeZone }],
+    queryFn: () => getGcSubcontractorScorecards(session!.access_token, date, tzOffset, timeZone),
     enabled: !!session,
   });
 

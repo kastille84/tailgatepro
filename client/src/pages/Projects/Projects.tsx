@@ -2,7 +2,9 @@ import { useState } from "react";
 
 import { useAuth } from "../../context/auth";
 import { useCurrentUser } from "../../hooks/useCurrentUser";
+import { useJobsiteMemberships } from "../../hooks/useJobsiteMemberships";
 import { useProjects } from "../../hooks/useProjects";
+import { useUnsyncedProjectIds } from "../../hooks/useUnsyncedProjectIds";
 import { Button } from "../../ui_comps/button";
 import { Checkbox } from "../../ui_comps/checkbox";
 import { Footer } from "../../ui_comps/footer";
@@ -41,6 +43,15 @@ export const Projects = () => {
 
   const [showArchived, setShowArchived] = useState(false);
   const { projects, isLoading, isError } = useProjects(showArchived);
+  // Projects created offline and not yet synced can't be linked to a GC.
+  const unsyncedProjectIds = useUnsyncedProjectIds();
+  // A sub's per-job-site cadence settings, attached to the project card that
+  // is linked to each job site. A GC has no memberships (the server 403s it),
+  // so the query only runs for subcontractors.
+  const { memberships } = useJobsiteMemberships({ enabled: isSubcontractor });
+  const cadenceByJobsiteId = new Map(
+    memberships.map((membership) => [membership.jobsiteId, membership]),
+  );
 
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [editing, setEditing] = useState<Project | undefined>(undefined);
@@ -127,6 +138,8 @@ export const Projects = () => {
                 projects={projects}
                 onEdit={openEdit}
                 onLinkGc={isSubcontractor ? setLinkingProject : undefined}
+                unsyncedProjectIds={unsyncedProjectIds}
+                cadenceByJobsiteId={cadenceByJobsiteId}
               />
             )}
             </>

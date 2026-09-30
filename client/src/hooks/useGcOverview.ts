@@ -14,12 +14,12 @@ import { getGcOverview } from "../services/apiGc";
  * TanStack's default `networkMode` ("online") so the query simply pauses
  * while offline and resumes on reconnect, rather than failing.
  */
-export const useGcOverview = (date: string, tzOffset: number) => {
+export const useGcOverview = (date: string, tzOffset: number, timeZone?: string) => {
   const { session } = useAuth();
 
   const query = useQuery({
-    queryKey: ["gcOverview", { date, tzOffset }],
-    queryFn: () => getGcOverview(session!.access_token, date, tzOffset),
+    queryKey: ["gcOverview", { date, tzOffset, timeZone }],
+    queryFn: () => getGcOverview(session!.access_token, date, tzOffset, timeZone),
     enabled: !!session,
   });
 

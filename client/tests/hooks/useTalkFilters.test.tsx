@@ -59,6 +59,27 @@ describe("useTalkFilters", () => {
     expect(result.current.visibleTalks).toEqual([talks[1]]);
   });
 
+  it("searches beyond the title, e.g. site hazards", () => {
+    const withHazard = [
+      {
+        ...talks[0],
+        structured: {
+          site_hazards_to_check: ["Flying debris"],
+          osha_standards: [],
+          summary: null,
+        },
+      },
+      talks[1],
+    ] as Talk[];
+    const { result } = renderHook(() =>
+      useTalkFilters(withHazard, tradeOptions, new Set()),
+    );
+
+    act(() => result.current.setSearch("debris"));
+
+    expect(result.current.visibleTalks).toEqual([withHazard[0]]);
+  });
+
   it("filters to favorited talks only", () => {
     const { result } = renderHook(() =>
       useTalkFilters(talks, tradeOptions, new Set(["t2"])),

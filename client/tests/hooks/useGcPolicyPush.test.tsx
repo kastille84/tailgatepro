@@ -41,10 +41,10 @@ describe("useGcPolicyPush", () => {
   it("fetches the current policy push for the given date and tzOffset", async () => {
     vi.mocked(apiGc.getGcPolicyPush).mockResolvedValue(compliance);
 
-    const { result } = renderHook(() => useGcPolicyPush("2026-09-21", 300), { wrapper });
+    const { result } = renderHook(() => useGcPolicyPush("2026-09-21", 300, "America/New_York"), { wrapper });
 
     await waitFor(() => expect(result.current.isLoading).toBe(false));
-    expect(apiGc.getGcPolicyPush).toHaveBeenCalledWith("token-123", "2026-09-21", 300);
+    expect(apiGc.getGcPolicyPush).toHaveBeenCalledWith("token-123", "2026-09-21", 300, "America/New_York");
     expect(result.current.policyPush).toEqual(compliance);
     expect(result.current.isError).toBe(false);
   });

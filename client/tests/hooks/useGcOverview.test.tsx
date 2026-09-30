@@ -52,7 +52,7 @@ describe("useGcOverview", () => {
   it("fetches the overview for the given date and tzOffset", async () => {
     vi.mocked(apiGc.getGcOverview).mockResolvedValue(overview);
 
-    const { result } = renderHook(() => useGcOverview("2026-09-21", 300), {
+    const { result } = renderHook(() => useGcOverview("2026-09-21", 300, "America/New_York"), {
       wrapper,
     });
 
@@ -61,6 +61,7 @@ describe("useGcOverview", () => {
       "token-123",
       "2026-09-21",
       300,
+      "America/New_York",
     );
     expect(result.current.overview).toEqual(overview);
     expect(result.current.isError).toBe(false);

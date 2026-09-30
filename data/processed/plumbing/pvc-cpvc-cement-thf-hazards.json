@@ -1,0 +1,58 @@
+{
+  "id": "pvc-cpvc-cement-thf-hazards",
+  "title": "PVC and CPVC Cement: Tetrahydrofuran (THF) Hazards",
+  "primary_trade": "Plumbing",
+  "trade_tags": [
+    "Plumbing",
+    "HVAC & Refrigeration",
+    "Electrical"
+  ],
+  "osha_standards": [
+    "29 CFR 1926.59"
+  ],
+  "estimated_minutes": 5,
+  "summary": "Many PVC and CPVC primers and cements contain tetrahydrofuran (THF), which is believed to cause cancer with long exposure. Check labels, wear the right PPE, store it safely, and ask for safer products.",
+  "talking_points": [
+    "THF is a common solvent in these products at 10 percent to 70 percent. Most products contain at least some. Long-term exposure to THF is believed to cause cancer, based on kidney and liver cancer in animal studies.",
+    "THF evaporates quickly while primer and cement dry and gets in the air. You can be exposed by breathing it in or by skin contact.",
+    "Check the label and the safety data sheet for \"tetrahydrofuran,\" \"THF,\" or \"oxolane.\" Look for the OSHA health hazard pictogram or a California Proposition 65 warning.",
+    "Ask for safer products. Several products on the market do not contain THF and perform about the same and meet the applicable standards.",
+    "Wear the PPE your employer provides. Check the label and Section 8 of the safety data sheet for the right respiratory protection, eye protection, and gloves.",
+    "Do not use cloth gloves. They absorb the solvent and hold it against your skin. Use chemical-resistant gloves such as nitrile, and wash cement off your skin right away with soap and water.",
+    "Get training on handling and storage before you work with these products.",
+    "Store them away from oxidizing agents, such as chlorine, hydrogen peroxide, nitric acid, and bleach, because violent reactions can occur. Keep them in tightly closed containers in a cool, well-ventilated area, away from smoking and open flames."
+  ],
+  "site_hazards_to_check": [
+    "PVC or CPVC cement with THF stored in warm or poorly ventilated areas",
+    "Workers using cloth gloves with cement",
+    "No respiratory protection, eye protection, or chemical-resistant gloves",
+    "Cement stored near bleach, cleaners, disinfectants, or other oxidizers",
+    "Open cement containers or containers near ignition sources",
+    "No safety data sheet or label check for the product in use"
+  ],
+  "discussion_questions": [
+    "Does the cement we are using contain THF, and how do we know?",
+    "What gloves and respirator does the safety data sheet call for?",
+    "Could we switch to a product without THF for this job?"
+  ],
+  "attribution": {
+    "source": "CPWR",
+    "publisher": "CPWR — The Center for Construction Research and Training",
+    "copyright": "© 2026 CPWR — The Center for Construction Research and Training. All rights reserved.",
+    "license": "free-use-with-attribution",
+    "source_url": "https://www.cpwr.com/wp-content/uploads/HA-PVC.pdf",
+    "notice": "Adapted from a CPWR/NIOSH Hazard Alert, produced under NIOSH cooperative agreement OH 012761. Reproduced with attribution for jobsite safety training; not an endorsement by CPWR or NIOSH."
+  },
+  "audit": {
+    "status": "approved",
+    "audited_at": "2026-09-30T14:01:48.440Z",
+    "osha_accuracy_verified": true,
+    "flags": [
+      "Verified against data/raw/cpwr-pvc-cpvc-cement-hazard-alert.md: THF 10-70 percent, cancer belief from animal studies, evaporation and exposure routes, label terms (THF, oxolane), HCS pictogram, Prop 65 warning, safer products, PPE per SDS Section 8, no cloth gloves, nitrile, wash with soap, training, oxidizer storage list, closed cool ventilated storage away from ignition. No brand names used.",
+      "Edited: hazard item about \"used in poorly ventilated spaces\" is not in the source (source gives ventilation only for storage); changed to storage wording.",
+      "Edited osha_standards: 1910.1200 -> 29 CFR 1926.59 (construction hazard communication, identical to 1910.1200).",
+      "Copyright (c) 2026 and cooperative agreement OH 012761 match the source.",
+      "Provenance (non-blocking): CPWR content is copyrighted ('All rights reserved'); attribution block carries the (c) line, NIOSH cooperative-agreement credit and 'not an endorsement by CPWR or NIOSH' notice, matching docs/content-attribution.md. Keep the reminder that reuse remains under CPWR's free-use conditions (no standalone resale, attribution kept, no implied endorsement)."
+    ]
+  }
+}

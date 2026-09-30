@@ -7,6 +7,7 @@ import { MemoryRouter } from "react-router-dom";
 import { JobsiteForm } from "../../../src/features/jobsites/JobsiteForm";
 import theme from "../../../src/styles/theme";
 import type { Jobsite } from "../../../src/interfaces/jobsite";
+import { PlanLimitError } from "../../../src/utils/PlanLimitError";
 
 const mockCreate = vi.fn();
 const mockUpdate = vi.fn();
@@ -35,6 +36,8 @@ const jobsite: Jobsite = {
   status: "active",
   archivedAt: null,
   createdBySub: false,
+  plan: "free",
+  meetingCadence: "daily",
   createdAt: "x",
   subcontractors: [],
 };
@@ -104,6 +107,30 @@ describe("JobsiteForm", () => {
     expect(onClose).not.toHaveBeenCalled();
   });
 
+  it("calls onPlanLimit when creating hits the plan's site cap", async () => {
+    mockCreate.mockRejectedValue(new PlanLimitError("Site cap", 1));
+    const onPlanLimit = vi.fn();
+    renderForm({ onPlanLimit });
+
+    fireEvent.change(screen.getByLabelText(/job site name/i), {
+      target: { value: "Riverside" },
+    });
+    fireEvent.click(screen.getByRole("button", { name: /create job site/i }));
+
+    await waitFor(() => expect(onPlanLimit).toHaveBeenCalledTimes(1));
+  });
+
+  it("does not call onPlanLimit for a plan-limit error while editing", async () => {
+    mockUpdate.mockRejectedValue(new PlanLimitError("Site cap", 1));
+    const onPlanLimit = vi.fn();
+    renderForm({ jobsite, onPlanLimit });
+
+    fireEvent.click(screen.getByRole("button", { name: /save/i }));
+
+    await waitFor(() => expect(mockUpdate).toHaveBeenCalled());
+    expect(onPlanLimit).not.toHaveBeenCalled();
+  });
+
   it("prefills and saves an edit with name and status", async () => {
     const onClose = vi.fn();
     renderForm({ jobsite, onClose });
@@ -123,10 +150,32 @@ describe("JobsiteForm", () => {
     await waitFor(() =>
       expect(mockUpdate).toHaveBeenCalledWith({
         id: "j1",
-        patch: { name: "Riverside Tower", status: "completed" },
+        patch: { name: "Riverside Tower", status: "completed", meetingCadence: "daily" },
       }),
     );
     await waitFor(() => expect(onClose).toHaveBeenCalled());
+  });
+
+  it("saves a changed meeting cadence in edit mode and hides the control when creating", async () => {
+    renderForm({ jobsite });
+
+    fireEvent.change(screen.getByLabelText(/safety talk cadence/i), {
+      target: { value: "weekly" },
+    });
+    fireEvent.click(screen.getByRole("button", { name: /save changes/i }));
+
+    await waitFor(() =>
+      expect(mockUpdate).toHaveBeenCalledWith({
+        id: "j1",
+        patch: { name: "Riverside", status: "active", meetingCadence: "weekly" },
+      }),
+    );
+  });
+
+  it("does not show the cadence control when creating", () => {
+    renderForm();
+
+    expect(screen.queryByLabelText(/safety talk cadence/i)).toBeNull();
   });
 
   it("stays open when saving an edit fails", async () => {

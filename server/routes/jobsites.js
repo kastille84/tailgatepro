@@ -6,6 +6,7 @@ const { loadUserContext } = require("../middlewares/loadUserContext");
 const { requireGcCompany } = require("../middlewares/requireGcCompany");
 const { requireRole } = require("../middlewares/requireRole");
 const { validate } = require("../middlewares/validate");
+const { CADENCES } = require("../utility/cadence");
 const { MANAGER_ROLES, SITE_MANAGER_ROLES } = require("../constants/roles");
 const {
   requireSubcontractorCompany,
@@ -23,6 +24,8 @@ const {
   removeSubcontractor,
   listMembers,
   setMembers,
+  listMemberships,
+  setMyCadence,
 } = require("../controllers/jobsites");
 
 const router = express.Router();
@@ -57,7 +60,7 @@ router.post(
   createJobsite,
 );
 
-// PATCH /api/jobsites/:id — patch name/status on a jobsite the caller's GC
+// PATCH /api/jobsites/:id — patch name/status/meetingCadence on a jobsite the caller's GC
 // company owns. `archived: true|false` archives/restores it.
 router.patch(
   "/:id",
@@ -83,9 +86,44 @@ router.patch(
       .isBoolean()
       .withMessage("Invalid archived flag")
       .toBoolean(),
+    body("meetingCadence")
+      .optional()
+      .isIn(CADENCES)
+      .withMessage("Invalid meeting cadence"),
   ],
   validate,
   updateJobsite,
+);
+
+// GET /api/jobsites/memberships — a subcontractor company's own job sites
+// with their meeting cadence. Any member may read it; changing it is
+// manager-gated below.
+router.get(
+  "/memberships",
+  requireAuth,
+  loadUserContext,
+  requireSubcontractorCompany,
+  listMemberships,
+);
+
+// PATCH /api/jobsites/:id/my-cadence — a subcontractor company tightens (or,
+// with null, clears) its own meeting cadence on a jobsite it belongs to.
+// Manager-gated like the other actions that bind the whole company. A value
+// looser than the GC's default is a 422 from the service.
+router.patch(
+  "/:id/my-cadence",
+  requireAuth,
+  loadUserContext,
+  requireSubcontractorCompany,
+  requireRole(...MANAGER_ROLES),
+  [
+    param("id").isUUID().withMessage("A valid jobsite id is required"),
+    body("cadence")
+      .custom((value) => value === null || CADENCES.includes(value))
+      .withMessage("Invalid meeting cadence"),
+  ],
+  validate,
+  setMyCadence,
 );
 
 const inviteTokenParam = param("token")

@@ -1,0 +1,55 @@
+{
+  "id": "ladder-safety-for-painters",
+  "title": "Ladder Safety for Painters: Prep Before You Step",
+  "primary_trade": "Painting & Coatings",
+  "trade_tags": [
+    "Painting & Coatings",
+    "General Construction"
+  ],
+  "osha_standards": [
+    "29 CFR 1926.1053"
+  ],
+  "estimated_minutes": 5,
+  "summary": "Four Massachusetts house painters died in ladder falls in 2011 and 2012. Pick the right ladder, check it, set it up correctly, and use it the right way.",
+  "talking_points": [
+    "Choose a ladder that can hold you and your tools, and check its duty rating label. If a task cannot be done safely from a ladder, use scaffolding or a lift.",
+    "Inspect the ladder before each use. Look for cracked, loose, or slippery rungs, split side rails, worn shoes, and rung locks that do not work.",
+    "If a ladder has any defect, take it out of service right away and mark it defective or tag it \"Do not use.\"",
+    "Set the base on dry, level, secure ground. Set the angle at one foot out for every four feet of ladder height, and secure the base and top.",
+    "When you use an extension ladder to get to an upper level, it should extend three feet above the roof edge.",
+    "Use a tool belt or hoist to carry materials, and secure your paint to the ladder so you keep a hand free to hold on.",
+    "Face the ladder and keep three points of contact while you climb and paint. Keep your belt buckle between the side rails and do not overreach. Climb down and move the ladder instead.",
+    "Do not work from the top three rungs of an extension ladder or from the top or top step of a step ladder."
+  ],
+  "site_hazards_to_check": [
+    "Bent rungs, damaged side rails, or worn feet",
+    "Ladder set on composite decking or soft or uneven ground",
+    "Ladder not tied off or secured at the top or base",
+    "Extension ladder that does not reach 3 feet above the roof edge",
+    "Painter carrying a paint bucket up the ladder",
+    "Work that is too high or too far to reach from a ladder"
+  ],
+  "discussion_questions": [
+    "Is this the right ladder for this job, and has it been inspected today?",
+    "How is the ladder secured at the top and bottom, and is the angle right?",
+    "What can we use besides a ladder for this task?"
+  ],
+  "attribution": {
+    "source": "MA FACE",
+    "publisher": "Massachusetts Department of Public Health — Massachusetts Fatality Assessment and Control Evaluation (MA FACE) Program",
+    "copyright": "Massachusetts Department of Public Health FACE program, supported by CDC-NIOSH cooperative agreement 5U60OH008490. The source states: \"This document may be copied freely.\"",
+    "license": "copy-freely-per-source",
+    "source_url": "https://www.mass.gov/doc/ladder-safety-for-painters-prep-before-you-step/download",
+    "notice": "Adapted from the MA FACE Safety Alert, Ladder Safety for Painters: Prep Before You Step (October 2013). Reproduced with attribution for jobsite safety training; not an endorsement by MA FACE, the Massachusetts Department of Public Health, or CDC-NIOSH."
+  },
+  "audit": {
+    "status": "approved",
+    "audited_at": "2026-09-30T14:01:48.440Z",
+    "osha_accuracy_verified": true,
+    "flags": [
+      "Verified against data/raw/state-ma-face-ladder-safety-for-painters.md (MA FACE Safety Alert, Oct 2013): duty rating, inspection list, tag out of service, 1:4 angle, secure base and top, 3 ft above roof edge, tool belt/hoist, three-point contact, belt buckle, top three rungs of extension ladder / top or top step of stepladder; four painters died 2011-2012. 1926.1053 is the correct ladder standard and is cited by the source.",
+      "Provenance (non-blocking, owner decision): license label \"copy-freely-per-source\" is not one of the labels used elsewhere (public-domain, free-use-with-attribution, original-work, owner-provided-unverified), but no code depends on the value. The copyright field quotes the source permission verbatim (\"This document may be copied freely\"), names the MA DPH FACE program and the CDC-NIOSH grant, and the notice disclaims endorsement, which is adequate for attribution. It does not expressly grant adaptation or commercial use, and a state agency is not a public-domain federal publisher. Recommend the owner accept the risk (as with the Word library) or confirm with MA FACE (1-800-338-5223), and document the label in docs/content-attribution.md.",
+      "Harwood check: state .gov program alert, not grantee material."
+    ]
+  }
+}

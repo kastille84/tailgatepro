@@ -1,0 +1,60 @@
+{
+  "id": "concrete-masonry-wall-bracing-rebar",
+  "title": "Concrete and Masonry: Wall Bracing, Limited Access Zones, and Rebar Caps",
+  "primary_trade": "Concrete & Formwork",
+  "trade_tags": [
+    "Concrete & Formwork",
+    "Masonry",
+    "General Construction"
+  ],
+  "osha_standards": [
+    "29 CFR 1926.701(b)",
+    "29 CFR 1926.706(a)(1)",
+    "29 CFR 1926.706(b)",
+    "29 CFR 1926.703(a)(2)"
+  ],
+  "estimated_minutes": 5,
+  "summary": "Uncapped rebar, missing limited access zones, unbraced masonry walls, and missing formwork drawings are among the most cited serious violations in concrete and masonry work.",
+  "talking_points": [
+    "Cap or cover all rebar so no one can be impaled. Use protective rebar caps or a board such as a 2x4. Plastic or paper cups and tape do not stop impalement.",
+    "Bending rebar over is an option only if an engineer has approved it.",
+    "If you cannot keep workers out of areas with exposed rebar where they could fall, use guardrails or other fall protection.",
+    "Set up a limited access zone (LAZ) with tape, rope, or chain when a masonry wall is going up. It is as long as the wall and as far out as the wall height plus 4 feet. A 10-foot-high, 30-foot-long wall needs a 14 x 30 foot zone.",
+    "Only workers building the wall may be in the zone until the wall is strong enough that it can no longer fall over.",
+    "Brace any unsupported masonry wall over 8 feet high. The project engineer or a competent person decides how. A typical brace has a vertical member, an inclined strut, stakes, and a strut-brace if needed.",
+    "A masonry trade magazine quoted in OSHA's manual says scaffold planks (2x10) are typically used for the vertical member and strut, and 2x4s for stakes. It says most experts consider 2x4s and 2x6s inadequate for the vertical member or strut. Follow the engineer's or competent person's brace design. All lumber must be in good condition.",
+    "Keep formwork drawings and plans at the jobsite, and install formwork as drawn."
+  ],
+  "site_hazards_to_check": [
+    "Rebar sticking up without caps or covers",
+    "Improvised rebar covers made of plastic cups, paper cups, or tape",
+    "No marked limited access zone around a masonry wall going up",
+    "Masonry walls over 8 feet high that are not braced",
+    "Bracing lumber that is undersized or damaged",
+    "No formwork or jack layout drawings on site"
+  ],
+  "discussion_questions": [
+    "Where are the exposed rebar ends on this job, and what is covering each one?",
+    "How far out does our limited access zone go for this wall, and who is allowed inside?",
+    "Who decided how this wall is braced, and can we see the plan?"
+  ],
+  "attribution": {
+    "source": "OSHA",
+    "publisher": "Occupational Safety and Health Administration (OSHA)",
+    "copyright": "U.S. Government work — public domain.",
+    "license": "public-domain",
+    "source_url": "https://obis.osha.gov/Publications/Const_Res_Man/1926sub-q-overview.html",
+    "notice": "Adapted from OSHA Construction Resource Manual, Overview for Subpart Q, Concrete and Masonry. Reproduced with attribution for jobsite safety training; not an endorsement by OSHA."
+  },
+  "audit": {
+    "status": "approved",
+    "audited_at": "2026-09-30T14:01:48.440Z",
+    "osha_accuracy_verified": true,
+    "flags": [
+      "Verified against data/raw/osha-subpart-q-concrete-and-masonry-overview.md (OSHA Construction Resource Manual, obis.osha.gov/Publications, OSHA-authored): 701(b) rebar impalement, 706(a)(1) LAZ = length x (height+4 ft) with the 10x30 example, 706(b) brace over 8 ft, 703(a)(2) drawings at jobsite; each listed paragraph matches the one the source assigns.",
+      "Edited: lumber-size guidance was attributed to \"OSHA's guide\"; the source attributes it to Magazine of Masonry Construction (Nov 1988). Reworded and added pointer to engineer/competent-person design.",
+      "Non-blocking: lumber guidance is from a 1988 article; the 15 psf ANSI A10.9-1983 design figure in the source was deliberately not used.",
+      "Harwood check: obis.osha.gov/Publications is an OSHA-authored manual, not obis.osha.gov/dte/grant_materials."
+    ]
+  }
+}

@@ -30,7 +30,11 @@ const getLocalDateAndTzOffset = () => {
   const year = now.getFullYear();
   const month = String(now.getMonth() + 1).padStart(2, "0");
   const day = String(now.getDate()).padStart(2, "0");
-  return { date: `${year}-${month}-${day}`, tzOffset: now.getTimezoneOffset() };
+  return {
+    date: `${year}-${month}-${day}`,
+    tzOffset: now.getTimezoneOffset(),
+    timeZone: Intl.DateTimeFormat().resolvedOptions().timeZone,
+  };
 };
 
 /** Cross-project subcontractor safety scorecards (Phase 9e,
@@ -45,8 +49,8 @@ export const GcSubcontractors = () => {
   const { plan } = useCurrentUser();
   const isPortfolio = plan === "gc-portfolio";
 
-  const { date, tzOffset } = getLocalDateAndTzOffset();
-  const { scorecards, isLoading, isError } = useGcSubcontractorScorecards(date, tzOffset);
+  const { date, tzOffset, timeZone } = getLocalDateAndTzOffset();
+  const { scorecards, isLoading, isError } = useGcSubcontractorScorecards(date, tzOffset, timeZone);
 
   if (loading) {
     return (

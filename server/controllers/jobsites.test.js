@@ -16,6 +16,8 @@ const {
   removeSubcontractor,
   listMembers,
   setMembers,
+  listMemberships,
+  setMyCadence,
 } = require("./jobsites");
 const jobsiteMembersService = require("../services/jobsiteMembers");
 const listMembersSpy = vi.spyOn(jobsiteMembersService, "listForJobsite");
@@ -30,6 +32,8 @@ const acceptInviteSpy = vi.spyOn(jobsitesService, "acceptInvite");
 const getOrCreateJoinTokenSpy = vi.spyOn(jobsitesService, "getOrCreateJoinToken");
 const previewJoinLinkSpy = vi.spyOn(jobsitesService, "previewJoinLink");
 const acceptJoinLinkSpy = vi.spyOn(jobsitesService, "acceptJoinLink");
+const listMembershipsSpy = vi.spyOn(jobsitesService, "listMemberships");
+const setMyCadenceSpy = vi.spyOn(jobsitesService, "setMyCadence");
 const removeSubcontractorSpy = vi.spyOn(jobsitesService, "removeSubcontractor");
 const sendJobsiteInviteEmailSpy = vi.spyOn(emailService, "sendJobsiteInviteEmail");
 const keysSpy = vi.spyOn(envUtils, "keysBasedOnEnv");
@@ -534,5 +538,95 @@ describe("jobsites controller: invites (Phase 8d)", () => {
       // Assert
       expect(next).toHaveBeenCalledWith(error);
     });
+  });
+});
+
+describe("jobsites controller: meeting cadence", () => {
+  let req;
+  let res;
+  let next;
+
+  beforeEach(() => {
+    listMembershipsSpy.mockReset();
+    setMyCadenceSpy.mockReset();
+    req = { params: {}, body: {}, user: { id: "user-2", companyId: "sub-1", role: "admin" } };
+    res = { status: vi.fn().mockReturnThis(), json: vi.fn().mockReturnThis() };
+    next = vi.fn();
+  });
+
+  it("passes meetingCadence through when a GC patches a jobsite", async () => {
+    // Arrange
+    req.user.companyId = "gc-1";
+    req.params.id = "jobsite-1";
+    req.body = { meetingCadence: "weekly" };
+    updateSpy.mockReset().mockResolvedValue(jobsite);
+
+    // Act
+    await updateJobsite(req, res, next);
+
+    // Assert
+    expect(updateSpy).toHaveBeenCalledWith({
+      id: "jobsite-1",
+      gcCompanyId: "gc-1",
+      patch: { name: undefined, status: undefined, archived: undefined, meetingCadence: "weekly" },
+    });
+  });
+
+  it("lists the caller's own company's memberships", async () => {
+    // Arrange
+    const memberships = [{ jobsiteId: "jobsite-1", effectiveCadence: "daily" }];
+    listMembershipsSpy.mockResolvedValue(memberships);
+
+    // Act
+    await listMemberships(req, res, next);
+
+    // Assert
+    expect(listMembershipsSpy).toHaveBeenCalledWith("sub-1");
+    expect(res.status).toHaveBeenCalledWith(200);
+    expect(res.json).toHaveBeenCalledWith({ success: true, data: memberships });
+  });
+
+  it("forwards a listMemberships failure to next", async () => {
+    // Arrange
+    const error = new Error("boom");
+    listMembershipsSpy.mockRejectedValue(error);
+
+    // Act
+    await listMemberships(req, res, next);
+
+    // Assert
+    expect(next).toHaveBeenCalledWith(error);
+  });
+
+  it("sets the caller's own company's cadence override", async () => {
+    // Arrange
+    req.params.id = "jobsite-1";
+    req.body = { cadence: "daily" };
+    const result = { jobsiteId: "jobsite-1", effectiveCadence: "daily" };
+    setMyCadenceSpy.mockResolvedValue(result);
+
+    // Act
+    await setMyCadence(req, res, next);
+
+    // Assert
+    expect(setMyCadenceSpy).toHaveBeenCalledWith({
+      jobsiteId: "jobsite-1",
+      companyId: "sub-1",
+      cadence: "daily",
+    });
+    expect(res.status).toHaveBeenCalledWith(200);
+    expect(res.json).toHaveBeenCalledWith({ success: true, data: result });
+  });
+
+  it("forwards a setMyCadence failure to next", async () => {
+    // Arrange
+    const error = new Error("boom");
+    setMyCadenceSpy.mockRejectedValue(error);
+
+    // Act
+    await setMyCadence(req, res, next);
+
+    // Assert
+    expect(next).toHaveBeenCalledWith(error);
   });
 });

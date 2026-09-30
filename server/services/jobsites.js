@@ -9,12 +9,13 @@ const { isSubLocked } = require("../utility/subLocking");
 const companiesService = require("./companies");
 const subAccessService = require("./subAccess");
 const { isJobsiteAllowed } = require("./siteScope");
+const { effectiveCadence, isStricterOrEqual } = require("../utility/cadence");
 
 // The columns every jobsites query selects, and the snake_case -> camelCase
 // mapper applied to each row before it leaves the service. Services never
 // leak DB column names to the controller layer.
 const JOBSITE_COLUMNS =
-  "id, gc_company_id, name, status, archived_at, origin, plan, created_at";
+  "id, gc_company_id, name, status, archived_at, origin, plan, meeting_cadence, created_at";
 
 // A NULL origin (a jobsite that predates the column) maps to false: unknown is
 // never presented as sub-created.
@@ -29,6 +30,10 @@ const toJobsite = (row) => ({
   // per-jobsite paid features (e.g. the 9e Defense Bundle) without a second
   // round trip; the server is still the actual authority on every such route.
   plan: row.plan,
+  // 'daily' | 'weekly' -- the GC's default meeting cadence for this site; a
+  // sub may tighten it for itself (setMyCadence). A row that predates the
+  // column reads as daily, the original hardcoded rule.
+  meetingCadence: row.meeting_cadence ?? "daily",
   createdAt: row.created_at,
 });
 
@@ -184,6 +189,7 @@ const update = async ({ id, gcCompanyId, patch }) => {
   const nextPatch = {};
   if (patch.name !== undefined) nextPatch.name = patch.name;
   if (patch.status !== undefined) nextPatch.status = patch.status;
+  if (patch.meetingCadence !== undefined) nextPatch.meeting_cadence = patch.meetingCadence;
   if (patch.archived !== undefined) {
     nextPatch.archived_at = patch.archived ? new Date().toISOString() : null;
   }
@@ -601,7 +607,88 @@ const removeSubcontractor = async ({
   return { id: sub.id };
 };
 
+// The caller's own subcontractor company's live memberships, for the
+// cadence setting: one row per jobsite it has accepted, with the GC's default,
+// the company's own override (null = inherit) and the resulting effective
+// cadence. Archived/non-active jobsites are left out -- nothing to configure.
+const listMemberships = async (companyId) => {
+  const { data, error } = await supabase
+    .from("jobsite_subcontractors")
+    .select(
+      "jobsite_id, meeting_cadence, jobsites!inner(name, status, archived_at, meeting_cadence)",
+    )
+    .eq("sub_company_id", companyId)
+    .not("accepted_at", "is", null)
+    .eq("jobsites.status", "active")
+    .is("jobsites.archived_at", null);
+
+  if (error) {
+    throw new AppError("Could not load your job sites", 502, { cause: error });
+  }
+
+  return data.map((row) => {
+    const jobsiteCadence = row.jobsites.meeting_cadence ?? "daily";
+    return {
+      jobsiteId: row.jobsite_id,
+      jobsiteName: row.jobsites.name,
+      jobsiteCadence,
+      subCadence: row.meeting_cadence ?? null,
+      effectiveCadence: effectiveCadence(jobsiteCadence, row.meeting_cadence),
+    };
+  });
+};
+
+// Sets (or, with `cadence: null`, clears) the caller's company's own cadence
+// override on a jobsite it belongs to. An override may only tighten the GC's
+// default (daily on a weekly site), never relax it: a looser one is a 422. A
+// jobsite the company isn't an accepted member of is a 404, same as a missing
+// one.
+const setMyCadence = async ({ jobsiteId, companyId, cadence }) => {
+  const { data: membership, error: readError } = await supabase
+    .from("jobsite_subcontractors")
+    .select("id, jobsites!inner(meeting_cadence)")
+    .eq("jobsite_id", jobsiteId)
+    .eq("sub_company_id", companyId)
+    .not("accepted_at", "is", null)
+    .single();
+
+  if (readError) {
+    if (readError.code === "PGRST116") {
+      throw new AppError("Jobsite not found", 404, { cause: readError });
+    }
+    throw new AppError("Could not load your job site", 502, { cause: readError });
+  }
+
+  const jobsiteCadence = membership.jobsites.meeting_cadence ?? "daily";
+  if (cadence !== null && !isStricterOrEqual(cadence, jobsiteCadence)) {
+    throw new AppError(
+      `This job site requires ${jobsiteCadence} meetings; you can only make it stricter`,
+      422,
+    );
+  }
+
+  const { error: updateError } = await supabase
+    .from("jobsite_subcontractors")
+    .update({ meeting_cadence: cadence })
+    .eq("id", membership.id);
+
+  if (updateError) {
+    throw new AppError("Could not update your meeting cadence", 502, {
+      cause: updateError,
+    });
+  }
+
+  return {
+    jobsiteId,
+    jobsiteCadence,
+    subCadence: cadence,
+    effectiveCadence: effectiveCadence(jobsiteCadence, cadence),
+  };
+};
+
 module.exports = {
+  listMemberships,
+  setMyCadence,
   create,
   listForGc,
   update,

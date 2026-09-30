@@ -232,6 +232,7 @@ describe("gcDashboard service: getOverview", () => {
               companyId: "sub-1",
               companyName: "Acme Roofing",
               projectId: "project-1",
+              cadence: "daily",
               status: "logged",
               lastLoggedAt: "2026-09-21T14:00:00.000Z",
               count: 1,
@@ -242,6 +243,47 @@ describe("gcDashboard service: getOverview", () => {
       ],
       totals: { subs: 1, logged: 1, missing: 0 },
     });
+  });
+
+  it("should score a weekly sub against the whole week and a daily sub against today, and keep roster order", async () => {
+    // Arrange — "today" is Wednesday 2026-09-23, so Monday's log is inside
+    // this week but outside today.
+    jobsitesResult.data = [
+      jobsite({
+        meeting_cadence: "weekly",
+        jobsite_subcontractors: [
+          { sub_company_id: "sub-1", accepted_at: "2026-09-01T00:00:00.000Z", meeting_cadence: null },
+          { sub_company_id: "sub-2", accepted_at: "2026-09-01T00:00:00.000Z", meeting_cadence: "daily" },
+          // A looser override than the jobsite default is ignored.
+          { sub_company_id: "sub-3", accepted_at: "2026-09-01T00:00:00.000Z", meeting_cadence: "weekly" },
+        ],
+      }),
+    ];
+    projectsResult.data = [
+      project({ id: "project-1", owner_company_id: "sub-1" }),
+      project({ id: "project-2", owner_company_id: "sub-2" }),
+      project({ id: "project-3", owner_company_id: "sub-3" }),
+    ];
+    // Monday's logs for sub-1 and sub-2: inside the week, outside "today".
+    logsResult.data = [
+      { project_id: "project-1", held_at: "2026-09-21T14:00:00.000Z" },
+      { project_id: "project-2", held_at: "2026-09-21T14:00:00.000Z" },
+    ];
+    companiesResult.data = [
+      { id: "sub-1", name: "A" },
+      { id: "sub-2", name: "B" },
+      { id: "sub-3", name: "C" },
+    ];
+
+    // Act
+    const result = await getOverview("gc-1", { date: "2026-09-23", tzOffset: 0 });
+
+    // Assert
+    expect(result.jobsites[0].subs.map(({ companyId, cadence, status }) => ({ companyId, cadence, status }))).toEqual([
+      { companyId: "sub-1", cadence: "weekly", status: "logged" },
+      { companyId: "sub-2", cadence: "daily", status: "missing" },
+      { companyId: "sub-3", cadence: "weekly", status: "missing" },
+    ]);
   });
 
   it("should flag a subcontractor-originated jobsite as createdBySub and treat a legacy null origin as false", async () => {
@@ -368,6 +410,7 @@ describe("gcDashboard service: getOverview", () => {
         companyId: "sub-1",
         companyName: "Acme Roofing",
         projectId: "project-1",
+        cadence: "daily",
         status: "logged",
         lastLoggedAt: "2026-09-21T14:00:00.000Z",
         count: 1,
@@ -454,6 +497,7 @@ describe("gcDashboard service: getOverview", () => {
         companyId: null,
         companyName: null,
         projectId: null,
+        cadence: null,
         status: null,
         lastLoggedAt: null,
         count: null,

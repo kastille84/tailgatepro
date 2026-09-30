@@ -1,0 +1,55 @@
+{
+  "id": "lockout-tagout-electrically-powered-equipment",
+  "title": "Lockout/Tagout for Electrically Powered Equipment",
+  "primary_trade": "Electrical",
+  "trade_tags": [
+    "Electrical",
+    "General Construction"
+  ],
+  "osha_standards": [
+    "29 CFR 1926.417"
+  ],
+  "estimated_minutes": 5,
+  "summary": "Dozens of construction workers die every year because equipment was not turned off or locked out before work. Most are electrocuted, and some are crushed or lose limbs.",
+  "talking_points": [
+    "Lockout/tagout protects workers while equipment is serviced. The person doing the work disconnects it, locks the power source, and puts on a warning tag so it cannot start up or release energy.",
+    "Before maintenance, identify every energy source to lock out and tag out: electrical, mechanical, gravitational, thermal, hydraulic, pneumatic, and chemical.",
+    "Apply a lock to the energy source so power cannot restart the equipment. Tell your co-workers about the shutdown. Put a tag on the locked-out item warning that it must not be turned on.",
+    "Test or look to make sure the energy source is really shut down and the item is locked out.",
+    "Block or drain any stored energy.",
+    "Equipment marked \"high voltage\" can store lethal energy, even when it is disconnected from the power source.",
+    "When work is done, tell co-workers the locks are about to come off and the equipment will restart. As the final step, remove the tag.",
+    "In one case, a worker cleaning the unguarded side of an operating band saw that had not been shut down was pulled into a nip point and died."
+  ],
+  "site_hazards_to_check": [
+    "Equipment being serviced with no lock or tag on the power source",
+    "Energy sources not identified, such as hydraulic, pneumatic, or gravity",
+    "Stored energy not blocked or drained",
+    "Equipment marked \"high voltage\" that is treated as safe once unplugged",
+    "Unguarded moving parts on equipment that is still running",
+    "Co-workers who do not know equipment is locked out"
+  ],
+  "discussion_questions": [
+    "What energy sources does this equipment have, and how do we lock out each one?",
+    "How do we test that the equipment is really off before we start?",
+    "Who removes the lock and tag, and who do they tell first?"
+  ],
+  "attribution": {
+    "source": "CPWR",
+    "publisher": "CPWR — The Center for Construction Research and Training",
+    "copyright": "© 2017 CPWR — The Center for Construction Research and Training. All rights reserved.",
+    "license": "free-use-with-attribution",
+    "source_url": "https://www.cpwr.com/wp-content/uploads/TT-Lockout_Tagout.pdf",
+    "notice": "Adapted from a CPWR/NIOSH Toolbox Talk, produced under NIOSH cooperative agreement OH 009762. Reproduced with attribution for jobsite safety training; not an endorsement by CPWR or NIOSH."
+  },
+  "audit": {
+    "status": "approved",
+    "audited_at": "2026-09-30T14:01:48.440Z",
+    "osha_accuracy_verified": true,
+    "flags": [
+      "Verified against data/raw/cpwr-lockout-tagout-electrically-powered-equipment.md: definition, dozens of deaths/most electrocuted, 7 energy sources, lock/tell/tag/test/final-tag steps, block or drain stored energy, high-voltage stored energy, Luke band saw story. 29 CFR 1926.417 (verified on osha.gov: lockout and tagging of circuits) is the citation on the source.",
+      "Non-blocking scope note: 1926.417 requires tagging of de-energized circuits and controls; the talk's non-electrical energy steps (hydraulic, gravity, etc.) are CPWR best practice, not 1926.417 requirements, and the talk does not claim otherwise.",
+      "Provenance (non-blocking): CPWR content is copyrighted ('All rights reserved'); attribution block carries the (c) line, NIOSH cooperative-agreement credit and 'not an endorsement by CPWR or NIOSH' notice, matching docs/content-attribution.md. Keep the reminder that reuse remains under CPWR's free-use conditions (no standalone resale, attribution kept, no implied endorsement)."
+    ]
+  }
+}

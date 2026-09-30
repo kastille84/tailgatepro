@@ -4,6 +4,8 @@ import { Button } from "../../ui_comps/button";
 import { Checkbox } from "../../ui_comps/checkbox";
 import { ProgressModal } from "../../ui_comps/progress-modal";
 import { Spinner } from "../../ui_comps/spinner";
+import { UpgradeModal } from "../../ui_comps/upgrade-modal";
+import { useUpgradeModal } from "../../hooks/useUpgradeModal";
 import { useOnlineStatus } from "../../context/online-status";
 import { useCurrentUser } from "../../hooks/useCurrentUser";
 import { useDownloadDefenseBundle } from "../../hooks/useDownloadDefenseBundle";
@@ -29,6 +31,7 @@ export const JobsiteManager = () => {
   const canManageMembers = canManage && plan === "gc-portfolio";
 
   const { downloadBundle, isPending: isDownloadingBundle } = useDownloadDefenseBundle();
+  const upgrade = useUpgradeModal();
 
   const [showArchived, setShowArchived] = useState(false);
   const { jobsites, isLoading, isError } = useJobsites();
@@ -104,7 +107,13 @@ export const JobsiteManager = () => {
         isOpen={isFormOpen}
         onClose={() => setIsFormOpen(false)}
         jobsite={editing}
+        onPlanLimit={() => {
+          setIsFormOpen(false);
+          upgrade.open("fourth-site");
+        }}
       />
+
+      <UpgradeModal trigger={upgrade.trigger} onClose={upgrade.close} />
 
       {rosterJobsite && (
         <JobsiteRosterModal

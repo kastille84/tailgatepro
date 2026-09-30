@@ -1,5 +1,9 @@
 import type { Project, ProjectStatus } from "./project";
 
+/** How often subs must log a safety talk (Phase 11f). Weekly = Monday to
+ *  Sunday in the viewer's timezone. */
+export type MeetingCadence = "daily" | "weekly";
+
 /** One row of a jobsite's roster: a pending invite or an accepted sub. The
  *  invite token is never part of this shape — it only leaves the server via
  *  the invite email. */
@@ -28,6 +32,9 @@ export interface Jobsite {
   /** Per-jobsite GC plan (Phase 9b/9e) — `site_pro` unlocks the Defense
    *  Bundle ZIP export. Not blended with the GC company's own tier. */
   plan: "free" | "site_pro";
+  /** The GC's default cadence for this jobsite; a sub may tighten it for
+   *  itself but never relax it. */
+  meetingCadence: MeetingCadence;
   createdAt: string;
   subcontractors: JobsiteSubcontractor[];
 }
@@ -41,6 +48,7 @@ export interface JobsitePatch {
   name?: string;
   status?: ProjectStatus;
   archived?: boolean;
+  meetingCadence?: MeetingCadence;
 }
 
 /** POST /api/jobsites/:id/invite's response — email only, never the token. */
@@ -90,4 +98,25 @@ export interface JobsiteMember {
 
 export interface JobsiteMembersResult {
   members: JobsiteMember[];
+}
+
+/** One row of GET /api/jobsites/memberships (Phase 11f) — a jobsite the
+ *  caller's subcontractor company belongs to, with its cadence settings. */
+export interface JobsiteMembership {
+  jobsiteId: string;
+  jobsiteName: string;
+  /** The GC's default. */
+  jobsiteCadence: MeetingCadence;
+  /** This company's own override; null = inherits the GC's default. */
+  subCadence: MeetingCadence | null;
+  /** The stricter of the two — what compliance is actually scored against. */
+  effectiveCadence: MeetingCadence;
+}
+
+/** PATCH /api/jobsites/:id/my-cadence's response. */
+export interface MyCadenceResult {
+  jobsiteId: string;
+  jobsiteCadence: MeetingCadence;
+  subCadence: MeetingCadence | null;
+  effectiveCadence: MeetingCadence;
 }

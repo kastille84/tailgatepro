@@ -15,13 +15,14 @@ export const useGcSubcontractorScorecard = (
   companyId: string,
   date: string,
   tzOffset: number,
+  timeZone?: string,
 ) => {
   const { session } = useAuth();
 
   const query = useQuery({
-    queryKey: ["gcSubcontractorScorecard", companyId, { date, tzOffset }],
+    queryKey: ["gcSubcontractorScorecard", companyId, { date, tzOffset, timeZone }],
     queryFn: () =>
-      getGcSubcontractorScorecard(session!.access_token, companyId, date, tzOffset),
+      getGcSubcontractorScorecard(session!.access_token, companyId, date, tzOffset, timeZone),
     enabled: !!session && !!companyId,
   });
 

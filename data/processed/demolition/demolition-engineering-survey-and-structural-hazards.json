@@ -1,0 +1,59 @@
+{
+  "id": "demolition-engineering-survey-and-structural-hazards",
+  "title": "Demolition: Survey First, Then Take It Down Top to Bottom",
+  "primary_trade": "Demolition",
+  "trade_tags": [
+    "Demolition",
+    "General Construction"
+  ],
+  "osha_standards": [
+    "29 CFR 1926.850",
+    "29 CFR 1926.854",
+    "29 CFR 1926.858",
+    "29 CFR 1926.859"
+  ],
+  "estimated_minutes": 5,
+  "summary": "Demolition has hidden hazards, such as changes to the original design, materials inside structural members, and damaged materials of unknown strength. A written engineering survey and constant inspection help control them.",
+  "talking_points": [
+    "Before work starts, plan the job: the methods, the equipment, and the safety measures. Inspect your PPE and wear the PPE that fits the task.",
+    "A written engineering survey is required for each structure. It checks the condition of the framing, floors, and walls and the chance of an unplanned collapse.",
+    "Brace or shore the walls and floors of damaged structures that workers must enter. Inspect and maintain stairs, passageways, and ladders, and light all stairways.",
+    "Find out what hazardous chemicals, gases, explosives, and flammable materials were in pipes, tanks, or equipment, and test and purge them. Survey for asbestos and other hazardous materials.",
+    "Take down exterior walls and floors from the top down. Do not cut or remove load-carrying members on a floor until all stories above it are gone.",
+    "No wall one story or taller may stand alone without lateral bracing unless it was built to. Leave all walls stable at the end of each shift. Stay off the top of a wall when weather makes it dangerous.",
+    "Do not demolish retaining walls until the earth is braced or the neighboring structures are underpinned. Dismantle steel column by column and tier by tier.",
+    "Crane ball work: only workers who are needed may be in the area. The ball must not weigh more than 50 percent of the crane's rated load. A competent person inspects as the work goes on, and no one works where weak floors, walls, or loose material are not fixed by shoring or bracing."
+  ],
+  "site_hazards_to_check": [
+    "No written engineering survey for the structure",
+    "Damaged walls or floors that are not braced or shored",
+    "Hidden materials or changes in the structure that no one has checked",
+    "Free-standing walls with no lateral bracing",
+    "Pipes, tanks, or equipment with unknown chemicals, gases, or flammables inside",
+    "Unlit or damaged stairs, passageways, or ladders",
+    "Workers in the swing area of a crane ball or clamshell"
+  ],
+  "discussion_questions": [
+    "Where is the written engineering survey, and what does it say about this structure?",
+    "Which walls or floors are weak, and how are they braced?",
+    "Who is the competent person inspecting today, and what do we do if they find a hazard?"
+  ],
+  "attribution": {
+    "source": "OSHA",
+    "publisher": "Occupational Safety and Health Administration (OSHA)",
+    "copyright": "U.S. Government work — public domain.",
+    "license": "public-domain",
+    "source_url": "https://www.osha.gov/sites/default/files/publications/demolition_cleanup.pdf",
+    "notice": "Adapted from OSHA Fact Sheet, Demolition and Cleanup (2005). Reproduced with attribution for jobsite safety training; not an endorsement by OSHA."
+  },
+  "audit": {
+    "status": "approved",
+    "audited_at": "2026-09-30T14:01:48.440Z",
+    "osha_accuracy_verified": true,
+    "flags": [
+      "Verified against data/raw/osha-demolition-and-cleanup-fact-sheet.md (OSHA fact sheet, 10/2005). Standards checked against regulation text on osha.gov: 1926.850(a) engineering survey, 850(j) top-down, 854(b)-(d),(h) wall bracing/weather/load-bearing members/retaining walls, 858 steel column by column, 859(b) ball <= 50% of rated load, 859(f) cornices, 859(g) competent-person inspections.",
+      "Non-blocking: fact sheet says walls \"one story in height or higher\" need bracing; 1926.854(b) text reads \"more than one story\". Talk follows the (more conservative) fact sheet; acceptable.",
+      "Harwood check: OSHA-authored fact sheet."
+    ]
+  }
+}

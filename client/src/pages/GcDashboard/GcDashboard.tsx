@@ -34,7 +34,11 @@ const getLocalDateAndTzOffset = () => {
   const year = now.getFullYear();
   const month = String(now.getMonth() + 1).padStart(2, "0");
   const day = String(now.getDate()).padStart(2, "0");
-  return { date: `${year}-${month}-${day}`, tzOffset: now.getTimezoneOffset() };
+  return {
+    date: `${year}-${month}-${day}`,
+    tzOffset: now.getTimezoneOffset(),
+    timeZone: Intl.DateTimeFormat().resolvedOptions().timeZone,
+  };
 };
 
 /** The GC compliance dashboard, reached from the Dashboard hub. Online-only,
@@ -44,8 +48,8 @@ export const GcDashboard = () => {
   const { user, loading } = useAuth();
   const { isOnline } = useOnlineStatus();
 
-  const { date, tzOffset } = getLocalDateAndTzOffset();
-  const { overview, isLoading, isError } = useGcOverview(date, tzOffset);
+  const { date, tzOffset, timeZone } = getLocalDateAndTzOffset();
+  const { overview, isLoading, isError } = useGcOverview(date, tzOffset, timeZone);
 
   const [selectedSub, setSelectedSub] = useState<GcSubCompliance | undefined>(
     undefined,
@@ -75,10 +79,10 @@ export const GcDashboard = () => {
         <StyledHeroInner>
           <StyledEyebrow>GC Compliance</StyledEyebrow>
           <StyledHeadline id="gc-dashboard-hero-heading">
-            Today's job sites
+            Job site compliance
           </StyledHeadline>
           <StyledLede>
-            Which linked subcontractors have logged a safety talk today.
+            Which linked subcontractors have logged a safety talk for their current period — today, or this week for a weekly cadence.
           </StyledLede>
         </StyledHeroInner>
       </StyledHero>
@@ -87,7 +91,7 @@ export const GcDashboard = () => {
         <StyledContainer>
           {!isOnline && (
             <StyledOfflineNote role="status">
-              You're offline. Reconnect to see today's compliance status.
+              You're offline. Reconnect to see current compliance status.
             </StyledOfflineNote>
           )}
 

@@ -1,4 +1,6 @@
 import type { GcJobsite, GcSubCompliance } from "../../interfaces/gcDashboard";
+import { useUpgradeModal } from "../../hooks/useUpgradeModal";
+import { UpgradeModal } from "../../ui_comps/upgrade-modal";
 import { StyledOriginBadge } from "../projects/styles";
 import { SubComplianceRow } from "./SubComplianceRow";
 import {
@@ -19,6 +21,8 @@ interface JobsiteListProps {
 /** The GC's linked jobsites, each with its subs' compliance status for the
  *  requested day. */
 export const JobsiteList = ({ jobsites, onSelectSub }: JobsiteListProps) => {
+  const upgrade = useUpgradeModal();
+
   if (jobsites.length === 0) {
     return (
       <StyledEmpty>
@@ -54,12 +58,23 @@ export const JobsiteList = ({ jobsites, onSelectSub }: JobsiteListProps) => {
                   key={sub.companyId ?? `locked-${index}`}
                   sub={sub}
                   onSelect={onSelectSub}
+                  onUnlock={() =>
+                    upgrade.open("sub-blur", {
+                      subCount: jobsite.subs.length,
+                      siteName: jobsite.name,
+                    })
+                  }
                 />
               ))}
             </StyledSubList>
           )}
         </StyledJobsiteSection>
       ))}
+      <UpgradeModal
+        trigger={upgrade.trigger}
+        params={upgrade.params}
+        onClose={upgrade.close}
+      />
     </>
   );
 };

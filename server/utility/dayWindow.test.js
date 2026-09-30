@@ -1,7 +1,7 @@
 // Plain CommonJS — no `import` (see vitest.config.js / CLAUDE.md). A pure
 // function, so no mocking is needed.
 
-const { dayWindow } = require("./dayWindow");
+const { dayWindow, weekWindow } = require("./dayWindow");
 
 describe("dayWindow", () => {
   it("should return a UTC midnight window unchanged for tzOffset 0", () => {
@@ -88,5 +88,91 @@ describe("dayWindow", () => {
       start: "2028-02-29T00:00:00.000Z",
       end: "2028-03-01T00:00:00.000Z",
     });
+  });
+});
+
+describe("weekWindow", () => {
+  it("should start on the same day when the date is a Monday", () => {
+    expect(weekWindow({ date: "2026-09-21", tzOffset: 0 })).toEqual({
+      start: "2026-09-21T00:00:00.000Z",
+      end: "2026-09-28T00:00:00.000Z",
+    });
+  });
+
+  it("should start on the preceding Monday for a mid-week date", () => {
+    expect(weekWindow({ date: "2026-09-23", tzOffset: 0 })).toEqual({
+      start: "2026-09-21T00:00:00.000Z",
+      end: "2026-09-28T00:00:00.000Z",
+    });
+  });
+
+  it("should include Sunday in the week that started the prior Monday", () => {
+    expect(weekWindow({ date: "2026-09-27", tzOffset: 0 })).toEqual({
+      start: "2026-09-21T00:00:00.000Z",
+      end: "2026-09-28T00:00:00.000Z",
+    });
+  });
+
+  it("should roll back across a month and year boundary", () => {
+    // 2027-01-01 is a Friday; its week began Monday 2026-12-28.
+    expect(weekWindow({ date: "2027-01-01", tzOffset: 0 })).toEqual({
+      start: "2026-12-28T00:00:00.000Z",
+      end: "2027-01-04T00:00:00.000Z",
+    });
+  });
+
+  it("should apply the client's tzOffset to the local Monday midnight", () => {
+    expect(weekWindow({ date: "2026-09-23", tzOffset: 240 })).toEqual({
+      start: "2026-09-21T04:00:00.000Z",
+      end: "2026-09-28T04:00:00.000Z",
+    });
+  });
+
+  it("should reject an invalid date the same way dayWindow does", () => {
+    expect(() => weekWindow({ date: "nope", tzOffset: 0 })).toThrow(
+      "date must be in YYYY-MM-DD format",
+    );
+  });
+});
+
+describe("DST-exact windows with timeZone", () => {
+  const { dayWindow: dw, weekWindow: ww } = require("./dayWindow");
+  const NY = "America/New_York";
+  const hours = ({ start, end }) => (new Date(end) - new Date(start)) / 3600000;
+
+  it("makes the spring-forward day 23h and the fall-back day 25h", () => {
+    expect(hours(dw({ date: "2026-03-08", tzOffset: 300, timeZone: NY }))).toBe(23);
+    expect(hours(dw({ date: "2026-11-01", tzOffset: 240, timeZone: NY }))).toBe(25);
+    expect(dw({ date: "2026-03-08", tzOffset: 300, timeZone: NY }).start).toBe("2026-03-08T05:00:00.000Z");
+    expect(dw({ date: "2026-03-08", tzOffset: 300, timeZone: NY }).end).toBe("2026-03-09T04:00:00.000Z");
+  });
+
+  it("keeps an ordinary day at 24h", () => {
+    expect(hours(dw({ date: "2026-06-10", tzOffset: 240, timeZone: NY }))).toBe(24);
+  });
+
+  it("makes DST-spanning weeks 167h and 169h", () => {
+    expect(hours(ww({ date: "2026-03-08", tzOffset: 300, timeZone: NY }))).toBe(167);
+    expect(hours(ww({ date: "2026-11-01", tzOffset: 240, timeZone: NY }))).toBe(169);
+  });
+
+  it("supports other zones", () => {
+    expect(dw({ date: "2026-06-10", tzOffset: -330, timeZone: "Asia/Kolkata" }).start).toBe("2026-06-09T18:30:00.000Z");
+    expect(hours(dw({ date: "2026-03-29", tzOffset: -60, timeZone: "Europe/Berlin" }))).toBe(23);
+  });
+
+  it("handles a zone whose DST jump skips midnight", () => {
+    // Asia/Beirut springs forward at 00:00 on the last Sunday of March.
+    expect(hours(dw({ date: "2026-03-29", tzOffset: -120, timeZone: "Asia/Beirut" }))).toBe(23);
+  });
+
+  it("rejects an invalid timeZone with 400", () => {
+    expect(() => dw({ date: "2026-06-10", tzOffset: 0, timeZone: "Not/AZone" })).toThrow(
+      expect.objectContaining({ statusCode: 400 }),
+    );
+  });
+
+  it("falls back to flat tzOffset when timeZone is absent", () => {
+    expect(hours(dw({ date: "2026-03-08", tzOffset: 300 }))).toBe(24);
   });
 });

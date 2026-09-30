@@ -80,16 +80,16 @@ deliberate copy decision, not made here.
 |---|---|---|---|---|
 | Trade Free — 1 user account | Implemented (9c) | `server/services/seats.js`, `companyInvites.js`, `users.js` | Free counts every role, so the signup admin is the one seat; enforced on invite and on accept. No dedicated upgrade UI (toast only) | — |
 | Trade Free — full offline PWA | Implemented | `client/src/service-worker.ts`, `client/src/utils/db/*`, `*ReplayHandler.ts` | Real-device airplane-mode pass still owed (see tasks Phase 3) | — |
-| Trade Free — 30 core OSHA templates | Done (9c) | 30 talks flagged `is_core` (`scripts/lib/talkRow.js` `CORE_TALK_SLUGS`); `server/services/talks.js` hides the rest from Trade Free | — | Built (9c); Free sees 30 of ~112 global talks, upgrade banner in `ContentLibrary.tsx` |
+| Trade Free — 30 core OSHA templates | Done (9c) | 30 talks flagged `is_core` (`scripts/lib/talkRow.js` `CORE_TALK_SLUGS`); `server/services/talks.js` hides the rest from Trade Free | — | Built (9c); Free sees 30 of ~134 global talks, upgrade banner in `ContentLibrary.tsx` |
 | Trade Free — digital signatures + photo proof | Implemented | `signature-pad`, `SignaturesStep.tsx`, `PhotoCapture.tsx`, `server/services/signatures.js` | — | — |
 | Trade Free — auto-email PDF to GCs | Implemented | `pdfGenerationQueue.js`, `email.js` | Sends only when a GC admin or `gc_contact_email` exists; logs instead of sending if Mailgun is unset | — |
 | Trade Free — 30-day in-app history | Implemented (9c) | `meetingLogs.listForCompany` / `getMeeting` / `getPdfUrl` apply `historyDays`; `MeetingHistory.tsx` shows the hidden-count banner | — | — |
-| Trade Free — app watermark | Implemented | `pdfGeneration.js` (footer line for non-premium tiers) | A text footer, not an overlay; no "Claim your free GC portal" CTA (strategy doc §7) | 9g |
+| Trade Free — app watermark | Implemented | `pdfGeneration.js` (footer line for non-premium tiers) | A text footer, not an overlay; the "Claim Your Free GC Portal" CTA (strategy doc §7) is a separate GC block linking to `/signup`, shown on every tier, with no per-log claim token | — |
 | Trade Pro — up to 8 foremen | Implemented (9c) | as above | Counts foreman-role users + pending foreman invites; admins/safety managers are free | — |
 | Trade Pro — 5-year legal archive | Implemented (9c) | `MeetingHistory.tsx` (`/meetings`), `archiveYears` in `PLAN_LIMITS`; nothing is ever purged | Retention is a policy guarantee (5 yrs, crew photos follow their meeting), not a purge job | — |
 | Trade Pro — 1-click OSHA Defense Bundle (ZIP) | Implemented | `services/meetingLogs.js` `getDefenseBundleEntries`, `services/zipBundle.js`, `GET /api/meetings/defense-bundle` | Every completed log the company has ever logged, across every project/GC, plus an `index.csv` (labeled by GC/client, not by the caller's own company); gated on `archiveYears > 0` (Trade Pro/Enterprise). Landed alongside this row rather than being audited as a pre-existing gap — see `docs/sub-defense-bundle-design.md` | — |
 | Trade Pro — custom logo, no watermark | Implemented | `companies.js` controller, `pdfGeneration.js`, `LogoUpload.tsx` | — | — |
-| Trade Pro — 500+ OSHA library | Missing | 34 global talks | ~7% of the claim; licensing question at tasks.md 1749-1754 | Reword (9a) + Build (9e) |
+| Trade Pro — 500+ OSHA library | Missing | 134 global talks | ~27% of the claim; licensing question at tasks.md 1749-1754 | Reword (9a) + Build (9e, 11p) |
 | Trade Pro — AI Talk Builder | Missing | Only manual authoring (`TalkForm.tsx`) | No LLM code; see tasks.md 1736-1741 | Reword (9a) + Build (9e) |
 | Trade Pro — AI multi-language audio, 10+ languages | Partial | `translation.js` (Google Translate, custom talks only), `useTalkAudio.ts` (browser `speechSynthesis`) | Not AI voice; depends on device voices; language count unverified; global library not translated | Reword (9a) |
 | Enterprise — unlimited foremen | Implemented (9c) | `PLAN_LIMITS` `foremanSeats: null` | No cap applied | — |
@@ -129,7 +129,7 @@ deliberate copy decision, not made here.
 | "Can't be back-dated" | Landing | Partial | `held_at` plumbing exists (`utility/heldAt.js`); server clamping not verified | Verify (9a) |
 | Auto-SMS nudges every Monday | GcSection | Missing | See above | Reword (9a) |
 | "AI topic generator" / "generate a custom hazard talk" | ComparisonTable, HowItWorks | Missing | No AI generation | Reword (9a) |
-| "500+ OSHA talks" | ComparisonTable | Missing | 34 talks | Reword (9a) |
+| "500+ OSHA talks" | ComparisonTable | Missing | 134 talks; live copy no longer states a count (reworded in 9a) | Reword (done, 11n) |
 | "30-second field start", "rollout 1-4 weeks" | ComparisonTable | Unverifiable | Not measured anywhere | Reword (9a) |
 | Flat per-site pricing / no seat fees | Pricing | Missing | Display only; no billing | Defer |
 | Text + AI audio in 10+ languages | ComparisonTable | Partial | See the Trade Pro row | Reword (9a) |
@@ -144,13 +144,12 @@ From `docs/pricing-and-positioning-strategy_V2.md`:
 - §5: permanent history retention for GC Site Pro/Portfolio; "Custom Company Form Builder" on Trade Pro
   (deliberately dropped: the form builder is deferred, see the update above); Procore/ACC as a Trade Pro add-on; SMS "All Sites" and Procore/ACC
   "Multi-Project Routing" on Portfolio; Defense Bundle "Portfolio-Wide Search".
-- §2: smart tagging (trade, phase, equipment, natural-language search), QR pass and roster check-in, SOC-2 and
+- §2: smart tagging (trade, phase, equipment, natural-language search; a non-AI keyword search over title,
+  trade tags, hazards and OSHA standards has since shipped, see tasks.md 11m), QR pass and roster check-in, SOC-2 and
   cryptographic timestamping.
 - §6: every conversion-trigger modal (2nd foreman, 30-day lockout, watermark trap, non-English audio prompt,
   sub #2 blur, SMS upsell, the 4th-site "$447 vs $499" prompt, policy-push prompt, scorecard prompt). Only the
   Trade Pro non-English upsell note and the PDF watermark exist.
-- §7: PDF footer CTA "Claim Your Free GC Portal" (the shipped watermark reads "Logged via TailgatePro (Free
-  plan)" with no CTA).
 
 ## What is delivered today
 

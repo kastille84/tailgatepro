@@ -40,6 +40,7 @@ router.get(
     query("tzOffset")
       .isInt({ min: -840, max: 840 })
       .withMessage("tzOffset must be minutes between -840 and 840"),
+    query("timeZone").optional().isString().isLength({ max: 64 }).withMessage("timeZone must be an IANA time zone"),
   ],
   validate,
   getOverview,
@@ -120,6 +121,7 @@ router.get(
     query("tzOffset")
       .isInt({ min: -840, max: 840 })
       .withMessage("tzOffset must be minutes between -840 and 840"),
+    query("timeZone").optional().isString().isLength({ max: 64 }).withMessage("timeZone must be an IANA time zone"),
   ],
   validate,
   listSubcontractorScorecards,
@@ -138,6 +140,7 @@ router.get(
     query("tzOffset")
       .isInt({ min: -840, max: 840 })
       .withMessage("tzOffset must be minutes between -840 and 840"),
+    query("timeZone").optional().isString().isLength({ max: 64 }).withMessage("timeZone must be an IANA time zone"),
   ],
   validate,
   getSubcontractorScorecard,
@@ -156,6 +159,7 @@ router.get(
     query("tzOffset")
       .isInt({ min: -840, max: 840 })
       .withMessage("tzOffset must be minutes between -840 and 840"),
+    query("timeZone").optional().isString().isLength({ max: 64 }).withMessage("timeZone must be an IANA time zone"),
   ],
   validate,
   getPolicyPush,

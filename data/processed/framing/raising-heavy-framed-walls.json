@@ -1,0 +1,56 @@
+{
+  "id": "raising-heavy-framed-walls",
+  "title": "Raising Tall Framed Walls Without a Collapse",
+  "primary_trade": "Framing",
+  "trade_tags": [
+    "Framing",
+    "Carpentry",
+    "General Construction"
+  ],
+  "osha_standards": [
+    "OSH Act Section 5(a)(1) General Duty Clause"
+  ],
+  "estimated_minutes": 5,
+  "summary": "Tall balloon framed walls can get too heavy to hold by hand and fall back on the crew. OSHA reported 22 collapses from 1999 to 2004, with 5 deaths and 28 injuries.",
+  "talking_points": [
+    "Balloon framed walls run the full height from the floor sill plate to the roof, usually over 10 feet. Today's walls are heavier than they used to be.",
+    "In one case, a wall about 18 feet tall and 23 feet wide weighed roughly 2,300 pounds. Fifteen carpenters lifted it by hand. It fell back on them, pinning two workers.",
+    "Plan the job. Find the weight of the wall, hold a pre-lift meeting, and have a competent person supervise the whole lift. Do not guess the weight.",
+    "Use a crane with approved attachments, or a forklift of the right size and capacity, to raise and place walls when you can.",
+    "Use manual or powered wall jacks to help lift and place the wall.",
+    "Set up a limited access zone as long as the wall and as wide as the wall height plus 4 feet. Only workers actively lifting the wall may enter. Keep it in place until the wall is braced.",
+    "Secure bottom plates with metal bands at least 1 inch wide, nailed to the floor joists at each end and no more than 6 feet apart, or use another adequate method.",
+    "If you lift by hand, keep enough workers on the lift the whole time so the wall cannot fall back and no one is overworked. Do not let people drop out mid-lift."
+  ],
+  "site_hazards_to_check": [
+    "Walls over 10 feet tall with no known weight",
+    "Not enough workers on a manual lift",
+    "Workers standing in the fall zone who are not part of the lift",
+    "Bottom plates not banded or secured",
+    "Crane or forklift attachments that are not approved or not rated for the wall",
+    "Walls with extras attached, such as a chimney chase"
+  ],
+  "discussion_questions": [
+    "How much does this wall weigh, and how do we know?",
+    "Who is the competent person in charge of this lift, and where is the limited access zone?",
+    "What do we do if the wall feels too heavy while it is going up?"
+  ],
+  "attribution": {
+    "source": "OSHA",
+    "publisher": "Occupational Safety and Health Administration (OSHA)",
+    "copyright": "U.S. Government work — public domain.",
+    "license": "public-domain",
+    "source_url": "https://www.osha.gov/sites/default/files/publications/shib111705.pdf",
+    "notice": "Adapted from OSHA Safety and Health Information Bulletin SHIB 11-17-2005, Hazards of Manually Lifting Balloon Framed Walls. Reproduced with attribution for jobsite safety training; not an endorsement by OSHA."
+  },
+  "audit": {
+    "status": "approved",
+    "audited_at": "2026-09-30T14:01:48.440Z",
+    "osha_accuracy_verified": true,
+    "flags": [
+      "Verified against data/raw/osha-hazards-of-manually-lifting-balloon-framed-walls.md (SHIB 11-17-2005): 22 collapses Jul 1999-Jul 2004, 5 deaths, 28 injuries; 2,300 lb wall, 15 carpenters; LAZ = wall height + 4 ft along full length; 1-inch bands nailed to joists at each end, max 6 ft apart; crane/forklift/jacks; pre-lift meeting and competent person.",
+      "Mapping to General Duty Clause 5(a)(1) matches the bulletin (advisory, no specific standard). Talk does not claim the bulletin is a standard.",
+      "Harwood check: OSHA-authored bulletin."
+    ]
+  }
+}

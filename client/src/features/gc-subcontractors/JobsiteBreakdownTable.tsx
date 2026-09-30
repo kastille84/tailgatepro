@@ -21,7 +21,8 @@ export const JobsiteBreakdownTable = ({ jobsites }: JobsiteBreakdownTableProps) 
         <StyledJobsiteMeta>
           <StyledJobsiteName>{jobsite.jobsiteName}</StyledJobsiteName>
           <StyledJobsiteDays>
-            Logged {jobsite.loggedDays} of {jobsite.expectedDays} expected days
+            Logged {jobsite.loggedPeriods} of {jobsite.expectedPeriods} expected{" "}
+            {jobsite.cadence === "weekly" ? "weeks" : "days"}
           </StyledJobsiteDays>
         </StyledJobsiteMeta>
         <ScoreBadge score={jobsite.score} />

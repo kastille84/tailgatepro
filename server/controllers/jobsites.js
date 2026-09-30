@@ -32,11 +32,11 @@ exports.createJobsite = async (req, res, next) => {
 
 exports.updateJobsite = async (req, res, next) => {
   try {
-    const { name, status, archived } = req.body;
+    const { name, status, archived, meetingCadence } = req.body;
     const data = await jobsitesService.update({
       id: req.params.id,
       gcCompanyId: req.user.companyId,
-      patch: { name, status, archived },
+      patch: { name, status, archived, meetingCadence },
     });
     return res.status(200).json({ success: true, data });
   } catch (error) {
@@ -176,6 +176,32 @@ exports.setMembers = async (req, res, next) => {
       jobsiteId: req.params.id,
       gcCompanyId: req.user.companyId,
       userIds: req.body.userIds,
+    });
+    return res.status(200).json({ success: true, data });
+  } catch (error) {
+    return next(error);
+  }
+};
+
+// GET /api/jobsites/memberships — a subcontractor company's own job sites
+// with their meeting cadence (GC default, own override, effective).
+exports.listMemberships = async (req, res, next) => {
+  try {
+    const data = await jobsitesService.listMemberships(req.user.companyId);
+    return res.status(200).json({ success: true, data });
+  } catch (error) {
+    return next(error);
+  }
+};
+
+// PATCH /api/jobsites/:id/my-cadence — the caller's company tightens (or, with
+// null, clears) its own cadence on a jobsite it belongs to.
+exports.setMyCadence = async (req, res, next) => {
+  try {
+    const data = await jobsitesService.setMyCadence({
+      jobsiteId: req.params.id,
+      companyId: req.user.companyId,
+      cadence: req.body.cadence,
     });
     return res.status(200).json({ success: true, data });
   } catch (error) {

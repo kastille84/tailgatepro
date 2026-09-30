@@ -12,12 +12,12 @@ import { getGcPolicyPush } from "../services/apiGc";
  * Online-only, read-only — no offline cache fallback, same reasoning as
  * `useGcOverview`/`useGcSubcontractorScorecards`.
  */
-export const useGcPolicyPush = (date: string, tzOffset: number) => {
+export const useGcPolicyPush = (date: string, tzOffset: number, timeZone?: string) => {
   const { session } = useAuth();
 
   const query = useQuery({
-    queryKey: ["gcPolicyPush", { date, tzOffset }],
-    queryFn: () => getGcPolicyPush(session!.access_token, date, tzOffset),
+    queryKey: ["gcPolicyPush", { date, tzOffset, timeZone }],
+    queryFn: () => getGcPolicyPush(session!.access_token, date, tzOffset, timeZone),
     enabled: !!session,
   });
 

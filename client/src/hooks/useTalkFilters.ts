@@ -2,6 +2,7 @@ import { useMemo, useState } from "react";
 
 import type { SelectOption } from "../ui_comps/select";
 import type { Talk } from "../interfaces/talk";
+import { searchTalks } from "../utils/talkSearch";
 
 const ALL_TRADES = "all";
 
@@ -26,15 +27,14 @@ export const useTalkFilters = (
   );
 
   const visibleTalks = useMemo(() => {
-    const query = search.trim().toLowerCase();
-    return talks.filter((talk) => {
+    const filtered = talks.filter((talk) => {
       const matchesTrade =
         trade === ALL_TRADES || talk.tradeTags.includes(trade);
-      const matchesSearch = !query || talk.title.toLowerCase().includes(query);
       const matchesFavorite = !favoritesOnly || favoriteIds.has(talk.id);
       const matchesCustom = !customOnly || !talk.isGlobal;
-      return matchesTrade && matchesSearch && matchesFavorite && matchesCustom;
+      return matchesTrade && matchesFavorite && matchesCustom;
     });
+    return searchTalks(filtered, search);
   }, [talks, trade, search, favoritesOnly, favoriteIds, customOnly]);
 
   return {

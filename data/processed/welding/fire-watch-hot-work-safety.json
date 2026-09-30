@@ -1,0 +1,58 @@
+{
+  "id": "fire-watch-hot-work-safety",
+  "title": "Fire Watch Duties During Hot Work",
+  "primary_trade": "Welding",
+  "trade_tags": [
+    "Welding",
+    "General Construction"
+  ],
+  "osha_standards": [
+    "29 CFR 1926.352",
+    "29 CFR 1915.504"
+  ],
+  "estimated_minutes": 5,
+  "summary": "The fire watch is the first line of defense against fires during hot work. This OSHA card was written for shipyards (29 CFR 1915). Construction hot work is covered by 29 CFR 1926.352, and the card's core duties show what a good fire watch does on a construction job.",
+  "talking_points": [
+    "Hot work is any activity that makes fire or sparks, such as riveting, welding, burning, grinding, or powder-actuated tools. Fire watch workers are the first line of defense for other workers and property.",
+    "Stay alert and actively prevent and fight fires in the incipient (beginning) stage. The fire watch must be additional personnel assigned to guard against fire (29 CFR 1926.352(e)). Good practice, and a shipyard rule under 1915.504(c): do not do other duties along with fire watch while hot work is going on.",
+    "You need a clear view of all the hot work areas and quick access to them. Have the right fire extinguisher or a charged water hose ready. You must be instructed on the specific fire hazards and how to use the firefighting equipment (1926.352(e)).",
+    "Be able to communicate with the workers doing hot work.",
+    "Cover or isolate combustible materials that cannot be moved with fire-resistant blankets or flame-retardant gels. Wet down the area around the hot work.",
+    "Do not leave the area on breaks, during interruptions, or at shift end unless someone properly relieves you.",
+    "Keep the fire watch after hot work ends. Construction rule 1926.352(e): for a sufficient period of time. The shipyard card says at least 30 minutes unless your employer releases you after a site inspection. Good practice: use 30 minutes as your minimum unless your site's hot work rules require longer.",
+    "Shut down any hot work you think is unsafe and get conditions fixed. If a fire is beyond the beginning stage, warn workers, activate the alarm, and leave the area. Note: this card is for shipyards, so follow your own site's hot work and confined space rules."
+  ],
+  "site_hazards_to_check": [
+    "Combustible materials near sparks that are not covered or removed",
+    "Fire watch who cannot see all hot work areas",
+    "No extinguisher or charged hose at the hot work area",
+    "Fire watch assigned other duties during hot work (good practice; shipyard rule)",
+    "Hot work area left unattended on breaks or at shift end",
+    "No way for the fire watch to communicate with the welder"
+  ],
+  "discussion_questions": [
+    "Who is the fire watch today, and can they see every spot where sparks land?",
+    "What is our plan if a small fire starts, and what do we do if it gets past that stage?",
+    "How long will the fire watch stay after the hot work ends?"
+  ],
+  "attribution": {
+    "source": "OSHA",
+    "publisher": "Occupational Safety and Health Administration (OSHA)",
+    "copyright": "U.S. Government work — public domain.",
+    "license": "public-domain",
+    "source_url": "https://www.osha.gov/sites/default/files/publications/OSHA_3494.pdf",
+    "notice": "Adapted from OSHA Quick Card, Fire Watch Safety during Hot Work in Shipyards (OSHA 3494-02N-12). Reproduced with attribution for jobsite safety training; not an endorsement by OSHA."
+  },
+  "audit": {
+    "status": "approved",
+    "audited_at": "2026-09-30T14:01:48.440Z",
+    "osha_accuracy_verified": true,
+    "flags": [
+      "Verified against data/raw/osha-fire-watch-safety-during-hot-work.md (OSHA 3494 Quick Card, shipyards): definition, first line of defense, incipient fires, other-duties ban, view/access, extinguisher or charged hose, communication, blankets/gels/wet-down, do not abandon, 30 minutes, shut down unsafe work, alarm and exit.",
+      "Item (1) mapping confirmed against 1926.352 text on osha.gov: (a)-(c) move/confine heat, sparks and slag, (d) extinguishing equipment ready, (e) additional personnel to guard against fire during and for a sufficient period after the work, instructed on hazards and equipment. Construction has no 30-minute figure and no other-duties ban; those are shipyard 1915.504 requirements. Approved because the duties are conservative and transferable, after rewording so shipyard-only rules are not presented as construction requirements (edits listed). Talk already carried a \"this card is for shipyards\" note.",
+      "Non-blocking: no hot work permit content (source has none).",
+      "1915.504 kept in osha_standards only as the source citation; talk now labels it shipyard.",
+      "Harwood check: OSHA-authored quick card."
+    ]
+  }
+}

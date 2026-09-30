@@ -9,6 +9,7 @@ import { Select } from "../../ui_comps/select";
 import { useCreateJobsite } from "../../hooks/useCreateJobsite";
 import { useUpdateJobsite } from "../../hooks/useUpdateJobsite";
 import type { Jobsite } from "../../interfaces/jobsite";
+import { PlanLimitError } from "../../utils/PlanLimitError";
 import {
   StyledActions,
   StyledUpgradeLink,
@@ -24,6 +25,7 @@ const jobsiteSchema = z.object({
     .min(1, "Job site name is required")
     .max(120, "Job site name is too long"),
   status: z.enum(["active", "completed"]).optional(),
+  meetingCadence: z.enum(["daily", "weekly"]).optional(),
 });
 
 type JobsiteValues = z.infer<typeof jobsiteSchema>;
@@ -34,11 +36,13 @@ interface JobsiteFormProps {
   /** Present ⇒ edit mode; absent ⇒ create mode. The manager gives this
    *  component a `key` so it remounts (and re-seeds) when the target changes. */
   jobsite?: Jobsite;
+  /** Called when creating a site is rejected by the plan's site cap. */
+  onPlanLimit?: () => void;
 }
 
 /** Create / rename / change-status / archive-restore a GC-owned jobsite.
  *  Archiving is reversible, so it takes no confirm dialog. */
-export const JobsiteForm = ({ isOpen, onClose, jobsite }: JobsiteFormProps) => {
+export const JobsiteForm = ({ isOpen, onClose, jobsite, onPlanLimit }: JobsiteFormProps) => {
   const isEdit = Boolean(jobsite);
   const isArchived = Boolean(jobsite?.archivedAt);
   const { createJobsite, isCreating, planLimitError: createLimitError } = useCreateJobsite();
@@ -55,6 +59,7 @@ export const JobsiteForm = ({ isOpen, onClose, jobsite }: JobsiteFormProps) => {
     defaultValues: {
       name: jobsite?.name ?? "",
       status: jobsite?.status ?? "active",
+      meetingCadence: jobsite?.meetingCadence ?? "daily",
     },
   });
 
@@ -63,14 +68,20 @@ export const JobsiteForm = ({ isOpen, onClose, jobsite }: JobsiteFormProps) => {
       if (jobsite) {
         await updateJobsite({
           id: jobsite.id,
-          patch: { name: values.name, status: values.status },
+          patch: {
+            name: values.name,
+            status: values.status,
+            meetingCadence: values.meetingCadence,
+          },
         });
       } else {
         await createJobsite({ name: values.name });
       }
       onClose();
-    } catch {
+    } catch (error) {
       // useCreateJobsite / useUpdateJobsite already surface the failure as a toast.
+      // Hitting the site cap on create also hands off to the upsell modal.
+      if (!jobsite && error instanceof PlanLimitError) onPlanLimit?.();
     }
   };
 
@@ -89,6 +100,7 @@ export const JobsiteForm = ({ isOpen, onClose, jobsite }: JobsiteFormProps) => {
 
   const nameId = "jobsite-name";
   const statusId = "jobsite-status";
+  const cadenceId = "jobsite-cadence";
 
   return (
     <Modal
@@ -125,6 +137,23 @@ export const JobsiteForm = ({ isOpen, onClose, jobsite }: JobsiteFormProps) => {
                 { value: "completed", label: "Completed" },
               ]}
               {...register("status")}
+            />
+          </FormField>
+        )}
+
+        {isEdit && (
+          <FormField
+            id={cadenceId}
+            label="Safety talk cadence"
+            hint="How often each subcontractor must log a talk. A weekly week runs Monday to Sunday; a subcontractor can choose to log daily instead."
+          >
+            <Select
+              id={cadenceId}
+              options={[
+                { value: "daily", label: "Daily" },
+                { value: "weekly", label: "Weekly" },
+              ]}
+              {...register("meetingCadence")}
             />
           </FormField>
         )}

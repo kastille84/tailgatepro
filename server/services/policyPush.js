@@ -152,13 +152,13 @@ const listCompletedLogsForTalkSince = async (projectIds, talkId, since) => {
 // -- it deliberately does not reach for subScorecard.js's per-day rolling
 // machinery, which solves a different problem (a 30-day *rate* needing daily
 // granularity/proration).
-const getComplianceRollup = async (gcCompanyId, { date, tzOffset, allowedJobsiteIds = null }) => {
+const getComplianceRollup = async (gcCompanyId, { date, tzOffset, timeZone, allowedJobsiteIds = null }) => {
   const pushState = await getCurrentPush(gcCompanyId);
   if (!pushState.talkId) {
     return { ...pushState, jobsites: [], totals: { subs: 0, logged: 0, missing: 0 } };
   }
 
-  const { end } = dayWindow({ date, tzOffset });
+  const { end } = dayWindow({ date, tzOffset, timeZone });
 
   const [jobsiteRows, allProjects] = await Promise.all([
     gcDashboardService.listActiveJobsites(gcCompanyId, allowedJobsiteIds),

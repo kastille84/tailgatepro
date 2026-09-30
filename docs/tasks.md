@@ -1614,7 +1614,7 @@ Plan: `~/.claude/plans/let-s-wok-on-6e-jolly-goblet.md`.
   - A merged same-name/same-sub jobsite entry reports only the sub's **earliest** project id as `projectId`
     (what a drill-in would open) — one more concrete argument for the GC-owned canonical jobsite model later
 - [ ] Not in this pass, tracked not dropped: pagination for `GET /meetings` past 200 rows; a DST-transition day
-      is treated as a flat 24h window by `dayWindow.js` (same simplification `held_at`'s formatting already has
+      is treated as a flat 24h window by `dayWindow.js` (fixed in 11h) (same simplification `held_at`'s formatting already has
       per 6b2's known limitations)
 - [ ] Verify (user, needs live Supabase with the 6b/6b2/6c SQL and data applied, one `gc` account linked to at
       least two subcontractor projects — one with a completed talk today, one without):
@@ -1697,8 +1697,7 @@ tests` surfaces are all pre-existing, in files this pass didn't touch — `Meeti
 
 ### Not in Phase 6 (tracked, not dropped)
 
-- [ ] Configurable meeting cadence (GC- or sub-defined, e.g. weekly) — daily is the v1 rule; only the 6a design
-      sketch and the window-parameterized compliance util (6e) prepare for it
+- [x] Configurable meeting cadence (GC- or sub-defined, e.g. weekly) — shipped as 11f below
 - Email invites & role enforcement, `gc_contact_email` supersession → Cross-cutting epic below
 - GC tier gating / blurred subs / SMS nudges, Procore/ACC sync, OSHA Defense ZIP, cross-project scorecards /
   multi-manager roles, GC-owned canonical jobsites → future
@@ -2746,7 +2745,7 @@ Costs one extra query per request for Free subs (`resolveEffectiveTier`) and per
     now returns "Tampered" on both sides; confirm a pre-feature meeting (no seal) shows no badge on either
     side.
 - [ ] AI Talk Builder and cloud AI voice (see ~1736-1741).
-- [ ] Grow the library toward 500+ (see ~1749-1754; currently 112).
+- [ ] Grow the library toward 500+ (see ~1749-1754; currently 134 after 11p).
 - [-] Multi-crew scheduling and equipment check-ins — **dropped** (2026-09-29). No tables or code existed.
       Workforce scheduling and equipment inspection logging are scope outside TailgatePro's core toolbox-talk
       compliance loop (run a talk → capture signatures → sealed PDF → GC visibility) and overlap dedicated
@@ -2763,8 +2762,10 @@ Costs one extra query per request for Free subs (`resolveEffectiveTier`) and per
 - [ ] Conversion-trigger modals from strategy doc §6 (2nd foreman, 30-day lockout, watermark, non-English audio,
       sub #2 blur, SMS, 4th-site "$447 vs $499", policy push, scorecard). Only the non-English upsell note and the
       watermark exist today.
-- [ ] PDF footer CTA "Claim Your Free GC Portal" (§7); the shipped watermark has no CTA.
-- [ ] Smart tagging / natural-language search, SOC-2, cryptographic timestamping (§2).
+- [x] PDF footer CTA "Claim Your Free GC Portal" (§7) — shipped as copy-only, linking to `/signup`; a
+      per-log tracked claim link is not built.
+- [ ] Smart tagging / natural-language search, SOC-2, cryptographic timestamping (§2). (Keyword search
+      over title/tags/hazards/OSHA shipped as 11m; NL search, site-phase/equipment tags still open.)
 - [ ] `plans.ts` listing gaps vs strategy doc §5 (permanent GC history, Procore/ACC add-on, Portfolio-wide
       search) — decide whether to list or drop. (Trade Pro form builder: dropped, deferred with the form builder.)
 
@@ -2787,8 +2788,9 @@ seeded until they get topic-specific content. Feeds the "grow the library" item 
       ("Driving & Transportation"); trade filter options are derived from data, no client change needed
 - [x] OSHA citations independently checked by `safety-auditor`; general-industry 1910 cites replaced with 1926
       counterparts (1910.1030 and 1910.1200 kept as HazCom / bloodborne-pathogen references)
-- [ ] Confirm who authored/licensed the Word library (`attribution.license` is `owner-provided-unverified`; the
-      docx has no author or source) before any of it is published
+- [x] Confirm who authored/licensed the Word library (`attribution.license` is `owner-provided-unverified`; the
+      docx has no author or source) — not confirmed; owner accepted the risk for the 3 remaining talks on 2026-09-30
+      (see 11o)
 - [x] Agency-source pass (government + CPWR only, per user): `@safety-collector` TBT replacement mode found sources for 67
       talks, `@safety-structurer` rebuilt 63 (4 rejected as unfit), `@safety-auditor` approved 50 and sent 13 back;
       16 more turned out to duplicate original talks. Ledger: `data/raw/_tbt-source-matches.json`
@@ -2818,18 +2820,21 @@ seeded until they get topic-specific content. Feeds the "grow the library" item 
       overlaps, no readable source) are dropped, not written. Placeholder files deleted; `build-tbt-talks.js` no longer
       writes unverified Word talks and lists them under "Dropped by decision" in the import report. Nothing in Supabase
       changes (none was seeded). Revisit only if an HVAC installer pack (259, 260, 021) is wanted, as a new sourced effort
-- [ ] Check CPWR reuse terms: several CPWR PDFs say "All rights reserved" / "verify reuse terms" (talks 010, 122, 139,
-      142, 144 were flagged); confirm they fall under the free-use-with-attribution basis in `docs/content-attribution.md`
-- [ ] Decide whether environmental-compliance talks 177 (pollution prevention) and 180 (drain protection) belong in a
-      worker-safety library (their legal basis is Clean Water Act / EPA, not OSHA)
+- [x] Check CPWR reuse terms — decided 2026-09-30: accepted as-is. Of the flagged talks, 122 (Noise) is NIOSH public
+      domain; 010, 139, 142, 144 are CPWR "all rights reserved" and stay under the free-use-with-attribution basis in
+      `docs/content-attribution.md` (no standalone resale, attribution and notice shown, no endorsement). No written
+      CPWR permission was requested; revisit if CPWR objects
+- [x] Environmental-compliance talks 177 (pollution prevention) and 180 (drain protection) — decided 2026-09-30: keep
+      both (EPA public domain; GCs face stormwater/CWA liability). Not OSHA-based, so they cite the General Duty Clause
 - [ ] (superseded by the two items above) Write topic-specific content for the 217 `needs_revision` talks (start with trades customers use most:
       general-construction, electrical, carpentry), then re-run `@safety-auditor` per trade
-- [ ] Decide the "imported but overlapping an existing talk" list in the report (delete the JSON to drop one)
+- [x] "Imported but overlapping an existing talk" list — decided 2026-09-30: 14 of the 15 were already dropped in the
+      126-talk cut; the one left, 037 Safe Isolation Verification, is kept (different angle from `equipment-safety-maintenance`)
 - [x] Seeded 2026-09-25 to both the non-prod and prod Supabase projects (`npm run seed:talks`, `NODE_ENV=production` for
       prod): 92 global talks in each (58 added to the 34 already there), verified row-by-row; the 34 originals were
       unchanged. Rollback if ever needed: delete `toolbox_talks` rows where `is_global` and `slug` is one of the 58
       new slugs (the 34 originals excluded). `docs/content-attribution.md` counts updated
-- [ ] Update marketing/pricing copy that quotes the library size (was 34; now 112 seeded, see `docs/pricing-promise-gaps.md`)
+- [x] Update marketing/pricing copy that quotes the library size (was 34; now 112 seeded, see `docs/pricing-promise-gaps.md`) — done as 11n
 - [ ] Decide whether the 62 out-of-scope talks (quality, IT security, ethics, procurement) belong in a separate
       non-safety library
 
@@ -2879,35 +2884,141 @@ they can be worked one at a time. Tick a box here **and** in its source phase wh
   - Verify (user, needs live Supabase): `node scripts/regenerate-pdfs.js --id <id>` dry run lists it; with
     `--apply` the downloaded PDF shows the current header/local-time format and the same seal fragment, Verify
     still says "Verified", an audit row has `regenerated: true`, and the GC gets no email.
-- [ ] 11f. Configurable meeting cadence (GC- or sub-defined, e.g. weekly instead of the
-      hardcoded daily rule) — `compliance.js`/`dayWindow.js` are already window-parameterized in
-      prep for this. See Phase 6 (~line 1657).
-- [ ] 11g. Pagination for `GET /api/gc/meetings` past the current 200-row cap.
-      See Phase 6e (~line 1573).
-- [ ] 11h. DST-transition day fix in `server/utility/dayWindow.js` (currently treats every day
-      as a flat 24h window). See Phase 6e (~line 1573).
-- [ ] 11i. Disable the "Link to GC" UI while a project's create is still queued in the offline
+- [x] 11f. Configurable meeting cadence (daily / weekly). Done · status: code complete, live smoke pending (apply the
+      two `ALTER TABLE` lines in `Supabase_SQL.sql` first).
+  - **Model:** `jobsites.meeting_cadence` (GC default, NOT NULL, `'daily'`) + nullable
+    `jobsite_subcontractors.meeting_cadence` (a sub's own override). A sub may only **tighten** (daily on a weekly
+    site); the effective cadence is always the stricter of the two (`server/utility/cadence.js`), so a GC later
+    tightening the default automatically wins over an older looser override. Weekly = Monday–Sunday in the
+    viewer's timezone (`weekWindow` in `dayWindow.js`, derived from `date` + `tzOffset`, client sends nothing new).
+  - **Dashboard:** `getOverview` computes each sub's effective cadence, fetches logs once over the widest window,
+    and runs `computeCompliance` once per cadence group with that group's window (`compliance.js` unchanged);
+    each sub carries `cadence`. UI copy no longer says "today" (stat tile "logged", per-sub "No talk logged
+    today/this week", hero copy).
+  - **Scorecards:** period-based instead of day-based — `rollingPeriodWindows` (weekly = Mon–Sun weeks overlapping
+    the 30-day range), `computeRollingCompliance` (`expectedPeriods`/`loggedPeriods`, renamed from
+    `expectedDays`/`loggedDays` in the API + client), and an unlogged **still-open** weekly period is not counted
+    as a miss (daily keeps counting today). Breakdown row reads "Logged x of y expected weeks|days".
+  - **Settings UI:** GC sets the default in the edit-jobsite form (`PATCH /api/jobsites/:id` `meetingCadence`);
+    a sub sets its override via `GET /api/jobsites/memberships` + `PATCH /api/jobsites/:id/my-cadence` (manager
+    role, 422 if looser than the GC default) and a "Talk cadence" control on each GC-linked project card on the Projects page (`ProjectCadenceControl`).
+  - Deliberately not built: "every N days", GC-configurable week start, DST-day handling (still 11h).
+    `policyPush.js` needs no change. Tests: server 1126 passed (3 skipped); the touched client suites pass.
+  - Verify (user, needs live Supabase): set a jobsite to weekly → dashboard shows weekly subs as "logged" for a
+    Monday log through Sunday; a sub tightens to daily → its row flips to the daily window; a sub cannot loosen a
+    daily site (422); the scorecard for a weekly sub shows weeks, not ~14%.
+- [x] 11g. Pagination for `GET /api/gc/meetings` past the current 200-row cap.
+      See Phase 6e (~line 1573). Shipped: `limit`/`offset` (default 20, max 100) with a `hasMore` peek row and a
+      stable `held_at, id` sort; client `useGcMeetings` is a `useInfiniteQuery` with "load more" in
+      `SubMeetingsModal`. Server (gcDashboard, gc controller) and client (modal, hook, services) suites pass.
+- [x] 11h. DST-transition day fix in `server/utility/dayWindow.js` (was a flat 24h window). See Phase 6e (~line 1573).
+  - The client now also sends its IANA `timeZone` (`Intl.DateTimeFormat().resolvedOptions().timeZone`) on the four
+    windowed GC endpoints (overview, subcontractors, scorecard, policy-push). `dayWindow`/`weekWindow` compute each
+    edge as a real local midnight via Intl, so a DST day is 23h/25h and a DST-spanning week 167h/169h. Zones whose
+    jump skips midnight (e.g. Asia/Beirut) resolve to the first valid instant of the day.
+  - `rollingWindow.js` now walks back by calendar days/weeks (`dayWindow(args, -i)`, `weekWindow(args, -k)`), not
+    flat 24h steps, so rolling ranges across a transition stay contiguous.
+  - `timeZone` is optional; without it (old clients) behavior is the flat `tzOffset` fallback. An invalid zone 400s.
+    Out of scope: `formatDate`/`heldAt`/`pdfFilename` (they use the offset stored per meeting).
+  - Tests: server 1135 passed (needs dummy Supabase env vars locally); touched client suites pass at 100%.
+  - Verify (user, needs live Supabase): in a US Eastern machine timezone, log a meeting at 11:30pm on a DST day
+    and confirm it counts for that day on the dashboard and scorecard (next transition: 2026-11-01).
+- [x] 11i. Disable the "Link to GC" UI while a project's create is still queued in the offline
       outbox (currently 404s "Project not found" until it syncs). See Phase 6d (~line 1522).
+  - New `useUnsyncedProjectIds` hook (Dexie `liveQuery` over the outbox: `project` + `create` rows, so it
+    re-enables the moment the flush deletes the row; no new dependency). `Projects.tsx` passes the set to
+    `ProjectList`, which disables that card's link button (`aria-describedby`) and shows a visible
+    "Syncing — GC linking is available once this project is saved." line. Edit stays enabled.
+  - Tests: new hook suite + `ProjectList`/`Projects` cases pass. `tsc -b` shows two errors in
+    `AcceptInvite.tsx` / `JoinJobsite.tsx` that predate this change (untouched files).
+  - Verify (user, browser): DevTools offline → create a project → its "Link to GC" is disabled with the
+    hint; go online → row syncs and the button enables without a reload.
 - [ ] 11j. GC-side duplicate-jobsite merge tool (e.g. "Project A" vs "Project_A" created via a
       sub's join-code link) — re-points `projects.jobsite_id` and roster rows.
       See Phase 9d-2 (~line 2309).
-- [ ] 11k. Conversion-trigger upsell modals from the strategy doc §6 (2nd-foreman, 30-day
+  - Interim (done): the sub's New project form (`ProjectForm`, create mode only) shows a "Check with your GC
+    first" note — if the GC already uses TailgatePro, ask for a job-site invite; otherwise create the project.
+  - **DEFERRED — build only when a real duplicate jobsite shows up in production.** The QR join link
+    (`docs/jobsite-qr-join-design.md`) already prevents new duplicates (it attaches by jobsite id), so this
+    may rarely be needed. The review below is done; start from here.
+  - **Tamper-evidence is safe.** The seal (`server/utility/contentSeal.js:46-62`) covers only meeting-log
+    fields, including the sub's `projectId`. `jobsite_id`, jobsite name and `gc_company_id` are not sealed, so a
+    re-point can't break verification. Never merge or delete the sub's *project* rows; only move their jobsite pointer.
+  - **Risks to handle:**
+    1. Roster collisions on `jobsite_subs_company_unique` / `jobsite_subs_email_unique` (placeholder emails,
+       pending invites). Dedupe by `sub_company_id`, keep the earliest `accepted_at` (drives GC Free unlock
+       order), and pick the cadence override (must stay stricter-or-equal to the target's).
+    2. Plan mismatch (`site_pro` vs `free`) changes sponsorship. Block the merge or require an explicit choice.
+    3. `projects.gc_company_id` is denormalized and is the auth column: update it with `jobsite_id`, and require
+       both sites to belong to the caller's GC (`getOwnedJobsite`, 404 otherwise).
+    4. `jobsite_members`: upsert onto the target so site-scoped superintendents keep access; check the caller's
+       scope on both sites.
+    5. `projects.name` drift: subs can't rename GC-attached projects, so rewrite it in the merge or accept the
+       old name on PDFs/emails.
+    6. An archived source keeps a live `join_token` (QR poster) and pending invite tokens. Decide how to
+       neutralize them.
+    7. No cross-table transactions in supabase-js. Prefer a Postgres RPC, or ordered idempotent steps (roster
+       first, then projects).
+    8. No general audit table (`meeting_log_audit_events` is meeting-log-only). Add a merge audit table.
+  - **Design shape:** validate → merge roster by `sub_company_id` → upsert `jobsite_members` → update `projects`
+    (`jobsite_id`, `gc_company_id`, optionally `name`) → archive the source (don't delete: deleting cascades the
+    roster and members and nulls `projects.jobsite_id`) → write an audit row.
+  - **Reuse:** the `createdBySub` badge (`GET /api/jobsites`, `GET /api/gc/overview`) to pre-select the source;
+    `scripts/backfill-jobsites.js` / `scripts/lib/backfillPlan.js` as idempotent, dry-run-first prior art;
+    `findOrCreateJobsite` at `server/services/projects.js:341-368`.
+- [x] 11k. Conversion-trigger upsell modals from the strategy doc §6 (2nd-foreman, 30-day
       lockout, sub #2 blur, 4th-site "$447 vs $499" prompt, policy-push prompt, scorecard
-      prompt) — pure UI, no SMS/billing needed. See Phase 9g (~line 2720).
-- [ ] 11l. PDF footer CTA "Claim Your Free GC Portal" — the shipped watermark currently has no
-      CTA. See Phase 9g (~line 2723).
-- [ ] 11m. Basic tag/keyword search over the talk library — the strategy doc's "smart tagging"
-      implies NL search, but a non-AI keyword version needs no paid API.
+      prompt) — pure UI, no SMS/billing needed. See Phase 9g (~line 2720). · status: code complete, manual verify pending
+  - Modals **complement** the existing inline banners (banners untouched). New generic
+    `ui_comps/upgrade-modal/UpgradeModal.tsx` (on `Modal`; "Not now" + `/pricing` CTA),
+    `hooks/useUpgradeModal.ts`, and copy map `constants/upgradeTriggers.ts` (`getUpgradeCopy`; the 4th-site
+    "$447"/"$499" are derived from `data/plans.ts`, not hardcoded).
+  - Wired: 2nd foreman → `InviteTeammateForm` (sub company + `PlanLimitError`); 30-day lockout →
+    `MeetingHistory` banner's new "Unlock full archive" button; sub #2 blur → `SubComplianceRow` locked row is now
+    a button (`onUnlock`), owned by `JobsiteList` (site name + sub count); 4th site → `JobsiteForm`'s new
+    `onPlanLimit` (create only), `JobsiteManager` swaps the form for the modal; policy push →
+    `PolicyPushUpgradeNotice` "Push Required Safety Topic to All Active Sites" button; scorecard →
+    `SubScorecardUpgradeNotice` "Unlock scorecards" button.
+  - Deliberately no client-side site-count pre-check for the 4th-site prompt: the server's
+    `effectiveJobsiteLimit` (free = 1 + paid Site Pro sites) isn't on `/me`, so the 403 `PLAN_LIMIT` is the trigger.
+    Foreman-seat count is likewise 403-driven.
+  - Tests: new `UpgradeModal.test.tsx`, `useUpgradeModal.test.tsx`; extended `InviteTeammateForm`, `JobsiteForm`,
+    `JobsiteManager`, `JobsiteList`, `SubComplianceRow`, `MeetingHistory`, `PolicyPushUpgradeNotice`,
+    `SubScorecardUpgradeNotice`. Full client suite: 187 files / 1548 tests passing. `tsc -b` shows only the two
+    pre-existing `AcceptInvite.tsx` / `JoinJobsite.tsx` errors.
+  - Verify (user, browser): free sub invites a 2nd foreman → modal; Meeting History on Free → "Unlock full
+    archive"; free GC with 2+ subs clicks a locked row → modal with site name/count; free GC creates a site past
+    the cap → modal replaces the form; non-Portfolio GC clicks the policy-push and scorecard buttons.
+- [x] 11l. PDF footer CTA "Claim Your Free GC Portal" — the PDF's GC block now reads "Are you the
+      General Contractor on this project?" with a "Claim Your Free GC Portal" link to `/signup`
+      (`pdfGeneration.js`). Copy-only; a per-log/per-project tracked claim link is deferred.
+      See Phase 9g (~line 2723).
+- [x] 11m. Basic tag/keyword search over the talk library — the strategy doc's "smart tagging"
+      implies NL search, but a non-AI keyword version needs no paid API. Shipped: `searchTalks`
+      (`client/src/utils/talkSearch.ts`) matches title, trade tags, OSHA standards, site hazards and
+      summary (multi-word AND, title matches ranked first), wired through `useTalkFilters` so the
+      Content Library and the meeting wizard's talk picker both get it. NL search stays deferred.
       See Phase 9g (~line 2724).
-- [ ] 11n. Update marketing/pricing copy still quoting the old "34 talks" library size (now 112
-      seeded). See Phase 10 (~line 2789).
-- [ ] 11o. Word-library content decisions: confirm authorship/license on the 220 imported talks,
-      verify CPWR "all rights reserved" PDFs (talks 010, 122, 139, 142, 144), decide whether
-      environmental-compliance talks 177/180 belong in the library, decide the "overlapping an
-      existing talk" list. See Phase 10 (~lines 2747-2790).
-- [ ] 11p. Grow the library further using the existing free-source agents
+- [x] 11n. Update marketing/pricing copy still quoting the old "34 talks" library size (now 112
+      seeded). Verified the live client copy (`plans.ts`, `ComparisonTable.tsx`, `LandingFaq.tsx`) states
+      no library count, so nothing changed there; only `docs/pricing-promise-gaps.md` still said 34 and
+      is now updated to 112 (~22% of the 500+ claim). See Phase 10 (~line 2789).
+- [x] 11o. Word-library content decisions — all resolved 2026-09-30: CPWR "all rights reserved" talks accepted
+      as-is, 177/180 kept, overlap list resolved (037 kept). Word-library authorship is **unverified and accepted as
+      a known risk**: 3 talks remain (`safe-isolation-verification`, `manual-material-handling-and-lifting`,
+      `vacuum-pumps-and-evacuation`, license `owner-provided-unverified`). If anyone raises a claim, drop them:
+      delete the JSON files and the `toolbox_talks` rows (by slug) in both Supabase projects. See Phase 10.
+- [x] 11p. Grow the library further using the existing free-source agents
       (`@safety-collector`/`@safety-structurer`/`@safety-auditor` against OSHA/NIOSH/CPWR)
-      toward the 500+ claim. See Phase 9g (~line 2706).
+      toward the 500+ claim. First batch done 2026-09-30: 22 talks (112 → 134), all auditor-approved and
+      seeded to non-prod and prod. Six new trades (framing, steel-erection, concrete-formwork, demolition,
+      painting-coatings, flooring) plus additions to roofing, excavation, electrical, welding, plumbing.
+      Sources: OSHA, CPWR, and one Massachusetts FACE alert (`license: copy-freely-per-source`, non-blocking
+      auditor flag — accept the risk or confirm with MA FACE). Rollback: delete `toolbox_talks` rows by slug
+      for the 22 new files (those with audit dated 2026-09-30). Still `no-source` on free agency sites:
+      formwork/shoring, concrete pumping, rebar impalement, masonry scaffold, drywall dust (NIOSH 99-113 PDF
+      blocked to scripted fetch), stilts, pipe cutting/threading, glazing, kneeling ergonomics. Remaining gap
+      to 500+ is ~366 talks; further batches are still open work.
 
 **Excluded on purpose** (needs Stripe, Twilio, or another paid service — tracked in `## Deferred`
 and Phase 9e/9f instead): GC Site Pro sponsorship purchase flow, SMS nudges, AI Talk Builder /

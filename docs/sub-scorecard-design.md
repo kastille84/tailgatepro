@@ -55,10 +55,10 @@ for each day window in the 30-day range:
   if day.start < since:           // sub hadn't joined this jobsite yet
     skip (not counted at all)
   else:
-    expectedDays += 1
+    expectedPeriods += 1
     result = computeCompliance({ roster: [{ subId }], logs: thatJobsite'sLogs, window: day })
-    if result.status === "logged": loggedDays += 1
-expectedDays = max(expectedDays, 1)   // always defined, never 0/0
+    if result.status === "logged": loggedPeriods += 1
+expectedPeriods = max(expectedPeriods, 1)   // always defined, never 0/0
 ```
 
 This literally calls the existing, unmodified `computeCompliance` once per calendar day — the
@@ -66,14 +66,14 @@ new code (`server/utility/subScorecard.js`'s `computeRollingDailyCompliance`) on
 day-by-day loop and the join-date proration on top, rather than reimplementing
 `computeCompliance`'s half-open window matching.
 
-**Per-jobsite score:** `Math.round((loggedDays / expectedDays) * 100)`.
+**Per-jobsite score:** `Math.round((loggedPeriods / expectedPeriods) * 100)`.
 
 **Overall sub score:** average the **raw fractions** across all of that sub's jobsites with this
 GC (equal weight per jobsite, not log-volume-weighted — see "Known v1 limitations"), then round
 **once**:
 
 ```
-overallScore = Math.round(avg(loggedDays / expectedDays over every jobsite) * 100)
+overallScore = Math.round(avg(loggedPeriods / expectedPeriods over every jobsite) * 100)
 ```
 
 **Why round once, not average the rounded percentages:** the two can differ by a point. Worked
@@ -84,7 +84,7 @@ establishes "average raw, round once" as the rule (`buildScorecard` in `subScore
 resulting ±1-point gap from a naive re-average of the breakdown table's own displayed per-jobsite
 percentages is an accepted, documented quirk, not a bug (see "Known v1 limitations").
 
-**Proration anchor.** A jobsite membership younger than 30 days shrinks `expectedDays` down to
+**Proration anchor.** A jobsite membership younger than 30 days shrinks `expectedPeriods` down to
 roughly the days since `accepted_at`, never penalizing days before the sub joined.
 `accepted_at` (from `jobsite_subcontractors`) is used rather than a project's own `created_at`,
 since a sub can have several projects on one jobsite, or a project that predates joining that
@@ -98,8 +98,8 @@ its own unrelated tie-break, so this is a precedent-consistent choice.
 - A sub accepted onto a jobsite with zero completed logs anywhere scores 0% on that jobsite.
 - A sub logging on some jobsites but not others: each jobsite is scored independently, then
   averaged equally (not weighted by log volume).
-- A jobsite membership younger than 30 days: `expectedDays` prorates down via the `since` check
-  above; a join on the very last day of the range still gets `expectedDays` floored at 1 (never
+- A jobsite membership younger than 30 days: `expectedPeriods` prorates down via the `since` check
+  above; a join on the very last day of the range still gets `expectedPeriods` floored at 1 (never
   0/0).
 - An empty portfolio (the GC has zero accepted subs anywhere): the list endpoint returns `[]`;
   the detail endpoint 404s for any `companyId`.
@@ -114,7 +114,7 @@ existence is never leaked to an unauthorized caller.
 | Endpoint | Returns |
 | --- | --- |
 | `GET /api/gc/subcontractors?date&tzOffset` | Every distinct sub across the GC's active portfolio jobsites with a rolling 30-day `overallScore` (0–100), worst-first. `[]` if the portfolio has no accepted subs. 403 `PLAN_LIMIT` unless GC Portfolio. |
-| `GET /api/gc/subcontractors/:companyId/scorecard?date&tzOffset` | One sub's `overallScore` plus a `jobsites[]` breakdown (`jobsiteId`, `jobsiteName`, `expectedDays`, `loggedDays`, `score`). 404 if `companyId` isn't a current accepted roster member anywhere in the caller's (allowed) portfolio. 403 `PLAN_LIMIT` unless GC Portfolio. |
+| `GET /api/gc/subcontractors/:companyId/scorecard?date&tzOffset` | One sub's `overallScore` plus a `jobsites[]` breakdown (`jobsiteId`, `jobsiteName`, `expectedPeriods`, `loggedPeriods`, `score`). 404 if `companyId` isn't a current accepted roster member anywhere in the caller's (allowed) portfolio. 403 `PLAN_LIMIT` unless GC Portfolio. |
 
 A site-scoped superintendent (Phase 9d-2) sees the roster narrowed to their assigned jobsites
 only, the same `allowedJobsiteIds` threading every other GC endpoint uses; a sub who is also on a
@@ -130,6 +130,14 @@ HTML `<table>` — no table primitive exists elsewhere in this codebase). Both p
 and read-only, same as the rest of the GC dashboard (`docs/gc-dashboard-design.md` "Client
 notes") — no offline cache fallback. No filter controls exist in v1 (`docs/ui-inputs.md`
 confirms none are needed — there's no user input beyond navigation).
+
+## Cadence (Phase 11f)
+
+A "period" is a day for a daily cadence and a Monday–Sunday week for a weekly one; each (sub, jobsite) is scored
+on its effective cadence (`rollingPeriodWindows`, `computeRollingCompliance`). Weekly periods are the weeks
+overlapping the same 30-day range, and an unlogged, still-open weekly period isn't counted as a miss. The API
+fields were renamed `expectedDays`/`loggedDays` → `expectedPeriods`/`loggedPeriods`, and each jobsite entry
+carries `cadence`.
 
 ## Known v1 limitations
 
