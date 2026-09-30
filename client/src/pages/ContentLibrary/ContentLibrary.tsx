@@ -122,7 +122,7 @@ export const ContentLibrary = () => {
           <StyledLede>
             {isGc
               ? "OSHA-mapped toolbox talks, plus your own company talks. Every subcontractor on your active jobsites sees the talks you write here and can run them."
-              : "OSHA-mapped toolbox talks, ready to run on site. Filter by trade or search by title. Plus add your own custom talks."}
+              : "OSHA-mapped toolbox talks, ready to run on site. Filter by trade or search by topic or hazard. Plus add your own custom talks."}
           </StyledLede>
         </StyledHeroInner>
       </StyledHero>

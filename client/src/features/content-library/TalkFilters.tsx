@@ -42,7 +42,7 @@ export const TalkFilters = ({
       <FormField id="talk-search" label="Search">
         <TextInput
           type="search"
-          placeholder="Search by title…"
+          placeholder="Search by topic, hazard or OSHA #…"
           value={search}
           onChange={(event) => onSearchChange(event.target.value)}
         />

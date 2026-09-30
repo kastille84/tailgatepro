@@ -144,7 +144,8 @@ From `docs/pricing-and-positioning-strategy_V2.md`:
 - §5: permanent history retention for GC Site Pro/Portfolio; "Custom Company Form Builder" on Trade Pro
   (deliberately dropped: the form builder is deferred, see the update above); Procore/ACC as a Trade Pro add-on; SMS "All Sites" and Procore/ACC
   "Multi-Project Routing" on Portfolio; Defense Bundle "Portfolio-Wide Search".
-- §2: smart tagging (trade, phase, equipment, natural-language search), QR pass and roster check-in, SOC-2 and
+- §2: smart tagging (trade, phase, equipment, natural-language search; a non-AI keyword search over title,
+  trade tags, hazards and OSHA standards has since shipped, see tasks.md 11m), QR pass and roster check-in, SOC-2 and
   cryptographic timestamping.
 - §6: every conversion-trigger modal (2nd foreman, 30-day lockout, watermark trap, non-English audio prompt,
   sub #2 blur, SMS upsell, the 4th-site "$447 vs $499" prompt, policy-push prompt, scorecard prompt). Only the

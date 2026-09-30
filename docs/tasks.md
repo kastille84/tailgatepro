@@ -2764,7 +2764,8 @@ Costs one extra query per request for Free subs (`resolveEffectiveTier`) and per
       watermark exist today.
 - [x] PDF footer CTA "Claim Your Free GC Portal" (§7) — shipped as copy-only, linking to `/signup`; a
       per-log tracked claim link is not built.
-- [ ] Smart tagging / natural-language search, SOC-2, cryptographic timestamping (§2).
+- [ ] Smart tagging / natural-language search, SOC-2, cryptographic timestamping (§2). (Keyword search
+      over title/tags/hazards/OSHA shipped as 11m; NL search, site-phase/equipment tags still open.)
 - [ ] `plans.ts` listing gaps vs strategy doc §5 (permanent GC history, Procore/ACC add-on, Portfolio-wide
       search) — decide whether to list or drop. (Trade Pro form builder: dropped, deferred with the form builder.)
 
@@ -2988,8 +2989,11 @@ they can be worked one at a time. Tick a box here **and** in its source phase wh
       General Contractor on this project?" with a "Claim Your Free GC Portal" link to `/signup`
       (`pdfGeneration.js`). Copy-only; a per-log/per-project tracked claim link is deferred.
       See Phase 9g (~line 2723).
-- [ ] 11m. Basic tag/keyword search over the talk library — the strategy doc's "smart tagging"
-      implies NL search, but a non-AI keyword version needs no paid API.
+- [x] 11m. Basic tag/keyword search over the talk library — the strategy doc's "smart tagging"
+      implies NL search, but a non-AI keyword version needs no paid API. Shipped: `searchTalks`
+      (`client/src/utils/talkSearch.ts`) matches title, trade tags, OSHA standards, site hazards and
+      summary (multi-word AND, title matches ranked first), wired through `useTalkFilters` so the
+      Content Library and the meeting wizard's talk picker both get it. NL search stays deferred.
       See Phase 9g (~line 2724).
 - [ ] 11n. Update marketing/pricing copy still quoting the old "34 talks" library size (now 112
       seeded). See Phase 10 (~line 2789).
