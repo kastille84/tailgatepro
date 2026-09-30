@@ -2762,7 +2762,8 @@ Costs one extra query per request for Free subs (`resolveEffectiveTier`) and per
 - [ ] Conversion-trigger modals from strategy doc §6 (2nd foreman, 30-day lockout, watermark, non-English audio,
       sub #2 blur, SMS, 4th-site "$447 vs $499", policy push, scorecard). Only the non-English upsell note and the
       watermark exist today.
-- [ ] PDF footer CTA "Claim Your Free GC Portal" (§7); the shipped watermark has no CTA.
+- [x] PDF footer CTA "Claim Your Free GC Portal" (§7) — shipped as copy-only, linking to `/signup`; a
+      per-log tracked claim link is not built.
 - [ ] Smart tagging / natural-language search, SOC-2, cryptographic timestamping (§2).
 - [ ] `plans.ts` listing gaps vs strategy doc §5 (permanent GC history, Procore/ACC add-on, Portfolio-wide
       search) — decide whether to list or drop. (Trade Pro form builder: dropped, deferred with the form builder.)
@@ -2983,8 +2984,10 @@ they can be worked one at a time. Tick a box here **and** in its source phase wh
   - Verify (user, browser): free sub invites a 2nd foreman → modal; Meeting History on Free → "Unlock full
     archive"; free GC with 2+ subs clicks a locked row → modal with site name/count; free GC creates a site past
     the cap → modal replaces the form; non-Portfolio GC clicks the policy-push and scorecard buttons.
-- [ ] 11l. PDF footer CTA "Claim Your Free GC Portal" — the shipped watermark currently has no
-      CTA. See Phase 9g (~line 2723).
+- [x] 11l. PDF footer CTA "Claim Your Free GC Portal" — the PDF's GC block now reads "Are you the
+      General Contractor on this project?" with a "Claim Your Free GC Portal" link to `/signup`
+      (`pdfGeneration.js`). Copy-only; a per-log/per-project tracked claim link is deferred.
+      See Phase 9g (~line 2723).
 - [ ] 11m. Basic tag/keyword search over the talk library — the strategy doc's "smart tagging"
       implies NL search, but a non-AI keyword version needs no paid API.
       See Phase 9g (~line 2724).

@@ -20,6 +20,7 @@ const BOLD_FONT = "Helvetica-Bold";
 // Confirmed with the user — no production domain exists elsewhere in this
 // codebase yet (pre-launch), this is the one place it's hardcoded.
 const CTA_URL = "https://www.getTailgatePro.com";
+const GC_SIGNUP_URL = `${CTA_URL}/signup`;
 
 // pdfkit auto-paginates wrapped text (checks remaining page height and
 // calls addPage() internally) but not images — an image near the bottom of
@@ -243,22 +244,22 @@ const renderMeetingLogPdf = ({
       .fontSize(11)
       .fillColor("black") // reset — the watermark line above left fillColor as gray
       .text(
-        "GC's, are you receiving many safety reports like this from multiple subcontractors?",
+        "Are you the General Contractor on this project?",
       );
     doc
       .font(BODY_FONT)
       .fontSize(10)
       .text(
-        "TailgatePro gives general contractors one dashboard to track every " +
-          "subcontractor's toolbox talks, signatures, and compliance status " +
-          "— no more chasing paper.",
+        "Track site-wide safety compliance across all your trades for free " +
+          "— every subcontractor's toolbox talks, signatures, and compliance " +
+          "status in one dashboard.",
       );
     doc.moveDown();
     doc
       .font(BOLD_FONT)
       .fillColor("#1a56db")
-      .text("Try TailgatePro free at getTailgatePro.com", {
-        link: CTA_URL,
+      .text("Claim Your Free GC Portal", {
+        link: GC_SIGNUP_URL,
         underline: true,
       });
 

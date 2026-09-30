@@ -155,14 +155,12 @@ describe("pdfGeneration: renderMeetingLogPdf", () => {
     const text = decodeRenderedText(buffer);
     const raw = buffer.toString("latin1");
 
-    expect(text).toContain(
-      "GC's, are you receiving many safety reports like this from multiple subcontractors?",
-    );
-    expect(text).toContain("Try TailgatePro free at getTailgatePro.com");
+    expect(text).toContain("Are you the General Contractor on this project?");
+    expect(text).toContain("Claim Your Free GC Portal");
     // A link annotation's URI is stored as a literal string in the PDF
     // object, not hex-encoded glyph runs like the visible text — assertable
     // directly against the raw buffer.
-    expect(raw).toContain("https://www.getTailgatePro.com");
+    expect(raw).toContain("https://www.getTailgatePro.com/signup");
   });
 
   it("falls back to 'Unknown' for the subcontractor when no company is given", async () => {

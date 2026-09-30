@@ -84,7 +84,7 @@ deliberate copy decision, not made here.
 | Trade Free — digital signatures + photo proof | Implemented | `signature-pad`, `SignaturesStep.tsx`, `PhotoCapture.tsx`, `server/services/signatures.js` | — | — |
 | Trade Free — auto-email PDF to GCs | Implemented | `pdfGenerationQueue.js`, `email.js` | Sends only when a GC admin or `gc_contact_email` exists; logs instead of sending if Mailgun is unset | — |
 | Trade Free — 30-day in-app history | Implemented (9c) | `meetingLogs.listForCompany` / `getMeeting` / `getPdfUrl` apply `historyDays`; `MeetingHistory.tsx` shows the hidden-count banner | — | — |
-| Trade Free — app watermark | Implemented | `pdfGeneration.js` (footer line for non-premium tiers) | A text footer, not an overlay; no "Claim your free GC portal" CTA (strategy doc §7) | 9g |
+| Trade Free — app watermark | Implemented | `pdfGeneration.js` (footer line for non-premium tiers) | A text footer, not an overlay; the "Claim Your Free GC Portal" CTA (strategy doc §7) is a separate GC block linking to `/signup`, shown on every tier, with no per-log claim token | — |
 | Trade Pro — up to 8 foremen | Implemented (9c) | as above | Counts foreman-role users + pending foreman invites; admins/safety managers are free | — |
 | Trade Pro — 5-year legal archive | Implemented (9c) | `MeetingHistory.tsx` (`/meetings`), `archiveYears` in `PLAN_LIMITS`; nothing is ever purged | Retention is a policy guarantee (5 yrs, crew photos follow their meeting), not a purge job | — |
 | Trade Pro — 1-click OSHA Defense Bundle (ZIP) | Implemented | `services/meetingLogs.js` `getDefenseBundleEntries`, `services/zipBundle.js`, `GET /api/meetings/defense-bundle` | Every completed log the company has ever logged, across every project/GC, plus an `index.csv` (labeled by GC/client, not by the caller's own company); gated on `archiveYears > 0` (Trade Pro/Enterprise). Landed alongside this row rather than being audited as a pre-existing gap — see `docs/sub-defense-bundle-design.md` | — |
@@ -149,8 +149,6 @@ From `docs/pricing-and-positioning-strategy_V2.md`:
 - §6: every conversion-trigger modal (2nd foreman, 30-day lockout, watermark trap, non-English audio prompt,
   sub #2 blur, SMS upsell, the 4th-site "$447 vs $499" prompt, policy-push prompt, scorecard prompt). Only the
   Trade Pro non-English upsell note and the PDF watermark exist.
-- §7: PDF footer CTA "Claim Your Free GC Portal" (the shipped watermark reads "Logged via TailgatePro (Free
-  plan)" with no CTA).
 
 ## What is delivered today
 
