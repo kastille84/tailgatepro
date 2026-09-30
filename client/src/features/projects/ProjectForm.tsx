@@ -17,6 +17,7 @@ import {
   StyledActions,
   StyledDangerZone,
   StyledDangerZoneTitle,
+  StyledGcCheckNote,
 } from "./styles";
 
 // Mirrors the express-validator chains in server/routes/projects.js. The GC
@@ -151,6 +152,14 @@ export const ProjectForm = ({ isOpen, onClose, project }: ProjectFormProps) => {
       title={isEdit ? "Edit project" : "New project"}
     >
       <Form onSubmit={handleSubmit(onSubmit)} noValidate>
+        {!isEdit && (
+          <StyledGcCheckNote>
+            <strong>Check with your GC first.</strong> If your general
+            contractor already uses TailgatePro, ask them to invite you to
+            their job site instead — that avoids a duplicate project. If they
+            don't use it, go ahead and create your project below.
+          </StyledGcCheckNote>
+        )}
         <FormField
           id={nameId}
           label="Project name"

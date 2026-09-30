@@ -63,6 +63,15 @@ describe("ProjectForm", () => {
     expect(screen.queryByRole("dialog")).toBeNull();
   });
 
+  it("tells a sub to check with their GC first in create mode only", () => {
+    const { unmount } = renderForm();
+    expect(screen.getByText("Check with your GC first.")).toBeTruthy();
+    unmount();
+
+    renderForm({ project: editProject });
+    expect(screen.queryByText("Check with your GC first.")).toBeNull();
+  });
+
   it("creates a project and closes on a valid submit", async () => {
     const onClose = vi.fn();
     renderForm({ onClose });

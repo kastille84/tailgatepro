@@ -132,6 +132,19 @@ export const StyledLinkNote = styled.p`
   color: ${({ theme }) => theme.colors.navy[500]};
 `;
 
+/** "Check with your GC first" heads-up at the top of the new-project form. */
+export const StyledGcCheckNote = styled.p`
+  margin: 0 0 1.6rem;
+  padding: 1.2rem 1.6rem;
+  font-size: 1.4rem;
+  font-weight: 500;
+  line-height: 1.6;
+  color: ${({ theme }) => theme.colors.navy[600]};
+  background: ${({ theme }) => theme.colors.orange[100]};
+  border: 0.1rem solid ${({ theme }) => theme.colors.orange[200]};
+  border-radius: ${({ theme }) => theme.borderRadius.md};
+`;
+
 /** "Danger zone" footer inside the edit modal: archive/restore + delete. */
 export const StyledDangerZone = styled.div`
   margin-top: 2.4rem;

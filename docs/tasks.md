@@ -2930,6 +2930,8 @@ they can be worked one at a time. Tick a box here **and** in its source phase wh
 - [ ] 11j. GC-side duplicate-jobsite merge tool (e.g. "Project A" vs "Project_A" created via a
       sub's join-code link) — re-points `projects.jobsite_id` and roster rows.
       See Phase 9d-2 (~line 2309).
+  - Interim (done): the sub's New project form (`ProjectForm`, create mode only) shows a "Check with your GC
+    first" note — if the GC already uses TailgatePro, ask for a job-site invite; otherwise create the project.
   - **DEFERRED — build only when a real duplicate jobsite shows up in production.** The QR join link
     (`docs/jobsite-qr-join-design.md`) already prevents new duplicates (it attaches by jobsite id), so this
     may rarely be needed. The review below is done; start from here.
