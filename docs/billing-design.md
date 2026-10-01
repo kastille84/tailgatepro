@@ -108,6 +108,45 @@ The `whsec_...` printed by `stripe listen` is a different secret from the one on
 - [ ] Send a test event from the Dashboard and check for a 200 response and a row in `stripe_events`.
 - [ ] Make one real low-value purchase, confirm `companies.tier` changes, then cancel and refund it. Repeat once for a Site Pro jobsite and confirm `jobsites.plan` flips and reverts.
 
+## Live-mode product and price table
+
+Create these in the live Dashboard (Product catalog). Annual is 10x monthly. The unlimited-sites monthly amount ($799) is inferred from its $7,990 annual price, so confirm it before creating it.
+
+| Product | Monthly | Annual | Env vars (`_PROD` suffix on each) |
+| --- | --- | --- | --- |
+| Trade Pro | $29 | $290 | `STRIPE_PRICE_TRADE_PRO_MONTHLY` / `_ANNUAL` |
+| Trade Enterprise | $79 | $790 | `STRIPE_PRICE_TRADE_ENTERPRISE_MONTHLY` / `_ANNUAL` |
+| GC Portfolio (10 sites) | $499 | $4,990 | `STRIPE_PRICE_GC_PORTFOLIO_10_SITES_MONTHLY` / `_ANNUAL` |
+| GC Portfolio (unlimited) | $799 | $7,990 | `STRIPE_PRICE_GC_PORTFOLIO_UNLIMITED_SITES_MONTHLY` / `_ANNUAL` |
+| GC Site Pro (per jobsite) | $149 | $1,490 | `STRIPE_PRICE_GC_SITE_PRO_MONTHLY` / `_ANNUAL` |
+
+## Production env checklist (names only)
+
+`NODE_ENV=production`, `STRIPE_SECRET_KEY_PROD`, `STRIPE_WEBHOOK_SECRET_PROD` (from the registered live endpoint, not the CLI) and the 10 `STRIPE_PRICE_*_PROD` vars above. The client origin used for Checkout return URLs is hardcoded in `server/utility/envUtils.js` (`clientUrl`), so it needs no env var. The webhook is server-to-server, so CORS does not apply to it.
+
 ## Live-DB migration
 
-Run the commented `ALTER TABLE companies ...` lines, the `ALTER TABLE jobsites ... -- Phase 12h` lines and the `CREATE TABLE stripe_events` block from `Supabase_SQL.sql` before using billing.
+Safe to run on production before launch (every statement is additive). Paste into the Supabase SQL editor:
+
+```sql
+ALTER TABLE companies ADD COLUMN IF NOT EXISTS stripe_customer_id TEXT UNIQUE;
+ALTER TABLE companies ADD COLUMN IF NOT EXISTS stripe_subscription_id TEXT UNIQUE;
+ALTER TABLE companies ADD COLUMN IF NOT EXISTS subscription_status TEXT;
+ALTER TABLE companies ADD COLUMN IF NOT EXISTS billing_interval TEXT CHECK (billing_interval IN ('monthly', 'annual'));
+ALTER TABLE companies ADD COLUMN IF NOT EXISTS current_period_end TIMESTAMPTZ;
+
+ALTER TABLE jobsites ADD COLUMN IF NOT EXISTS plan TEXT NOT NULL DEFAULT 'free' CHECK (plan IN ('free', 'site_pro'));
+ALTER TABLE jobsites ADD COLUMN IF NOT EXISTS stripe_subscription_id TEXT UNIQUE;
+ALTER TABLE jobsites ADD COLUMN IF NOT EXISTS site_pro_status TEXT;
+ALTER TABLE jobsites ADD COLUMN IF NOT EXISTS site_pro_interval TEXT CHECK (site_pro_interval IN ('monthly', 'annual'));
+ALTER TABLE jobsites ADD COLUMN IF NOT EXISTS site_pro_period_end TIMESTAMPTZ;
+
+CREATE TABLE IF NOT EXISTS stripe_events (
+  id TEXT PRIMARY KEY,
+  type TEXT NOT NULL,
+  processed_at TIMESTAMPTZ DEFAULT NOW()
+);
+ALTER TABLE stripe_events ENABLE ROW LEVEL SECURITY;
+```
+
+Source of truth stays `Supabase_SQL.sql`; if the production DB already has the `jobsites.plan` column from Phase 9b, the `IF NOT EXISTS` makes that line a no-op.
