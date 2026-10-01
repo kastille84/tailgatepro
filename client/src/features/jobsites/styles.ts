@@ -174,3 +174,36 @@ export const StyledSiteProActions = styled.div`
     flex-direction: row;
   }
 `;
+
+/** One provider (Procore / ACC) in IntegrationsModal. */
+export const StyledIntegrationCard = styled.section`
+  display: flex;
+  flex-direction: column;
+  gap: 1.2rem;
+  padding: 1.6rem;
+  border: 0.1rem solid ${({ theme }) => theme.colors.navy[100]};
+  border-radius: ${({ theme }) => theme.borderRadius.md};
+  background-color: ${({ theme }) => theme.colors.concrete[100]};
+`;
+
+export const StyledIntegrationHeader = styled.div`
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1.2rem;
+`;
+
+export const StyledIntegrationTitle = styled.h3`
+  margin: 0;
+  font-size: 1.8rem;
+  color: ${({ theme }) => theme.colors.navy[700]};
+`;
+
+export const StyledIntegrationError = styled.p`
+  margin: 0;
+  font-size: 1.4rem;
+  font-weight: 600;
+  line-height: 1.6;
+  color: ${({ theme }) => theme.colors.red[700]};
+`;

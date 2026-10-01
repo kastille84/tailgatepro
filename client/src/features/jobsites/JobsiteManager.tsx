@@ -12,6 +12,7 @@ import { useDownloadDefenseBundle } from "../../hooks/useDownloadDefenseBundle";
 import { useJobsites } from "../../hooks/useJobsites";
 import { useSiteCheckoutReturn } from "../../hooks/useSiteCheckoutReturn";
 import type { Jobsite } from "../../interfaces/jobsite";
+import { IntegrationsModal } from "./IntegrationsModal";
 import { JobsiteForm } from "./JobsiteForm";
 import { JobsiteList } from "./JobsiteList";
 import { JobsiteMembersModal } from "./JobsiteMembersModal";
@@ -52,6 +53,8 @@ export const JobsiteManager = () => {
   const membersJobsite = jobsites.find((jobsite) => jobsite.id === membersId);
   const [siteProId, setSiteProId] = useState<string | undefined>(undefined);
   const siteProJobsite = jobsites.find((jobsite) => jobsite.id === siteProId);
+  const [integrationsId, setIntegrationsId] = useState<string | undefined>(undefined);
+  const integrationsJobsite = jobsites.find((jobsite) => jobsite.id === integrationsId);
 
   const openCreate = () => {
     setEditing(undefined);
@@ -101,6 +104,7 @@ export const JobsiteManager = () => {
           onEdit={canManage ? openEdit : undefined}
           onManageSubs={(jobsite) => setRosterId(jobsite.id)}
           onManageMembers={canManageMembers ? (jobsite) => setMembersId(jobsite.id) : undefined}
+          onManageIntegrations={canManage ? (jobsite) => setIntegrationsId(jobsite.id) : undefined}
           onUpgrade={canManage ? (jobsite) => setSiteProId(jobsite.id) : undefined}
           onDownloadBundle={downloadBundle}
           isDownloadingBundle={isDownloadingBundle}
@@ -137,6 +141,13 @@ export const JobsiteManager = () => {
 
       {membersJobsite && (
         <JobsiteMembersModal jobsite={membersJobsite} onClose={() => setMembersId(undefined)} />
+      )}
+
+      {integrationsJobsite && (
+        <IntegrationsModal
+          jobsite={integrationsJobsite}
+          onClose={() => setIntegrationsId(undefined)}
+        />
       )}
 
       <ProgressModal

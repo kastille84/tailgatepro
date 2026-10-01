@@ -166,19 +166,36 @@ const renderAndStore = async (meetingLogId, companyId) => {
   const path = meetingLogsService.pdfPath(meetingLogId);
   await storageService.uploadBlob(PDF_BUCKET, path, pdfBuffer, "application/pdf");
   await meetingLogsService.setFinalPdfUrl(meetingLogId, companyId, path);
-  return { path, meetingLog, project, company };
+  return { path, meetingLog, project, company, pdfBuffer };
 };
 
 const enqueue = async (meetingLogId, companyId) => {
   try {
-    const { path, meetingLog, project, company } = await renderAndStore(
-      meetingLogId,
-      companyId,
-    );
+    const { path, meetingLog, project, company, pdfBuffer } =
+      await renderAndStore(meetingLogId, companyId);
     await auditLogService.record({
       meetingLogId,
       eventType: "pdf_generated",
       metadata: { path },
+    });
+
+    const filename = buildPdfFilename({
+      companyName: company.name,
+      projectName: project.name,
+      meetingDate: meetingLog.heldAt,
+      meetingLogId: meetingLog.id,
+      tzOffset: meetingLog.heldTzOffset,
+    });
+
+    // Phase 9f: push to the jobsite's connected Procore/ACC projects. Soft-fail
+    // by contract (never throws), and independent of the email step below.
+    // Required lazily like meetingLogs/signatures above: jobsiteIntegrations
+    // pulls in jobsites.js, so a top-level require risks a circular load.
+    await require("./jobsiteIntegrations").pushMeeting({
+      meetingLogId,
+      jobsiteId: project.jobsiteId,
+      pdfBuffer,
+      filename,
     });
 
     // Silently skip when neither a linked GC admin nor gc_contact_email
@@ -187,14 +204,6 @@ const enqueue = async (meetingLogId, companyId) => {
     // an unlinked project with no manual email either), not a failure.
     const gcContactEmail = await resolveGcContactEmail(project);
     if (gcContactEmail) {
-      const filename = buildPdfFilename({
-        companyName: company.name,
-        projectName: project.name,
-        meetingDate: meetingLog.heldAt,
-        meetingLogId: meetingLog.id,
-        tzOffset: meetingLog.heldTzOffset,
-      });
-
       const pdfUrl = await storageService.getSignedUrl(
         PDF_BUCKET,
         path,

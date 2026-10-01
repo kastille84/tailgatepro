@@ -25,6 +25,7 @@ const gcRoutes = require("./server/routes/gc");
 // const moderateRoutes = require("./server/routes/moderate");
 // const emailRoutes = require("./server/routes/emails");
 const stripeRoutes = require("./server/routes/stripe");
+const integrationsRoutes = require("./server/routes/integrations");
 const stripeWebhookRoutes = require("./server/routes/stripeWebhook");
 // const {
 //   deleteFlaggedFlyers,
@@ -71,6 +72,7 @@ app.use("/api/gc", gcRoutes);
 // app.use("/api/moderate", moderateRoutes);
 // app.use("/api/email", emailRoutes);
 app.use("/api/stripe", stripeRoutes);
+app.use("/api", integrationsRoutes);
 
 /****  C R O N   J O B S *****/
 // cron jobs - delete flagged flyers

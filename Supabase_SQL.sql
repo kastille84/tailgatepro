@@ -496,7 +496,7 @@ ALTER TABLE companies ADD COLUMN IF NOT EXISTS required_talk_pushed_by UUID REFE
 CREATE TABLE meeting_log_audit_events (
   id UUID PRIMARY KEY,
   meeting_log_id UUID NOT NULL REFERENCES meeting_logs(id) ON DELETE CASCADE,
-  event_type TEXT NOT NULL CHECK (event_type IN ('created', 'completed', 'pdf_generated', 'seal_verified')),
+  event_type TEXT NOT NULL CHECK (event_type IN ('created', 'completed', 'pdf_generated', 'seal_verified', 'integration_pushed')),
   actor_id UUID REFERENCES users(id) ON DELETE SET NULL,
   metadata JSONB,
   created_at TIMESTAMPTZ DEFAULT NOW()
@@ -511,3 +511,46 @@ CREATE INDEX idx_meeting_log_audit_events_meeting_log_id ON meeting_log_audit_ev
 -- If the table already exists from an earlier run:
 -- CREATE INDEX IF NOT EXISTS idx_meeting_log_audit_events_meeting_log_id ON meeting_log_audit_events (meeting_log_id);
 -- ALTER TABLE meeting_log_audit_events ENABLE ROW LEVEL SECURITY;
+-- 17. Document integrations (Phase 9f, docs/integrations-design.md) -- Procore /
+-- Autodesk ACC. Bring-your-own credentials: a GC manager pastes service-account
+-- credentials for THEIR Procore/ACC account; TailgatePro owns no developer app.
+-- `encrypted_credentials` is AES-256-GCM ciphertext (server/utility/secretBox.js),
+-- never returned to the client. `id`s are server-generated (uuidv4()), the same
+-- offline-sync exception as jobsites.id -- these rows are only ever written by
+-- authenticated server code.
+CREATE TABLE IF NOT EXISTS jobsite_integrations (
+  id UUID PRIMARY KEY,
+  jobsite_id UUID NOT NULL REFERENCES jobsites(id) ON DELETE CASCADE,
+  provider TEXT NOT NULL CHECK (provider IN ('procore', 'acc')),
+  external_project_id TEXT NOT NULL,
+  external_folder_id TEXT,
+  encrypted_credentials TEXT NOT NULL,
+  status TEXT NOT NULL DEFAULT 'connected' CHECK (status IN ('connected', 'error')),
+  last_error TEXT,
+  created_at TIMESTAMPTZ DEFAULT NOW(),
+  UNIQUE (jobsite_id, provider)
+);
+
+-- One push per (meeting, integration): the UNIQUE makes pushing idempotent.
+CREATE TABLE IF NOT EXISTS integration_pushes (
+  id UUID PRIMARY KEY,
+  meeting_log_id UUID NOT NULL REFERENCES meeting_logs(id) ON DELETE CASCADE,
+  integration_id UUID NOT NULL REFERENCES jobsite_integrations(id) ON DELETE CASCADE,
+  status TEXT NOT NULL DEFAULT 'pending' CHECK (status IN ('pending', 'sent', 'failed')),
+  external_file_id TEXT,
+  filename TEXT,
+  error TEXT,
+  attempted_at TIMESTAMPTZ DEFAULT NOW(),
+  UNIQUE (meeting_log_id, integration_id)
+);
+
+-- Server-only tables: RLS with NO policies (service-role key only).
+ALTER TABLE jobsite_integrations ENABLE ROW LEVEL SECURITY;
+ALTER TABLE integration_pushes ENABLE ROW LEVEL SECURITY;
+
+CREATE INDEX IF NOT EXISTS idx_jobsite_integrations_jobsite_id ON jobsite_integrations (jobsite_id);
+CREATE INDEX IF NOT EXISTS idx_integration_pushes_meeting_log_id ON integration_pushes (meeting_log_id);
+
+-- Existing databases: allow the new audit event type.
+-- ALTER TABLE meeting_log_audit_events DROP CONSTRAINT IF EXISTS meeting_log_audit_events_event_type_check;
+-- ALTER TABLE meeting_log_audit_events ADD CONSTRAINT meeting_log_audit_events_event_type_check CHECK (event_type IN ('created', 'completed', 'pdf_generated', 'seal_verified', 'integration_pushed'));

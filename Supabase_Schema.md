@@ -210,12 +210,43 @@ Full design: `docs/tamper-evidence-design.md`.
 | :--- | :--- | :--- | :--- |
 | `id` | UUID | Primary Key | Server-generated UUID (not an offline record — every event here originates from an authenticated server-side step) |
 | `meeting_log_id` | UUID | Not Null, FK -> `meeting_logs.id` (ON DELETE CASCADE) | The meeting log this event describes |
-| `event_type` | Text | Not Null, CHECK in (`created`, `completed`, `pdf_generated`, `seal_verified`) | The lifecycle event |
+| `event_type` | Text | Not Null, CHECK in (`created`, `completed`, `pdf_generated`, `seal_verified`, `integration_pushed`) | The lifecycle event |
 | `actor_id` | UUID | Nullable, FK -> `users.id` (ON DELETE SET NULL) | The acting user, or `NULL` for a system-triggered event (`pdf_generated`) |
 | `metadata` | JSONB | Nullable | Event-specific detail, e.g. `{ valid, via }` on `seal_verified` |
 | `created_at` | Timestamptz | Default `now()` | |
 
 A lifecycle trail scoped to `meeting_logs` only, not a general system-wide audit log — write-only
 in v1 (no admin UI reads it yet).
+
+> RLS: enabled with no policies (server-brokered, deny-all) — see `docs/data-access.md`.
+
+### 9. Document Integrations (Phase 9f)
+
+Full design: `docs/integrations-design.md`.
+
+| Table: `jobsite_integrations` | Type | Constraints | Description |
+| :--- | :--- | :--- | :--- |
+| `id` | UUID | Primary Key | Server-generated UUID (online-only, server-written) |
+| `jobsite_id` | UUID | Not Null, FK -> `jobsites.id` (ON DELETE CASCADE) | The connected jobsite |
+| `provider` | Text | Not Null, CHECK in (`procore`, `acc`) | The document platform |
+| `external_project_id` | Text | Not Null | The customer's Procore/ACC project id |
+| `external_folder_id` | Text | Nullable | Target folder (required for ACC, optional for Procore) |
+| `encrypted_credentials` | Text | Not Null | AES-256-GCM ciphertext of the customer's service-account credentials; never returned to the client |
+| `status` | Text | Not Null, Default `connected`, CHECK in (`connected`, `error`) | Follows the latest push attempt |
+| `last_error` | Text | Nullable | Last push failure message |
+| `created_at` | Timestamptz | Default `now()` | |
+| **UNIQUE** | | `(jobsite_id, provider)` | One connection per provider per jobsite |
+
+| Table: `integration_pushes` | Type | Constraints | Description |
+| :--- | :--- | :--- | :--- |
+| `id` | UUID | Primary Key | Server-generated UUID |
+| `meeting_log_id` | UUID | Not Null, FK -> `meeting_logs.id` (ON DELETE CASCADE) | The meeting whose PDF was pushed |
+| `integration_id` | UUID | Not Null, FK -> `jobsite_integrations.id` (ON DELETE CASCADE) | The connection used |
+| `status` | Text | Not Null, Default `pending`, CHECK in (`pending`, `sent`, `failed`) | Outcome of the latest attempt |
+| `external_file_id` | Text | Nullable | The provider's id for the uploaded file |
+| `filename` | Text | Nullable | The PDF filename used (reused on retry) |
+| `error` | Text | Nullable | Failure message |
+| `attempted_at` | Timestamptz | Default `now()` | |
+| **UNIQUE** | | `(meeting_log_id, integration_id)` | Makes a push idempotent |
 
 > RLS: enabled with no policies (server-brokered, deny-all) — see `docs/data-access.md`.

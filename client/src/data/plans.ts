@@ -89,10 +89,7 @@ export const GC_PLANS: Plan[] = [
       "Procore & Autodesk ACC sync — single project",
       "1-click OSHA Defense Bundle for the site (indexed ZIP)",
     ],
-    comingSoon: [
-      "Automated SMS nudges — 7:00 AM every Monday (single site)",
-      "Procore & Autodesk ACC sync — single project",
-    ],
+    comingSoon: ["Automated SMS nudges — 7:00 AM every Monday (single site)"],
   },
   {
     id: "gc-portfolio",

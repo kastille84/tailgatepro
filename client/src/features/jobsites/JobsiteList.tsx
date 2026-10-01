@@ -23,6 +23,9 @@ interface JobsiteListProps {
   /** Present ⇒ each card gets a Team button (GC Portfolio manager only —
    *  Phase 9d-2, assigns superintendents to this job site). */
   onManageMembers?: (jobsite: Jobsite) => void;
+  /** Present ⇒ a Site Pro jobsite gets an Integrations button (Phase 9f;
+   *  manager only, Procore / ACC document push). */
+  onManageIntegrations?: (jobsite: Jobsite) => void;
   /** Present ⇒ an active, non-Site-Pro jobsite shows "Upgrade to Site Pro"
    *  (Phase 12h; manager only, since the server 403s anyone else) instead of
    *  the disabled Defense Bundle button. */
@@ -56,6 +59,7 @@ export const JobsiteList = ({
   onEdit,
   onManageSubs,
   onManageMembers,
+  onManageIntegrations,
   onUpgrade,
   onDownloadBundle,
   isDownloadingBundle = false,
@@ -107,6 +111,16 @@ export const JobsiteList = ({
                 aria-label={`Superintendents for ${jobsite.name}`}
               >
                 Team
+              </Button>
+            )}
+            {onManageIntegrations && jobsite.sitePro && (
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => onManageIntegrations(jobsite)}
+                aria-label={`Integrations for ${jobsite.name}`}
+              >
+                Integrations
               </Button>
             )}
             {jobsite.sitePro ? (

@@ -12,6 +12,7 @@ const usersService = require("./users");
 const pdfGeneration = require("./pdfGeneration");
 const emailService = require("./email");
 const auditLogService = require("./auditLog");
+const jobsiteIntegrationsService = require("./jobsiteIntegrations");
 const { enqueue, regenerate } = require("./pdfGenerationQueue");
 
 const meetingLog = {
@@ -125,6 +126,27 @@ describe("pdfGenerationQueue: enqueue", () => {
 
   afterEach(() => {
     consoleErrorSpy.mockRestore();
+  });
+
+  it("pushes the rendered PDF to the project's jobsite integrations (Phase 9f)", async () => {
+    // Arrange
+    const pushSpy = vi
+      .spyOn(jobsiteIntegrationsService, "pushMeeting")
+      .mockReset()
+      .mockResolvedValue(undefined);
+    projectsService.getById.mockResolvedValue({ ...project, jobsiteId: "jobsite-1" });
+
+    // Act
+    await enqueue("meeting-1", "company-1");
+
+    // Assert
+    expect(pushSpy).toHaveBeenCalledWith({
+      meetingLogId: "meeting-1",
+      jobsiteId: "jobsite-1",
+      pdfBuffer,
+      filename: expect.stringMatching(/\.pdf$/),
+    });
+    pushSpy.mockRestore();
   });
 
   it("should fetch every input (including the company and each signature's image), render the PDF, upload it, and persist its path", async () => {

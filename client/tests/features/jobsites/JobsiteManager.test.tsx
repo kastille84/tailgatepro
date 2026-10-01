@@ -55,6 +55,7 @@ vi.mock("../../../src/features/jobsites/JobsiteList", () => ({
     onEdit,
     onManageSubs,
     onManageMembers,
+    onManageIntegrations,
     onUpgrade,
     onDownloadBundle,
     isDownloadingBundle,
@@ -63,6 +64,7 @@ vi.mock("../../../src/features/jobsites/JobsiteList", () => ({
     onEdit?: (j: Jobsite) => void;
     onManageSubs: (j: Jobsite) => void;
     onManageMembers?: (j: Jobsite) => void;
+    onManageIntegrations?: (j: Jobsite) => void;
     onUpgrade?: (j: Jobsite) => void;
     onDownloadBundle: (j: Jobsite) => void;
     isDownloadingBundle?: boolean;
@@ -83,6 +85,11 @@ vi.mock("../../../src/features/jobsites/JobsiteList", () => ({
       {jobsites[0] && onManageMembers && (
         <button type="button" onClick={() => onManageMembers(jobsites[0])}>
           stub-members
+        </button>
+      )}
+      {jobsites[0] && onManageIntegrations && (
+        <button type="button" onClick={() => onManageIntegrations(jobsites[0])}>
+          stub-integrations
         </button>
       )}
       {jobsites[0] && onUpgrade && (
@@ -152,6 +159,22 @@ vi.mock("../../../src/features/jobsites/JobsiteMembersModal", () => ({
       members {jobsite.id}
       <button type="button" onClick={onClose}>
         stub-members-close
+      </button>
+    </div>
+  ),
+}));
+vi.mock("../../../src/features/jobsites/IntegrationsModal", () => ({
+  IntegrationsModal: ({
+    jobsite,
+    onClose,
+  }: {
+    jobsite: Jobsite;
+    onClose: () => void;
+  }) => (
+    <div role="dialog">
+      integrations {jobsite.id}
+      <button type="button" onClick={onClose}>
+        stub-integrations-close
       </button>
     </div>
   ),
@@ -319,6 +342,23 @@ describe("JobsiteManager", () => {
 
     fireEvent.click(screen.getByRole("button", { name: /stub-members-close/i }));
     expect(screen.queryByRole("dialog")).toBeNull();
+  });
+
+  it("opens and closes the integrations modal for a manager", () => {
+    renderManager();
+
+    fireEvent.click(screen.getByRole("button", { name: /stub-integrations$/i }));
+    expect(screen.getByRole("dialog").textContent).toContain("integrations j1");
+
+    fireEvent.click(screen.getByRole("button", { name: /stub-integrations-close/i }));
+    expect(screen.queryByRole("dialog")).toBeNull();
+  });
+
+  it("hides Integrations for a foreman", () => {
+    mockUseCurrentUser.mockReturnValue({ role: "foreman", plan: "gc-portfolio" });
+    renderManager();
+
+    expect(screen.queryByRole("button", { name: /stub-integrations$/i })).toBeNull();
   });
 
   it("hides the Team button on a GC plan below Portfolio", () => {

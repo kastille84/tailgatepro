@@ -114,6 +114,22 @@ describe("JobsiteList", () => {
     expect(onManageMembers).toHaveBeenCalledWith(base);
   });
 
+  it("shows Integrations only on a Site Pro jobsite when onManageIntegrations is provided", () => {
+    const onManageIntegrations = vi.fn();
+    renderList({ jobsites: [{ ...base, plan: "site_pro", sitePro: true }], onManageIntegrations });
+
+    fireEvent.click(screen.getByRole("button", { name: "Integrations for Riverside" }));
+    expect(onManageIntegrations).toHaveBeenCalledWith(expect.objectContaining({ id: "j1" }));
+  });
+
+  it("omits Integrations without the callback or without Site Pro", () => {
+    renderList({ jobsites: [{ ...base, plan: "site_pro", sitePro: true }] });
+    expect(screen.queryByRole("button", { name: /^integrations/i })).toBeNull();
+
+    renderList({ jobsites: [{ ...base, plan: "free", sitePro: false }], onManageIntegrations: vi.fn() });
+    expect(screen.queryByRole("button", { name: /^integrations/i })).toBeNull();
+  });
+
   it("shows a disabled Defense Bundle button on a non-Site-Pro jobsite", () => {
     renderList({ jobsites: [{ ...base, plan: "free" }] });
 

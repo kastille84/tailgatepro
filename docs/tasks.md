@@ -2753,9 +2753,20 @@ Costs one extra query per request for Free subs (`resolveEffectiveTier`) and per
       already dropped Custom safety manual upload and deferred the form/manual builder above. Removed from
       Trade Enterprise's pricing copy (`plans.ts`, the strategy doc, `docs/pricing-promise-gaps.md`).
 
-### 9f — Integrations (blocked on billing; deferred)
+### 9f — Integrations (Procore + ACC document push built; live verification open)
 
-- [-] Procore, Autodesk ACC (Site Pro), JobTread, QuickBooks (Enterprise) sync.
+Design: `docs/integrations-design.md`. Bring-your-own credentials (customer pastes a Procore service account /
+ACC custom integration), AES-256-GCM encrypted, auto-push after PDF + manual Retry. Gated to Site Pro access.
+
+- [x] Schema: `jobsite_integrations`, `integration_pushes`, `integration_pushed` audit event (`Supabase_SQL.sql` section 17, `Supabase_Schema.md`). **Run section 17 and the commented audit-constraint `ALTER` on the live DB.**
+- [x] Server: `secretBox.js` (+ `INTEGRATIONS_ENCRYPTION_KEY[_PROD]` in `envUtils.js`), provider adapters `integrations/{procore,acc}.js`, `jobsiteIntegrations.js` (connect/disconnect/list/pushMeeting/retryPush), `routes/integrations.js` mounted at `/api`, hook in `pdfGenerationQueue.enqueue`, tests
+- [x] Client: `apiIntegrations`, `useJobsiteIntegrations` / `useConnectIntegration` / `useDisconnectIntegration` / `useRetryPush`, `IntegrationsModal` + `IntegrationConnectForm`, "Integrations" button on Site Pro jobsites, tests
+- [x] Copy/docs: `plans.ts` Site Pro "coming soon" removed for Procore/ACC, Pricing waitlist copy, `pricing-promise-gaps.md`, PRD 6.1
+- [ ] Set `INTEGRATIONS_ENCRYPTION_KEY` (and `_PROD`): `node -e "console.log(require('crypto').randomBytes(32).toString('base64'))"`
+- [ ] Live verification with a real Procore/ACC account (connect, complete a meeting, confirm the PDF lands, force a failure and Retry). Request shapes are untested against the vendors.
+- [-] JobTread sync — deferred (one adapter file once wanted; see the design doc).
+- [-] QuickBooks sync — deferred; accounting has no document-folder equivalent, needs its own job/customer-sync design.
+- [-] Trade Enterprise (sub-side) Procore/JobTread/QuickBooks sync — not built; stays "coming soon".
 
 ### 9g — Strategy-doc extras
 
@@ -3054,5 +3065,5 @@ Stripe-hosted Checkout (redirect), not embedded. Design doc: `docs/billing-desig
 
 ## Deferred
 
-- [-] Procore integration — also JobTread, QuickBooks, Autodesk ACC (see Phase 9f)
+- [-] JobTread, QuickBooks, and sub-side Trade Enterprise integrations (Procore + ACC document push shipped, see Phase 9f)
 - [-] SMS nudges (9e) — provider decided (Twilio, Toll-Free Verified number); waiting on Stripe billing first

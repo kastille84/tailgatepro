@@ -267,12 +267,12 @@ export const Pricing = () => {
       >
         <StyledCtaInner>
           <StyledSectionTitle id="pricing-cta-heading">
-            SMS nudges and Procore sync are coming soon
+            SMS nudges and Trade Enterprise integrations are coming soon
           </StyledSectionTitle>
           <StyledSectionLede>
-            Automated SMS nudges and Procore &amp; Autodesk ACC sync aren&apos;t
-            live yet. Join the waitlist and we&apos;ll let you know the moment
-            they are.
+            Automated SMS nudges and Procore, JobTread &amp; QuickBooks sync for
+            Trade Enterprise aren&apos;t live yet. Join the waitlist and
+            we&apos;ll let you know the moment they are.
           </StyledSectionLede>
           <WaitlistForm
             idPrefix="pricing"

@@ -151,7 +151,7 @@ describe("Pricing page", () => {
     expect(waitlist.getAttribute("data-audience")).toBe("gc");
     expect(waitlist.getAttribute("data-plan-interest")).toBe("gc-site-pro");
     expect(
-      screen.getByRole("heading", { name: /sms nudges and procore sync are coming soon/i }),
+      screen.getByRole("heading", { name: /sms nudges and trade enterprise integrations are coming soon/i }),
     ).toBeTruthy();
   });
 

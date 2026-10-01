@@ -60,6 +60,12 @@ exports.keysBasedOnEnv = () => {
       meetingLogSeal: {
         secret: process.env.MEETING_LOG_SEAL_SECRET_PROD,
       },
+      // Procore/ACC integration credential encryption (Phase 9f,
+      // server/utility/secretBox.js). 32-byte key, base64. secretBox.js
+      // throws if unset, same fail-loud rule as meetingLogSeal.
+      integrations: {
+        encryptionKey: process.env.INTEGRATIONS_ENCRYPTION_KEY_PROD,
+      },
     };
   } else {
     console.log("not production");
@@ -112,6 +118,10 @@ exports.keysBasedOnEnv = () => {
       // Tamper-evidence content seal -- see the prod branch's comment.
       meetingLogSeal: {
         secret: process.env.MEETING_LOG_SEAL_SECRET,
+      },
+      // Integration credential encryption -- see the prod branch's comment.
+      integrations: {
+        encryptionKey: process.env.INTEGRATIONS_ENCRYPTION_KEY,
       },
     };
   }
