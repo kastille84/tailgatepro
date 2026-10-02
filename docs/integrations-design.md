@@ -72,17 +72,40 @@ one entry in `client/src/data/integrationProviders.ts`.
 
 ## Decisions and limits
 
-- **Scope:** Procore and ACC only. QuickBooks is accounting, with no document-folder equivalent for a
-  safety PDF — it would be a different feature (job/customer sync) and needs its own design. JobTread is deferred.
+- **Scope:** Procore and ACC only. JobTread is deferred. QuickBooks was dropped (2026-10-01): accounting has
+  no document-folder equivalent for a safety PDF, so it is a poor fit.
 - **No queue:** there is no persistent job queue in this codebase. A push that fails is recorded as `failed`
   and surfaced with a Retry button; nothing retries automatically.
-- **Trade Enterprise** lists "Procore, JobTread & QuickBooks sync" on the *subcontractor* side. That is not
-  built and stays "coming soon".
-- **Secrets:** losing or rotating `INTEGRATIONS_ENCRYPTION_KEY` makes stored credentials undecryptable;
+- **Trade Enterprise** (sub-side) is covered by the "Sub-side" section below.- **Secrets:** losing or rotating `INTEGRATIONS_ENCRYPTION_KEY` makes stored credentials undecryptable;
   affected integrations show as `error` on the next push and must be reconnected.
+
+## Sub-side: Trade Enterprise (Procore + JobTread)
+
+A subcontractor manager on **Trade Enterprise** (`hasTradeEnterpriseAccess`, company tier) connects one of their
+TailgatePro **projects** (`projects.id`) to their own Procore project or JobTread job. Same bring-your-own-credentials
+model and encryption as the GC side; each sealed PDF for the project is pushed automatically, with a manual Retry.
+
+- **Independent of the GC push.** A project linked to a GC jobsite that has its own integration pushes to *both*; neither
+  suppresses the other. Each side files the PDF in its own system.
+- **Tables** (`Supabase_SQL.sql` section 18): `project_integrations` (UNIQUE project + provider) and
+  `project_integration_pushes` (UNIQUE meeting + integration). Separate from the jobsite tables to keep their FKs intact.
+- **Shared engine:** `integrations/pushRunner.js` runs one attempt (decrypt, adapter push, record outcome, audit event)
+  for both sides, parameterised by table names; `jobsiteIntegrations.js` and `projectIntegrations.js` are thin wrappers.
+- **Providers per side:** `GC_PROVIDERS = procore, acc`; `SUB_PROVIDERS = procore, jobtread` (`integrations/index.js`);
+  each route validates only its own side.
+- **JobTread** (`integrations/jobtread.js`): customer creates an API grant key in their JobTread organization. Pave API,
+  one `POST https://api.jobtread.com/pave` with the grant key in the request body; verify = read the job;
+  push = `createUploadRequest`, PUT the bytes, `createFile` attached to the job (the pasted job id). No folder concept.
+- **Gating:** `connect` and `retryPush` return 403 `PLAN_REQUIRED` unless the caller is on Trade Enterprise; `pushMeeting`
+  re-checks the owning company at push time so a lapsed plan stops pushing. The client shows an upgrade prompt.
+- **API** (sub managers only): `GET|PUT|DELETE /api/projects/:id/integrations[/:provider]`,
+  `POST /api/project-integrations/pushes/:id/retry`.
 
 ## Live verification (open)
 
 Provider request shapes follow each vendor's public API docs but were not run against a live account. Before
 announcing: with a customer or sandbox, connect each provider, complete a meeting, confirm the PDF lands in
 the folder, force a failure (revoke the service account) and confirm Retry after reconnecting.
+
+**JobTread is the least certain:** its Pave field names (`createUploadRequest`, `createFile` and its target fields) were taken
+from secondary sources because the official docs could not be fetched. They live only in `integrations/jobtread.js`.

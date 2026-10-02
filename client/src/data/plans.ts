@@ -57,9 +57,8 @@ export const SUB_PLANS: Plan[] = [
     annualSub: "$65/mo billed annually — save 20%",
     features: [
       "Unlimited foremen & crews",
-      "Procore, JobTread & QuickBooks sync",
+      "Procore & JobTread document sync",
     ],
-    comingSoon: ["Procore, JobTread & QuickBooks sync"],
   },
 ];
 

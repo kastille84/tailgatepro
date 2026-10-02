@@ -6,10 +6,13 @@ import { Link } from "react-router-dom";
 // duplicated; only roster-specific pieces are defined here.
 export {
   StyledActions,
+  StyledActionsPanel,
+  StyledActionsToggle,
   StyledArchivedBadge,
   StyledCard,
   StyledCardActions,
   StyledCardMain,
+  StyledChevron,
   StyledEmpty,
   StyledList,
   StyledMeta,

@@ -4,6 +4,8 @@ import type {
   IntegrationProvider,
   JobsiteIntegration,
   JobsiteIntegrationsResult,
+  ConnectProjectIntegrationInput,
+  ProjectIntegrationsResult,
 } from "../interfaces/integration";
 
 const GENERIC_ERROR = "Something went wrong. Please try again.";
@@ -78,5 +80,64 @@ export const retryIntegrationPush = async (
     method: "POST",
     headers: authHeaders(accessToken),
   });
+  return unwrap<{ status: "sent" | "failed" }>(res);
+};
+
+/** GET /api/projects/:id/integrations — a sub's project (Trade Enterprise). */
+export const listProjectIntegrations = async (
+  accessToken: string,
+  projectId: string,
+): Promise<ProjectIntegrationsResult> => {
+  const res = await fetchWithTimeout(`/api/projects/${projectId}/integrations`, {
+    method: "GET",
+    headers: { Authorization: `Bearer ${accessToken}` },
+  });
+  return unwrap<ProjectIntegrationsResult>(res);
+};
+
+/** PUT /api/projects/:id/integrations/:provider — verified, then stored encrypted. */
+export const connectProjectIntegration = async (
+  accessToken: string,
+  { tailgateProjectId, provider, credentials, projectId, folderId }: ConnectProjectIntegrationInput,
+): Promise<JobsiteIntegration> => {
+  const res = await fetchWithTimeout(
+    `/api/projects/${tailgateProjectId}/integrations/${provider}`,
+    {
+      method: "PUT",
+      headers: authHeaders(accessToken),
+      body: JSON.stringify({ credentials, projectId, folderId }),
+    },
+  );
+  return unwrap<JobsiteIntegration>(res);
+};
+
+/** DELETE /api/projects/:id/integrations/:provider */
+export const disconnectProjectIntegration = async (
+  accessToken: string,
+  projectId: string,
+  provider: IntegrationProvider,
+): Promise<void> => {
+  const res = await fetchWithTimeout(
+    `/api/projects/${projectId}/integrations/${provider}`,
+    {
+      method: "DELETE",
+      headers: { Authorization: `Bearer ${accessToken}` },
+    },
+  );
+  await unwrap<null>(res);
+};
+
+/** POST /api/project-integrations/pushes/:id/retry — re-sends a failed PDF push. */
+export const retryProjectIntegrationPush = async (
+  accessToken: string,
+  pushId: string,
+): Promise<{ status: "sent" | "failed" }> => {
+  const res = await fetchWithTimeout(
+    `/api/project-integrations/pushes/${pushId}/retry`,
+    {
+      method: "POST",
+      headers: authHeaders(accessToken),
+    },
+  );
   return unwrap<{ status: "sent" | "failed" }>(res);
 };

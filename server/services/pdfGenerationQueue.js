@@ -198,6 +198,15 @@ const enqueue = async (meetingLogId, companyId) => {
       filename,
     });
 
+    // Trade Enterprise: the sub's own Procore/JobTread push for this project.
+    // Independent of the GC push above; same soft-fail contract.
+    await require("./projectIntegrations").pushMeeting({
+      meetingLogId,
+      projectId: project.id,
+      pdfBuffer,
+      filename,
+    });
+
     // Silently skip when neither a linked GC admin nor gc_contact_email
     // resolves to anything (see resolveGcContactEmail above), per docs/tasks.md
     // 5f/8b. No log for the skip itself; it's an expected, common state (e.g.

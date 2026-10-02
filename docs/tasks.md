@@ -2753,7 +2753,7 @@ Costs one extra query per request for Free subs (`resolveEffectiveTier`) and per
       already dropped Custom safety manual upload and deferred the form/manual builder above. Removed from
       Trade Enterprise's pricing copy (`plans.ts`, the strategy doc, `docs/pricing-promise-gaps.md`).
 
-### 9f — Integrations (Procore + ACC document push built; live verification open)
+### 9f — Integrations (Procore + ACC GC push, Procore + JobTread sub push built; live verification open)
 
 Design: `docs/integrations-design.md`. Bring-your-own credentials (customer pastes a Procore service account /
 ACC custom integration), AES-256-GCM encrypted, auto-push after PDF + manual Retry. Gated to Site Pro access.
@@ -2764,9 +2764,17 @@ ACC custom integration), AES-256-GCM encrypted, auto-push after PDF + manual Ret
 - [x] Copy/docs: `plans.ts` Site Pro "coming soon" removed for Procore/ACC, Pricing waitlist copy, `pricing-promise-gaps.md`, PRD 6.1
 - [ ] Set `INTEGRATIONS_ENCRYPTION_KEY` (and `_PROD`): `node -e "console.log(require('crypto').randomBytes(32).toString('base64'))"`
 - [ ] Live verification with a real Procore/ACC account (connect, complete a meeting, confirm the PDF lands, force a failure and Retry). Request shapes are untested against the vendors.
-- [-] JobTread sync — deferred (one adapter file once wanted; see the design doc).
-- [-] QuickBooks sync — deferred; accounting has no document-folder equivalent, needs its own job/customer-sync design.
-- [-] Trade Enterprise (sub-side) Procore/JobTread/QuickBooks sync — not built; stays "coming soon".
+- [-] QuickBooks sync — **dropped** (2026-10-01); accounting has no document-folder equivalent and the buyer doesn't work in the books. Copy removed from `plans.ts`, Pricing waitlist, strategy doc.
+
+#### 9f-2 — Trade Enterprise sub-side sync (Procore + JobTread; live verification open)
+
+A Trade Enterprise sub connects one of their TailgatePro projects to their own Procore project or JobTread job; each sealed PDF for that project is pushed automatically (+ manual Retry). Independent of the GC-side push. Design: `docs/integrations-design.md` ("Sub-side").
+
+- [x] Schema: `project_integrations`, `project_integration_pushes` (`Supabase_SQL.sql` section 18, `Supabase_Schema.md`). **Run section 18 on the live DB.**
+- [x] Server: `integrations/jobtread.js`, shared `integrations/pushRunner.js` (GC push refactored onto it), `projectIntegrations.js`, `routes/projectIntegrations.js` (`/api/projects/:id/integrations…`, `/api/project-integrations/pushes/:id/retry`), `hasTradeEnterpriseAccess`, hook in `pdfGenerationQueue.enqueue`, tests
+- [x] Client: project hooks + API, `IntegrationsPanel` (shared with the GC modal), `ProjectIntegrationsModal` with an upgrade prompt for non-Enterprise subs, "Integrations" button on project cards for sub managers, tests
+- [x] Copy/docs: `plans.ts` Trade Enterprise ("Procore & JobTread document sync" shipped; QuickBooks dropped), Pricing waitlist copy, strategy doc, `pricing-promise-gaps.md`
+- [ ] Live verification with a real Procore and a real JobTread account. **JobTread's Pave field names (createUploadRequest / createFile target) came from secondary sources and are the least certain part.**
 
 ### 9g — Strategy-doc extras
 
@@ -3065,5 +3073,5 @@ Stripe-hosted Checkout (redirect), not embedded. Design doc: `docs/billing-desig
 
 ## Deferred
 
-- [-] JobTread, QuickBooks, and sub-side Trade Enterprise integrations (Procore + ACC document push shipped, see Phase 9f)
+- [-] QuickBooks sync — dropped 2026-10-01 (Procore + ACC GC push and Procore + JobTread sub push shipped, see Phase 9f)
 - [-] SMS nudges (9e) — provider decided (Twilio, Toll-Free Verified number); waiting on Stripe billing first

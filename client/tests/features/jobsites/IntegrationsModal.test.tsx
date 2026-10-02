@@ -9,6 +9,7 @@ import type { Jobsite } from "../../../src/interfaces/jobsite";
 
 const mockUseOnlineStatus = vi.fn();
 const mockUseIntegrations = vi.fn();
+const mockConnect = vi.fn();
 const mockDisconnect = vi.fn();
 const mockRetry = vi.fn();
 let retryingPushId: string | null = null;
@@ -18,6 +19,9 @@ vi.mock("../../../src/context/online-status", () => ({
 }));
 vi.mock("../../../src/hooks/useJobsiteIntegrations", () => ({
   useJobsiteIntegrations: (id: string) => mockUseIntegrations(id),
+}));
+vi.mock("../../../src/hooks/useConnectIntegration", () => ({
+  useConnectIntegration: () => ({ connectIntegration: mockConnect, isConnecting: false }),
 }));
 vi.mock("../../../src/hooks/useDisconnectIntegration", () => ({
   useDisconnectIntegration: () => ({
@@ -30,8 +34,24 @@ vi.mock("../../../src/hooks/useRetryPush", () => ({
 }));
 // The connect form is covered by its own test.
 vi.mock("../../../src/features/jobsites/IntegrationConnectForm", () => ({
-  IntegrationConnectForm: ({ config }: { config: { provider: string } }) => (
-    <div>connect form: {config.provider}</div>
+  IntegrationConnectForm: ({
+    config,
+    onConnect,
+  }: {
+    config: { provider: string };
+    onConnect: (values: unknown) => void;
+  }) => (
+    <div>
+      connect form: {config.provider}
+      <button
+        type="button"
+        onClick={() =>
+          onConnect({ provider: config.provider, credentials: { clientId: "a" }, projectId: "77" })
+        }
+      >
+        submit {config.provider}
+      </button>
+    </div>
   ),
 }));
 
@@ -80,6 +100,17 @@ describe("IntegrationsModal", () => {
     expect(mockUseIntegrations).toHaveBeenCalledWith("j1");
     expect(screen.getByText("connect form: procore")).toBeDefined();
     expect(screen.getByText("connect form: acc")).toBeDefined();
+  });
+
+  it("connects against this jobsite", () => {
+    render_();
+    fireEvent.click(screen.getByRole("button", { name: "submit acc" }));
+    expect(mockConnect).toHaveBeenCalledWith({
+      provider: "acc",
+      credentials: { clientId: "a" },
+      projectId: "77",
+      jobsiteId: "j1",
+    });
   });
 
   it("shows a spinner while loading", () => {

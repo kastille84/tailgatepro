@@ -1,24 +1,25 @@
-// Procore / Autodesk ACC document push (Phase 9f, docs/integrations-design.md).
-// A GC manager connects THEIR OWN Procore/ACC project to one jobsite by
-// pasting service-account credentials; every sealed meeting-log PDF for that
-// jobsite is then pushed into the project's Documents folder. Gated to Site Pro
-// access (hasSiteProAccess). Credentials are AES-256-GCM encrypted at rest
-// (utility/secretBox.js) and never returned to the client.
+// Sub-side Procore / JobTread document push (Trade Enterprise,
+// docs/integrations-design.md). A subcontractor manager connects THEIR OWN
+// Procore project or JobTread job to one of their TailgatePro projects by
+// pasting credentials; every sealed meeting-log PDF for that project is then
+// pushed there. Gated to Trade Enterprise. Independent of the GC-side push
+// (jobsiteIntegrations.js): a project linked to a GC jobsite pushes to both.
+// Credentials are AES-256-GCM encrypted at rest and never returned.
 const { v4: uuidv4 } = require("uuid");
 const { supabase } = require("../utility/supabaseClient");
 const { AppError } = require("../utility/AppError");
 const { encrypt } = require("../utility/secretBox");
-const { hasSiteProAccess } = require("../utility/entitlements");
-const { getProvider, PROVIDER_FIELDS, GC_PROVIDERS } = require("./integrations");
+const { hasTradeEnterpriseAccess } = require("../utility/entitlements");
+const { getProvider, PROVIDER_FIELDS, SUB_PROVIDERS } = require("./integrations");
 const { runPush: runProviderPush } = require("./integrations/pushRunner");
-const jobsitesService = require("./jobsites");
+const projectsService = require("./projects");
 const storageService = require("./storage");
 
 const PDF_BUCKET = "meeting-pdfs";
 const RECENT_PUSH_LIMIT = 20;
 
 const INTEGRATION_COLUMNS =
-  "id, jobsite_id, provider, external_project_id, external_folder_id, encrypted_credentials, status, last_error";
+  "id, project_id, provider, external_project_id, external_folder_id, encrypted_credentials, status, last_error";
 
 // Never includes the credentials, encrypted or not.
 const toIntegration = (row) => ({
@@ -40,45 +41,44 @@ const toPush = (row) => ({
 });
 
 const requireProvider = (provider) => {
-  const adapter = GC_PROVIDERS.includes(provider) ? getProvider(provider) : null;
+  const adapter = SUB_PROVIDERS.includes(provider) ? getProvider(provider) : null;
   if (!adapter) {
     throw new AppError("Unsupported integration provider", 400);
   }
   return adapter;
 };
 
-const requireSitePro = (jobsite) => {
-  if (!jobsite.sitePro) {
-    throw new AppError("Integrations require GC Site Pro", 403, {
+const isEnterprise = ({ companyType, tier }) =>
+  hasTradeEnterpriseAccess(companyType, tier);
+
+const requireEnterprise = (caller) => {
+  if (!isEnterprise(caller)) {
+    throw new AppError("Integrations require Trade Enterprise", 403, {
       data: { code: "PLAN_REQUIRED" },
     });
   }
 };
 
-const listIntegrationRows = async (jobsiteId) => {
+const listIntegrationRows = async (projectId) => {
   const { data, error } = await supabase
-    .from("jobsite_integrations")
+    .from("project_integrations")
     .select(INTEGRATION_COLUMNS)
-    .eq("jobsite_id", jobsiteId);
+    .eq("project_id", projectId);
   if (error) {
     throw new AppError("Could not load integrations", 502, { cause: error });
   }
   return data ?? [];
 };
 
-/** Connected integrations plus recent push results for one jobsite. */
-const list = async ({ jobsiteId, gcCompanyId, allowedJobsiteIds = null }) => {
-  const jobsite = await jobsitesService.getOwnedJobsite(
-    jobsiteId,
-    gcCompanyId,
-    allowedJobsiteIds,
-  );
-  const rows = await listIntegrationRows(jobsiteId);
+/** Connected integrations plus recent push results for one project. */
+const list = async ({ projectId, companyId, companyType, tier }) => {
+  await projectsService.getById(projectId, companyId);
+  const rows = await listIntegrationRows(projectId);
 
   let recentPushes = [];
   if (rows.length > 0) {
     const { data, error } = await supabase
-      .from("integration_pushes")
+      .from("project_integration_pushes")
       .select("id, meeting_log_id, integration_id, status, error, attempted_at")
       .in(
         "integration_id",
@@ -93,7 +93,7 @@ const list = async ({ jobsiteId, gcCompanyId, allowedJobsiteIds = null }) => {
   }
 
   return {
-    sitePro: jobsite.sitePro,
+    enterprise: isEnterprise({ companyType, tier }),
     integrations: rows.map(toIntegration),
     recentPushes,
   };
@@ -104,25 +104,22 @@ const list = async ({ jobsiteId, gcCompanyId, allowedJobsiteIds = null }) => {
  * encrypted. Reconnecting the same provider replaces the old row's config.
  */
 const connect = async ({
-  jobsiteId,
-  gcCompanyId,
-  allowedJobsiteIds = null,
+  projectId,
+  companyId,
+  companyType,
+  tier,
   provider,
   credentials,
-  projectId,
+  externalProjectId,
   folderId,
 }) => {
   const adapter = requireProvider(provider);
-  const jobsite = await jobsitesService.getOwnedJobsite(
-    jobsiteId,
-    gcCompanyId,
-    allowedJobsiteIds,
-  );
-  requireSitePro(jobsite);
+  await projectsService.getById(projectId, companyId);
+  requireEnterprise({ companyType, tier });
 
   const fields = PROVIDER_FIELDS[provider];
   const missing = fields.credentials.filter((field) => !credentials?.[field]);
-  if (missing.length > 0 || !projectId || (fields.folderRequired && !folderId)) {
+  if (missing.length > 0 || !externalProjectId || (fields.folderRequired && !folderId)) {
     throw new AppError("Missing required integration details", 400);
   }
 
@@ -130,17 +127,20 @@ const connect = async ({
   const creds = Object.fromEntries(
     fields.credentials.map((field) => [field, String(credentials[field])]),
   );
-  const target = { projectId: String(projectId), folderId: folderId ? String(folderId) : null };
+  const target = {
+    projectId: String(externalProjectId),
+    folderId: folderId ? String(folderId) : null,
+  };
 
   // Throws AppError 502 when the provider rejects the credentials/project.
   await adapter.verify(creds, target);
 
   const { data, error } = await supabase
-    .from("jobsite_integrations")
+    .from("project_integrations")
     .upsert(
       {
         id: uuidv4(),
-        jobsite_id: jobsiteId,
+        project_id: projectId,
         provider,
         external_project_id: target.projectId,
         external_folder_id: target.folderId,
@@ -148,7 +148,7 @@ const connect = async ({
         status: "connected",
         last_error: null,
       },
-      { onConflict: "jobsite_id,provider" },
+      { onConflict: "project_id,provider" },
     )
     .select(INTEGRATION_COLUMNS)
     .single();
@@ -158,13 +158,13 @@ const connect = async ({
   return toIntegration(data);
 };
 
-const disconnect = async ({ jobsiteId, gcCompanyId, allowedJobsiteIds = null, provider }) => {
+const disconnect = async ({ projectId, companyId, provider }) => {
   requireProvider(provider);
-  await jobsitesService.getOwnedJobsite(jobsiteId, gcCompanyId, allowedJobsiteIds);
+  await projectsService.getById(projectId, companyId);
   const { error } = await supabase
-    .from("jobsite_integrations")
+    .from("project_integrations")
     .delete()
-    .eq("jobsite_id", jobsiteId)
+    .eq("project_id", projectId)
     .eq("provider", provider);
   if (error) {
     throw new AppError("Could not remove the integration", 502, { cause: error });
@@ -175,30 +175,35 @@ const disconnect = async ({ jobsiteId, gcCompanyId, allowedJobsiteIds = null, pr
 const runPush = (args) =>
   runProviderPush({
     ...args,
-    integrationsTable: "jobsite_integrations",
-    pushesTable: "integration_pushes",
+    integrationsTable: "project_integrations",
+    pushesTable: "project_integration_pushes",
   });
 
 /**
  * Called by pdfGenerationQueue.enqueue once a meeting's PDF exists. Pushes to
- * every connected integration on the meeting's jobsite, unless the jobsite no
- * longer has Site Pro access. Soft-fail: never throws.
+ * every connected integration on the meeting's project, unless the owning
+ * company is no longer on Trade Enterprise. Soft-fail: never throws.
  */
-const pushMeeting = async ({ meetingLogId, jobsiteId, pdfBuffer, filename }) => {
+const pushMeeting = async ({ meetingLogId, projectId, pdfBuffer, filename }) => {
   try {
-    if (!jobsiteId) return;
+    if (!projectId) return;
 
-    const { data: jobsite, error } = await supabase
-      .from("jobsites")
-      .select("plan, companies(tier)")
-      .eq("id", jobsiteId)
+    const { data: project, error } = await supabase
+      .from("projects")
+      .select("companies:owner_company_id(tier, company_type)")
+      .eq("id", projectId)
       .single();
     if (error) throw error;
-    if (!hasSiteProAccess({ sitePlan: jobsite.plan, companyTier: jobsite.companies?.tier })) {
+    if (
+      !isEnterprise({
+        companyType: project.companies?.company_type,
+        tier: project.companies?.tier,
+      })
+    ) {
       return;
     }
 
-    const rows = await listIntegrationRows(jobsiteId);
+    const rows = await listIntegrationRows(projectId);
     await Promise.all(
       rows.map((integration) =>
         runPush({ integration, meetingLogId, pdfBuffer, filename }),
@@ -206,18 +211,18 @@ const pushMeeting = async ({ meetingLogId, jobsiteId, pdfBuffer, filename }) => 
     );
   } catch (error) {
     console.error(
-      `jobsiteIntegrations: could not push meeting ${meetingLogId}`,
+      `projectIntegrations: could not push meeting ${meetingLogId}`,
       error,
     );
   }
 };
 
 /** Manual retry of a failed push; re-reads the stored PDF from storage. */
-const retryPush = async ({ pushId, gcCompanyId, allowedJobsiteIds = null }) => {
+const retryPush = async ({ pushId, companyId, companyType, tier }) => {
   const { data: push, error } = await supabase
-    .from("integration_pushes")
+    .from("project_integration_pushes")
     .select(
-      `id, meeting_log_id, filename, integration:jobsite_integrations(${INTEGRATION_COLUMNS})`,
+      `id, meeting_log_id, filename, integration:project_integrations(${INTEGRATION_COLUMNS})`,
     )
     .eq("id", pushId)
     .single();
@@ -228,13 +233,9 @@ const retryPush = async ({ pushId, gcCompanyId, allowedJobsiteIds = null }) => {
     throw new AppError("Push not found", 404, { cause: error });
   }
 
-  // Ownership: the push's jobsite must belong to the caller (404 otherwise).
-  const jobsite = await jobsitesService.getOwnedJobsite(
-    push.integration.jobsite_id,
-    gcCompanyId,
-    allowedJobsiteIds,
-  );
-  requireSitePro(jobsite);
+  // Ownership: the push's project must belong to the caller (404 otherwise).
+  await projectsService.getById(push.integration.project_id, companyId);
+  requireEnterprise({ companyType, tier });
 
   const pdfBuffer = await storageService.downloadBlob(
     PDF_BUCKET,

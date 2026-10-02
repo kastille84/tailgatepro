@@ -249,4 +249,33 @@ Full design: `docs/integrations-design.md`.
 | `attempted_at` | Timestamptz | Default `now()` | |
 | **UNIQUE** | | `(meeting_log_id, integration_id)` | Makes a push idempotent |
 
+**Sub-side (Trade Enterprise, `Supabase_SQL.sql` section 18).** Same model, scoped to a subcontractor's project instead of a GC jobsite; providers `procore` and `jobtread`.
+
+| Table: `project_integrations` | Type | Constraints | Description |
+| :--- | :--- | :--- | :--- |
+| `id` | UUID | Primary Key | Server-generated UUID |
+| `project_id` | UUID | Not Null, FK -> `projects.id` (ON DELETE CASCADE) | The connected TailgatePro project |
+| `provider` | Text | Not Null, CHECK in (`procore`, `jobtread`) | The platform |
+| `external_project_id` | Text | Not Null | The customer's Procore project id / JobTread job id |
+| `external_folder_id` | Text | Nullable | Procore Documents folder (optional); unused by JobTread |
+| `encrypted_credentials` | Text | Not Null | AES-256-GCM ciphertext; never returned to the client |
+| `status` | Text | Not Null, Default `connected`, CHECK in (`connected`, `error`) | Follows the latest push attempt |
+| `last_error` | Text | Nullable | Last push failure message |
+| `created_at` | Timestamptz | Default `now()` | |
+| **UNIQUE** | | `(project_id, provider)` | One connection per provider per project |
+
+| Table: `project_integration_pushes` | Type | Constraints | Description |
+| :--- | :--- | :--- | :--- |
+| `id` | UUID | Primary Key | Server-generated UUID |
+| `meeting_log_id` | UUID | Not Null, FK -> `meeting_logs.id` (ON DELETE CASCADE) | The meeting whose PDF was pushed |
+| `integration_id` | UUID | Not Null, FK -> `project_integrations.id` (ON DELETE CASCADE) | The connection used |
+| `status` | Text | Not Null, Default `pending`, CHECK in (`pending`, `sent`, `failed`) | Outcome of the latest attempt |
+| `external_file_id` | Text | Nullable | The provider's id for the uploaded file |
+| `filename` | Text | Nullable | The PDF filename used (reused on retry) |
+| `error` | Text | Nullable | Failure message |
+| `attempted_at` | Timestamptz | Default `now()` | |
+| **UNIQUE** | | `(meeting_log_id, integration_id)` | Makes a push idempotent |
+
+> The four tables in this section are all RLS-enabled with no policies (server-only).
+
 > RLS: enabled with no policies (server-brokered, deny-all) — see `docs/data-access.md`.

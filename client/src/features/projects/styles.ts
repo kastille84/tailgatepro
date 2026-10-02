@@ -32,12 +32,55 @@ export const StyledCardMain = styled.div`
   gap: 0.4rem;
 `;
 
-/** Status/linked badges plus the card's action buttons. */
+/** Status/linked badges. */
 export const StyledCardActions = styled.div`
   display: flex;
   flex-wrap: wrap;
   align-items: center;
   gap: 1.2rem;
+`;
+
+/** Disclosure button that shows/hides the card's action panel. Full width on
+ *  mobile (48px target); shrinks to content from tablet up. */
+export const StyledActionsToggle = styled.button`
+  flex: 1 1 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1.2rem;
+  min-height: 4.8rem;
+  padding: 0 1.6rem;
+  font-size: 1.6rem;
+  font-weight: 700;
+  color: ${({ theme }) => theme.colors.navy[700]};
+  background-color: transparent;
+  border: 0.1rem solid ${({ theme }) => theme.colors.navy[200]};
+  border-radius: ${({ theme }) => theme.borderRadius.md};
+  cursor: pointer;
+
+  @media (min-width: ${({ theme }) => theme.breakpoints.sm}) {
+    flex: 0 0 auto;
+  }
+`;
+
+export const StyledChevron = styled.span<{ $open: boolean }>`
+  width: 0.9rem;
+  height: 0.9rem;
+  border-right: 0.2rem solid currentColor;
+  border-bottom: 0.2rem solid currentColor;
+  transform: ${({ $open }) => ($open ? "rotate(-135deg)" : "rotate(45deg)")};
+`;
+
+/** The collapsible buttons: stacked on mobile, one row from tablet up. */
+export const StyledActionsPanel = styled.div`
+  flex: 1 1 100%;
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 1.2rem;
+
+  @media (min-width: ${({ theme }) => theme.breakpoints.sm}) {
+    grid-template-columns: repeat(auto-fit, minmax(14rem, 1fr));
+  }
 `;
 
 export const StyledName = styled.h3`

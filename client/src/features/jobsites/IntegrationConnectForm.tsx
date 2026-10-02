@@ -5,41 +5,45 @@ import { z } from "zod";
 import { Button } from "../../ui_comps/button";
 import { Form, FormField, TextInput } from "../../ui_comps/form";
 import { useOnlineStatus } from "../../context/online-status";
-import { useConnectIntegration } from "../../hooks/useConnectIntegration";
+import type { ConnectFormValues } from "../../interfaces/integration";
 import type { IntegrationProviderConfig } from "../../data/integrationProviders";
 
 const REQUIRED = "This field is required";
+
+type ConnectValues = Record<string, string>;
 
 // Mirrors the server's validators (routes/integrations.js) and per-provider
 // field rules (services/integrations/index.js PROVIDER_FIELDS).
 const buildSchema = (config: IntegrationProviderConfig) =>
   z.object({
-    clientId: z.string().trim().min(1, REQUIRED),
-    clientSecret: z.string().trim().min(1, REQUIRED),
-    companyId: config.credentialFields.some((field) => field.name === "companyId")
-      ? z.string().trim().min(1, REQUIRED)
-      : z.string().trim(),
+    ...Object.fromEntries(
+      config.credentialFields.map((field) => [
+        field.name,
+        z.string().trim().min(1, REQUIRED),
+      ]),
+    ),
     projectId: z.string().trim().min(1, REQUIRED),
     folderId: config.folderRequired
       ? z.string().trim().min(1, REQUIRED)
       : z.string().trim(),
   });
 
-type ConnectValues = z.infer<ReturnType<typeof buildSchema>>;
-
 interface IntegrationConnectFormProps {
-  jobsiteId: string;
   config: IntegrationProviderConfig;
+  /** Sends the values to the server; rejects when it refuses them. The caller's
+   *  hook already surfaces the failure as a toast. */
+  onConnect: (values: ConnectFormValues) => Promise<unknown>;
+  isConnecting: boolean;
 }
 
-/** Paste a customer-owned Procore/ACC service account to connect one jobsite.
- *  The server verifies it against the provider before storing it. */
+/** Paste a customer-owned service account / API key to connect one jobsite or
+ *  project. The server verifies it against the provider before storing it. */
 export const IntegrationConnectForm = ({
-  jobsiteId,
   config,
+  onConnect,
+  isConnecting,
 }: IntegrationConnectFormProps) => {
   const { isOnline } = useOnlineStatus();
-  const { connectIntegration, isConnecting } = useConnectIntegration();
 
   const {
     register,
@@ -50,9 +54,7 @@ export const IntegrationConnectForm = ({
     resolver: zodResolver(buildSchema(config)),
     mode: "onTouched",
     defaultValues: {
-      clientId: "",
-      clientSecret: "",
-      companyId: "",
+      ...Object.fromEntries(config.credentialFields.map((field) => [field.name, ""])),
       projectId: "",
       folderId: "",
     },
@@ -60,8 +62,7 @@ export const IntegrationConnectForm = ({
 
   const onSubmit = async (values: ConnectValues) => {
     try {
-      await connectIntegration({
-        jobsiteId,
+      await onConnect({
         provider: config.provider,
         credentials: Object.fromEntries(
           config.credentialFields.map((field) => [field.name, values[field.name]]),
@@ -71,7 +72,7 @@ export const IntegrationConnectForm = ({
       });
       reset();
     } catch {
-      // useConnectIntegration already surfaces the failure as a toast.
+      // The connect hook already surfaces the failure as a toast.
     }
   };
 
@@ -111,19 +112,21 @@ export const IntegrationConnectForm = ({
         />
       </FormField>
 
-      <FormField
-        id={fieldId("folderId")}
-        label={config.folderLabel}
-        error={errors.folderId?.message}
-      >
-        <TextInput
+      {config.hasFolder && (
+        <FormField
           id={fieldId("folderId")}
-          autoComplete="off"
-          disabled={!isOnline}
-          hasError={!!errors.folderId}
-          {...register("folderId")}
-        />
-      </FormField>
+          label={config.folderLabel}
+          error={errors.folderId?.message}
+        >
+          <TextInput
+            id={fieldId("folderId")}
+            autoComplete="off"
+            disabled={!isOnline}
+            hasError={!!errors.folderId}
+            {...register("folderId")}
+          />
+        </FormField>
+      )}
 
       <Button
         type="submit"

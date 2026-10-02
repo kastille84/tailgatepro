@@ -138,9 +138,16 @@ const hasSiteProAccess = ({ sitePlan, companyTier }) =>
   sitePlan === "site_pro" ||
   getPlanId("gc", companyTier) === "gc-portfolio";
 
+// Whether a subcontractor company is on Trade Enterprise (sub-side Procore /
+// JobTread document push, docs/integrations-design.md). Company-tier based,
+// unlike the per-jobsite Site Pro check above.
+const hasTradeEnterpriseAccess = (companyType, tier) =>
+  getPlanId(companyType, tier) === "trade-enterprise";
+
 module.exports = {
   TRANSLATION_TIERS,
   hasSiteProAccess,
+  hasTradeEnterpriseAccess,
   hasTranslationAccess,
   hasBrandingAccess,
   PLAN_LIMITS,

@@ -554,3 +554,40 @@ CREATE INDEX IF NOT EXISTS idx_integration_pushes_meeting_log_id ON integration_
 -- Existing databases: allow the new audit event type.
 -- ALTER TABLE meeting_log_audit_events DROP CONSTRAINT IF EXISTS meeting_log_audit_events_event_type_check;
 -- ALTER TABLE meeting_log_audit_events ADD CONSTRAINT meeting_log_audit_events_event_type_check CHECK (event_type IN ('created', 'completed', 'pdf_generated', 'seal_verified', 'integration_pushed'));
+
+-- 18. Sub-side document integrations (Trade Enterprise, docs/integrations-design.md)
+-- -- Procore / JobTread. Same bring-your-own-credentials model as section 17, but
+-- scoped to a subcontractor's project (projects.id) instead of a GC jobsite.
+-- Server-written uuidv4 ids; `encrypted_credentials` is AES-256-GCM ciphertext.
+CREATE TABLE IF NOT EXISTS project_integrations (
+  id UUID PRIMARY KEY,
+  project_id UUID NOT NULL REFERENCES projects(id) ON DELETE CASCADE,
+  provider TEXT NOT NULL CHECK (provider IN ('procore', 'jobtread')),
+  external_project_id TEXT NOT NULL,
+  external_folder_id TEXT,
+  encrypted_credentials TEXT NOT NULL,
+  status TEXT NOT NULL DEFAULT 'connected' CHECK (status IN ('connected', 'error')),
+  last_error TEXT,
+  created_at TIMESTAMPTZ DEFAULT NOW(),
+  UNIQUE (project_id, provider)
+);
+
+-- One push per (meeting, integration): the UNIQUE makes pushing idempotent.
+CREATE TABLE IF NOT EXISTS project_integration_pushes (
+  id UUID PRIMARY KEY,
+  meeting_log_id UUID NOT NULL REFERENCES meeting_logs(id) ON DELETE CASCADE,
+  integration_id UUID NOT NULL REFERENCES project_integrations(id) ON DELETE CASCADE,
+  status TEXT NOT NULL DEFAULT 'pending' CHECK (status IN ('pending', 'sent', 'failed')),
+  external_file_id TEXT,
+  filename TEXT,
+  error TEXT,
+  attempted_at TIMESTAMPTZ DEFAULT NOW(),
+  UNIQUE (meeting_log_id, integration_id)
+);
+
+-- Server-only tables: RLS with NO policies (service-role key only).
+ALTER TABLE project_integrations ENABLE ROW LEVEL SECURITY;
+ALTER TABLE project_integration_pushes ENABLE ROW LEVEL SECURITY;
+
+CREATE INDEX IF NOT EXISTS idx_project_integrations_project_id ON project_integrations (project_id);
+CREATE INDEX IF NOT EXISTS idx_project_integration_pushes_meeting_log_id ON project_integration_pushes (meeting_log_id);

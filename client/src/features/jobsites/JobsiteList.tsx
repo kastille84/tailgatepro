@@ -1,19 +1,6 @@
-import { Button } from "../../ui_comps/button";
 import type { Jobsite } from "../../interfaces/jobsite";
-import {
-  StyledArchivedBadge,
-  StyledCard,
-  StyledCardActions,
-  StyledCardMain,
-  StyledEmpty,
-  StyledList,
-  StyledMeta,
-  StyledName,
-  StyledOriginBadge,
-  StyledStatusBadge,
-} from "./styles";
-
-import { HiOutlineDownload } from "react-icons/hi";
+import { JobsiteCard } from "./JobsiteCard";
+import { StyledEmpty, StyledList } from "./styles";
 
 interface JobsiteListProps {
   jobsites: Jobsite[];
@@ -44,14 +31,6 @@ interface JobsiteListProps {
   isOnline: boolean;
 }
 
-const describeRoster = (jobsite: Jobsite) => {
-  const accepted = jobsite.subcontractors.filter(
-    (sub) => sub.status === "accepted",
-  ).length;
-  const pending = jobsite.subcontractors.length - accepted;
-  return `${accepted} subcontractor${accepted === 1 ? "" : "s"}, ${pending} pending`;
-};
-
 /** Presentational list of a GC's jobsites. The manager owns data and modal
  *  state; this only renders and reports clicks. */
 export const JobsiteList = ({
@@ -76,99 +55,18 @@ export const JobsiteList = ({
   return (
     <StyledList>
       {jobsites.map((jobsite) => (
-        <StyledCard key={jobsite.id}>
-          <StyledCardMain>
-            <StyledName>{jobsite.name}</StyledName>
-            <StyledMeta>{describeRoster(jobsite)}</StyledMeta>
-            {jobsite.createdBySub && (
-              <StyledOriginBadge>Created by subcontractor</StyledOriginBadge>
-            )}
-            {jobsite.sitePro && jobsite.plan !== "site_pro" && (
-              <StyledOriginBadge>Covered by GC Portfolio</StyledOriginBadge>
-            )}
-          </StyledCardMain>
-          <StyledCardActions>
-            {jobsite.archivedAt ? (
-              <StyledArchivedBadge>Archived</StyledArchivedBadge>
-            ) : (
-              <StyledStatusBadge $status={jobsite.status}>
-                {jobsite.status}
-              </StyledStatusBadge>
-            )}
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => onManageSubs(jobsite)}
-              aria-label={`Subcontractors for ${jobsite.name}`}
-            >
-              Subs
-            </Button>
-            {onManageMembers && (
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => onManageMembers(jobsite)}
-                aria-label={`Superintendents for ${jobsite.name}`}
-              >
-                Team
-              </Button>
-            )}
-            {onManageIntegrations && jobsite.sitePro && (
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => onManageIntegrations(jobsite)}
-                aria-label={`Integrations for ${jobsite.name}`}
-              >
-                Integrations
-              </Button>
-            )}
-            {jobsite.sitePro ? (
-              <Button
-                variant="outline"
-                size="sm"
-                disabled={!isOnline}
-                loading={isDownloadingBundle}
-                leftIcon={<HiOutlineDownload />}
-                onClick={() => onDownloadBundle(jobsite)}
-                aria-label={`Download OSHA Defense Bundle for ${jobsite.name}`}
-                title={`Download OSHA Defense Bundle for ${jobsite.name}`}
-              >
-                Defense Bundle
-              </Button>
-            ) : onUpgrade && !jobsite.archivedAt && jobsite.status === "active" ? (
-              <Button
-                variant="primary"
-                size="sm"
-                disabled={!isOnline}
-                onClick={() => onUpgrade(jobsite)}
-                aria-label={`Upgrade ${jobsite.name} to Site Pro`}
-              >
-                Upgrade to Site Pro
-              </Button>
-            ) : (
-              <Button
-                variant="primary"
-                size="sm"
-                leftIcon={<HiOutlineDownload />}
-                disabled={true}
-                aria-label={`Download OSHA Defense Bundle for ${jobsite.name}`}
-              >
-                Defense Bundle
-              </Button>
-            )}
-            {onEdit && (
-              <Button
-                variant="primary"
-                size="sm"
-                onClick={() => onEdit(jobsite)}
-                aria-label={`Edit ${jobsite.name}`}
-              >
-                Edit
-              </Button>
-            )}
-          </StyledCardActions>
-        </StyledCard>
+        <JobsiteCard
+          key={jobsite.id}
+          jobsite={jobsite}
+          onEdit={onEdit}
+          onManageSubs={onManageSubs}
+          onManageMembers={onManageMembers}
+          onManageIntegrations={onManageIntegrations}
+          onUpgrade={onUpgrade}
+          onDownloadBundle={onDownloadBundle}
+          isDownloadingBundle={isDownloadingBundle}
+          isOnline={isOnline}
+        />
       ))}
     </StyledList>
   );

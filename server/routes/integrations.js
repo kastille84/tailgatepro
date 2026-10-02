@@ -7,7 +7,7 @@ const { requireGcCompany } = require("../middlewares/requireGcCompany");
 const { requireRole } = require("../middlewares/requireRole");
 const { validate } = require("../middlewares/validate");
 const { MANAGER_ROLES } = require("../constants/roles");
-const { PROVIDER_NAMES } = require("../services/integrations");
+const { GC_PROVIDERS } = require("../services/integrations");
 const {
   listIntegrations,
   connectIntegration,
@@ -22,7 +22,7 @@ const router = express.Router();
 const guard = [requireAuth, loadUserContext, requireGcCompany, requireRole(...MANAGER_ROLES)];
 const jobsiteId = param("id").isUUID().withMessage("Invalid jobsite id");
 const provider = param("provider")
-  .isIn(PROVIDER_NAMES)
+  .isIn(GC_PROVIDERS)
   .withMessage("Unsupported integration provider");
 
 // GET /api/jobsites/:id/integrations -- connected integrations + recent pushes

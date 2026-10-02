@@ -2,7 +2,8 @@
 const procore = require("./procore");
 const acc = require("./acc");
 const { request } = require("./http");
-const { getProvider, PROVIDER_NAMES } = require("./index");
+const jobtread = require("./jobtread");
+const { getProvider, GC_PROVIDERS, SUB_PROVIDERS } = require("./index");
 
 const ok = (body) => ({ ok: true, status: 200, json: async () => body, text: async () => "" });
 const fail = (status, text = "nope") => ({
@@ -48,10 +49,70 @@ describe("http.request", () => {
 
 describe("registry", () => {
   it("resolves known providers and null for unknown", () => {
-    expect(PROVIDER_NAMES).toEqual(["procore", "acc"]);
+    expect(GC_PROVIDERS).toEqual(["procore", "acc"]);
+    expect(SUB_PROVIDERS).toEqual(["procore", "jobtread"]);
     expect(getProvider("procore")).toBe(procore);
     expect(getProvider("acc")).toBe(acc);
-    expect(getProvider("jobtread")).toBeNull();
+    expect(getProvider("jobtread")).toBe(jobtread);
+    expect(getProvider("quickbooks")).toBeNull();
+  });
+});
+
+describe("jobtread", () => {
+  const creds = { grantKey: "gk" };
+  const target = { projectId: "job-1", folderId: null };
+
+  it("verify reads the job with the grant key in the request body", async () => {
+    fetchMock.mockResolvedValueOnce(ok({ job: { id: "job-1" } }));
+    await jobtread.verify(creds, target);
+    expect(fetchMock.mock.calls[0][0]).toBe("https://api.jobtread.com/pave");
+    const body = JSON.parse(fetchMock.mock.calls[0][1].body);
+    expect(body.query.$.grantKey).toBe("gk");
+    expect(body.query.job.$.id).toBe("job-1");
+  });
+
+  it("push requests an upload, sends the bytes, then attaches the file to the job", async () => {
+    fetchMock
+      .mockResolvedValueOnce(
+        ok({
+          createUploadRequest: {
+            createdUploadRequest: { id: "ur1", url: "https://s3/put", method: "PUT", headers: { "x-a": "b" } },
+          },
+        }),
+      )
+      .mockResolvedValueOnce(ok({}))
+      .mockResolvedValueOnce(ok({ createFile: { createdFile: { id: "f9" } } }));
+    const pdfBuffer = Buffer.from("pdf");
+    const result = await jobtread.push({ creds, target, pdfBuffer, filename: "a.pdf" });
+    expect(result).toEqual({ externalFileId: "f9" });
+    expect(fetchMock.mock.calls[1][0]).toBe("https://s3/put");
+    expect(fetchMock.mock.calls[1][1]).toMatchObject({ method: "PUT", headers: { "x-a": "b" }, body: pdfBuffer });
+    const fileBody = JSON.parse(fetchMock.mock.calls[2][1].body);
+    expect(fileBody.query.createFile.$).toMatchObject({
+      name: "a.pdf",
+      uploadRequestId: "ur1",
+      targetId: "job-1",
+      targetType: "job",
+    });
+  });
+
+  it("push falls back to a PUT with a PDF content type when the request omits them", async () => {
+    fetchMock
+      .mockResolvedValueOnce(ok({ createUploadRequest: { createdUploadRequest: { id: "ur1", url: "https://s3/put" } } }))
+      .mockResolvedValueOnce(ok({}))
+      .mockResolvedValueOnce(ok({ createFile: { createdFile: { id: 1 } } }));
+    await jobtread.push({ creds, target, pdfBuffer: Buffer.from("x"), filename: "a.pdf" });
+    expect(fetchMock.mock.calls[1][1]).toMatchObject({
+      method: "PUT",
+      headers: { "Content-Type": "application/pdf" },
+    });
+  });
+
+  it("push surfaces a failed step as AppError 502", async () => {
+    fetchMock.mockResolvedValueOnce(fail(401));
+    await expect(
+      jobtread.push({ creds, target, pdfBuffer: Buffer.from("x"), filename: "a.pdf" }),
+    ).rejects.toMatchObject({ statusCode: 502 });
   });
 });
 

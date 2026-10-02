@@ -25,10 +25,17 @@ const base: Jobsite = {
   ],
 };
 
+/** Action buttons live in a collapsed-by-default panel; open every card's. */
+const expandAll = () =>
+  screen
+    .getAllByRole("button", { name: /^actions for /i })
+    .forEach((toggle) => fireEvent.click(toggle));
+
 const renderList = (
   props: Partial<React.ComponentProps<typeof JobsiteList>> = {},
-) =>
-  render(
+  { expanded = true }: { expanded?: boolean } = {},
+) => {
+  const result = render(
     <MemoryRouter>
       <ThemeProvider theme={theme}>
         <JobsiteList
@@ -41,11 +48,32 @@ const renderList = (
       </ThemeProvider>
     </MemoryRouter>,
   );
+  if (expanded && props.jobsites?.length !== 0) expandAll();
+  return result;
+};
 
 describe("JobsiteList", () => {
   it("shows an empty state with no jobsites", () => {
     renderList({ jobsites: [] });
     expect(screen.getByText(/no job sites yet/i)).toBeDefined();
+  });
+
+  it("keeps the action buttons collapsed until the card's toggle is opened", () => {
+    renderList({ onEdit: vi.fn() }, { expanded: false });
+
+    const toggle = screen.getByRole("button", { name: "Actions for Riverside" });
+    expect(toggle.getAttribute("aria-expanded")).toBe("false");
+    expect(screen.queryByRole("button", { name: "Edit Riverside" })).toBeNull();
+
+    fireEvent.click(toggle);
+    expect(toggle.getAttribute("aria-expanded")).toBe("true");
+    const panel = document.getElementById(toggle.getAttribute("aria-controls") ?? "");
+    expect(panel?.getAttribute("role")).toBe("group");
+    expect(screen.getByRole("button", { name: "Edit Riverside" })).toBeDefined();
+
+    fireEvent.click(toggle);
+    expect(toggle.getAttribute("aria-expanded")).toBe("false");
+    expect(screen.queryByRole("button", { name: "Edit Riverside" })).toBeNull();
   });
 
   it("shows the name, status, and a roster summary", () => {

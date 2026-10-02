@@ -11,7 +11,20 @@ const {
   seatRoleFor,
   effectiveJobsiteLimit,
   hasSiteProAccess,
+  hasTradeEnterpriseAccess,
 } = require("./entitlements");
+
+describe("entitlements: hasTradeEnterpriseAccess", () => {
+  it.each([
+    ["subcontractor", "enterprise", true],
+    ["subcontractor", "premium", false],
+    ["subcontractor", "basic", false],
+    ["gc", "enterprise", false],
+    [undefined, undefined, false],
+  ])("%s on tier %s -> %s", (companyType, tier, expected) => {
+    expect(hasTradeEnterpriseAccess(companyType, tier)).toBe(expected);
+  });
+});
 
 describe("entitlements: hasSiteProAccess", () => {
   it.each([

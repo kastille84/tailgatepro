@@ -13,20 +13,19 @@ const mockConnect = vi.fn();
 vi.mock("../../../src/context/online-status", () => ({
   useOnlineStatus: () => mockUseOnlineStatus(),
 }));
-vi.mock("../../../src/hooks/useConnectIntegration", () => ({
-  useConnectIntegration: () => ({
-    connectIntegration: mockConnect,
-    isConnecting: false,
-  }),
-}));
 
 const procore = INTEGRATION_PROVIDERS.find((p) => p.provider === "procore")!;
 const acc = INTEGRATION_PROVIDERS.find((p) => p.provider === "acc")!;
+const jobtread = INTEGRATION_PROVIDERS.find((p) => p.provider === "jobtread")!;
 
-const renderForm = (config = procore) =>
+const renderForm = (config = procore, isConnecting = false) =>
   render(
     <ThemeProvider theme={theme}>
-      <IntegrationConnectForm jobsiteId="j1" config={config} />
+      <IntegrationConnectForm
+        config={config}
+        onConnect={mockConnect}
+        isConnecting={isConnecting}
+      />
     </ThemeProvider>,
   );
 
@@ -66,7 +65,6 @@ describe("IntegrationConnectForm", () => {
 
     await waitFor(() =>
       expect(mockConnect).toHaveBeenCalledWith({
-        jobsiteId: "j1",
         provider: "procore",
         credentials: { clientId: "id", clientSecret: "secret", companyId: "9" },
         projectId: "77",
@@ -90,13 +88,39 @@ describe("IntegrationConnectForm", () => {
     fireEvent.click(screen.getByRole("button", { name: /connect autodesk acc/i }));
     await waitFor(() =>
       expect(mockConnect).toHaveBeenCalledWith({
-        jobsiteId: "j1",
         provider: "acc",
         credentials: { clientId: "id", clientSecret: "secret" },
         projectId: "p",
         folderId: "urn:folder",
       }),
     );
+  });
+
+  it("connects JobTread with only a grant key and a job id (no folder field)", async () => {
+    renderForm(jobtread);
+    expect((screen.getByLabelText(/grant key/i) as HTMLInputElement).type).toBe("password");
+    expect(screen.queryByLabelText(/folder/i)).toBeNull();
+
+    fireEvent.click(screen.getByRole("button", { name: /connect jobtread/i }));
+    expect((await screen.findAllByText(/this field is required/i)).length).toBe(2);
+    expect(mockConnect).not.toHaveBeenCalled();
+
+    fill(/grant key/i, "gk");
+    fill(/jobtread job id/i, "job-1");
+    fireEvent.click(screen.getByRole("button", { name: /connect jobtread/i }));
+    await waitFor(() =>
+      expect(mockConnect).toHaveBeenCalledWith({
+        provider: "jobtread",
+        credentials: { grantKey: "gk" },
+        projectId: "job-1",
+        folderId: undefined,
+      }),
+    );
+  });
+
+  it("shows the busy state while connecting", () => {
+    renderForm(procore, true);
+    expect(screen.getByRole("button", { name: /connect procore/i }).getAttribute("aria-busy")).toBe("true");
   });
 
   it("clears the form after a successful connect", async () => {
