@@ -12,6 +12,11 @@
 | `tier` | Enum | Not Null | `basic`, `premium`, `enterprise` |
 | `logo_path` | Text | Nullable | Storage path of the uploaded company logo (`company-logos` bucket); embedded in generated PDFs and removes the free-tier watermark for Trade Pro+ tiers |
 | `join_code` | Text | Unique (Nullable) | GC-only (Phase 6): the 8-character code a subcontractor enters to link a project to this GC. Generated server-side on the GC's first `GET /api/companies/join-code`; always `NULL` for a subcontractor (**CHECK** `check_join_code_gc_only`: `join_code IS NULL OR company_type = 'gc'`). See `docs/gc-dashboard-design.md` |
+| `stripe_customer_id` | Text | Unique (Nullable) | Phase 12 billing: the company's Stripe customer (`cus_...`). Created on first checkout; written server-side only |
+| `stripe_subscription_id` | Text | Unique (Nullable) | Phase 12: the active Stripe subscription (`sub_...`). Set/cleared by the Stripe webhook |
+| `subscription_status` | Text | Nullable | Phase 12: mirrors Stripe's subscription status (`active`, `trialing`, `past_due`, `canceled`, ...) |
+| `billing_interval` | Text | Nullable | Phase 12: `monthly` or `annual` (**CHECK**) |
+| `current_period_end` | Timestamptz | Nullable | Phase 12: end of the paid period, for display in Settings → Billing |
 | `required_talk_id` | UUID | FK → `toolbox_talks.id`, `ON DELETE SET NULL`, Nullable | GC-only (Phase 9e, GC Portfolio, `docs/policy-push-design.md`): the GC's current top-down policy push — one global toolbox talk pushed as required reading across every active jobsite. `NULL` = no push currently active. Cleared/replaced by the GC only; never auto-expires |
 | `required_talk_pushed_at` | Timestamptz | Nullable | When the current `required_talk_id` was pushed |
 | `required_talk_pushed_by` | UUID | FK → `users.id`, `ON DELETE SET NULL`, Nullable | Which user pushed the current `required_talk_id` |
@@ -23,7 +28,13 @@
 | `role` | Enum | Not Null | `admin`, `safety_manager`, `foreman` |
 | `name` | Text | Not Null | User's full name |
 
-> RLS: enabled with no policies (server-brokered, deny-all) on `companies` and `users` — see `docs/data-access.md`.
+| Table: `stripe_events` | Type | Constraints | Description |
+| :--- | :--- | :--- | :--- |
+| `id` | Text | Primary Key | Stripe's event id (`evt_...`), **not** a client-generated UUID (server-only table, never written offline). Inserted before an event is handled; a duplicate means a Stripe retry and is skipped |
+| `type` | Text | Not Null | Stripe event type, e.g. `customer.subscription.updated` |
+| `processed_at` | Timestamptz | Default `NOW()` | When the event was recorded |
+
+> RLS: enabled with no policies (server-brokered, deny-all) on `companies`, `users` and `stripe_events` — see `docs/data-access.md`.
 
 ### 2. Projects & Access
 
@@ -156,7 +167,11 @@ still its own row, now optionally pointed at one of these via `jobsite_id` (see 
 | `name` | Text | Not Null | E.g., "Riverside Tower" |
 | `status` | Enum | Default `active` | `active`, `completed` — reuses `project_status` |
 | `archived_at` | Timestamptz | Nullable | `NULL` = live; a timestamp = archived |
-| `plan` | Text | Not Null, Default `'free'`, CHECK in (`free`, `site_pro`) | Phase 9b: per-site GC plan. `site_pro` = a paid GC Site Pro site (see `server/utility/entitlements.js`). Not yet enforced or written (9d) |
+| `plan` | Text | Not Null, Default `'free'`, CHECK in (`free`, `site_pro`) | Phase 9b: per-site GC plan. `site_pro` = a paid GC Site Pro site (see `server/utility/entitlements.js`). Enforced by the entitlement checks (9d); written only by the Stripe webhook (12h) |
+| `stripe_subscription_id` | Text | Unique (Nullable) | Phase 12h: the jobsite's own Site Pro subscription, set by the Stripe webhook. Separate from `companies.stripe_subscription_id` so a Site Pro purchase never touches the company's plan |
+| `site_pro_status` | Text | Nullable | Stripe status of that subscription (`active`, `trialing`, `past_due`, `canceled`, ...) |
+| `site_pro_interval` | Text | Nullable, CHECK in (`monthly`, `annual`) | Billing interval of the Site Pro subscription |
+| `site_pro_period_end` | Timestamptz | Nullable | Current period end of the Site Pro subscription |
 | `origin` | Text | Nullable, CHECK in (`gc`, `subcontractor`) | Who created the jobsite: `gc` via `POST /api/jobsites`, `subcontractor` when a join-code link find-or-created it. `NULL` = created before this column existed (origin unknown, never guessed). Server-written only; drives the "Created by subcontractor" badge |
 | `join_token` | Text | Unique (Nullable) | Phase 9e (`docs/jobsite-qr-join-design.md`): this jobsite's own standing QR/join link, created lazily on first `GET /api/jobsites/:id/join-link`. Never expires, unlike `jobsite_subcontractors.token` below — meant to be publicly displayed (a QR code, a printed poster), the same trust model `companies.join_code` has |
 | `meeting_cadence` | Text | Not Null, Default `'daily'`, CHECK in (`daily`, `weekly`) | Phase 11f: how often subs on this site must log a talk — the GC's default. A sub may tighten it for itself via `jobsite_subcontractors.meeting_cadence`, never relax it. Weekly = Monday–Sunday in the viewer's timezone |
@@ -195,12 +210,72 @@ Full design: `docs/tamper-evidence-design.md`.
 | :--- | :--- | :--- | :--- |
 | `id` | UUID | Primary Key | Server-generated UUID (not an offline record — every event here originates from an authenticated server-side step) |
 | `meeting_log_id` | UUID | Not Null, FK -> `meeting_logs.id` (ON DELETE CASCADE) | The meeting log this event describes |
-| `event_type` | Text | Not Null, CHECK in (`created`, `completed`, `pdf_generated`, `seal_verified`) | The lifecycle event |
+| `event_type` | Text | Not Null, CHECK in (`created`, `completed`, `pdf_generated`, `seal_verified`, `integration_pushed`) | The lifecycle event |
 | `actor_id` | UUID | Nullable, FK -> `users.id` (ON DELETE SET NULL) | The acting user, or `NULL` for a system-triggered event (`pdf_generated`) |
 | `metadata` | JSONB | Nullable | Event-specific detail, e.g. `{ valid, via }` on `seal_verified` |
 | `created_at` | Timestamptz | Default `now()` | |
 
 A lifecycle trail scoped to `meeting_logs` only, not a general system-wide audit log — write-only
 in v1 (no admin UI reads it yet).
+
+> RLS: enabled with no policies (server-brokered, deny-all) — see `docs/data-access.md`.
+
+### 9. Document Integrations (Phase 9f)
+
+Full design: `docs/integrations-design.md`.
+
+| Table: `jobsite_integrations` | Type | Constraints | Description |
+| :--- | :--- | :--- | :--- |
+| `id` | UUID | Primary Key | Server-generated UUID (online-only, server-written) |
+| `jobsite_id` | UUID | Not Null, FK -> `jobsites.id` (ON DELETE CASCADE) | The connected jobsite |
+| `provider` | Text | Not Null, CHECK in (`procore`, `acc`) | The document platform |
+| `external_project_id` | Text | Not Null | The customer's Procore/ACC project id |
+| `external_folder_id` | Text | Nullable | Target folder (required for ACC, optional for Procore) |
+| `encrypted_credentials` | Text | Not Null | AES-256-GCM ciphertext of the customer's service-account credentials; never returned to the client |
+| `status` | Text | Not Null, Default `connected`, CHECK in (`connected`, `error`) | Follows the latest push attempt |
+| `last_error` | Text | Nullable | Last push failure message |
+| `created_at` | Timestamptz | Default `now()` | |
+| **UNIQUE** | | `(jobsite_id, provider)` | One connection per provider per jobsite |
+
+| Table: `integration_pushes` | Type | Constraints | Description |
+| :--- | :--- | :--- | :--- |
+| `id` | UUID | Primary Key | Server-generated UUID |
+| `meeting_log_id` | UUID | Not Null, FK -> `meeting_logs.id` (ON DELETE CASCADE) | The meeting whose PDF was pushed |
+| `integration_id` | UUID | Not Null, FK -> `jobsite_integrations.id` (ON DELETE CASCADE) | The connection used |
+| `status` | Text | Not Null, Default `pending`, CHECK in (`pending`, `sent`, `failed`) | Outcome of the latest attempt |
+| `external_file_id` | Text | Nullable | The provider's id for the uploaded file |
+| `filename` | Text | Nullable | The PDF filename used (reused on retry) |
+| `error` | Text | Nullable | Failure message |
+| `attempted_at` | Timestamptz | Default `now()` | |
+| **UNIQUE** | | `(meeting_log_id, integration_id)` | Makes a push idempotent |
+
+**Sub-side (Trade Enterprise, `Supabase_SQL.sql` section 18).** Same model, scoped to a subcontractor's project instead of a GC jobsite; providers `procore` and `jobtread`.
+
+| Table: `project_integrations` | Type | Constraints | Description |
+| :--- | :--- | :--- | :--- |
+| `id` | UUID | Primary Key | Server-generated UUID |
+| `project_id` | UUID | Not Null, FK -> `projects.id` (ON DELETE CASCADE) | The connected TailgatePro project |
+| `provider` | Text | Not Null, CHECK in (`procore`, `jobtread`) | The platform |
+| `external_project_id` | Text | Not Null | The customer's Procore project id / JobTread job id |
+| `external_folder_id` | Text | Nullable | Procore Documents folder (optional); unused by JobTread |
+| `encrypted_credentials` | Text | Not Null | AES-256-GCM ciphertext; never returned to the client |
+| `status` | Text | Not Null, Default `connected`, CHECK in (`connected`, `error`) | Follows the latest push attempt |
+| `last_error` | Text | Nullable | Last push failure message |
+| `created_at` | Timestamptz | Default `now()` | |
+| **UNIQUE** | | `(project_id, provider)` | One connection per provider per project |
+
+| Table: `project_integration_pushes` | Type | Constraints | Description |
+| :--- | :--- | :--- | :--- |
+| `id` | UUID | Primary Key | Server-generated UUID |
+| `meeting_log_id` | UUID | Not Null, FK -> `meeting_logs.id` (ON DELETE CASCADE) | The meeting whose PDF was pushed |
+| `integration_id` | UUID | Not Null, FK -> `project_integrations.id` (ON DELETE CASCADE) | The connection used |
+| `status` | Text | Not Null, Default `pending`, CHECK in (`pending`, `sent`, `failed`) | Outcome of the latest attempt |
+| `external_file_id` | Text | Nullable | The provider's id for the uploaded file |
+| `filename` | Text | Nullable | The PDF filename used (reused on retry) |
+| `error` | Text | Nullable | Failure message |
+| `attempted_at` | Timestamptz | Default `now()` | |
+| **UNIQUE** | | `(meeting_log_id, integration_id)` | Makes a push idempotent |
+
+> The four tables in this section are all RLS-enabled with no policies (server-only).
 
 > RLS: enabled with no policies (server-brokered, deny-all) — see `docs/data-access.md`.

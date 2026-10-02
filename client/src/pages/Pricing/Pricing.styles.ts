@@ -111,18 +111,6 @@ export const StyledSaveHint = styled.span`
   letter-spacing: 0.04em;
 `;
 
-export const StyledSelectedNote = styled.p`
-  margin: 0;
-  font-size: 1.4rem;
-  font-weight: 600;
-  color: ${({ theme }) => theme.colors.navy[200]};
-
-  strong {
-    color: ${({ theme }) => theme.colors.orange[400]};
-    font-weight: 800;
-  }
-`;
-
 /* ---------- plan cards ---------- */
 
 export const StyledPlanGrid = styled.div`
@@ -261,8 +249,17 @@ export const StyledSoonTag = styled.span`
   vertical-align: middle;
 `;
 
-export const StyledPlanCta = styled.a<{ $featured?: boolean }>`
+export const StyledPlanCtaGroup = styled.div`
   margin-top: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 1.2rem;
+`;
+
+export const StyledPlanCta = styled.a<{
+  $featured?: boolean;
+  $disabled?: boolean;
+}>`
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -278,6 +275,7 @@ export const StyledPlanCta = styled.a<{ $featured?: boolean }>`
     $featured ? theme.colors.concrete[100] : theme.colors.navy[700]};
   font-size: 1.5rem;
   font-weight: 700;
+  text-align: center;
   text-decoration: none;
   transition:
     background-color 0.15s ease,
@@ -295,6 +293,21 @@ export const StyledPlanCta = styled.a<{ $featured?: boolean }>`
     outline: 0.2rem solid ${({ theme }) => theme.colors.orange[500]};
     outline-offset: 0.2rem;
   }
+
+  ${({ $disabled, theme }) =>
+    $disabled &&
+    `
+    cursor: default;
+    opacity: 0.7;
+    background-color: ${theme.colors.concrete[200]};
+    border-color: ${theme.colors.navy[200]};
+    color: ${theme.colors.navy[600]};
+
+    &:hover {
+      background-color: ${theme.colors.concrete[200]};
+      border-color: ${theme.colors.navy[200]};
+    }
+  `}
 `;
 
 /* ---------- zero seat-tax callout ---------- */

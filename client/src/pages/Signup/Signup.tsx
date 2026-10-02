@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { Controller, useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -14,6 +14,11 @@ import { Form, FieldRow, FormField, TextInput } from "../../ui_comps/form";
 import { PasswordInput } from "../../ui_comps/password-input";
 import { SegmentedToggle } from "../../ui_comps/segmented-toggle";
 import type { CompanyType } from "../../interfaces/company";
+import {
+  checkoutPath,
+  parsePendingCheckout,
+  savePendingCheckout,
+} from "../../utils/pendingCheckout";
 import {
   StyledPage,
   StyledHero,
@@ -59,6 +64,10 @@ export const Signup = () => {
   const { signUpWithEmail } = useAuth();
   const { createProfile, isCreating } = useCreateProfile();
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  // A plan picked on /pricing (`?plan=&interval=`): the new account ends at
+  // Stripe Checkout for it instead of the dashboard.
+  const pendingCheckout = parsePendingCheckout(searchParams);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [awaitingConfirmation, setAwaitingConfirmation] = useState(false);
 
@@ -83,9 +92,17 @@ export const Signup = () => {
         companyType: values.companyType,
       });
 
+      // Remember the choice before anything else can interrupt: on the
+      // email-confirmation path Login picks it up after the first sign-in.
+      if (pendingCheckout) savePendingCheckout(pendingCheckout);
+
       if (session) {
         await createProfile({ accessToken: session.access_token });
-        navigate("/dashboard");
+        navigate(
+          pendingCheckout
+            ? checkoutPath(pendingCheckout.plan, pendingCheckout.interval)
+            : "/dashboard",
+        );
       } else {
         // Supabase "Confirm email" is on for this project — no session yet, so
         // there's no authenticated request to create the profile with. The

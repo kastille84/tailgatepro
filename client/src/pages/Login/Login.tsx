@@ -12,6 +12,7 @@ import { Button } from "../../ui_comps/button";
 import { Footer } from "../../ui_comps/footer";
 import { Form, FormField, TextInput } from "../../ui_comps/form";
 import { PasswordInput } from "../../ui_comps/password-input";
+import { checkoutPath, readPendingCheckout } from "../../utils/pendingCheckout";
 import {
   StyledPage,
   StyledHero,
@@ -43,13 +44,17 @@ const getPrefillEmail = (state: unknown) => {
 };
 
 /** Where to land after signing in: a page that sent the user here (e.g. an
- *  invite link) via `state.from`, else the dashboard. Only same-origin paths
- *  are honored so this can't be turned into an open redirect. */
+ *  invite link) via `state.from`; else the checkout for a plan chosen on
+ *  /pricing before the account existed (signup, email confirmation, then
+ *  here); else the dashboard. Only same-origin paths are honored so this
+ *  can't be turned into an open redirect. */
 const getPostLoginPath = (state: unknown) => {
   const from = (state as { from?: unknown } | null)?.from;
-  return typeof from === "string" && from.startsWith("/") && !from.startsWith("//")
-    ? from
-    : "/dashboard";
+  if (typeof from === "string" && from.startsWith("/") && !from.startsWith("//")) {
+    return from;
+  }
+  const pending = readPendingCheckout();
+  return pending ? checkoutPath(pending.plan, pending.interval) : "/dashboard";
 };
 
 export const Login = () => {

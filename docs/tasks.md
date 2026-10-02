@@ -2753,9 +2753,28 @@ Costs one extra query per request for Free subs (`resolveEffectiveTier`) and per
       already dropped Custom safety manual upload and deferred the form/manual builder above. Removed from
       Trade Enterprise's pricing copy (`plans.ts`, the strategy doc, `docs/pricing-promise-gaps.md`).
 
-### 9f — Integrations (blocked on billing; deferred)
+### 9f — Integrations (Procore + ACC GC push, Procore + JobTread sub push built; live verification open)
 
-- [-] Procore, Autodesk ACC (Site Pro), JobTread, QuickBooks (Enterprise) sync.
+Design: `docs/integrations-design.md`. Bring-your-own credentials (customer pastes a Procore service account /
+ACC custom integration), AES-256-GCM encrypted, auto-push after PDF + manual Retry. Gated to Site Pro access.
+
+- [x] Schema: `jobsite_integrations`, `integration_pushes`, `integration_pushed` audit event (`Supabase_SQL.sql` section 17, `Supabase_Schema.md`). **Run section 17 and the commented audit-constraint `ALTER` on the live DB.**
+- [x] Server: `secretBox.js` (+ `INTEGRATIONS_ENCRYPTION_KEY[_PROD]` in `envUtils.js`), provider adapters `integrations/{procore,acc}.js`, `jobsiteIntegrations.js` (connect/disconnect/list/pushMeeting/retryPush), `routes/integrations.js` mounted at `/api`, hook in `pdfGenerationQueue.enqueue`, tests
+- [x] Client: `apiIntegrations`, `useJobsiteIntegrations` / `useConnectIntegration` / `useDisconnectIntegration` / `useRetryPush`, `IntegrationsModal` + `IntegrationConnectForm`, "Integrations" button on Site Pro jobsites, tests
+- [x] Copy/docs: `plans.ts` Site Pro "coming soon" removed for Procore/ACC, Pricing waitlist copy, `pricing-promise-gaps.md`, PRD 6.1
+- [ ] Set `INTEGRATIONS_ENCRYPTION_KEY` (and `_PROD`): `node -e "console.log(require('crypto').randomBytes(32).toString('base64'))"`
+- [ ] Live verification with a real Procore/ACC account (connect, complete a meeting, confirm the PDF lands, force a failure and Retry). Request shapes are untested against the vendors.
+- [-] QuickBooks sync — **dropped** (2026-10-01); accounting has no document-folder equivalent and the buyer doesn't work in the books. Copy removed from `plans.ts`, Pricing waitlist, strategy doc.
+
+#### 9f-2 — Trade Enterprise sub-side sync (Procore + JobTread; live verification open)
+
+A Trade Enterprise sub connects one of their TailgatePro projects to their own Procore project or JobTread job; each sealed PDF for that project is pushed automatically (+ manual Retry). Independent of the GC-side push. Design: `docs/integrations-design.md` ("Sub-side").
+
+- [x] Schema: `project_integrations`, `project_integration_pushes` (`Supabase_SQL.sql` section 18, `Supabase_Schema.md`). **Run section 18 on the live DB.**
+- [x] Server: `integrations/jobtread.js`, shared `integrations/pushRunner.js` (GC push refactored onto it), `projectIntegrations.js`, `routes/projectIntegrations.js` (`/api/projects/:id/integrations…`, `/api/project-integrations/pushes/:id/retry`), `hasTradeEnterpriseAccess`, hook in `pdfGenerationQueue.enqueue`, tests
+- [x] Client: project hooks + API, `IntegrationsPanel` (shared with the GC modal), `ProjectIntegrationsModal` with an upgrade prompt for non-Enterprise subs, "Integrations" button on project cards for sub managers, tests
+- [x] Copy/docs: `plans.ts` Trade Enterprise ("Procore & JobTread document sync" shipped; QuickBooks dropped), Pricing waitlist copy, strategy doc, `pricing-promise-gaps.md`
+- [ ] Live verification with a real Procore and a real JobTread account. **JobTread's Pave field names (createUploadRequest / createFile target) came from secondary sources and are the least certain part.**
 
 ### 9g — Strategy-doc extras
 
@@ -3024,8 +3043,35 @@ they can be worked one at a time. Tick a box here **and** in its source phase wh
 and Phase 9e/9f instead): GC Site Pro sponsorship purchase flow, SMS nudges, AI Talk Builder /
 cloud AI voice, Procore/ACC/JobTread/QuickBooks sync, the purchased 300+-talk bundle.
 
+## Phase 12: Stripe billing (milestone 1: company plans, hosted Checkout)
+
+Scope: Trade Pro, Trade Enterprise, GC Portfolio (10 / unlimited sites), monthly + annual, writing
+`companies.tier`. Per-jobsite GC Site Pro (`jobsites.plan`) is 12h, done before go-live so live Stripe is set up once; SMS nudges and integrations stay deferred.
+Stripe-hosted Checkout (redirect), not embedded. Design doc: `docs/billing-design.md`.
+
+- [x] 12a. Stripe account setup (manual): test-mode account, branding, 8 recurring prices, Customer Portal, Stripe CLI, keys in `.env` (keys in `.env` done; Customer Portal + Stripe CLI not yet confirmed)
+- [x] 12b. Config + schema (`server/utility/stripePlans.js`; **run the commented `ALTER TABLE` + `CREATE TABLE stripe_events` from `Supabase_SQL.sql` on the live DB**): replace stale `STRIPE_PRICE_*` env keys, price-to-tier map, `companies` billing columns, `stripe_events` table
+- [x] 12c. Server checkout + portal endpoints (`POST /api/stripe/checkout-session`, `/portal-session`) with tests (manager-only; 409 `ALREADY_SUBSCRIBED` sends existing subscribers to the portal; never writes `companies.tier`, that is 12d)
+- [x] 12d. Webhook `POST /webhook/stripe` (raw body, signature check, idempotency, tier sync, downgrade on cancel) with tests (design in `docs/billing-design.md`; not yet exercised against real Stripe events)
+- [x] 12e. Client: `apiStripe`, `useCheckout`, `useBillingPortal`, `useBillingStatus`, `/checkout` page, Pricing CTAs (signup then checkout; GC Portfolio has two size buttons; Site Pro stays waitlist), Signup/Login carry the chosen plan, Settings Billing section, `?checkout=success|cancel` return handling; plus `GET /api/stripe/billing` (not yet exercised end to end against real Stripe; `UpgradeModal` still just links to `/pricing`)
+- [x] 12f. Cleanup (done: `plans.ts` comment, promise-gaps doc, Landing waitlist -> signup CTAs, tsc errors fixed via `JobsiteJoinProfile` + `superintendent` label; `comingSoon` entries kept since they are still unbuilt; schema docs already current): `plans.ts` `comingSoon`, `docs/pricing-promise-gaps.md`, schema docs, Landing page waitlist copy (`Landing.tsx`, `LandingFaq.tsx` still say waitlist / "launch"), two pre-existing `tsc` errors in `AcceptInvite.tsx` / `JoinJobsite.tsx`
+- [x] 12h. Per-jobsite GC Site Pro billing (plan: `~/.claude/plans/let-s-work-on-the-partitioned-noodle.md`; design in `docs/billing-design.md` -> "GC Site Pro"; done before 12g). Decisions: purchase starts from a per-jobsite button; cancel reverts the jobsite to `free` and keeps it; Site Pro waitlist copy replaced with purchase CTAs
+  - [x] Server: `SITE_PLAN` + `scope` in `stripePlans.js`, `STRIPE_PRICE_GC_SITE_PRO_*` env vars, `jobsites.stripe_subscription_id` / `site_pro_*` columns (**run the new `jobsites` `ALTER TABLE` lines on the live DB**), `createSiteCheckoutSession` + `POST /api/stripe/site-checkout-session`, webhook `syncSiteSubscription` (never touches company columns), tests
+  - [x] Client: `createSiteCheckoutSession`, `useSiteCheckout`, `SiteProCheckoutModal`, "Upgrade to Site Pro" on the jobsite list + sub-blur upsell (`UpgradeModal` `onUpgrade`), `useSiteCheckoutReturn` (polls `useJobsites({ poll })`), Pricing CTA/copy (waitlist kept only for SMS + Procore/ACC), tests
+  - [x] Docs: `billing-design.md`, `pricing-promise-gaps.md`, `Supabase_Schema.md`
+  - [x] Manual, test mode (done in 12g): create the 2 Site Pro prices + env vars, `stripe listen`, buy Site Pro on one jobsite with 4242, confirm `jobsites.plan` flips and company `tier` / `stripe_subscription_id` are untouched, cancel in the portal and confirm revert to `free` (the Portfolio check moved to 12i)
+- [x] 12i. Portfolio absorbs Site Pro (follow-up to 12h; design in `docs/billing-design.md` -> "Portfolio absorbs Site Pro"). Buying a GC Portfolio cancels the company's per-site subscriptions (prorated, credited), and every site under a Portfolio company has Site Pro access
+  - [x] Server: `hasSiteProAccess` (`entitlements.js`), `jobsites.sitePro` derived flag (embeds `companies(tier)`), Defense Bundle and sponsorship use it, webhook `cancelSiteSubscriptions` on an active company GC subscription, `createSiteCheckoutSession` 409 `COVERED_BY_PORTFOLIO`, tests
+  - [x] Client: `Jobsite.sitePro`, Defense Bundle / upgrade button keyed on it, "Covered by GC Portfolio" badge, Pricing FAQ and `fourth-site` copy, tests
+  - [x] Manual, test mode (done in 12g): buy Site Pro on 2 jobsites, then buy GC Portfolio; confirm both site subscriptions cancel with a credit on the customer balance, the sites keep the Defense Bundle, company `tier` is `premium`; then cancel Portfolio and confirm the sites drop to free
+- [x] 12g. Go-live prep (everything that does not need the deployed API domain; checklist in `docs/billing-design.md` -> "Going live")
+  - [x] Pre-flight: `_PROD` env vars all read in `envUtils.js`; webhook mounted above `bodyParser.json()`; Checkout return URLs use the hardcoded prod `clientUrl`; env checklist, price table and paste-ready migration SQL added to `billing-design.md`
+  - [x] Test mode, `stripe listen`: company plan flips `companies.tier`; Site Pro on 2 jobsites then Portfolio cancels both with a credit; cancel Portfolio drops the sites to free (closes the open manual items in 12h and 12i)
+  - [x] Run the migration block from `billing-design.md` -> "Live-DB migration" on the production Supabase DB
+  - [x] Live Dashboard: 5 products / 10 prices, live Customer Portal; set the 10 `STRIPE_PRICE_*_PROD` vars on the host
+- [ ] 12j. Launch day (blocked on the deployed API domain): **register the live webhook endpoint in the Stripe Dashboard** (`https://<api-domain>/webhook/stripe`, 5 events) and put its `whsec_` in `STRIPE_WEBHOOK_SECRET_PROD`; live secret key in `STRIPE_SECRET_KEY_PROD`; `NODE_ENV=production`; Dashboard test event (200 + `stripe_events` row); one real purchase (company plan and a Site Pro jobsite), then cancel and refund; drop the "not yet exercised against live Stripe" note in `docs/pricing-promise-gaps.md`
+
 ## Deferred
 
-- [-] Stripe billing (needs multi-user/site concepts; `companies.tier` enum reconciled in 9b) — see Phase 9b
-- [-] Procore integration — also JobTread, QuickBooks, Autodesk ACC (see Phase 9f)
+- [-] QuickBooks sync — dropped 2026-10-01 (Procore + ACC GC push and Procore + JobTread sub push shipped, see Phase 9f)
 - [-] SMS nudges (9e) — provider decided (Twilio, Toll-Free Verified number); waiting on Stripe billing first

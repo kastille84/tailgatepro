@@ -34,12 +34,14 @@ vi.mock("../../../src/features/projects", () => ({
     projects,
     onEdit,
     onLinkGc,
+    onManageIntegrations,
     cadenceByJobsiteId,
     unsyncedProjectIds,
   }: {
     projects: { id: string }[];
     onEdit: (p: { id: string }) => void;
     onLinkGc?: (p: { id: string }) => void;
+    onManageIntegrations?: (p: { id: string }) => void;
     cadenceByJobsiteId?: Map<string, unknown>;
     unsyncedProjectIds?: Set<string>;
   }) => (
@@ -55,6 +57,25 @@ vi.mock("../../../src/features/projects", () => ({
           stub-link
         </button>
       )}
+      {onManageIntegrations && (
+        <button type="button" onClick={() => onManageIntegrations({ id: "p1" })}>
+          stub-integrations
+        </button>
+      )}
+    </div>
+  ),
+  ProjectIntegrationsModal: ({
+    project,
+    onClose,
+  }: {
+    project: { id: string };
+    onClose: () => void;
+  }) => (
+    <div role="dialog">
+      integrations {project.id}
+      <button type="button" onClick={onClose}>
+        stub-integrations-close
+      </button>
     </div>
   ),
   GcLinkModal: ({
@@ -229,6 +250,25 @@ describe("Projects page", () => {
 
     fireEvent.click(screen.getByRole("button", { name: /stub-link-close/i }));
     expect(screen.queryByRole("dialog")).toBeNull();
+  });
+
+  it("lets a subcontractor manager open and close the integrations modal from a list row", () => {
+    mockUseCurrentUser.mockReturnValue({ isSubcontractor: true, isManagerRole: true });
+    renderPage();
+    expect(screen.queryByRole("dialog")).toBeNull();
+
+    fireEvent.click(screen.getByRole("button", { name: /stub-integrations$/i }));
+    expect(screen.getByRole("dialog").textContent).toContain("integrations p1");
+
+    fireEvent.click(screen.getByRole("button", { name: /stub-integrations-close/i }));
+    expect(screen.queryByRole("dialog")).toBeNull();
+  });
+
+  it("offers no integrations action to a foreman", () => {
+    mockUseCurrentUser.mockReturnValue({ isSubcontractor: true, isManagerRole: false });
+    renderPage();
+
+    expect(screen.queryByRole("button", { name: /stub-integrations$/i })).toBeNull();
   });
 
   it("offers no link-to-GC action to a GC company or while the profile is still loading", () => {

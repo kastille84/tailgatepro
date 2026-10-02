@@ -8,6 +8,27 @@ import { JobsiteList } from "../../../src/features/gc-dashboard";
 import theme from "../../../src/styles/theme";
 import type { GcJobsite } from "../../../src/interfaces/gcDashboard";
 
+vi.mock("../../../src/context/online-status", () => ({
+  useOnlineStatus: () => ({ isOnline: true }),
+}));
+vi.mock("../../../src/features/jobsites/SiteProCheckoutModal", () => ({
+  SiteProCheckoutModal: ({
+    jobsite,
+    onClose,
+  }: {
+    jobsite: { id: string; name: string } | null;
+    onClose: () => void;
+  }) =>
+    jobsite ? (
+      <div data-testid="site-pro-modal">
+        {jobsite.id}
+        <button type="button" onClick={onClose}>
+          stub-site-pro-close
+        </button>
+      </div>
+    ) : null,
+}));
+
 const jobsites: GcJobsite[] = [
   {
     id: "jobsite-1",
@@ -122,6 +143,38 @@ describe("JobsiteList", () => {
     ).toBeDefined();
     fireEvent.click(screen.getByRole("button", { name: "Not now" }));
     expect(screen.queryByRole("dialog")).toBeNull();
+  });
+
+  it("starts the Site Pro purchase for that jobsite from the sub-blur upsell", () => {
+    renderList({
+      jobsites: [
+        {
+          id: "jobsite-3",
+          name: "Locked Site",
+          subs: [
+            {
+              companyId: null,
+              companyName: null,
+              projectId: null,
+              status: null,
+              lastLoggedAt: null,
+              count: null,
+              locked: true,
+            },
+          ],
+        },
+      ],
+    });
+
+    expect(screen.queryByTestId("site-pro-modal")).toBeNull();
+    fireEvent.click(screen.getByRole("button", { name: /unlock on site pro/i }));
+    fireEvent.click(screen.getByRole("button", { name: "Upgrade to GC Site Pro" }));
+
+    expect(screen.getByTestId("site-pro-modal").textContent).toContain("jobsite-3");
+    expect(screen.queryByText(/actively logging safety talks/)).toBeNull();
+
+    fireEvent.click(screen.getByRole("button", { name: "stub-site-pro-close" }));
+    expect(screen.queryByTestId("site-pro-modal")).toBeNull();
   });
 
   it("calls onSelectSub with the clicked sub", () => {

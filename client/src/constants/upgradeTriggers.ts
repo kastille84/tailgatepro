@@ -19,6 +19,8 @@ export interface UpgradeParams {
   subCount?: number;
   /** `sub-blur`: the jobsite's name. */
   siteName?: string;
+  /** `sub-blur`: the jobsite the purchase would apply to. */
+  jobsiteId?: string;
 }
 
 export interface UpgradeCopy {
@@ -66,7 +68,7 @@ export const getUpgradeCopy = (
     case "fourth-site":
       return {
         title: "Adding another site?",
-        body: `You are currently paying $${THREE_SITES_MONTHLY}/mo for 3 individual sites. Upgrade to GC Portfolio ($${PORTFOLIO_MONTHLY}/mo) for flat-rate coverage across up to 10 active projects.`,
+        body: `You are currently paying $${THREE_SITES_MONTHLY}/mo for 3 individual sites. Upgrade to GC Portfolio ($${PORTFOLIO_MONTHLY}/mo) for flat-rate coverage across up to 10 active projects. Your Site Pro subscriptions are cancelled and the unused time is credited.`,
         cta: "Upgrade to GC Portfolio",
       };
     case "policy-push":

@@ -74,7 +74,7 @@ The Digital Toolbox Safety Talks application called "TailgatePro", digitizes man
 
 Allow GCs to push final PDF reports directly into existing Procore project folders.
 
-- **Auth:** OAuth 2.0 to obtain project-level write permissions.
+- **Auth:** OAuth 2.0 client-credentials grant using a service account the customer creates in their own Procore company (bring-your-own credentials — TailgatePro owns no Procore developer app). See `docs/integrations-design.md`.
 - **Upload Flow (4-Steps):**
   1.  Authenticate.
   2.  `POST /rest/v1.1/projects/{project_id}/uploads` (Get upload instructions & presigned URL).

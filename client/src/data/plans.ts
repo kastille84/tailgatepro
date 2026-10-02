@@ -3,7 +3,9 @@ import type { Plan } from "../interfaces/plan";
 /**
  * Pricing tiers from docs/pricing-and-positioning-strategy_V2.md (§4.1 / §4.2).
  * Shared by the /pricing page and the homepage pricing teaser so the two never
- * drift. Prices are display strings, not numbers — there is no checkout yet.
+ * drift. Prices are display strings, not numbers — the Stripe price ids live
+ * server-side (`server/utility/stripePlans.js`) and the client maps plans to
+ * checkout keys in `data/checkoutPlans.ts`.
  *
  * `comingSoon` lists the features (exact `features` strings) that are promised
  * but not built yet — see docs/pricing-promise-gaps.md and Phase 9 in
@@ -55,9 +57,8 @@ export const SUB_PLANS: Plan[] = [
     annualSub: "$65/mo billed annually — save 20%",
     features: [
       "Unlimited foremen & crews",
-      "Procore, JobTread & QuickBooks sync",
+      "Procore & JobTread document sync",
     ],
-    comingSoon: ["Procore, JobTread & QuickBooks sync"],
   },
 ];
 
@@ -87,11 +88,7 @@ export const GC_PLANS: Plan[] = [
       "Procore & Autodesk ACC sync — single project",
       "1-click OSHA Defense Bundle for the site (indexed ZIP)",
     ],
-    comingSoon: [
-      "Sponsor unlimited subcontractors on one site",
-      "Automated SMS nudges — 7:00 AM every Monday (single site)",
-      "Procore & Autodesk ACC sync — single project",
-    ],
+    comingSoon: ["Automated SMS nudges — 7:00 AM every Monday (single site)"],
   },
   {
     id: "gc-portfolio",

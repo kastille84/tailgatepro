@@ -1,6 +1,6 @@
 import React from "react";
 import { describe, it, expect, vi, beforeEach } from "vitest";
-import { render, screen } from "@testing-library/react";
+import { fireEvent, render, screen } from "@testing-library/react";
 import { MemoryRouter } from "react-router-dom";
 import { ThemeProvider } from "styled-components";
 
@@ -12,6 +12,20 @@ const mockUseCurrentUser = vi.fn();
 const mockUseCompanyLogo = vi.fn();
 const mockUseUploadCompanyLogo = vi.fn();
 const mockUseJoinCode = vi.fn();
+const mockUseBillingStatus = vi.fn();
+const mockOpenPortal = vi.fn();
+const mockUseBillingPortal = vi.fn();
+const mockUseCheckoutReturn = vi.fn();
+
+vi.mock("../../../src/hooks/useBillingStatus", () => ({
+  useBillingStatus: () => mockUseBillingStatus(),
+}));
+vi.mock("../../../src/hooks/useBillingPortal", () => ({
+  useBillingPortal: () => mockUseBillingPortal(),
+}));
+vi.mock("../../../src/hooks/useCheckoutReturn", () => ({
+  useCheckoutReturn: () => mockUseCheckoutReturn(),
+}));
 
 vi.mock("../../../src/hooks/useJoinCode", () => ({
   useJoinCode: () => mockUseJoinCode(),
@@ -52,6 +66,32 @@ vi.mock("../../../src/features/company-settings", () => ({
     </div>
   ),
   InviteTeammateForm: () => <div data-testid="invite-teammate-form" />,
+  BillingSection: ({
+    planName,
+    billing,
+    isLoading,
+    isError,
+    isConfirming,
+    isOpening,
+    onManage,
+  }: {
+    planName: string | null;
+    billing: { subscriptionStatus: string | null } | null;
+    isLoading: boolean;
+    isError: boolean;
+    isConfirming: boolean;
+    isOpening: boolean;
+    onManage: () => void;
+  }) => (
+    <div data-testid="billing-section">
+      plan: {planName ?? "none"} status: {billing?.subscriptionStatus ?? "none"}{" "}
+      loading: {String(isLoading)} error: {String(isError)} confirming:{" "}
+      {String(isConfirming)} opening: {String(isOpening)}
+      <button type="button" onClick={onManage}>
+        manage
+      </button>
+    </div>
+  ),
 }));
 
 const renderPage = () =>
@@ -73,6 +113,16 @@ describe("Settings page", () => {
       isLoading: false,
       isError: false,
     });
+    mockUseBillingStatus.mockReturnValue({
+      billing: null,
+      isLoading: false,
+      isError: false,
+    });
+    mockUseBillingPortal.mockReturnValue({
+      openPortal: mockOpenPortal,
+      isOpening: false,
+    });
+    mockUseCheckoutReturn.mockReturnValue({ isConfirming: false });
     mockUseCompanyLogo.mockReturnValue({ logoUrl: null, isLoading: false });
     mockUseUploadCompanyLogo.mockReturnValue({
       uploadLogo: vi.fn(),
@@ -179,6 +229,79 @@ describe("Settings page", () => {
 
     expect(screen.queryByText(/subcontractor join code/i)).toBeNull();
     expect(screen.queryByTestId("join-code-card")).toBeNull();
+  });
+
+  describe("billing section", () => {
+    it("shows the billing section, fed by the billing hooks, to a manager", () => {
+      mockUseCurrentUser.mockReturnValue({
+        hasBrandingAccess: false,
+        isManagerRole: true,
+        plan: "trade-pro",
+      });
+      mockUseBillingStatus.mockReturnValue({
+        billing: { subscriptionStatus: "active" },
+        isLoading: false,
+        isError: true,
+      });
+      mockUseBillingPortal.mockReturnValue({
+        openPortal: mockOpenPortal,
+        isOpening: true,
+      });
+      mockUseCheckoutReturn.mockReturnValue({ isConfirming: true });
+      renderPage();
+
+      expect(screen.getByRole("heading", { name: "Billing" })).toBeDefined();
+      const text = screen.getByTestId("billing-section").textContent;
+      expect(text).toContain("plan: Trade Pro");
+      expect(text).toContain("status: active");
+      expect(text).toContain("error: true");
+      expect(text).toContain("confirming: true");
+      expect(text).toContain("opening: true");
+    });
+
+    it("resolves a GC plan id to its name and passes null for an unknown plan", () => {
+      mockUseCurrentUser.mockReturnValue({
+        hasBrandingAccess: false,
+        isManagerRole: true,
+        plan: "gc-portfolio",
+      });
+      const { unmount } = renderPage();
+      expect(screen.getByTestId("billing-section").textContent).toContain(
+        "plan: GC Portfolio",
+      );
+      unmount();
+
+      mockUseCurrentUser.mockReturnValue({
+        hasBrandingAccess: false,
+        isManagerRole: true,
+        plan: null,
+      });
+      renderPage();
+      expect(screen.getByTestId("billing-section").textContent).toContain(
+        "plan: none",
+      );
+    });
+
+    it("opens the billing portal when the section asks to manage billing", () => {
+      mockUseCurrentUser.mockReturnValue({
+        hasBrandingAccess: false,
+        isManagerRole: true,
+      });
+      renderPage();
+
+      fireEvent.click(screen.getByRole("button", { name: "manage" }));
+      expect(mockOpenPortal).toHaveBeenCalledTimes(1);
+    });
+
+    it("hides the billing section from a non-manager", () => {
+      mockUseCurrentUser.mockReturnValue({
+        hasBrandingAccess: false,
+        isManagerRole: false,
+      });
+      renderPage();
+
+      expect(screen.queryByTestId("billing-section")).toBeNull();
+    });
   });
 
   it.each(["admin", "safety_manager"])(

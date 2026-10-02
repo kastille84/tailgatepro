@@ -38,6 +38,15 @@ export interface JobsiteInviteAcceptProfile {
   jobsiteInviteToken: string;
 }
 
+/** Carried as `user_metadata` at signup for a new subcontractor joining a
+ *  jobsite by its standing QR/link token. Same shape as the email-invite
+ *  profile, but the token is the jobsite's `join_token`. */
+export interface JobsiteJoinProfile {
+  name: string;
+  companyName: string;
+  jobsiteJoinToken: string;
+}
+
 export interface AuthContextType extends AuthState {
   loginWithGoogle: () => Promise<void>;
   /** Returns the session directly (like `signUpWithEmail`) so a first-login
@@ -54,7 +63,11 @@ export interface AuthContextType extends AuthState {
   signUpWithEmail: (
     email: string,
     password: string,
-    profile: SignupProfile | InviteAcceptProfile | JobsiteInviteAcceptProfile,
+    profile:
+      | SignupProfile
+      | InviteAcceptProfile
+      | JobsiteInviteAcceptProfile
+      | JobsiteJoinProfile,
   ) => Promise<{ session: Session | null }>;
   sendPasswordReset: (email: string) => Promise<void>;
   updatePassword: (newPassword: string) => Promise<void>;

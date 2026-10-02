@@ -1,6 +1,10 @@
+import { useState } from "react";
+
 import type { GcJobsite, GcSubCompliance } from "../../interfaces/gcDashboard";
+import { useOnlineStatus } from "../../context/online-status";
 import { useUpgradeModal } from "../../hooks/useUpgradeModal";
 import { UpgradeModal } from "../../ui_comps/upgrade-modal";
+import { SiteProCheckoutModal } from "../jobsites";
 import { StyledOriginBadge } from "../projects/styles";
 import { SubComplianceRow } from "./SubComplianceRow";
 import {
@@ -22,6 +26,9 @@ interface JobsiteListProps {
  *  requested day. */
 export const JobsiteList = ({ jobsites, onSelectSub }: JobsiteListProps) => {
   const upgrade = useUpgradeModal();
+  const { isOnline } = useOnlineStatus();
+  const [siteProId, setSiteProId] = useState<string | undefined>(undefined);
+  const siteProJobsite = jobsites.find((jobsite) => jobsite.id === siteProId);
 
   if (jobsites.length === 0) {
     return (
@@ -62,6 +69,7 @@ export const JobsiteList = ({ jobsites, onSelectSub }: JobsiteListProps) => {
                     upgrade.open("sub-blur", {
                       subCount: jobsite.subs.length,
                       siteName: jobsite.name,
+                      jobsiteId: jobsite.id,
                     })
                   }
                 />
@@ -74,6 +82,19 @@ export const JobsiteList = ({ jobsites, onSelectSub }: JobsiteListProps) => {
         trigger={upgrade.trigger}
         params={upgrade.params}
         onClose={upgrade.close}
+        onUpgrade={
+          upgrade.params?.jobsiteId
+            ? () => {
+                setSiteProId(upgrade.params?.jobsiteId);
+                upgrade.close();
+              }
+            : undefined
+        }
+      />
+      <SiteProCheckoutModal
+        jobsite={siteProJobsite ?? null}
+        isOnline={isOnline}
+        onClose={() => setSiteProId(undefined)}
       />
     </>
   );

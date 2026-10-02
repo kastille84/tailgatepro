@@ -44,6 +44,18 @@ describe("UpgradeModal", () => {
     expect(onClose).toHaveBeenCalledTimes(2);
   });
 
+  it("renders the CTA as a button that runs onUpgrade when one is given", () => {
+    const onUpgrade = vi.fn();
+    renderModal(
+      <UpgradeModal trigger="sub-blur" onClose={vi.fn()} onUpgrade={onUpgrade} />,
+    );
+
+    expect(screen.queryByRole("link", { name: "Upgrade to GC Site Pro" })).toBeNull();
+    fireEvent.click(screen.getByRole("button", { name: "Upgrade to GC Site Pro" }));
+
+    expect(onUpgrade).toHaveBeenCalledTimes(1);
+  });
+
   it("fills the sub-blur copy from params", () => {
     renderModal(
       <UpgradeModal

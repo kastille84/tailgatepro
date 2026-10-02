@@ -355,7 +355,10 @@ describe("users service: getUserContext", () => {
       },
       error: null,
     });
-    const sponsorQuery = { then: (resolve) => Promise.resolve({ count: 1, error: null }).then(resolve) };
+    const sponsorQuery = {
+      then: (resolve) =>
+        Promise.resolve({ data: [{ jobsites: { plan: "site_pro" } }], error: null }).then(resolve),
+    };
     ["select", "eq", "not", "is"].forEach((method) => {
       sponsorQuery[method] = vi.fn(() => sponsorQuery);
     });

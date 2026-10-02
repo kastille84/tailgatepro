@@ -46,6 +46,7 @@ import { ContentLibrary } from "./pages/ContentLibrary";
 import { MeetingFlow } from "./pages/MeetingFlow";
 import { MeetingHistory } from "./pages/MeetingHistory";
 import { Settings } from "./pages/Settings";
+import { Checkout } from "./pages/Checkout";
 import { GcDashboard } from "./pages/GcDashboard";
 import { GcMeetingReport } from "./pages/GcMeetingReport";
 import { GcSubcontractors } from "./pages/GcSubcontractors";
@@ -126,6 +127,7 @@ function App() {
                         element={<MeetingFlow />}
                       ></Route>
                       <Route path="/settings" element={<Settings />}></Route>
+                      <Route path="/checkout" element={<Checkout />}></Route>
                       <Route element={<RequireGc />}>
                         <Route path="/gc" element={<GcDashboard />}></Route>
                         <Route

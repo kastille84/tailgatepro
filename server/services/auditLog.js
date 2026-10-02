@@ -7,12 +7,18 @@
 const { v4: uuidv4 } = require("uuid");
 const { supabase } = require("../utility/supabaseClient");
 
-const EVENT_TYPES = ["created", "completed", "pdf_generated", "seal_verified"];
+const EVENT_TYPES = [
+  "created",
+  "completed",
+  "pdf_generated",
+  "seal_verified",
+  "integration_pushed",
+];
 
 /**
  * @param {object} params
  * @param {string} params.meetingLogId
- * @param {"created"|"completed"|"pdf_generated"|"seal_verified"} params.eventType
+ * @param {"created"|"completed"|"pdf_generated"|"seal_verified"|"integration_pushed"} params.eventType
  * @param {string|null} [params.actorId] - the acting user's id, or null for a
  *   system-triggered event (pdf_generated).
  * @param {object|null} [params.metadata]

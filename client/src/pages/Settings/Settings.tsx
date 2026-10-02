@@ -1,12 +1,17 @@
 import { Link } from "react-router-dom";
 
 import { useAuth } from "../../context/auth";
+import { SUB_PLANS, GC_PLANS } from "../../data/plans";
+import { useBillingPortal } from "../../hooks/useBillingPortal";
+import { useBillingStatus } from "../../hooks/useBillingStatus";
+import { useCheckoutReturn } from "../../hooks/useCheckoutReturn";
 import { useCompanyLogo } from "../../hooks/useCompanyLogo";
 import { useCurrentUser } from "../../hooks/useCurrentUser";
 import { useJoinCode } from "../../hooks/useJoinCode";
 import { useUploadCompanyLogo } from "../../hooks/useUploadCompanyLogo";
 import { Footer } from "../../ui_comps/footer";
 import {
+  BillingSection,
   InviteTeammateForm,
   JoinCodeCard,
   LogoUpload,
@@ -37,10 +42,25 @@ import {
  *  though it sits behind `RequireAuth`, matching `Projects.tsx`. */
 export const Settings = () => {
   const { user, loading } = useAuth();
-  const { role, hasBrandingAccess, isGc } = useCurrentUser();
+  const { role, hasBrandingAccess, isGc, isManagerRole, plan } =
+    useCurrentUser();
   const canInvite = role === "admin" || role === "safety_manager";
-  const { joinCode, isLoading: isJoinCodeLoading, isError: isJoinCodeError } =
-    useJoinCode();
+  const planName =
+    [...SUB_PLANS, ...GC_PLANS].find((candidate) => candidate.id === plan)
+      ?.name ?? null;
+  const {
+    billing,
+    isLoading: isBillingLoading,
+    isError: isBillingError,
+  } = useBillingStatus();
+  const { openPortal, isOpening } = useBillingPortal();
+  // Handles ?checkout=success|cancel after Stripe redirects back here.
+  const { isConfirming } = useCheckoutReturn();
+  const {
+    joinCode,
+    isLoading: isJoinCodeLoading,
+    isError: isJoinCodeError,
+  } = useJoinCode();
   const { logoUrl } = useCompanyLogo();
   const { uploadLogo, isUploading } = useUploadCompanyLogo();
 
@@ -102,9 +122,24 @@ export const Settings = () => {
               </StyledUpsell>
             )}
           </StyledLogoSection>
-
+          {isManagerRole && (
+            <StyledLogoSection>
+              <hr />
+              <StyledSectionTitle>Billing</StyledSectionTitle>
+              <BillingSection
+                planName={planName}
+                billing={billing}
+                isLoading={isBillingLoading}
+                isError={isBillingError}
+                isConfirming={isConfirming}
+                isOpening={isOpening}
+                onManage={() => openPortal()}
+              />
+            </StyledLogoSection>
+          )}
           {isGc && (
             <StyledLogoSection>
+              <hr />
               <StyledSectionTitle>Subcontractor join code</StyledSectionTitle>
               <JoinCodeCard
                 joinCode={joinCode}
@@ -113,9 +148,9 @@ export const Settings = () => {
               />
             </StyledLogoSection>
           )}
-
           {canInvite && (
             <StyledLogoSection>
+              <hr />
               <StyledSectionTitle>Invite a teammate</StyledSectionTitle>
               <InviteTeammateForm />
             </StyledLogoSection>

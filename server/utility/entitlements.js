@@ -130,8 +130,24 @@ const effectiveJobsiteLimit = ({ tier, paidSiteCount = 0 }) => {
   return tier === "basic" ? activeJobsites + paidSiteCount : activeJobsites;
 };
 
+// Whether a GC jobsite has Site Pro features (Defense Bundle, sub sponsorship):
+// it either bought Site Pro itself (`jobsites.plan`) or its company is on GC
+// Portfolio, which includes them on every site. Derived, never stored, so a
+// Portfolio ending needs nothing un-written.
+const hasSiteProAccess = ({ sitePlan, companyTier }) =>
+  sitePlan === "site_pro" ||
+  getPlanId("gc", companyTier) === "gc-portfolio";
+
+// Whether a subcontractor company is on Trade Enterprise (sub-side Procore /
+// JobTread document push, docs/integrations-design.md). Company-tier based,
+// unlike the per-jobsite Site Pro check above.
+const hasTradeEnterpriseAccess = (companyType, tier) =>
+  getPlanId(companyType, tier) === "trade-enterprise";
+
 module.exports = {
   TRANSLATION_TIERS,
+  hasSiteProAccess,
+  hasTradeEnterpriseAccess,
   hasTranslationAccess,
   hasBrandingAccess,
   PLAN_LIMITS,

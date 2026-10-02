@@ -12,6 +12,7 @@ const mockUseOnlineStatus = vi.fn();
 const mockUseCurrentUser = vi.fn();
 const mockUseJobsites = vi.fn();
 const mockUseDownloadDefenseBundle = vi.fn();
+const mockUseSiteCheckoutReturn = vi.fn();
 
 vi.mock("../../../src/context/online-status", () => ({
   useOnlineStatus: () => mockUseOnlineStatus(),
@@ -21,6 +22,26 @@ vi.mock("../../../src/hooks/useCurrentUser", () => ({
 }));
 vi.mock("../../../src/hooks/useJobsites", () => ({
   useJobsites: () => mockUseJobsites(),
+}));
+vi.mock("../../../src/hooks/useSiteCheckoutReturn", () => ({
+  useSiteCheckoutReturn: () => mockUseSiteCheckoutReturn(),
+}));
+vi.mock("../../../src/features/jobsites/SiteProCheckoutModal", () => ({
+  SiteProCheckoutModal: ({
+    jobsite,
+    onClose,
+  }: {
+    jobsite: { id: string } | null;
+    onClose: () => void;
+  }) =>
+    jobsite ? (
+      <div role="dialog">
+        site-pro {jobsite.id}
+        <button type="button" onClick={onClose}>
+          stub-site-pro-close
+        </button>
+      </div>
+    ) : null,
 }));
 vi.mock("../../../src/hooks/useDownloadDefenseBundle", () => ({
   useDownloadDefenseBundle: () => mockUseDownloadDefenseBundle(),
@@ -34,6 +55,8 @@ vi.mock("../../../src/features/jobsites/JobsiteList", () => ({
     onEdit,
     onManageSubs,
     onManageMembers,
+    onManageIntegrations,
+    onUpgrade,
     onDownloadBundle,
     isDownloadingBundle,
   }: {
@@ -41,6 +64,8 @@ vi.mock("../../../src/features/jobsites/JobsiteList", () => ({
     onEdit?: (j: Jobsite) => void;
     onManageSubs: (j: Jobsite) => void;
     onManageMembers?: (j: Jobsite) => void;
+    onManageIntegrations?: (j: Jobsite) => void;
+    onUpgrade?: (j: Jobsite) => void;
     onDownloadBundle: (j: Jobsite) => void;
     isDownloadingBundle?: boolean;
     isOnline: boolean;
@@ -60,6 +85,16 @@ vi.mock("../../../src/features/jobsites/JobsiteList", () => ({
       {jobsites[0] && onManageMembers && (
         <button type="button" onClick={() => onManageMembers(jobsites[0])}>
           stub-members
+        </button>
+      )}
+      {jobsites[0] && onManageIntegrations && (
+        <button type="button" onClick={() => onManageIntegrations(jobsites[0])}>
+          stub-integrations
+        </button>
+      )}
+      {jobsites[0] && onUpgrade && (
+        <button type="button" onClick={() => onUpgrade(jobsites[0])}>
+          stub-upgrade
         </button>
       )}
       {jobsites[0] && (
@@ -128,6 +163,22 @@ vi.mock("../../../src/features/jobsites/JobsiteMembersModal", () => ({
     </div>
   ),
 }));
+vi.mock("../../../src/features/jobsites/IntegrationsModal", () => ({
+  IntegrationsModal: ({
+    jobsite,
+    onClose,
+  }: {
+    jobsite: Jobsite;
+    onClose: () => void;
+  }) => (
+    <div role="dialog">
+      integrations {jobsite.id}
+      <button type="button" onClick={onClose}>
+        stub-integrations-close
+      </button>
+    </div>
+  ),
+}));
 vi.mock("../../../src/ui_comps/progress-modal", () => ({
   ProgressModal: ({ isOpen }: { isOpen: boolean }) =>
     isOpen ? <div data-testid="bundle-progress-modal" /> : null,
@@ -169,6 +220,29 @@ describe("JobsiteManager", () => {
       downloadBundle: vi.fn(),
       isPending: false,
     });
+  });
+
+  it("lets a manager open and close the Site Pro checkout for a jobsite", () => {
+    renderManager();
+
+    fireEvent.click(screen.getByRole("button", { name: /stub-upgrade/i }));
+    expect(screen.getByRole("dialog").textContent).toContain("site-pro j1");
+
+    fireEvent.click(screen.getByRole("button", { name: /stub-site-pro-close/i }));
+    expect(screen.queryByRole("dialog")).toBeNull();
+  });
+
+  it("does not offer Site Pro upgrades to a foreman", () => {
+    mockUseCurrentUser.mockReturnValue({ role: "foreman", plan: "gc-portfolio" });
+    renderManager();
+
+    expect(screen.queryByRole("button", { name: /stub-upgrade/i })).toBeNull();
+  });
+
+  it("handles the return from Site Pro checkout", () => {
+    renderManager();
+
+    expect(mockUseSiteCheckoutReturn).toHaveBeenCalled();
   });
 
   it("shows a spinner while loading", () => {
@@ -268,6 +342,23 @@ describe("JobsiteManager", () => {
 
     fireEvent.click(screen.getByRole("button", { name: /stub-members-close/i }));
     expect(screen.queryByRole("dialog")).toBeNull();
+  });
+
+  it("opens and closes the integrations modal for a manager", () => {
+    renderManager();
+
+    fireEvent.click(screen.getByRole("button", { name: /stub-integrations$/i }));
+    expect(screen.getByRole("dialog").textContent).toContain("integrations j1");
+
+    fireEvent.click(screen.getByRole("button", { name: /stub-integrations-close/i }));
+    expect(screen.queryByRole("dialog")).toBeNull();
+  });
+
+  it("hides Integrations for a foreman", () => {
+    mockUseCurrentUser.mockReturnValue({ role: "foreman", plan: "gc-portfolio" });
+    renderManager();
+
+    expect(screen.queryByRole("button", { name: /stub-integrations$/i })).toBeNull();
   });
 
   it("hides the Team button on a GC plan below Portfolio", () => {

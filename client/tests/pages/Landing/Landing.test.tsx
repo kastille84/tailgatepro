@@ -2,16 +2,11 @@ import React from "react";
 import { describe, it, expect, vi } from "vitest";
 import { render, screen, within } from "@testing-library/react";
 import { ThemeProvider } from "styled-components";
+import { MemoryRouter } from "react-router-dom";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 
 import { Landing } from "../../../src/pages/Landing/Landing";
 import theme from "../../../src/styles/theme";
-
-vi.mock("../../../src/pages/Landing/WaitlistForm", () => ({
-  WaitlistForm: ({ idPrefix }: { idPrefix: string }) => (
-    <div data-testid={`waitlist-${idPrefix}`}>Join the launch waitlist</div>
-  ),
-}));
 
 vi.mock("../../../src/pages/Landing/PricingTeaser", () => ({
   PricingTeaser: () => (
@@ -33,7 +28,9 @@ describe("Landing", () => {
     return render(
       <QueryClientProvider client={queryClient}>
         <ThemeProvider theme={theme}>
-          <Landing />
+          <MemoryRouter>
+            <Landing />
+          </MemoryRouter>
         </ThemeProvider>
       </QueryClientProvider>,
     );
@@ -200,7 +197,7 @@ describe("Landing", () => {
       screen.getByRole("heading", { name: /questions crews and gcs ask us/i }),
     ).toBeTruthy();
     expect(
-      screen.getByText(/When can I actually sign up\?/i),
+      screen.getByText(/When can I sign up\?/i),
     ).toBeTruthy();
   });
 
@@ -215,7 +212,7 @@ describe("Landing", () => {
 
     expect(
       screen.getByText(
-        /Add your name and we'll set you up on the right plan the day we go live\./i,
+        /Create your free account and run your first talk today/i,
       ),
     ).toBeTruthy();
 
@@ -240,15 +237,18 @@ describe("Landing", () => {
     expect(heroImage.getAttribute("loading")).toBe("eager");
   });
 
-  it("renders both waitlist forms and the launch-footnote text", () => {
+  it("links the hero and closing CTAs to signup and pricing", () => {
     renderLanding();
 
-    expect(screen.getByTestId("waitlist-hero")).toBeTruthy();
-    expect(screen.getByTestId("waitlist-cta")).toBeTruthy();
+    const signupLinks = screen
+      .getAllByRole("link", { name: /get started free/i })
+      .map((a) => a.getAttribute("href"));
+    expect(signupLinks).toEqual(["/signup", "/signup"]);
     expect(
-      screen.getByText(
-        /Join the launch waitlist\. No spam — one email when we go live\./i,
-      ),
+      screen.getByRole("link", { name: /see pricing/i }).getAttribute("href"),
+    ).toBe("/pricing");
+    expect(
+      screen.getByText(/Free plans need no credit card\./i),
     ).toBeTruthy();
   });
 });

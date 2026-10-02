@@ -13,6 +13,7 @@ import { JobsiteManager } from "../../features/jobsites";
 import {
   GcLinkModal,
   ProjectForm,
+  ProjectIntegrationsModal,
   ProjectList,
 } from "../../features/projects";
 import type { Project } from "../../interfaces/project";
@@ -39,7 +40,10 @@ export const Projects = () => {
   // Creating and linking a project to a GC are both subcontractor-only (the
   // server 403s a GC on either) — the project model is sub-owned. A GC manages
   // its own job sites instead (JobsiteManager, Phase 8d-e).
-  const { isSubcontractor, isGc } = useCurrentUser();
+  const { isSubcontractor, isGc, isManagerRole } = useCurrentUser();
+  // Integrations are manager-only on the server; hidden here from a foreman
+  // who would just get a 403.
+  const canManageIntegrations = isSubcontractor && isManagerRole;
 
   const [showArchived, setShowArchived] = useState(false);
   const { projects, isLoading, isError } = useProjects(showArchived);
@@ -73,6 +77,9 @@ export const Projects = () => {
   const [linkingProject, setLinkingProject] = useState<Project | undefined>(
     undefined,
   );
+  const [integrationsProject, setIntegrationsProject] = useState<
+    Project | undefined
+  >(undefined);
 
   if (loading) {
     return (
@@ -138,6 +145,9 @@ export const Projects = () => {
                 projects={projects}
                 onEdit={openEdit}
                 onLinkGc={isSubcontractor ? setLinkingProject : undefined}
+                onManageIntegrations={
+                  canManageIntegrations ? setIntegrationsProject : undefined
+                }
                 unsyncedProjectIds={unsyncedProjectIds}
                 cadenceByJobsiteId={cadenceByJobsiteId}
               />
@@ -160,6 +170,13 @@ export const Projects = () => {
         <GcLinkModal
           project={linkingProject}
           onClose={() => setLinkingProject(undefined)}
+        />
+      )}
+
+      {integrationsProject && (
+        <ProjectIntegrationsModal
+          project={integrationsProject}
+          onClose={() => setIntegrationsProject(undefined)}
         />
       )}
     </StyledPage>

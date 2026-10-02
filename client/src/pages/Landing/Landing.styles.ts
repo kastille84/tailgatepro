@@ -132,6 +132,21 @@ export const StyledFormWrap = styled.div`
   margin-top: 0.8rem;
 `;
 
+export const StyledCtaRow = styled.div`
+  display: flex;
+  flex-direction: column;
+  gap: 1.2rem;
+
+  @media (min-width: ${({ theme }) => theme.breakpoints.sm}) {
+    flex-direction: row;
+  }
+`;
+
+export const StyledCtaLink = styled.a`
+  color: inherit;
+  text-decoration: none;
+`;
+
 export const StyledFootnote = styled.p`
   margin: 0;
   font-size: 1.3rem;

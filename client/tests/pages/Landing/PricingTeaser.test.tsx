@@ -52,7 +52,8 @@ describe("PricingTeaser", () => {
     expect(link.getAttribute("href")).toBe("/pricing?audience=gc");
   });
 
-  it("tags unbuilt features with Coming soon and leaves built ones untagged", () => {
+  it("tags unbuilt features with Coming soon and leaves built ones untagged", async () => {
+    const user = userEvent.setup();
     render(
       <MemoryRouter>
         <ThemeProvider theme={theme}>
@@ -61,10 +62,14 @@ describe("PricingTeaser", () => {
       </MemoryRouter>,
     );
 
-    const unbuilt = screen.getByText("Procore, JobTread & QuickBooks sync");
+    await user.click(
+      screen.getByRole("button", { name: /for general contractors/i }),
+    );
+
+    const unbuilt = screen.getByText(/Automated SMS nudges/);
     expect(within(unbuilt).getByText("Coming soon")).toBeDefined();
 
-    const built = screen.getByText("Full offline PWA capabilities");
+    const built = screen.getByText("Procore & Autodesk ACC sync — single project");
     expect(within(built).queryByText("Coming soon")).toBeNull();
   });
 });

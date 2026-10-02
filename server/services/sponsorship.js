@@ -1,27 +1,32 @@
 const { supabase } = require("../utility/supabaseClient");
-const { countRows } = require("../utility/countRows");
+const { AppError } = require("../utility/AppError");
+const { hasSiteProAccess } = require("../utility/entitlements");
 
 // Whether a subcontractor company is sponsored: it holds an accepted roster row
-// on a live (active, not archived) GC Site Pro jobsite (`jobsites.plan =
-// 'site_pro'`). A sponsored sub gets Trade Pro access at no cost (Phase 9d).
-// Ends by itself when the site is unpaid, archived, or the sub is removed --
-// nothing is stored on the sub's own company row.
+// on a live (active, not archived) jobsite with Site Pro access -- either the
+// site's own `jobsites.plan = 'site_pro'` or its GC being on Portfolio, which
+// covers every site. A sponsored sub gets Trade Pro access at no cost (Phase
+// 9d). Ends by itself when the site is unpaid, archived, or the sub is removed
+// -- nothing is stored on the sub's own company row.
 const isSponsored = async (companyId) => {
-  const count = await countRows(
-    supabase
-      .from("jobsite_subcontractors")
-      .select("id, jobsites!inner(plan, status, archived_at)", {
-        count: "exact",
-        head: true,
-      })
-      .eq("sub_company_id", companyId)
-      .not("accepted_at", "is", null)
-      .eq("jobsites.plan", "site_pro")
-      .eq("jobsites.status", "active")
-      .is("jobsites.archived_at", null),
-    "Could not check your sponsorship",
+  const { data, error } = await supabase
+    .from("jobsite_subcontractors")
+    .select("jobsites!inner(plan, status, archived_at, companies(tier))")
+    .eq("sub_company_id", companyId)
+    .not("accepted_at", "is", null)
+    .eq("jobsites.status", "active")
+    .is("jobsites.archived_at", null);
+
+  if (error) {
+    throw new AppError("Could not check your sponsorship", 502, { cause: error });
+  }
+
+  return data.some((row) =>
+    hasSiteProAccess({
+      sitePlan: row.jobsites.plan,
+      companyTier: row.jobsites.companies?.tier,
+    }),
   );
-  return count > 0;
 };
 
 // The tier a company's limits should be resolved from: the stored tier, except

@@ -16,11 +16,20 @@ export interface UpgradeModalProps {
   trigger: UpgradeTrigger | null;
   params?: UpgradeParams;
   onClose: () => void;
+  /** When given, the CTA is a button that starts an in-app purchase instead of
+   *  a link to /pricing (used where the purchase target is known, e.g. a
+   *  specific jobsite's Site Pro). */
+  onUpgrade?: () => void;
 }
 
 /** Conversion-trigger upsell (strategy doc §6): the trigger's copy plus a
- *  link to /pricing and a "Not now" dismiss. Purely informational — no billing. */
-export const UpgradeModal = ({ trigger, params, onClose }: UpgradeModalProps) => {
+ *  link to /pricing (or an `onUpgrade` action) and a "Not now" dismiss. */
+export const UpgradeModal = ({
+  trigger,
+  params,
+  onClose,
+  onUpgrade,
+}: UpgradeModalProps) => {
   if (!trigger) return null;
   const copy = getUpgradeCopy(trigger, params);
   return (
@@ -30,9 +39,15 @@ export const UpgradeModal = ({ trigger, params, onClose }: UpgradeModalProps) =>
         <Button type="button" variant="outline" size="md" onClick={onClose}>
           Not now
         </Button>
-        <StyledUpgradeCta to="/pricing" onClick={onClose}>
-          {copy.cta}
-        </StyledUpgradeCta>
+        {onUpgrade ? (
+          <Button type="button" variant="primary" size="md" onClick={onUpgrade}>
+            {copy.cta}
+          </Button>
+        ) : (
+          <StyledUpgradeCta to="/pricing" onClick={onClose}>
+            {copy.cta}
+          </StyledUpgradeCta>
+        )}
       </StyledUpgradeActions>
     </Modal>
   );

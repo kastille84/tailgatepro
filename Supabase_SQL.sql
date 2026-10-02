@@ -24,6 +24,15 @@ CREATE TABLE companies (
   -- GET /api/companies/join-code. NULL = not generated yet (and always NULL
   -- for a subcontractor). See docs/gc-dashboard-design.md.
   join_code TEXT UNIQUE,
+  -- Stripe billing (Phase 12, docs/billing-design.md). Written ONLY by the
+  -- Stripe webhook / checkout service, never from client input. All NULL for a
+  -- company that has never subscribed (tier stays 'basic').
+  stripe_customer_id TEXT UNIQUE,
+  stripe_subscription_id TEXT UNIQUE,
+  -- Stripe subscription status: active, trialing, past_due, canceled, ...
+  subscription_status TEXT,
+  billing_interval TEXT CHECK (billing_interval IN ('monthly', 'annual')),
+  current_period_end TIMESTAMPTZ,
   created_at TIMESTAMPTZ DEFAULT NOW(),
   CONSTRAINT check_join_code_gc_only CHECK (
     join_code IS NULL OR company_type = 'gc'
@@ -39,6 +48,26 @@ ALTER TABLE companies ENABLE ROW LEVEL SECURITY;
 -- ALTER TABLE companies ADD COLUMN IF NOT EXISTS join_code TEXT UNIQUE;
 -- ALTER TABLE companies ADD CONSTRAINT check_join_code_gc_only CHECK (join_code IS NULL OR company_type = 'gc');
 -- ALTER TABLE companies ENABLE ROW LEVEL SECURITY;
+-- Existing database (Phase 12, Stripe billing): add the billing columns + events table:
+-- ALTER TABLE companies ADD COLUMN IF NOT EXISTS stripe_customer_id TEXT UNIQUE;
+-- ALTER TABLE companies ADD COLUMN IF NOT EXISTS stripe_subscription_id TEXT UNIQUE;
+-- ALTER TABLE companies ADD COLUMN IF NOT EXISTS subscription_status TEXT;
+-- ALTER TABLE companies ADD COLUMN IF NOT EXISTS billing_interval TEXT CHECK (billing_interval IN ('monthly', 'annual'));
+-- ALTER TABLE companies ADD COLUMN IF NOT EXISTS current_period_end TIMESTAMPTZ;
+
+-- 1b. Stripe webhook events (Phase 12): idempotency ledger. `id` is Stripe's
+-- own event id (evt_...), NOT a client-generated UUID -- the one deliberate
+-- exception to the offline-sync UUID rule, since this table is server-only
+-- and never written offline. The webhook inserts the id before handling an
+-- event; a duplicate insert means Stripe is retrying an event already handled.
+CREATE TABLE stripe_events (
+  id TEXT PRIMARY KEY,
+  type TEXT NOT NULL,
+  processed_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+-- Server-only table: RLS enabled with NO policies (service-role key only).
+ALTER TABLE stripe_events ENABLE ROW LEVEL SECURITY;
 
 -- 2. Users
 CREATE TABLE users (
@@ -326,6 +355,12 @@ CREATE TABLE jobsites (
   archived_at TIMESTAMPTZ,
   -- Phase 9b: per-site GC plan; 'site_pro' = paid GC Site Pro site.
   plan TEXT NOT NULL DEFAULT 'free' CHECK (plan IN ('free', 'site_pro')),
+  -- Phase 12h: Site Pro billing. Written only by the Stripe webhook
+  -- (server/services/stripeWebhook.js), like companies.tier; NULL until bought.
+  stripe_subscription_id TEXT UNIQUE,
+  site_pro_status TEXT,
+  site_pro_interval TEXT CHECK (site_pro_interval IN ('monthly', 'annual')),
+  site_pro_period_end TIMESTAMPTZ,
   -- Who originated the row: 'gc' (POST /api/jobsites) or 'subcontractor'
   -- (join-code link find-or-create). NULL = legacy/unknown, never guessed.
   origin TEXT CHECK (origin IN ('gc', 'subcontractor')),
@@ -352,6 +387,10 @@ CREATE INDEX idx_jobsites_gc_company ON jobsites (gc_company_id);
 -- ALTER TABLE jobsites ENABLE ROW LEVEL SECURITY;
 -- CREATE INDEX IF NOT EXISTS idx_jobsites_gc_company ON jobsites (gc_company_id);
 -- ALTER TABLE jobsites ADD COLUMN IF NOT EXISTS plan TEXT NOT NULL DEFAULT 'free' CHECK (plan IN ('free', 'site_pro'));  -- Phase 9b
+-- ALTER TABLE jobsites ADD COLUMN IF NOT EXISTS stripe_subscription_id TEXT UNIQUE;  -- Phase 12h
+-- ALTER TABLE jobsites ADD COLUMN IF NOT EXISTS site_pro_status TEXT;  -- Phase 12h
+-- ALTER TABLE jobsites ADD COLUMN IF NOT EXISTS site_pro_interval TEXT CHECK (site_pro_interval IN ('monthly', 'annual'));  -- Phase 12h
+-- ALTER TABLE jobsites ADD COLUMN IF NOT EXISTS site_pro_period_end TIMESTAMPTZ;  -- Phase 12h
 -- ALTER TABLE jobsites ADD COLUMN IF NOT EXISTS origin TEXT CHECK (origin IN ('gc', 'subcontractor'));  -- who created the jobsite; NULL = unknown
 -- ALTER TABLE jobsites ADD COLUMN IF NOT EXISTS join_token TEXT UNIQUE;  -- Phase 9e
 -- ALTER TABLE jobsites ADD COLUMN IF NOT EXISTS meeting_cadence TEXT NOT NULL DEFAULT 'daily' CHECK (meeting_cadence IN ('daily', 'weekly'));  -- Phase 11f
@@ -457,7 +496,7 @@ ALTER TABLE companies ADD COLUMN IF NOT EXISTS required_talk_pushed_by UUID REFE
 CREATE TABLE meeting_log_audit_events (
   id UUID PRIMARY KEY,
   meeting_log_id UUID NOT NULL REFERENCES meeting_logs(id) ON DELETE CASCADE,
-  event_type TEXT NOT NULL CHECK (event_type IN ('created', 'completed', 'pdf_generated', 'seal_verified')),
+  event_type TEXT NOT NULL CHECK (event_type IN ('created', 'completed', 'pdf_generated', 'seal_verified', 'integration_pushed')),
   actor_id UUID REFERENCES users(id) ON DELETE SET NULL,
   metadata JSONB,
   created_at TIMESTAMPTZ DEFAULT NOW()
@@ -472,3 +511,83 @@ CREATE INDEX idx_meeting_log_audit_events_meeting_log_id ON meeting_log_audit_ev
 -- If the table already exists from an earlier run:
 -- CREATE INDEX IF NOT EXISTS idx_meeting_log_audit_events_meeting_log_id ON meeting_log_audit_events (meeting_log_id);
 -- ALTER TABLE meeting_log_audit_events ENABLE ROW LEVEL SECURITY;
+-- 17. Document integrations (Phase 9f, docs/integrations-design.md) -- Procore /
+-- Autodesk ACC. Bring-your-own credentials: a GC manager pastes service-account
+-- credentials for THEIR Procore/ACC account; TailgatePro owns no developer app.
+-- `encrypted_credentials` is AES-256-GCM ciphertext (server/utility/secretBox.js),
+-- never returned to the client. `id`s are server-generated (uuidv4()), the same
+-- offline-sync exception as jobsites.id -- these rows are only ever written by
+-- authenticated server code.
+CREATE TABLE IF NOT EXISTS jobsite_integrations (
+  id UUID PRIMARY KEY,
+  jobsite_id UUID NOT NULL REFERENCES jobsites(id) ON DELETE CASCADE,
+  provider TEXT NOT NULL CHECK (provider IN ('procore', 'acc')),
+  external_project_id TEXT NOT NULL,
+  external_folder_id TEXT,
+  encrypted_credentials TEXT NOT NULL,
+  status TEXT NOT NULL DEFAULT 'connected' CHECK (status IN ('connected', 'error')),
+  last_error TEXT,
+  created_at TIMESTAMPTZ DEFAULT NOW(),
+  UNIQUE (jobsite_id, provider)
+);
+
+-- One push per (meeting, integration): the UNIQUE makes pushing idempotent.
+CREATE TABLE IF NOT EXISTS integration_pushes (
+  id UUID PRIMARY KEY,
+  meeting_log_id UUID NOT NULL REFERENCES meeting_logs(id) ON DELETE CASCADE,
+  integration_id UUID NOT NULL REFERENCES jobsite_integrations(id) ON DELETE CASCADE,
+  status TEXT NOT NULL DEFAULT 'pending' CHECK (status IN ('pending', 'sent', 'failed')),
+  external_file_id TEXT,
+  filename TEXT,
+  error TEXT,
+  attempted_at TIMESTAMPTZ DEFAULT NOW(),
+  UNIQUE (meeting_log_id, integration_id)
+);
+
+-- Server-only tables: RLS with NO policies (service-role key only).
+ALTER TABLE jobsite_integrations ENABLE ROW LEVEL SECURITY;
+ALTER TABLE integration_pushes ENABLE ROW LEVEL SECURITY;
+
+CREATE INDEX IF NOT EXISTS idx_jobsite_integrations_jobsite_id ON jobsite_integrations (jobsite_id);
+CREATE INDEX IF NOT EXISTS idx_integration_pushes_meeting_log_id ON integration_pushes (meeting_log_id);
+
+-- Existing databases: allow the new audit event type.
+-- ALTER TABLE meeting_log_audit_events DROP CONSTRAINT IF EXISTS meeting_log_audit_events_event_type_check;
+-- ALTER TABLE meeting_log_audit_events ADD CONSTRAINT meeting_log_audit_events_event_type_check CHECK (event_type IN ('created', 'completed', 'pdf_generated', 'seal_verified', 'integration_pushed'));
+
+-- 18. Sub-side document integrations (Trade Enterprise, docs/integrations-design.md)
+-- -- Procore / JobTread. Same bring-your-own-credentials model as section 17, but
+-- scoped to a subcontractor's project (projects.id) instead of a GC jobsite.
+-- Server-written uuidv4 ids; `encrypted_credentials` is AES-256-GCM ciphertext.
+CREATE TABLE IF NOT EXISTS project_integrations (
+  id UUID PRIMARY KEY,
+  project_id UUID NOT NULL REFERENCES projects(id) ON DELETE CASCADE,
+  provider TEXT NOT NULL CHECK (provider IN ('procore', 'jobtread')),
+  external_project_id TEXT NOT NULL,
+  external_folder_id TEXT,
+  encrypted_credentials TEXT NOT NULL,
+  status TEXT NOT NULL DEFAULT 'connected' CHECK (status IN ('connected', 'error')),
+  last_error TEXT,
+  created_at TIMESTAMPTZ DEFAULT NOW(),
+  UNIQUE (project_id, provider)
+);
+
+-- One push per (meeting, integration): the UNIQUE makes pushing idempotent.
+CREATE TABLE IF NOT EXISTS project_integration_pushes (
+  id UUID PRIMARY KEY,
+  meeting_log_id UUID NOT NULL REFERENCES meeting_logs(id) ON DELETE CASCADE,
+  integration_id UUID NOT NULL REFERENCES project_integrations(id) ON DELETE CASCADE,
+  status TEXT NOT NULL DEFAULT 'pending' CHECK (status IN ('pending', 'sent', 'failed')),
+  external_file_id TEXT,
+  filename TEXT,
+  error TEXT,
+  attempted_at TIMESTAMPTZ DEFAULT NOW(),
+  UNIQUE (meeting_log_id, integration_id)
+);
+
+-- Server-only tables: RLS with NO policies (service-role key only).
+ALTER TABLE project_integrations ENABLE ROW LEVEL SECURITY;
+ALTER TABLE project_integration_pushes ENABLE ROW LEVEL SECURITY;
+
+CREATE INDEX IF NOT EXISTS idx_project_integrations_project_id ON project_integrations (project_id);
+CREATE INDEX IF NOT EXISTS idx_project_integration_pushes_meeting_log_id ON project_integration_pushes (meeting_log_id);

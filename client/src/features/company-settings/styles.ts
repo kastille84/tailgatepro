@@ -205,3 +205,37 @@ export const StyledUpsellBody = styled.p`
     font-weight: 700;
   }
 `;
+
+/** Plan / status / renewal rows in Settings → Billing. */
+export const StyledBillingList = styled.dl`
+  margin: 0;
+  display: grid;
+  grid-template-columns: max-content 1fr;
+  gap: 0.8rem 2.4rem;
+  font-size: 1.5rem;
+
+  dt {
+    font-weight: 600;
+    color: ${({ theme }) => theme.colors.navy[500]};
+  }
+
+  dd {
+    margin: 0;
+    font-weight: 700;
+    color: ${({ theme }) => theme.colors.navy[700]};
+  }
+`;
+
+/** Inline notice when the last payment failed (past_due) — same treatment as
+ *  the seat-cap upgrade prompt. */
+export const StyledBillingWarning = styled.p`
+  margin: 0;
+  padding: 1.6rem 2rem;
+  border-radius: ${({ theme }) => theme.borderRadius.md};
+  border: 0.1rem solid ${({ theme }) => theme.colors.red[500]};
+  background-color: ${({ theme }) => theme.colors.concrete[200]};
+  font-size: 1.4rem;
+  font-weight: 600;
+  line-height: 1.6;
+  color: ${({ theme }) => theme.colors.navy[700]};
+`;

@@ -16,6 +16,7 @@ const base: Jobsite = {
   archivedAt: null,
   createdBySub: false,
   plan: "free",
+  sitePro: false,
   createdAt: "x",
   subcontractors: [
     { id: "s1", email: "a@a.com", status: "accepted", companyName: "A Co" },
@@ -24,10 +25,17 @@ const base: Jobsite = {
   ],
 };
 
+/** Action buttons live in a collapsed-by-default panel; open every card's. */
+const expandAll = () =>
+  screen
+    .getAllByRole("button", { name: /^actions for /i })
+    .forEach((toggle) => fireEvent.click(toggle));
+
 const renderList = (
   props: Partial<React.ComponentProps<typeof JobsiteList>> = {},
-) =>
-  render(
+  { expanded = true }: { expanded?: boolean } = {},
+) => {
+  const result = render(
     <MemoryRouter>
       <ThemeProvider theme={theme}>
         <JobsiteList
@@ -40,11 +48,32 @@ const renderList = (
       </ThemeProvider>
     </MemoryRouter>,
   );
+  if (expanded && props.jobsites?.length !== 0) expandAll();
+  return result;
+};
 
 describe("JobsiteList", () => {
   it("shows an empty state with no jobsites", () => {
     renderList({ jobsites: [] });
     expect(screen.getByText(/no job sites yet/i)).toBeDefined();
+  });
+
+  it("keeps the action buttons collapsed until the card's toggle is opened", () => {
+    renderList({ onEdit: vi.fn() }, { expanded: false });
+
+    const toggle = screen.getByRole("button", { name: "Actions for Riverside" });
+    expect(toggle.getAttribute("aria-expanded")).toBe("false");
+    expect(screen.queryByRole("button", { name: "Edit Riverside" })).toBeNull();
+
+    fireEvent.click(toggle);
+    expect(toggle.getAttribute("aria-expanded")).toBe("true");
+    const panel = document.getElementById(toggle.getAttribute("aria-controls") ?? "");
+    expect(panel?.getAttribute("role")).toBe("group");
+    expect(screen.getByRole("button", { name: "Edit Riverside" })).toBeDefined();
+
+    fireEvent.click(toggle);
+    expect(toggle.getAttribute("aria-expanded")).toBe("false");
+    expect(screen.queryByRole("button", { name: "Edit Riverside" })).toBeNull();
   });
 
   it("shows the name, status, and a roster summary", () => {
@@ -113,6 +142,22 @@ describe("JobsiteList", () => {
     expect(onManageMembers).toHaveBeenCalledWith(base);
   });
 
+  it("shows Integrations only on a Site Pro jobsite when onManageIntegrations is provided", () => {
+    const onManageIntegrations = vi.fn();
+    renderList({ jobsites: [{ ...base, plan: "site_pro", sitePro: true }], onManageIntegrations });
+
+    fireEvent.click(screen.getByRole("button", { name: "Integrations for Riverside" }));
+    expect(onManageIntegrations).toHaveBeenCalledWith(expect.objectContaining({ id: "j1" }));
+  });
+
+  it("omits Integrations without the callback or without Site Pro", () => {
+    renderList({ jobsites: [{ ...base, plan: "site_pro", sitePro: true }] });
+    expect(screen.queryByRole("button", { name: /^integrations/i })).toBeNull();
+
+    renderList({ jobsites: [{ ...base, plan: "free", sitePro: false }], onManageIntegrations: vi.fn() });
+    expect(screen.queryByRole("button", { name: /^integrations/i })).toBeNull();
+  });
+
   it("shows a disabled Defense Bundle button on a non-Site-Pro jobsite", () => {
     renderList({ jobsites: [{ ...base, plan: "free" }] });
 
@@ -126,9 +171,71 @@ describe("JobsiteList", () => {
     expect(screen.queryByRole("link", { name: /defense bundle/i })).toBeNull();
   });
 
+  it("offers Upgrade to Site Pro on an active free jobsite when onUpgrade is provided", () => {
+    const onUpgrade = vi.fn();
+    renderList({ jobsites: [{ ...base, plan: "free" }], onUpgrade });
+
+    expect(
+      screen.queryByRole("button", { name: "Download OSHA Defense Bundle for Riverside" }),
+    ).toBeNull();
+    fireEvent.click(screen.getByRole("button", { name: "Upgrade Riverside to Site Pro" }));
+
+    expect(onUpgrade).toHaveBeenCalledWith({ ...base, plan: "free" });
+  });
+
+  it("disables Upgrade to Site Pro while offline", () => {
+    renderList({ onUpgrade: vi.fn(), isOnline: false });
+
+    expect(
+      (screen.getByRole("button", { name: "Upgrade Riverside to Site Pro" }) as HTMLButtonElement)
+        .disabled,
+    ).toBe(true);
+  });
+
+  it("does not offer an upgrade on an archived or completed jobsite", () => {
+    const onUpgrade = vi.fn();
+    const { unmount } = renderList({
+      jobsites: [{ ...base, archivedAt: "2026-09-02" }],
+      onUpgrade,
+    });
+    expect(screen.queryByRole("button", { name: /to site pro/i })).toBeNull();
+    unmount();
+
+    renderList({ jobsites: [{ ...base, status: "completed" }], onUpgrade });
+    expect(screen.queryByRole("button", { name: /to site pro/i })).toBeNull();
+  });
+
+  it("does not offer an upgrade on a jobsite that is already Site Pro", () => {
+    renderList({ jobsites: [{ ...base, plan: "site_pro", sitePro: true }], onUpgrade: vi.fn() });
+
+    expect(screen.queryByRole("button", { name: /to site pro/i })).toBeNull();
+  });
+
+  it("treats a free-plan jobsite under GC Portfolio as Site Pro and says it is covered", () => {
+    const onDownloadBundle = vi.fn();
+    renderList({
+      jobsites: [{ ...base, plan: "free", sitePro: true }],
+      onUpgrade: vi.fn(),
+      onDownloadBundle,
+    });
+
+    expect(screen.getByText("Covered by GC Portfolio")).toBeDefined();
+    expect(screen.queryByRole("button", { name: /to site pro/i })).toBeNull();
+    fireEvent.click(
+      screen.getByRole("button", { name: "Download OSHA Defense Bundle for Riverside" }),
+    );
+    expect(onDownloadBundle).toHaveBeenCalled();
+  });
+
+  it("does not show the covered badge on a jobsite that pays for its own Site Pro", () => {
+    renderList({ jobsites: [{ ...base, plan: "site_pro", sitePro: true }] });
+
+    expect(screen.queryByText("Covered by GC Portfolio")).toBeNull();
+  });
+
   it("reports a Defense Bundle click with the jobsite on a Site Pro jobsite", () => {
     const onDownloadBundle = vi.fn();
-    renderList({ jobsites: [{ ...base, plan: "site_pro" }], onDownloadBundle });
+    renderList({ jobsites: [{ ...base, plan: "site_pro", sitePro: true }], onDownloadBundle });
 
     fireEvent.click(
       screen.getByRole("button", {
@@ -139,11 +246,12 @@ describe("JobsiteList", () => {
     expect(onDownloadBundle).toHaveBeenCalledWith({
       ...base,
       plan: "site_pro",
+      sitePro: true,
     });
   });
 
   it("disables the Defense Bundle button while offline", () => {
-    renderList({ jobsites: [{ ...base, plan: "site_pro" }], isOnline: false });
+    renderList({ jobsites: [{ ...base, plan: "site_pro", sitePro: true }], isOnline: false });
 
     expect(
       (
@@ -156,7 +264,7 @@ describe("JobsiteList", () => {
 
   it("disables the Defense Bundle button while a download is in flight", () => {
     renderList({
-      jobsites: [{ ...base, plan: "site_pro" }],
+      jobsites: [{ ...base, plan: "site_pro", sitePro: true }],
       isDownloadingBundle: true,
     });
 

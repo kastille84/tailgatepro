@@ -12,6 +12,8 @@ const usersService = require("./users");
 const pdfGeneration = require("./pdfGeneration");
 const emailService = require("./email");
 const auditLogService = require("./auditLog");
+const jobsiteIntegrationsService = require("./jobsiteIntegrations");
+const projectIntegrationsService = require("./projectIntegrations");
 const { enqueue, regenerate } = require("./pdfGenerationQueue");
 
 const meetingLog = {
@@ -119,12 +121,49 @@ describe("pdfGenerationQueue: enqueue", () => {
     vi.spyOn(pdfGeneration, "renderMeetingLogPdf").mockReset().mockResolvedValue(pdfBuffer);
     vi.spyOn(emailService, "sendMeetingLogEmail").mockReset().mockResolvedValue(undefined);
     vi.spyOn(auditLogService, "record").mockReset().mockResolvedValue(undefined);
+    vi.spyOn(projectIntegrationsService, "pushMeeting")
+      .mockReset()
+      .mockResolvedValue(undefined);
 
     consoleErrorSpy = vi.spyOn(console, "error").mockImplementation(() => {});
   });
 
   afterEach(() => {
     consoleErrorSpy.mockRestore();
+  });
+
+  it("pushes the rendered PDF to the project's jobsite integrations (Phase 9f)", async () => {
+    // Arrange
+    const pushSpy = vi
+      .spyOn(jobsiteIntegrationsService, "pushMeeting")
+      .mockReset()
+      .mockResolvedValue(undefined);
+    projectsService.getById.mockResolvedValue({ ...project, jobsiteId: "jobsite-1" });
+
+    // Act
+    await enqueue("meeting-1", "company-1");
+
+    // Assert
+    expect(pushSpy).toHaveBeenCalledWith({
+      meetingLogId: "meeting-1",
+      jobsiteId: "jobsite-1",
+      pdfBuffer,
+      filename: expect.stringMatching(/\.pdf$/),
+    });
+    pushSpy.mockRestore();
+  });
+
+  it("pushes the rendered PDF to the project's own integrations (Trade Enterprise)", async () => {
+    // Act
+    await enqueue("meeting-1", "company-1");
+
+    // Assert
+    expect(projectIntegrationsService.pushMeeting).toHaveBeenCalledWith({
+      meetingLogId: "meeting-1",
+      projectId: "project-1",
+      pdfBuffer,
+      filename: expect.stringMatching(/\.pdf$/),
+    });
   });
 
   it("should fetch every input (including the company and each signature's image), render the PDF, upload it, and persist its path", async () => {
@@ -500,6 +539,9 @@ describe("pdfGenerationQueue: regenerate", () => {
     vi.spyOn(pdfGeneration, "renderMeetingLogPdf").mockReset().mockResolvedValue(pdfBuffer);
     vi.spyOn(emailService, "sendMeetingLogEmail").mockReset().mockResolvedValue(undefined);
     vi.spyOn(auditLogService, "record").mockReset().mockResolvedValue(undefined);
+    vi.spyOn(projectIntegrationsService, "pushMeeting")
+      .mockReset()
+      .mockResolvedValue(undefined);
 
     consoleErrorSpy = vi.spyOn(console, "error").mockImplementation(() => {});
   });

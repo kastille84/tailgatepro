@@ -1,19 +1,6 @@
-import { Button } from "../../ui_comps/button";
 import type { Jobsite } from "../../interfaces/jobsite";
-import {
-  StyledArchivedBadge,
-  StyledCard,
-  StyledCardActions,
-  StyledCardMain,
-  StyledEmpty,
-  StyledList,
-  StyledMeta,
-  StyledName,
-  StyledOriginBadge,
-  StyledStatusBadge,
-} from "./styles";
-
-import { HiOutlineDownload } from "react-icons/hi";
+import { JobsiteCard } from "./JobsiteCard";
+import { StyledEmpty, StyledList } from "./styles";
 
 interface JobsiteListProps {
   jobsites: Jobsite[];
@@ -23,8 +10,15 @@ interface JobsiteListProps {
   /** Present ⇒ each card gets a Team button (GC Portfolio manager only —
    *  Phase 9d-2, assigns superintendents to this job site). */
   onManageMembers?: (jobsite: Jobsite) => void;
+  /** Present ⇒ a Site Pro jobsite gets an Integrations button (Phase 9f;
+   *  manager only, Procore / ACC document push). */
+  onManageIntegrations?: (jobsite: Jobsite) => void;
+  /** Present ⇒ an active, non-Site-Pro jobsite shows "Upgrade to Site Pro"
+   *  (Phase 12h; manager only, since the server 403s anyone else) instead of
+   *  the disabled Defense Bundle button. */
+  onUpgrade?: (jobsite: Jobsite) => void;
   /** Always provided — visibility isn't gated per-caller like `onManageMembers`,
-   *  since the Defense Bundle (Phase 9e) is gated per-jobsite (`jobsite.plan`),
+   *  since the Defense Bundle (Phase 9e) is gated per-jobsite (`jobsite.sitePro`),
    *  not per-company-role. A non-Site-Pro jobsite renders an upgrade link
    *  instead of a working button, so the paid feature stays visible. */
   onDownloadBundle: (jobsite: Jobsite) => void;
@@ -37,14 +31,6 @@ interface JobsiteListProps {
   isOnline: boolean;
 }
 
-const describeRoster = (jobsite: Jobsite) => {
-  const accepted = jobsite.subcontractors.filter(
-    (sub) => sub.status === "accepted",
-  ).length;
-  const pending = jobsite.subcontractors.length - accepted;
-  return `${accepted} subcontractor${accepted === 1 ? "" : "s"}, ${pending} pending`;
-};
-
 /** Presentational list of a GC's jobsites. The manager owns data and modal
  *  state; this only renders and reports clicks. */
 export const JobsiteList = ({
@@ -52,6 +38,8 @@ export const JobsiteList = ({
   onEdit,
   onManageSubs,
   onManageMembers,
+  onManageIntegrations,
+  onUpgrade,
   onDownloadBundle,
   isDownloadingBundle = false,
   isOnline,
@@ -67,76 +55,18 @@ export const JobsiteList = ({
   return (
     <StyledList>
       {jobsites.map((jobsite) => (
-        <StyledCard key={jobsite.id}>
-          <StyledCardMain>
-            <StyledName>{jobsite.name}</StyledName>
-            <StyledMeta>{describeRoster(jobsite)}</StyledMeta>
-            {jobsite.createdBySub && (
-              <StyledOriginBadge>Created by subcontractor</StyledOriginBadge>
-            )}
-          </StyledCardMain>
-          <StyledCardActions>
-            {jobsite.archivedAt ? (
-              <StyledArchivedBadge>Archived</StyledArchivedBadge>
-            ) : (
-              <StyledStatusBadge $status={jobsite.status}>
-                {jobsite.status}
-              </StyledStatusBadge>
-            )}
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => onManageSubs(jobsite)}
-              aria-label={`Subcontractors for ${jobsite.name}`}
-            >
-              Subs
-            </Button>
-            {onManageMembers && (
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => onManageMembers(jobsite)}
-                aria-label={`Superintendents for ${jobsite.name}`}
-              >
-                Team
-              </Button>
-            )}
-            {jobsite.plan === "site_pro" ? (
-              <Button
-                variant="outline"
-                size="sm"
-                disabled={!isOnline}
-                loading={isDownloadingBundle}
-                leftIcon={<HiOutlineDownload />}
-                onClick={() => onDownloadBundle(jobsite)}
-                aria-label={`Download OSHA Defense Bundle for ${jobsite.name}`}
-                title={`Download OSHA Defense Bundle for ${jobsite.name}`}
-              >
-                Defense Bundle
-              </Button>
-            ) : (
-              <Button
-                variant="primary"
-                size="sm"
-                leftIcon={<HiOutlineDownload />}
-                disabled={true}
-                aria-label={`Download OSHA Defense Bundle for ${jobsite.name}`}
-              >
-                Defense Bundle
-              </Button>
-            )}
-            {onEdit && (
-              <Button
-                variant="primary"
-                size="sm"
-                onClick={() => onEdit(jobsite)}
-                aria-label={`Edit ${jobsite.name}`}
-              >
-                Edit
-              </Button>
-            )}
-          </StyledCardActions>
-        </StyledCard>
+        <JobsiteCard
+          key={jobsite.id}
+          jobsite={jobsite}
+          onEdit={onEdit}
+          onManageSubs={onManageSubs}
+          onManageMembers={onManageMembers}
+          onManageIntegrations={onManageIntegrations}
+          onUpgrade={onUpgrade}
+          onDownloadBundle={onDownloadBundle}
+          isDownloadingBundle={isDownloadingBundle}
+          isOnline={isOnline}
+        />
       ))}
     </StyledList>
   );
