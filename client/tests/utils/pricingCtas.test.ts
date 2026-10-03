@@ -79,10 +79,8 @@ describe("getPlanCtas", () => {
     });
   });
 
-  it("falls back to the waitlist for a plan with no checkout", () => {
-    expect(getPlanCtas("unknown-plan", ctx())).toEqual([
-      { label: "Join the waitlist", waitlist: true },
-    ]);
+  it("shows no button for a plan with no checkout", () => {
+    expect(getPlanCtas("unknown-plan", ctx())).toEqual([]);
   });
 
   describe("visitors on a paid plan", () => {

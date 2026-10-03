@@ -15,6 +15,7 @@ import {
   InviteTeammateForm,
   JoinCodeCard,
   LogoUpload,
+  SmsOptInCard,
 } from "../../features/company-settings";
 import {
   StyledSection as StyledLogoSection,
@@ -135,6 +136,13 @@ export const Settings = () => {
                 isOpening={isOpening}
                 onManage={() => openPortal()}
               />
+            </StyledLogoSection>
+          )}
+          {!isGc && (
+            <StyledLogoSection>
+              <hr />
+              <StyledSectionTitle>Text reminders</StyledSectionTitle>
+              <SmsOptInCard />
             </StyledLogoSection>
           )}
           {isGc && (

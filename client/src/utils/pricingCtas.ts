@@ -29,14 +29,10 @@ export interface PricingCtaContext {
   billing: Billing;
 }
 
-export interface PlanCta {
-  label: string;
-  /** Router path. Absent for a disabled CTA or the waitlist anchor. */
-  to?: string;
-  disabled?: boolean;
-  /** Scrolls to the waitlist form instead of navigating. */
-  waitlist?: boolean;
-}
+/** A button on a plan card: a router link, or a disabled placeholder. */
+export type PlanCta =
+  | { label: string; to: string; disabled?: false }
+  | { label: string; disabled: true; to?: undefined };
 
 /** What buttons a plan card shows for this visitor. Purely a UI decision — the
  *  server re-checks the company type and role on every checkout. */
@@ -65,8 +61,8 @@ export const getPlanCtas = (
   }
 
   const options = CHECKOUT_OPTIONS[planId];
-  // Plans with no checkout option (none today) fall back to the waitlist.
-  if (!options) return [{ label: "Join the waitlist", waitlist: true }];
+  // A plan with no checkout option (none today) simply shows no button.
+  if (!options) return [];
 
   if (!signedIn) {
     return options.map(({ key, label }) => ({

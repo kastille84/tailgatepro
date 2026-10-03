@@ -1,6 +1,6 @@
 # Billing design (Phase 12)
 
-Stripe subscriptions for company plans: Trade Pro, Trade Enterprise, GC Portfolio (10 sites / unlimited), monthly and annual. Per-jobsite GC Site Pro is covered in its own section below (Phase 12h). SMS nudges and integrations are out of scope.
+Stripe subscriptions for company plans: Trade Pro, Trade Enterprise, GC Portfolio (10 sites / unlimited), monthly and annual. Per-jobsite GC Site Pro is covered in its own section below (Phase 12h). Integrations are out of scope; SMS nudges (Twilio) are their own design in `docs/sms-nudges-design.md`.
 
 **Principle:** `companies.tier` is written only by the Stripe webhook. Checkout and the client's success redirect never grant a plan.
 

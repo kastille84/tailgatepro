@@ -148,14 +148,14 @@ describe("Landing", () => {
     ).toBeTruthy();
   });
 
-  it("tags the unbuilt GC bullets Coming soon and leaves built ones untagged", () => {
+  it("tags the unbuilt GC bullets Coming soon and leaves built ones (incl. SMS nudges) untagged", () => {
     renderLanding();
 
     const defenseBundle = screen.getByText(/1-click OSHA Defense Bundle — an/i);
     expect(within(defenseBundle).getByText("Coming soon")).toBeTruthy();
 
     const sms = screen.getByText(/Auto-SMS nudges non-compliant foremen/i);
-    expect(within(sms).getByText("Coming soon")).toBeTruthy();
+    expect(within(sms).queryByText("Coming soon")).toBeNull();
 
     const built = screen.getByText(
       "Flat rate per site or portfolio — never per user seat.",
