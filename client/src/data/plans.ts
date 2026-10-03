@@ -42,11 +42,10 @@ export const SUB_PLANS: Plan[] = [
       "5-year legal archive for OSHA audits",
       "1-click OSHA Defense Bundle — download every log as one ZIP",
       "Expanded OSHA talk library",
-      "AI Talk Builder",
+      "AI Talk Builder — 10 AI-drafted talks a month",
     ],
     comingSoon: [
       "Expanded OSHA talk library",
-      "AI Talk Builder",
     ],
   },
   {
@@ -58,6 +57,7 @@ export const SUB_PLANS: Plan[] = [
     features: [
       "Unlimited foremen & crews",
       "Procore & JobTread document sync",
+      "AI Talk Builder — 100 AI-drafted talks a month",
     ],
   },
 ];
@@ -102,6 +102,7 @@ export const GC_PLANS: Plan[] = [
       "Top-down corporate policy push across all sites",
       "Multi-manager roles — Superintendent vs Safety Director",
       "Custom company safety talks shared with every sub",
+      "AI Talk Builder — draft a site-specific talk, then push it to every sub",
     ],
   },
 ];

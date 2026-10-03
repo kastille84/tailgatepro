@@ -9,7 +9,10 @@ const {
   updateTalk,
   deleteTalk,
   listTranslationLanguages,
+  generateTalk,
+  getAiUsage,
 } = require("./talks");
+const talkGenerationService = require("../services/talkGeneration");
 
 const listForCompanySpy = vi.spyOn(talksService, "listForCompany");
 const getByIdSpy = vi.spyOn(talksService, "getById");
@@ -21,6 +24,9 @@ const getSupportedLanguagesSpy = vi.spyOn(
   translationService,
   "getSupportedLanguages",
 );
+
+const generateDraftSpy = vi.spyOn(talkGenerationService, "generateTalkDraft");
+const getUsageSpy = vi.spyOn(talkGenerationService, "getUsage");
 
 const talk = {
   id: "talk-1",
@@ -51,6 +57,8 @@ describe("talks controller", () => {
       .mockReset()
       .mockResolvedValue({ fullLibrary: true, gcCompanyIds: [] });
     getSupportedLanguagesSpy.mockReset();
+    generateDraftSpy.mockReset();
+    getUsageSpy.mockReset();
     req = {
       params: {},
       body: {},
@@ -580,6 +588,134 @@ describe("talks controller", () => {
       // Assert
       expect(next).toHaveBeenCalledWith(error);
       expect(res.status).not.toHaveBeenCalled();
+    });
+  });
+
+  describe("generateTalk / getAiUsage (AI Talk Builder)", () => {
+    it("should respond 200 with the draft and usage for a Trade Pro caller", async () => {
+      // Arrange
+      req.body = { topic: "trenching", tradeTag: "Concrete" };
+      const result = { draft: { title: "Trench Safety" }, usage: { used: 1, limit: 10, remaining: 9 } };
+      generateDraftSpy.mockResolvedValue(result);
+
+      // Act
+      await generateTalk(req, res, next);
+
+      // Assert
+      expect(generateDraftSpy).toHaveBeenCalledWith({
+        user: req.user,
+        topic: "trenching",
+        tradeTag: "Concrete",
+      });
+      expect(res.status).toHaveBeenCalledWith(200);
+      expect(res.json).toHaveBeenCalledWith({ success: true, data: result });
+    });
+
+    it("should reject Trade Free with a 403 upgrade message without calling the service", async () => {
+      // Arrange
+      req.user.tier = "basic";
+      req.body = { topic: "trenching" };
+
+      // Act
+      await generateTalk(req, res, next);
+
+      // Assert
+      expect(generateDraftSpy).not.toHaveBeenCalled();
+      expect(next).toHaveBeenCalledWith(
+        expect.objectContaining({
+          statusCode: 403,
+          message: "Upgrade to Trade Pro to unlock the AI Talk Builder",
+        }),
+      );
+    });
+
+    it("should apply the GC plan and role gates before the AI gate", async () => {
+      // Arrange
+      req.user = { ...req.user, companyType: "gc", tier: "basic", role: "admin" };
+
+      // Act
+      await generateTalk(req, res, next);
+
+      // Assert
+      expect(next).toHaveBeenCalledWith(
+        expect.objectContaining({ message: "Upgrade to GC Portfolio to create company talks" }),
+      );
+
+      // Arrange: Portfolio but not a manager role
+      next.mockReset();
+      req.user = { ...req.user, tier: "premium", role: "superintendent" };
+
+      // Act
+      await generateTalk(req, res, next);
+
+      // Assert
+      expect(next).toHaveBeenCalledWith(
+        expect.objectContaining({ message: "Only a safety director or admin can write company talks" }),
+      );
+      expect(generateDraftSpy).not.toHaveBeenCalled();
+    });
+
+    it("should allow a GC Portfolio manager", async () => {
+      // Arrange
+      req.user = { ...req.user, companyType: "gc", tier: "premium", role: "safety_manager" };
+      req.body = { topic: "crane lift" };
+      generateDraftSpy.mockResolvedValue({ draft: {}, usage: {} });
+
+      // Act
+      await generateTalk(req, res, next);
+
+      // Assert
+      expect(res.status).toHaveBeenCalledWith(200);
+    });
+
+    it("should forward a service error (e.g. the 429 cap) to next()", async () => {
+      // Arrange
+      req.body = { topic: "trenching" };
+      const error = new Error("cap");
+      generateDraftSpy.mockRejectedValue(error);
+
+      // Act
+      await generateTalk(req, res, next);
+
+      // Assert
+      expect(next).toHaveBeenCalledWith(error);
+    });
+
+    it("getAiUsage should respond 200 with this month's usage", async () => {
+      // Arrange
+      const usage = { used: 2, limit: 10, remaining: 8 };
+      getUsageSpy.mockResolvedValue(usage);
+
+      // Act
+      await getAiUsage(req, res, next);
+
+      // Assert
+      expect(getUsageSpy).toHaveBeenCalledWith(req.user);
+      expect(res.json).toHaveBeenCalledWith({ success: true, data: usage });
+    });
+
+    it("getAiUsage should 403 without access and forward service errors", async () => {
+      // Arrange
+      req.user.tier = "basic";
+
+      // Act
+      await getAiUsage(req, res, next);
+
+      // Assert
+      expect(getUsageSpy).not.toHaveBeenCalled();
+      expect(next).toHaveBeenCalledWith(expect.objectContaining({ statusCode: 403 }));
+
+      // Arrange
+      next.mockReset();
+      req.user.tier = "premium";
+      const error = new Error("boom");
+      getUsageSpy.mockRejectedValue(error);
+
+      // Act
+      await getAiUsage(req, res, next);
+
+      // Assert
+      expect(next).toHaveBeenCalledWith(error);
     });
   });
 });

@@ -15,6 +15,8 @@ const mockUseTalks = vi.fn();
 const mockUseCurrentUser = vi.fn();
 const mockUseOnlineStatus = vi.fn();
 const mockUseTranslationLanguages = vi.fn();
+const mockUseGenerateTalk = vi.fn();
+const mockGenerateDraft = vi.fn();
 
 vi.mock("../../../src/hooks/useCreateTalk", () => ({
   useCreateTalk: () => ({ createTalk: mockCreate, isCreating: false }),
@@ -37,36 +39,53 @@ vi.mock("../../../src/context/online-status", () => ({
 vi.mock("../../../src/hooks/useTranslationLanguages", () => ({
   useTranslationLanguages: () => mockUseTranslationLanguages(),
 }));
+vi.mock("../../../src/hooks/useGenerateTalk", () => ({
+  useGenerateTalk: () => mockUseGenerateTalk(),
+}));
 
 // BulletListEditor has its own tests (ui_comps/bullet-list-editor); stub it
 // here as a plain textarea (one line per bullet) so TalkForm's tests stay
 // focused on TalkForm's own logic — assembling the payload, wiring
-// Controller, surfacing validation and mutation errors.
-vi.mock("../../../src/ui_comps/bullet-list-editor", () => ({
-  BulletListEditor: ({
-    id,
-    value,
-    onChange,
-    hasError,
-    "aria-describedby": ariaDescribedBy,
-  }: {
-    id?: string;
-    value: string[];
-    onChange: (items: string[]) => void;
-    hasError?: boolean;
-    "aria-describedby"?: string;
-  }) => (
-    <textarea
-      id={id}
-      aria-invalid={hasError}
-      aria-describedby={ariaDescribedBy}
-      value={value.join("\n")}
-      onChange={(event) =>
-        onChange(event.target.value.split("\n").filter((line) => line.trim() !== ""))
-      }
-    />
-  ),
-}));
+// Controller, surfacing validation and mutation errors. Like the real editor
+// it only reads `value` once, on mount (a `defaultValue` would NOT do: jsdom
+// keeps updating an untouched textarea's text), so a test fails if TalkForm
+// forgets to remount it after pushing new values in with `reset()`.
+vi.mock("../../../src/ui_comps/bullet-list-editor", async () => {
+  const { useEffect, useRef } = await import("react");
+  return {
+    BulletListEditor: ({
+      id,
+      value,
+      onChange,
+      hasError,
+      "aria-describedby": ariaDescribedBy,
+    }: {
+      id?: string;
+      value: string[];
+      onChange: (items: string[]) => void;
+      hasError?: boolean;
+      "aria-describedby"?: string;
+    }) => {
+      const ref = useRef<HTMLTextAreaElement>(null);
+      useEffect(() => {
+        if (ref.current) ref.current.value = value.join("\n");
+        // Seed once on mount, like Tiptap's `content`.
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+      }, []);
+      return (
+        <textarea
+          ref={ref}
+          id={id}
+          aria-invalid={hasError}
+          aria-describedby={ariaDescribedBy}
+          onChange={(event) =>
+            onChange(event.target.value.split("\n").filter((line) => line.trim() !== ""))
+          }
+        />
+      );
+    },
+  };
+});
 
 const renderForm = (
   props: Partial<React.ComponentProps<typeof TalkForm>> = {},
@@ -122,6 +141,14 @@ describe("TalkForm", () => {
     // Empty by default so pre-existing tests' `targetLanguages: []` payload
     // expectation holds without every test needing to think about it.
     mockUseTranslationLanguages.mockReturnValue({ languages: [], isAvailable: false });
+    // Access on by default; the AI panel's own tests override per case.
+    mockUseGenerateTalk.mockReturnValue({
+      generateDraft: mockGenerateDraft,
+      isGenerating: false,
+      usage: null,
+      hasAccess: true,
+      isOnline: true,
+    });
   });
 
   it("renders nothing when closed", () => {
@@ -561,6 +588,161 @@ describe("TalkForm", () => {
           }),
         ),
       );
+    });
+  });
+
+  describe("AI Talk Builder panel", () => {
+    const aiDraft = {
+      title: "Trench Safety",
+      tradeTag: "General",
+      summary: "Trenches collapse without warning.",
+      talkingPoints: ["Never enter an unprotected trench."],
+      siteHazardsToCheck: ["Spoil pile at the edge"],
+      discussionQuestions: ["Where is our ladder?"],
+      oshaStandards: ["29 CFR 1926.651"],
+      estimatedMinutes: 6,
+    };
+
+    const draftButton = () => screen.getByRole("button", { name: /^draft with ai$/i });
+    const topicInput = () => screen.getByLabelText(/topic for the ai draft/i);
+
+    it("pre-fills the form from the draft, shows the verify banner, and saves through the normal create flow", async () => {
+      mockGenerateDraft.mockResolvedValue({
+        draft: aiDraft,
+        usage: { used: 1, limit: 10, remaining: 9 },
+      });
+      renderForm();
+
+      expect(screen.queryByRole("status")).toBeNull();
+      fireEvent.change(topicInput(), { target: { value: "  trenching  " } });
+      fireEvent.click(draftButton());
+
+      await waitFor(() => expect(screen.getByRole("status")).toBeDefined());
+      expect(mockGenerateDraft).toHaveBeenCalledWith({
+        topic: "trenching",
+        tradeTag: undefined,
+      });
+      expect(screen.getByRole("status").textContent).toMatch(/verify every point against osha/i);
+      expect((screen.getByLabelText(/^title$/i) as HTMLInputElement).value).toBe(
+        "Trench Safety",
+      );
+      expect((screen.getByLabelText(/talking points/i) as HTMLTextAreaElement).value).toBe(
+        "Never enter an unprotected trench.",
+      );
+      expect(
+        (screen.getByLabelText(/hazards to check on site/i) as HTMLTextAreaElement).value,
+      ).toBe("Spoil pile at the edge");
+      expect(
+        (screen.getByLabelText(/discussion questions/i) as HTMLTextAreaElement).value,
+      ).toBe("Where is our ladder?");
+      expect((screen.getByLabelText(/estimated minutes/i) as HTMLInputElement).value).toBe("6");
+      expect(
+        (screen.getByLabelText(/^osha standard 1$/i) as HTMLInputElement).value,
+      ).toBe("29 CFR 1926.651");
+
+      fireEvent.click(screen.getByRole("button", { name: /create talk/i }));
+
+      await waitFor(() =>
+        expect(mockCreate).toHaveBeenCalledWith(
+          expect.objectContaining({
+            title: "Trench Safety",
+            tradeTag: "General",
+            talkingPoints: aiDraft.talkingPoints,
+            siteHazardsToCheck: aiDraft.siteHazardsToCheck,
+            discussionQuestions: aiDraft.discussionQuestions,
+            oshaStandards: ["29 CFR 1926.651"],
+            estimatedMinutes: 6,
+          }),
+        ),
+      );
+    });
+
+    it("passes an already-typed trade along to the draft", async () => {
+      mockGenerateDraft.mockResolvedValue({ draft: aiDraft, usage: {} });
+      renderForm();
+
+      fireEvent.change(screen.getByLabelText(/^trade/i), { target: { value: " Roofing " } });
+      fireEvent.change(topicInput(), { target: { value: "fall protection" } });
+      fireEvent.click(draftButton());
+
+      await waitFor(() =>
+        expect(mockGenerateDraft).toHaveBeenCalledWith({
+          topic: "fall protection",
+          tradeTag: "Roofing",
+        }),
+      );
+    });
+
+    it("leaves the form untouched and shows no banner when generation fails", async () => {
+      mockGenerateDraft.mockRejectedValue(new Error("cap reached"));
+      renderForm();
+
+      fireEvent.change(screen.getByLabelText(/^title$/i), { target: { value: "My talk" } });
+      fireEvent.change(topicInput(), { target: { value: "trenching" } });
+      fireEvent.click(draftButton());
+
+      await waitFor(() => expect(mockGenerateDraft).toHaveBeenCalled());
+      expect(screen.queryByRole("status")).toBeNull();
+      expect((screen.getByLabelText(/^title$/i) as HTMLInputElement).value).toBe("My talk");
+    });
+
+    it("disables the button until the topic has 3 characters", () => {
+      renderForm();
+
+      expect((draftButton() as HTMLButtonElement).disabled).toBe(true);
+      fireEvent.change(topicInput(), { target: { value: "ab" } });
+      expect((draftButton() as HTMLButtonElement).disabled).toBe(true);
+      fireEvent.change(topicInput(), { target: { value: "abc" } });
+      expect((draftButton() as HTMLButtonElement).disabled).toBe(false);
+    });
+
+    it("shows the remaining allowance and disables the button once it is used up", () => {
+      mockUseGenerateTalk.mockReturnValue({
+        generateDraft: mockGenerateDraft,
+        isGenerating: false,
+        usage: { used: 10, limit: 10, remaining: 0 },
+        hasAccess: true,
+        isOnline: true,
+      });
+      renderForm();
+
+      expect(screen.getByText(/0 of 10 ai drafts left this month/i)).toBeDefined();
+      fireEvent.change(topicInput(), { target: { value: "trenching" } });
+      expect((draftButton() as HTMLButtonElement).disabled).toBe(true);
+    });
+
+    it("shows an upgrade note instead of the input when the plan has no access", () => {
+      mockUseGenerateTalk.mockReturnValue({
+        generateDraft: mockGenerateDraft,
+        isGenerating: false,
+        usage: null,
+        hasAccess: false,
+        isOnline: true,
+      });
+      renderForm();
+
+      expect(screen.getByText(/ai talk builder is a trade pro feature/i)).toBeDefined();
+      expect(screen.queryByLabelText(/topic for the ai draft/i)).toBeNull();
+    });
+
+    it("shows an offline note instead of the input when offline", () => {
+      mockUseGenerateTalk.mockReturnValue({
+        generateDraft: mockGenerateDraft,
+        isGenerating: false,
+        usage: null,
+        hasAccess: true,
+        isOnline: false,
+      });
+      renderForm();
+
+      expect(screen.getByText(/unavailable offline/i)).toBeDefined();
+      expect(screen.queryByLabelText(/topic for the ai draft/i)).toBeNull();
+    });
+
+    it("is not offered when editing an existing talk", () => {
+      renderForm({ talk: editTalk });
+
+      expect(screen.queryByText(/draft with ai/i)).toBeNull();
     });
   });
 });

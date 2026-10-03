@@ -15,6 +15,12 @@ const TRANSLATION_TIERS = ["premium", "enterprise"];
  *  features/jobsites/JobsiteManager.tsx's own copy. UI hints only. */
 const MANAGER_ROLES = ["admin", "safety_manager"];
 
+/** Plan ids with an AI Talk Builder allowance — mirrors the server's
+ *  non-zero `aiGenerationsPerMonth` in `PLAN_LIMITS`
+ *  (server/utility/entitlements.js). UI hint only; the server enforces it
+ *  (and the cap) on `POST /api/talks/generate`. */
+const AI_TALK_BUILDER_PLANS = ["trade-pro", "trade-enterprise", "gc-portfolio"];
+
 /**
  * The caller's own profile + subscription tier (`GET /api/users/me`), kept
  * as its own domain hook layered on top of `useAuth()` rather than merged
@@ -48,6 +54,10 @@ export const useCurrentUser = () => {
     plan: query.data?.plan ?? null,
     limits: query.data?.limits ?? null,
     hasTranslationAccess: tier !== null && TRANSLATION_TIERS.includes(tier),
+    // Keyed off the server-resolved `plan`, so false until the profile loads.
+    hasAiTalkBuilderAccess: AI_TALK_BUILDER_PLANS.includes(
+      query.data?.plan ?? "",
+    ),
     // Server-resolved (like plan/limits above), not a tier mirror: a GC can
     // earn this from owning a Site Pro jobsite, which isn't knowable from
     // tier alone (server/services/branding.js's resolveBrandingAccess).
