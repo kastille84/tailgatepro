@@ -39,6 +39,12 @@ vi.mock("../../../src/features/jobsites/JobsiteJoinQrCard", () => ({
   ),
 }));
 
+vi.mock("../../../src/features/jobsites/SmsRecipientsPanel", () => ({
+  SmsRecipientsPanel: ({ jobsite }: { jobsite: { id: string } }) => (
+    <div data-testid="sms-recipients-panel">{jobsite.id}</div>
+  ),
+}));
+
 const jobsite: Jobsite = {
   id: "j1",
   gcCompanyId: "gc-1",
@@ -118,6 +124,19 @@ describe("JobsiteRosterModal", () => {
     await waitFor(() =>
       expect(mockRemove).toHaveBeenCalledWith({ jobsiteId: "j1", subId: "s9" }),
     );
+  });
+
+  it("shows the SMS recipients panel only for a manager on a Site Pro site", () => {
+    renderModal();
+    expect(screen.queryByTestId("sms-recipients-panel")).toBeNull();
+
+    renderModal({ jobsite: { ...jobsite, sitePro: true } });
+    expect(screen.getByTestId("sms-recipients-panel").textContent).toBe("j1");
+  });
+
+  it("hides the SMS recipients panel from a non-manager even on Site Pro", () => {
+    renderModal({ jobsite: { ...jobsite, sitePro: true }, canManage: false });
+    expect(screen.queryByTestId("sms-recipients-panel")).toBeNull();
   });
 
   it("shows an empty message when nobody is invited", () => {

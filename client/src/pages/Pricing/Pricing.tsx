@@ -4,7 +4,6 @@ import { HiCheck } from "react-icons/hi2";
 
 import { useAuth } from "../../context/auth";
 import { useCurrentUser } from "../../hooks/useCurrentUser";
-import { WaitlistForm } from "../Landing/WaitlistForm";
 import { SegmentedToggle } from "../../ui_comps/segmented-toggle";
 import { Footer } from "../../ui_comps/footer";
 import { SUB_PLANS, GC_PLANS } from "../../data/plans";
@@ -46,8 +45,6 @@ import {
   StyledFaqItem,
   StyledFaqQuestion,
   StyledFaqAnswer,
-  StyledCtaSection,
-  StyledCtaInner,
 } from "./Pricing.styles";
 
 const AUDIENCE_OPTIONS: { value: Audience; label: string }[] = [
@@ -82,8 +79,6 @@ const FAQ: { q: string; a: string }[] = [
     a: "Right now. Start on a free plan, or pick Trade Pro, Trade Enterprise or GC Portfolio and we'll take you through sign-up to secure checkout. GC Site Pro is bought per jobsite: sign up, open your job sites and choose Upgrade to Site Pro on the site you want.",
   },
 ];
-
-const WAITLIST_ANCHOR = "#pricing-waitlist";
 
 export const Pricing = () => {
   const [searchParams] = useSearchParams();
@@ -199,22 +194,11 @@ export const Pricing = () => {
                           </StyledPlanCta>
                         );
                       }
-                      if (cta.to) {
-                        return (
-                          <StyledPlanCta
-                            key={cta.label}
-                            as={Link}
-                            to={cta.to}
-                            $featured={plan.featured}
-                          >
-                            {cta.label}
-                          </StyledPlanCta>
-                        );
-                      }
                       return (
                         <StyledPlanCta
                           key={cta.label}
-                          href={WAITLIST_ANCHOR}
+                          as={Link}
+                          to={cta.to}
                           $featured={plan.featured}
                         >
                           {cta.label}
@@ -261,26 +245,6 @@ export const Pricing = () => {
         </StyledContainer>
       </StyledSection>
 
-      <StyledCtaSection
-        id="pricing-waitlist"
-        aria-labelledby="pricing-cta-heading"
-      >
-        <StyledCtaInner>
-          <StyledSectionTitle id="pricing-cta-heading">
-            SMS nudges are coming soon
-          </StyledSectionTitle>
-          <StyledSectionLede>
-            Automated SMS nudges aren&apos;t live yet. Join the waitlist and
-            we&apos;ll let you know the moment they are.
-          </StyledSectionLede>
-          <WaitlistForm
-            idPrefix="pricing"
-            tone="onDark"
-            audience="gc"
-            planInterest="gc-site-pro"
-          />
-        </StyledCtaInner>
-      </StyledCtaSection>
       <Footer />
     </StyledPage>
   );

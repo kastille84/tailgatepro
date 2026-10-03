@@ -8,6 +8,7 @@ import { useRemoveSubcontractor } from "../../hooks/useRemoveSubcontractor";
 import type { Jobsite, JobsiteSubcontractor } from "../../interfaces/jobsite";
 import { InviteSubcontractorForm } from "./InviteSubcontractorForm";
 import { JobsiteJoinQrCard } from "./JobsiteJoinQrCard";
+import { SmsRecipientsPanel } from "./SmsRecipientsPanel";
 import {
   StyledMeta,
   StyledName,
@@ -82,6 +83,8 @@ export const JobsiteRosterModal = ({
             <JobsiteJoinQrCard jobsiteId={jobsite.id} jobsiteName={jobsite.name} />
           </>
         )}
+
+        {canManage && jobsite.sitePro && <SmsRecipientsPanel jobsite={jobsite} />}
 
         {jobsite.subcontractors.length === 0 ? (
           <StyledNote>No subcontractors invited yet.</StyledNote>

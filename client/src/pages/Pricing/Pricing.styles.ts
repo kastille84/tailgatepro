@@ -430,30 +430,3 @@ export const StyledFaqAnswer = styled.p`
   font-weight: 500;
   color: ${({ theme }) => theme.colors.navy[500]};
 `;
-
-/* ---------- closing waitlist CTA ---------- */
-
-export const StyledCtaSection = styled.section`
-  scroll-margin-top: 8rem;
-  padding: 5.6rem 1.6rem;
-  background: linear-gradient(
-    160deg,
-    ${({ theme }) => theme.colors.navy[500]} 0%,
-    ${({ theme }) => theme.colors.navy[700]} 100%
-  );
-  color: ${({ theme }) => theme.colors.concrete[100]};
-
-  @media (min-width: ${({ theme }) => theme.breakpoints.md}) {
-    padding: 8rem 2.4rem;
-  }
-`;
-
-export const StyledCtaInner = styled.div`
-  width: 100%;
-  max-width: 56rem;
-  margin: 0 auto;
-  text-align: center;
-  display: flex;
-  flex-direction: column;
-  gap: 1.6rem;
-`;

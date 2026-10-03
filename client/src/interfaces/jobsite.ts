@@ -39,6 +39,12 @@ export interface Jobsite {
   /** The GC's default cadence for this jobsite; a sub may tighten it for
    *  itself but never relax it. */
   meetingCadence: MeetingCadence;
+  /** Phase 9e: the GC has switched on the Monday 7:00 AM SMS nudge for this
+   *  site. Only ever true on a Site Pro site (server-enforced). */
+  smsNudgesEnabled: boolean;
+  /** IANA zone (e.g. `America/Chicago`) the Monday 7:00 AM send is evaluated
+   *  in; null until the GC sets one, and nudges skip a site without one. */
+  timezone: string | null;
   createdAt: string;
   subcontractors: JobsiteSubcontractor[];
 }
@@ -53,6 +59,8 @@ export interface JobsitePatch {
   status?: ProjectStatus;
   archived?: boolean;
   meetingCadence?: MeetingCadence;
+  smsNudgesEnabled?: boolean;
+  timezone?: string;
 }
 
 /** POST /api/jobsites/:id/invite's response — email only, never the token. */

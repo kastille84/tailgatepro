@@ -15,7 +15,7 @@ const { effectiveCadence, isStricterOrEqual } = require("../utility/cadence");
 // mapper applied to each row before it leaves the service. Services never
 // leak DB column names to the controller layer.
 const JOBSITE_COLUMNS =
-  "id, gc_company_id, name, status, archived_at, origin, plan, meeting_cadence, created_at";
+  "id, gc_company_id, name, status, archived_at, origin, plan, meeting_cadence, sms_nudges_enabled, timezone, created_at";
 
 // A NULL origin (a jobsite that predates the column) maps to false: unknown is
 // never presented as sub-created.
@@ -38,6 +38,10 @@ const toJobsite = (row) => ({
   // sub may tighten it for itself (setMyCadence). A row that predates the
   // column reads as daily, the original hardcoded rule.
   meetingCadence: row.meeting_cadence ?? "daily",
+  // Phase 9e SMS nudges: per-site opt-in and the IANA zone the Monday 7:00 AM
+  // send is evaluated in (docs/sms-nudges-design.md).
+  smsNudgesEnabled: row.sms_nudges_enabled ?? false,
+  timezone: row.timezone ?? null,
   createdAt: row.created_at,
 });
 
@@ -190,8 +194,21 @@ const update = async ({ id, gcCompanyId, patch }) => {
     }
   }
 
+  // Turning SMS nudges on needs Site Pro access on this site (own plan or the
+  // company's GC Portfolio); turning them off is always allowed.
+  if (patch.smsNudgesEnabled === true) {
+    const current = await getOwnedJobsite(id, gcCompanyId);
+    if (!current.sitePro) {
+      throw new AppError("SMS nudges are part of GC Site Pro. Upgrade this site to use them.", 403, {
+        data: { code: "PLAN_LIMIT" },
+      });
+    }
+  }
+
   const nextPatch = {};
   if (patch.name !== undefined) nextPatch.name = patch.name;
+  if (patch.smsNudgesEnabled !== undefined) nextPatch.sms_nudges_enabled = patch.smsNudgesEnabled;
+  if (patch.timezone !== undefined) nextPatch.timezone = patch.timezone;
   if (patch.status !== undefined) nextPatch.status = patch.status;
   if (patch.meetingCadence !== undefined) nextPatch.meeting_cadence = patch.meetingCadence;
   if (patch.archived !== undefined) {

@@ -175,6 +175,9 @@ still its own row, now optionally pointed at one of these via `jobsite_id` (see 
 | `origin` | Text | Nullable, CHECK in (`gc`, `subcontractor`) | Who created the jobsite: `gc` via `POST /api/jobsites`, `subcontractor` when a join-code link find-or-created it. `NULL` = created before this column existed (origin unknown, never guessed). Server-written only; drives the "Created by subcontractor" badge |
 | `join_token` | Text | Unique (Nullable) | Phase 9e (`docs/jobsite-qr-join-design.md`): this jobsite's own standing QR/join link, created lazily on first `GET /api/jobsites/:id/join-link`. Never expires, unlike `jobsite_subcontractors.token` below — meant to be publicly displayed (a QR code, a printed poster), the same trust model `companies.join_code` has |
 | `meeting_cadence` | Text | Not Null, Default `'daily'`, CHECK in (`daily`, `weekly`) | Phase 11f: how often subs on this site must log a talk — the GC's default. A sub may tighten it for itself via `jobsite_subcontractors.meeting_cadence`, never relax it. Weekly = Monday–Sunday in the viewer's timezone |
+| `sms_nudges_enabled` | Boolean | Not Null, Default `false` | Phase 9e: GC opt-in for the Monday 7:00 AM SMS nudge on this site. Can only be turned on when the site has Site Pro access (`hasSiteProAccess`) |
+| `timezone` | Text | Nullable | Phase 9e: IANA zone (e.g. `America/Chicago`) the Monday 7:00 AM send is evaluated in; nudges skip a site without one |
+| `sms_last_nudged_on` | Date | Nullable | Phase 9e: local Monday date this site was last nudged; the once-per-week guard |
 | `created_at` | Timestamptz | Default `now()` | |
 
 > RLS: enabled with no policies (server-brokered, deny-all) — see `docs/data-access.md`.
@@ -279,3 +282,24 @@ Full design: `docs/integrations-design.md`.
 > The four tables in this section are all RLS-enabled with no policies (server-only).
 
 > RLS: enabled with no policies (server-brokered, deny-all) — see `docs/data-access.md`.
+
+## SMS nudges (Phase 9e)
+
+Design: `docs/sms-nudges-design.md`. DDL: `Supabase_SQL.sql` section 15.
+
+| Table: `sms_recipients` | Type | Constraints | Description |
+| :--- | :--- | :--- | :--- |
+| `id` | UUID | Primary Key | Server-generated UUID |
+| `sub_company_id` | UUID | Not Null, FK -> `companies.id` (ON DELETE CASCADE) | The subcontractor company the phone speaks for |
+| `user_id` | UUID | Nullable, FK -> `users.id` (ON DELETE CASCADE) | Set for a foreman's own opt-in (`source = 'foreman'`) |
+| `jobsite_id` | UUID | Nullable, FK -> `jobsites.id` (ON DELETE CASCADE) | Set for a GC-entered number (`source = 'gc'`); `NULL` on a foreman opt-in, which covers every site the company is on |
+| `phone` | Text | Not Null | E.164, e.g. `+15125550123` |
+| `source` | Text | Not Null, CHECK in (`foreman`, `gc`) | Who entered the number |
+| `consented_at` | Timestamptz | Not Null, Default `now()` | When consent was given (foreman) or the number was entered (GC) |
+| `confirmed_at` | Timestamptz | Nullable | Foreman: equals `consented_at`. GC-entered: set when the recipient replies `YES`; unconfirmed numbers are never texted |
+| `opted_out_at` | Timestamptz | Nullable | Set by a `STOP` reply (all rows with that phone), cleared by `START` |
+| `created_at` | Timestamptz | Default `now()` | |
+| **UNIQUE** | | `(user_id)` where not null; `(jobsite_id, sub_company_id, phone)` where `source = 'gc'` | One opt-in per foreman; no duplicate GC entries |
+
+> RLS: enabled with no policies (server-brokered, deny-all).
+

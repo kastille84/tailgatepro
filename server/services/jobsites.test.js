@@ -20,7 +20,7 @@ const {
 } = require("./jobsites");
 
 const JOBSITE_COLUMNS =
-  "id, gc_company_id, name, status, archived_at, origin, plan, meeting_cadence, created_at";
+  "id, gc_company_id, name, status, archived_at, origin, plan, meeting_cadence, sms_nudges_enabled, timezone, created_at";
 const LIST_SELECT = `${JOBSITE_COLUMNS}, companies(tier), jobsite_subcontractors(id, sub_company_id, invited_email, accepted_at, companies(name))`;
 const ROSTER_COLUMNS =
   "id, jobsite_id, sub_company_id, invited_email, token, expires_at, accepted_at";
@@ -46,6 +46,8 @@ const mappedJobsite = {
   plan: "free",
   sitePro: false,
   meetingCadence: "daily",
+  smsNudgesEnabled: false,
+  timezone: null,
   createdAt: "2026-01-01T00:00:00.000Z",
 };
 
@@ -380,6 +382,53 @@ describe("jobsites service: update", () => {
     fromSpy.mockImplementation((table) => {
       if (table === "jobsites") return { update };
       throw new Error(`Unexpected table: ${table}`);
+    });
+  });
+
+  it("should write timezone and turning SMS nudges off without any plan check", async () => {
+    await updateJobsite({
+      id: "jobsite-1",
+      gcCompanyId: "gc-1",
+      patch: { smsNudgesEnabled: false, timezone: "America/Chicago" },
+    });
+
+    expect(update).toHaveBeenCalledWith({
+      sms_nudges_enabled: false,
+      timezone: "America/Chicago",
+    });
+  });
+
+  describe("turning SMS nudges on", () => {
+    const mockOwned = (row) => {
+      const ownedSingle = vi.fn().mockResolvedValue({ data: row, error: null });
+      const ownedEqGc = vi.fn(() => ({ single: ownedSingle }));
+      const ownedEqId = vi.fn(() => ({ eq: ownedEqGc }));
+      const ownedSelect = vi.fn(() => ({ eq: ownedEqId }));
+      fromSpy.mockImplementation((table) => {
+        if (table === "jobsites") return { update, select: ownedSelect };
+        throw new Error(`Unexpected table: ${table}`);
+      });
+    };
+
+    it("should write the flag when the site has its own Site Pro plan", async () => {
+      mockOwned({ ...dbRow, plan: "site_pro", companies: { name: "Acme", tier: "basic" } });
+
+      await updateJobsite({
+        id: "jobsite-1",
+        gcCompanyId: "gc-1",
+        patch: { smsNudgesEnabled: true },
+      });
+
+      expect(update).toHaveBeenCalledWith({ sms_nudges_enabled: true });
+    });
+
+    it("should refuse with a 403 PLAN_LIMIT and write nothing on a free site", async () => {
+      mockOwned({ ...dbRow, plan: "free", companies: { name: "Acme", tier: "basic" } });
+
+      await expect(
+        updateJobsite({ id: "jobsite-1", gcCompanyId: "gc-1", patch: { smsNudgesEnabled: true } }),
+      ).rejects.toMatchObject({ statusCode: 403, data: { code: "PLAN_LIMIT" } });
+      expect(update).not.toHaveBeenCalled();
     });
   });
 

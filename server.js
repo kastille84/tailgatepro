@@ -28,6 +28,9 @@ const stripeRoutes = require("./server/routes/stripe");
 const integrationsRoutes = require("./server/routes/integrations");
 const projectIntegrationsRoutes = require("./server/routes/projectIntegrations");
 const stripeWebhookRoutes = require("./server/routes/stripeWebhook");
+const smsRoutes = require("./server/routes/sms");
+const twilioWebhookRoutes = require("./server/routes/twilioWebhook");
+const { runNudgeTick } = require("./server/services/smsNudges");
 // const {
 //   deleteFlaggedFlyers,
 //   deleteExpiredFlyers,
@@ -55,6 +58,7 @@ if ((process.env.NODE_ENV || "").toLowerCase() === "production") {
 // for handling stripe webhooks -- must stay above bodyParser.json(): the
 // signature check needs the raw request body.
 app.use("/webhook/stripe", stripeWebhookRoutes);
+app.use("/webhook/twilio", twilioWebhookRoutes);
 
 app.use(bodyParser.json());
 app.use(express.urlencoded({ extended: false }));
@@ -73,10 +77,22 @@ app.use("/api/gc", gcRoutes);
 // app.use("/api/moderate", moderateRoutes);
 // app.use("/api/email", emailRoutes);
 app.use("/api/stripe", stripeRoutes);
+app.use("/api/sms", smsRoutes);
 app.use("/api", integrationsRoutes);
 app.use("/api", projectIntegrationsRoutes);
 
 /****  C R O N   J O B S *****/
+// SMS nudges (Phase 9e, docs/sms-nudges-design.md): hourly, because Monday
+// 7:00 AM is evaluated in each jobsite's own timezone. The tick picks the
+// sites whose local clock reads Monday 7:xx and guards against repeats.
+cron.schedule("0 * * * *", async () => {
+  try {
+    await runNudgeTick();
+  } catch (error) {
+    console.error("[sms] nudge tick failed:", error);
+  }
+});
+
 // cron jobs - delete flagged flyers
 // cron.schedule("* * * * *", () => {
 // cron.schedule("0 5 * * *", () => {

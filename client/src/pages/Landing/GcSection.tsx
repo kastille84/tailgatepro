@@ -35,7 +35,6 @@ const GC_POINTS: GcPoint[] = [
   { text: "See who has logged a talk today and open each signed PDF." },
   {
     text: "Auto-SMS nudges non-compliant foremen every Monday at 7:00 AM.",
-    comingSoon: true,
   },
   {
     text: "1-click OSHA Defense Bundle — an indexed ZIP of every site log.",

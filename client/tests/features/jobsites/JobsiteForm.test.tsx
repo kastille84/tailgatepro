@@ -172,6 +172,67 @@ describe("JobsiteForm", () => {
     );
   });
 
+  describe("SMS nudges (Phase 9e)", () => {
+    const sitePro: Jobsite = { ...jobsite, plan: "site_pro", sitePro: true };
+
+    it("offers an upgrade note, not the SMS controls, on a site without Site Pro", () => {
+      renderForm({ jobsite });
+
+      expect(screen.getByText(/automatic monday text reminders/i)).toBeDefined();
+      expect(screen.getByRole("link", { name: /gc site pro/i })).toBeDefined();
+      expect(screen.queryByLabelText(/job site time zone/i)).toBeNull();
+    });
+
+    it("shows nothing about SMS when creating", () => {
+      renderForm();
+
+      expect(screen.queryByText(/monday/i)).toBeNull();
+    });
+
+    it("saves the toggle and time zone on a Site Pro site", async () => {
+      renderForm({ jobsite: { ...sitePro, timezone: "America/Chicago" } });
+
+      fireEvent.click(screen.getByLabelText(/text subcontractors a reminder/i));
+      fireEvent.change(screen.getByLabelText(/job site time zone/i), {
+        target: { value: "America/Denver" },
+      });
+      fireEvent.click(screen.getByRole("button", { name: /save changes/i }));
+
+      await waitFor(() =>
+        expect(mockUpdate).toHaveBeenCalledWith({
+          id: "j1",
+          patch: {
+            name: "Riverside",
+            status: "active",
+            meetingCadence: "daily",
+            smsNudgesEnabled: true,
+            timezone: "America/Denver",
+          },
+        }),
+      );
+    });
+
+    it("keeps a saved zone outside the common list selectable", () => {
+      renderForm({ jobsite: { ...sitePro, timezone: "Europe/London" } });
+
+      expect(
+        (screen.getByLabelText(/job site time zone/i) as HTMLSelectElement).value,
+      ).toBe("Europe/London");
+    });
+
+    it("defaults the zone to the browser's when none is saved", () => {
+      const spy = vi
+        .spyOn(Intl.DateTimeFormat.prototype, "resolvedOptions")
+        .mockReturnValue({ timeZone: "America/Phoenix" } as Intl.ResolvedDateTimeFormatOptions);
+      renderForm({ jobsite: { ...sitePro, timezone: null } });
+      spy.mockRestore();
+
+      expect(
+        (screen.getByLabelText(/job site time zone/i) as HTMLSelectElement).value,
+      ).toBe("America/Phoenix");
+    });
+  });
+
   it("does not show the cadence control when creating", () => {
     renderForm();
 

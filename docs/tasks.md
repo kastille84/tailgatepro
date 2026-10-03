@@ -2354,10 +2354,23 @@ Costs one extra query per request for Free subs (`resolveEffectiveTier`) and per
 
 ### 9e — Feature builds (each needs its own design doc first)
 
-- [-] Automated SMS nudges, Monday 7:00 AM (provider, phone-number storage + consent, scheduler; the only cron in
-      `server.js` is a leftover). Provider decided: Twilio, Toll-Free Verified number (cheaper than 10DLC at this
-      volume — no campaign fee; ~$2-3/mo per Site Pro customer at typical volume). Deferred until Stripe billing
-      ships — see Deferred section below.
+- [x] Automated SMS nudges, Monday 7:00 AM · status: code complete, live Twilio verification pending
+
+  Design doc: `docs/sms-nudges-design.md`. Provider: Twilio, Toll-Free Verified number (cheaper than 10DLC at this
+  volume; ~$2-3/mo per Site Pro customer). Decisions: recipients are a foreman's own opt-in **or** a GC-entered
+  number confirmed by a YES reply; each site has a `timezone` and the hourly cron fires where local time is
+  Monday 7:xx; per-site toggle (default off) gated by `hasSiteProAccess`.
+  - [x] Schema: `jobsites.sms_nudges_enabled` / `timezone` / `sms_last_nudged_on`, new `sms_recipients`
+        (**run the commented `ALTER TABLE` lines and `CREATE TABLE sms_recipients` from `Supabase_SQL.sql` on the live DB**)
+  - [x] Server: `utility/{localTime,phone}.js`, `services/sms.js` (Twilio REST via `fetch`, no SDK; signature check),
+        `services/smsNudges.js` (opt-in, recipients, inbound STOP/START/YES, `runNudgeTick`), `routes/sms.js`,
+        `POST /webhook/twilio/sms`, `PATCH /api/jobsites/:id` accepts `smsNudgesEnabled` + `timezone`, hourly cron, tests
+  - [x] Client: `apiSms`, `useMySmsOptIn`, `useJobsiteSmsRecipients`, `SmsOptInCard` (Settings), job site form toggle +
+        time zone, `SmsRecipientsPanel` (roster modal), SMS "coming soon" tags and the Pricing SMS waitlist removed, tests
+  - [ ] Manual, before launch: set `TWILIO_*` env vars (incl. `TWILIO_WEBHOOK_URL`, the exact public URL of
+        `/webhook/twilio/sms`) and point the Twilio number's inbound webhook at it; submit Toll-Free Verification
+        describing both opt-in paths; send a real nudge to a test phone (force `runNudgeTick(now)`), then verify STOP
+        and YES replies end to end
 - [x] 1-click OSHA Defense Bundle ZIP · status: shipped, manually verified
 
   Design doc: `docs/osha-defense-bundle-design.md`. Scope decided: one jobsite, every completed log, no date
@@ -3040,7 +3053,7 @@ they can be worked one at a time. Tick a box here **and** in its source phase wh
       to 500+ is ~366 talks; further batches are still open work.
 
 **Excluded on purpose** (needs Stripe, Twilio, or another paid service — tracked in `## Deferred`
-and Phase 9e/9f instead): GC Site Pro sponsorship purchase flow, SMS nudges, AI Talk Builder /
+and Phase 9e/9f instead): GC Site Pro sponsorship purchase flow, AI Talk Builder /
 cloud AI voice, Procore/ACC/JobTread/QuickBooks sync, the purchased 300+-talk bundle.
 
 ## Phase 12: Stripe billing (milestone 1: company plans, hosted Checkout)
@@ -3074,4 +3087,3 @@ Stripe-hosted Checkout (redirect), not embedded. Design doc: `docs/billing-desig
 ## Deferred
 
 - [-] QuickBooks sync — dropped 2026-10-01 (Procore + ACC GC push and Procore + JobTread sub push shipped, see Phase 9f)
-- [-] SMS nudges (9e) — provider decided (Twilio, Toll-Free Verified number); waiting on Stripe billing first

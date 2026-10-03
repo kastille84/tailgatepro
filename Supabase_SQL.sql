@@ -374,6 +374,12 @@ CREATE TABLE jobsites (
   -- subs on this site must log a talk. The GC's default; a sub may tighten it
   -- for itself via jobsite_subcontractors.meeting_cadence, never relax it.
   meeting_cadence TEXT NOT NULL DEFAULT 'daily' CHECK (meeting_cadence IN ('daily', 'weekly')),
+  -- Phase 9e SMS nudges (docs/sms-nudges-design.md): per-site opt-in (default
+  -- off, requires Site Pro access), the IANA zone the Monday 7:00 AM send is
+  -- evaluated in, and the local Monday date last nudged (once-per-week guard).
+  sms_nudges_enabled BOOLEAN NOT NULL DEFAULT FALSE,
+  timezone TEXT,
+  sms_last_nudged_on DATE,
   created_at TIMESTAMPTZ DEFAULT NOW()
 );
 
@@ -394,6 +400,9 @@ CREATE INDEX idx_jobsites_gc_company ON jobsites (gc_company_id);
 -- ALTER TABLE jobsites ADD COLUMN IF NOT EXISTS origin TEXT CHECK (origin IN ('gc', 'subcontractor'));  -- who created the jobsite; NULL = unknown
 -- ALTER TABLE jobsites ADD COLUMN IF NOT EXISTS join_token TEXT UNIQUE;  -- Phase 9e
 -- ALTER TABLE jobsites ADD COLUMN IF NOT EXISTS meeting_cadence TEXT NOT NULL DEFAULT 'daily' CHECK (meeting_cadence IN ('daily', 'weekly'));  -- Phase 11f
+-- ALTER TABLE jobsites ADD COLUMN IF NOT EXISTS sms_nudges_enabled BOOLEAN NOT NULL DEFAULT FALSE;  -- Phase 9e SMS
+-- ALTER TABLE jobsites ADD COLUMN IF NOT EXISTS timezone TEXT;  -- Phase 9e SMS
+-- ALTER TABLE jobsites ADD COLUMN IF NOT EXISTS sms_last_nudged_on DATE;  -- Phase 9e SMS
 
 -- 12. Jobsite Subcontractors (Phase 8d) — folds the GC's invite-by-email into
 -- the jobsite roster instead of a separate invites table, so "invited, not
@@ -591,3 +600,33 @@ ALTER TABLE project_integration_pushes ENABLE ROW LEVEL SECURITY;
 
 CREATE INDEX IF NOT EXISTS idx_project_integrations_project_id ON project_integrations (project_id);
 CREATE INDEX IF NOT EXISTS idx_project_integration_pushes_meeting_log_id ON project_integration_pushes (meeting_log_id);
+
+-- 15. SMS Recipients (Phase 9e, docs/sms-nudges-design.md) -- phone numbers
+-- that may receive the Monday 7:00 AM nudge for a subcontractor company.
+-- source 'foreman' = the foreman opted in themself (user_id set, applies to
+-- every site the company is on, confirmed_at = consented_at); source 'gc' =
+-- a GC typed the number for one jobsite (jobsite_id set, user_id NULL) and it
+-- only counts once the recipient replies YES (confirmed_at). opted_out_at is
+-- set by a STOP reply and cleared by START. `id` is server-generated, the
+-- same offline-sync exception as jobsites.id (online-only action).
+CREATE TABLE sms_recipients (
+  id UUID PRIMARY KEY,
+  sub_company_id UUID NOT NULL REFERENCES companies(id) ON DELETE CASCADE,
+  user_id UUID REFERENCES users(id) ON DELETE CASCADE,
+  jobsite_id UUID REFERENCES jobsites(id) ON DELETE CASCADE,
+  phone TEXT NOT NULL,
+  source TEXT NOT NULL CHECK (source IN ('foreman', 'gc')),
+  consented_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  confirmed_at TIMESTAMPTZ,
+  opted_out_at TIMESTAMPTZ,
+  created_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+-- One self opt-in per foreman; one GC-entered number per (jobsite, company, phone).
+CREATE UNIQUE INDEX sms_recipients_user_unique ON sms_recipients (user_id) WHERE user_id IS NOT NULL;
+CREATE UNIQUE INDEX sms_recipients_gc_unique ON sms_recipients (jobsite_id, sub_company_id, phone) WHERE source = 'gc';
+CREATE INDEX idx_sms_recipients_phone ON sms_recipients (phone);
+
+-- Server-only table: RLS with NO policies (service-role key bypasses it).
+ALTER TABLE sms_recipients ENABLE ROW LEVEL SECURITY;
+

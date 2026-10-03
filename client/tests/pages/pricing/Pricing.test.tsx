@@ -9,21 +9,6 @@ import { Pricing } from "../../../src/pages/Pricing/Pricing";
 import theme from "../../../src/styles/theme";
 import { planCadence } from "../../../src/utils/pricing";
 
-const waitlistFormSpy = vi.fn(
-  ({ audience, planInterest }: { audience: string; planInterest?: string }) => (
-    <div
-      data-testid="waitlist-form"
-      data-audience={audience}
-      data-plan-interest={planInterest ?? ""}
-    />
-  ),
-);
-
-vi.mock("../../../src/pages/Landing/WaitlistForm", () => ({
-  WaitlistForm: (props: { audience: string; planInterest?: string }) =>
-    waitlistFormSpy(props),
-}));
-
 const mockUseAuth = vi.fn();
 vi.mock("../../../src/context/auth", () => ({
   useAuth: () => mockUseAuth(),
@@ -144,15 +129,11 @@ describe("Pricing page", () => {
     expect(screen.queryByRole("heading", { name: "GC Site Pro" })).toBeNull();
   });
 
-  it("keeps a waitlist form for the features that are not built yet", () => {
-    renderPricing();
+  it("no longer shows an SMS waitlist now that SMS nudges are live", () => {
+    renderPricing("/pricing?audience=gc");
 
-    const waitlist = screen.getByTestId("waitlist-form");
-    expect(waitlist.getAttribute("data-audience")).toBe("gc");
-    expect(waitlist.getAttribute("data-plan-interest")).toBe("gc-site-pro");
-    expect(
-      screen.getByRole("heading", { name: /sms nudges are coming soon/i }),
-    ).toBeTruthy();
+    expect(screen.queryByRole("heading", { name: /sms nudges are coming soon/i })).toBeNull();
+    expect(screen.queryByText(/join the waitlist/i)).toBeNull();
   });
 
   it("starts on the GC plans when the audience query param says so", () => {

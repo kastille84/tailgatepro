@@ -3,6 +3,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 
 import { Button } from "../../ui_comps/button";
+import { Checkbox } from "../../ui_comps/checkbox";
 import { Form, FormField, TextInput } from "../../ui_comps/form";
 import { Modal } from "../../ui_comps/modal";
 import { Select } from "../../ui_comps/select";
@@ -10,8 +11,10 @@ import { useCreateJobsite } from "../../hooks/useCreateJobsite";
 import { useUpdateJobsite } from "../../hooks/useUpdateJobsite";
 import type { Jobsite } from "../../interfaces/jobsite";
 import { PlanLimitError } from "../../utils/PlanLimitError";
+import { detectTimeZone, timeZoneOptions } from "../../utils/timeZones";
 import {
   StyledActions,
+  StyledNote,
   StyledUpgradeLink,
   StyledUpgradePrompt,
   StyledUpgradeText,
@@ -26,6 +29,8 @@ const jobsiteSchema = z.object({
     .max(120, "Job site name is too long"),
   status: z.enum(["active", "completed"]).optional(),
   meetingCadence: z.enum(["daily", "weekly"]).optional(),
+  smsNudgesEnabled: z.boolean().optional(),
+  timezone: z.string().optional(),
 });
 
 type JobsiteValues = z.infer<typeof jobsiteSchema>;
@@ -49,6 +54,10 @@ export const JobsiteForm = ({ isOpen, onClose, jobsite, onPlanLimit }: JobsiteFo
   const { updateJobsite, isUpdating, planLimitError: updateLimitError } = useUpdateJobsite();
   const planLimitError = createLimitError ?? updateLimitError;
 
+  // The saved zone, else the browser's: a GC setting up a site is almost
+  // always standing in that site's timezone.
+  const defaultTimeZone = jobsite?.timezone ?? detectTimeZone();
+
   const {
     register,
     handleSubmit,
@@ -60,6 +69,8 @@ export const JobsiteForm = ({ isOpen, onClose, jobsite, onPlanLimit }: JobsiteFo
       name: jobsite?.name ?? "",
       status: jobsite?.status ?? "active",
       meetingCadence: jobsite?.meetingCadence ?? "daily",
+      smsNudgesEnabled: jobsite?.smsNudgesEnabled ?? false,
+      timezone: defaultTimeZone,
     },
   });
 
@@ -72,6 +83,12 @@ export const JobsiteForm = ({ isOpen, onClose, jobsite, onPlanLimit }: JobsiteFo
             name: values.name,
             status: values.status,
             meetingCadence: values.meetingCadence,
+            // The SMS fields only exist for a Site Pro site; sending them for
+            // any other would be a server-side 403.
+            ...(jobsite.sitePro && {
+              smsNudgesEnabled: values.smsNudgesEnabled,
+              timezone: values.timezone,
+            }),
           },
         });
       } else {
@@ -101,6 +118,7 @@ export const JobsiteForm = ({ isOpen, onClose, jobsite, onPlanLimit }: JobsiteFo
   const nameId = "jobsite-name";
   const statusId = "jobsite-status";
   const cadenceId = "jobsite-cadence";
+  const timezoneId = "jobsite-timezone";
 
   return (
     <Modal
@@ -156,6 +174,35 @@ export const JobsiteForm = ({ isOpen, onClose, jobsite, onPlanLimit }: JobsiteFo
               {...register("meetingCadence")}
             />
           </FormField>
+        )}
+
+        {isEdit && jobsite!.sitePro && (
+          <>
+            <Checkbox
+              label="Text subcontractors a reminder every Monday at 7:00 AM when they logged no safety talk last week"
+              {...register("smsNudgesEnabled")}
+            />
+            <FormField
+              id={timezoneId}
+              label="Job site time zone"
+              hint="The Monday 7:00 AM reminder is sent in this time zone. Add each foreman's number from the subcontractors list."
+            >
+              <Select
+                id={timezoneId}
+                options={timeZoneOptions(defaultTimeZone)}
+                {...register("timezone")}
+              />
+            </FormField>
+          </>
+        )}
+        {isEdit && !jobsite!.sitePro && (
+          <StyledNote>
+            Automatic Monday text reminders are part of{" "}
+            <StyledUpgradeLink to="/pricing?audience=gc">
+              GC Site Pro
+            </StyledUpgradeLink>
+            .
+          </StyledNote>
         )}
 
         <StyledActions>

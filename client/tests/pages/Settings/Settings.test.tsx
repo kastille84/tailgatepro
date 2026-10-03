@@ -66,6 +66,7 @@ vi.mock("../../../src/features/company-settings", () => ({
     </div>
   ),
   InviteTeammateForm: () => <div data-testid="invite-teammate-form" />,
+  SmsOptInCard: () => <div data-testid="sms-opt-in-card" />,
   BillingSection: ({
     planName,
     billing,
@@ -229,6 +230,20 @@ describe("Settings page", () => {
 
     expect(screen.queryByText(/subcontractor join code/i)).toBeNull();
     expect(screen.queryByTestId("join-code-card")).toBeNull();
+  });
+
+  it("shows the text reminders opt-in to a subcontractor account", () => {
+    renderPage();
+
+    expect(screen.getByText(/text reminders/i)).toBeDefined();
+    expect(screen.getByTestId("sms-opt-in-card")).toBeDefined();
+  });
+
+  it("hides the text reminders opt-in from a GC account", () => {
+    mockUseCurrentUser.mockReturnValue({ hasBrandingAccess: false, isGc: true });
+    renderPage();
+
+    expect(screen.queryByTestId("sms-opt-in-card")).toBeNull();
   });
 
   describe("billing section", () => {

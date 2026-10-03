@@ -66,6 +66,16 @@ exports.keysBasedOnEnv = () => {
       integrations: {
         encryptionKey: process.env.INTEGRATIONS_ENCRYPTION_KEY_PROD,
       },
+      // Twilio SMS (Phase 9e, server/services/sms.js, docs/sms-nudges-design.md)
+      // -- Toll-Free Verified number. Unset = nudges silently off, never a
+      // hard error (googleTranslate pattern). `webhookUrl` is the public URL
+      // of POST /webhook/twilio/sms, needed to verify Twilio's signature.
+      twilio: {
+        accountSid: process.env.TWILIO_ACCOUNT_SID_PROD,
+        authToken: process.env.TWILIO_AUTH_TOKEN_PROD,
+        fromNumber: process.env.TWILIO_FROM_NUMBER_PROD,
+        webhookUrl: process.env.TWILIO_WEBHOOK_URL_PROD,
+      },
     };
   } else {
     console.log("not production");
@@ -122,6 +132,13 @@ exports.keysBasedOnEnv = () => {
       // Integration credential encryption -- see the prod branch's comment.
       integrations: {
         encryptionKey: process.env.INTEGRATIONS_ENCRYPTION_KEY,
+      },
+      // Twilio SMS -- see the prod branch's comment.
+      twilio: {
+        accountSid: process.env.TWILIO_ACCOUNT_SID,
+        authToken: process.env.TWILIO_AUTH_TOKEN,
+        fromNumber: process.env.TWILIO_FROM_NUMBER,
+        webhookUrl: process.env.TWILIO_WEBHOOK_URL,
       },
     };
   }

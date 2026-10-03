@@ -7,6 +7,7 @@ const { requireGcCompany } = require("../middlewares/requireGcCompany");
 const { requireRole } = require("../middlewares/requireRole");
 const { validate } = require("../middlewares/validate");
 const { CADENCES } = require("../utility/cadence");
+const { isValidTimeZone } = require("../utility/localTime");
 const { MANAGER_ROLES, SITE_MANAGER_ROLES } = require("../constants/roles");
 const {
   requireSubcontractorCompany,
@@ -90,6 +91,15 @@ router.patch(
       .optional()
       .isIn(CADENCES)
       .withMessage("Invalid meeting cadence"),
+    body("smsNudgesEnabled")
+      .optional()
+      .isBoolean()
+      .withMessage("Invalid SMS nudges flag")
+      .toBoolean(),
+    body("timezone")
+      .optional()
+      .custom(isValidTimeZone)
+      .withMessage("timezone must be a valid IANA time zone"),
   ],
   validate,
   updateJobsite,
