@@ -17,16 +17,22 @@ const getHistoryDays = async (companyId) => {
 
 exports.listMeetings = async (req, res, next) => {
   try {
-    const { projectId, from, to } = req.query;
+    const { projectId, from, to, limit, cursor } = req.query;
     const historyDays = await getHistoryDays(req.user.companyId);
     const options = { projectId, historyDays, from, to };
-    const [data, hiddenCount] = await Promise.all([
-      meetingLogsService.listForCompany(req.user.companyId, options),
+    const [page, hiddenCount] = await Promise.all([
+      meetingLogsService.listForCompany(req.user.companyId, {
+        ...options,
+        limit: limit ? Number(limit) : undefined,
+        cursor,
+      }),
       meetingLogsService.countHiddenForCompany(req.user.companyId, options),
     ]);
-    return res
-      .status(200)
-      .json({ success: true, data, meta: { hiddenCount, historyDays } });
+    return res.status(200).json({
+      success: true,
+      data: page.meetings,
+      meta: { hiddenCount, historyDays, nextCursor: page.nextCursor },
+    });
   } catch (error) {
     return next(error);
   }

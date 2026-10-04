@@ -128,19 +128,36 @@ export interface MeetingLogsFilters {
   to?: string;
 }
 
+/** Paging controls for `GET /api/meetings`: `cursor` is the previous page's
+ *  `nextCursor` (omit for the first page). */
+export interface MeetingLogsPaging {
+  limit?: number;
+  cursor?: string;
+}
+
+/** One page of `GET /api/meetings`. `nextCursor` is null on the last page. */
+export interface MeetingLogsPage {
+  meetings: MeetingLog[];
+  nextCursor: string | null;
+}
+
 /**
- * GET /api/meetings — the caller's company's meeting logs, newest first,
- * limited to the plan's history window. Pass `from`/`to` for one month of the
- * archive (completed meetings only).
+ * GET /api/meetings — one page of the caller's company's meeting logs, newest
+ * first, limited to the plan's history window. Pass `from`/`to` for one month of
+ * the archive (completed meetings only), and the previous page's `nextCursor`
+ * as `cursor` to fetch the next page.
  */
 export const getMeetingLogs = async (
   accessToken: string,
   filters: MeetingLogsFilters = {},
-): Promise<MeetingLog[]> => {
+  paging: MeetingLogsPaging = {},
+): Promise<MeetingLogsPage> => {
   const params = new URLSearchParams();
   if (filters.projectId) params.set("projectId", filters.projectId);
   if (filters.from) params.set("from", filters.from);
   if (filters.to) params.set("to", filters.to);
+  if (paging.limit) params.set("limit", String(paging.limit));
+  if (paging.cursor) params.set("cursor", paging.cursor);
   const query = params.toString();
 
   const res = await fetchWithTimeout(
@@ -157,7 +174,10 @@ export const getMeetingLogs = async (
     throw new Error(body?.error ?? GENERIC_ERROR);
   }
 
-  return body.data as MeetingLog[];
+  return {
+    meetings: body.data as MeetingLog[],
+    nextCursor: (body.meta?.nextCursor as string | null | undefined) ?? null,
+  };
 };
 
 /** One archive month with at least one completed meeting. `month` is

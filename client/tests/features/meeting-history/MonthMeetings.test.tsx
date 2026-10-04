@@ -7,6 +7,7 @@ import { MonthMeetings } from "../../../src/features/meeting-history/MonthMeetin
 import { monthRange } from "../../../src/features/meeting-history/monthUtils";
 import theme from "../../../src/styles/theme";
 
+const mockUseOnlineStatus = vi.fn();
 const mockUseMeetingLogs = vi.fn();
 const mockUseProjects = vi.fn();
 const mockUseTalks = vi.fn();
@@ -15,7 +16,11 @@ const mockUseVerifyMeetingSeal = vi.fn();
 const openPdf = vi.fn();
 const verifySeal = vi.fn();
 const onBack = vi.fn();
+const fetchNextPage = vi.fn();
 
+vi.mock("../../../src/context/online-status", () => ({
+  useOnlineStatus: () => mockUseOnlineStatus(),
+}));
 vi.mock("../../../src/hooks/useMeetingLogs", () => ({
   useMeetingLogs: (...args: unknown[]) => mockUseMeetingLogs(...args),
 }));
@@ -52,6 +57,9 @@ const logs = (overrides = {}) => ({
   meetings: [baseMeeting],
   isLoading: false,
   isError: false,
+  hasNextPage: false,
+  isFetchingNextPage: false,
+  fetchNextPage,
   ...overrides,
 });
 
@@ -65,6 +73,7 @@ const renderMonth = () =>
 describe("MonthMeetings", () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    mockUseOnlineStatus.mockReturnValue({ isOnline: true });
     mockUseMeetingLogs.mockReturnValue(logs());
     mockUseProjects.mockReturnValue({
       projects: [{ id: "project-1", name: "Downtown Tower" }],
@@ -170,5 +179,55 @@ describe("MonthMeetings", () => {
       /could not load this month/i,
     );
     expect(screen.queryByText(/no completed meetings/i)).toBeNull();
+  });
+
+  it("keeps already-loaded meetings visible when a later page fails", () => {
+    mockUseMeetingLogs.mockReturnValue(logs({ isError: true }));
+    renderMonth();
+    expect(screen.getByRole("alert")).toBeDefined();
+    expect(screen.getByText("Fall Protection")).toBeDefined();
+  });
+
+  describe("pagination", () => {
+    it("hides Load more on the last page", () => {
+      renderMonth();
+      expect(screen.queryByRole("button", { name: /load more/i })).toBeNull();
+    });
+
+    it("loads the next page when Load more is clicked", () => {
+      mockUseMeetingLogs.mockReturnValue(logs({ hasNextPage: true }));
+      renderMonth();
+      fireEvent.click(screen.getByRole("button", { name: /load more/i }));
+      expect(fetchNextPage).toHaveBeenCalledTimes(1);
+    });
+
+    it("disables Load more while offline", () => {
+      mockUseOnlineStatus.mockReturnValue({ isOnline: false });
+      mockUseMeetingLogs.mockReturnValue(logs({ hasNextPage: true }));
+      renderMonth();
+      expect(
+        (screen.getByRole("button", { name: /load more/i }) as HTMLButtonElement)
+          .disabled,
+      ).toBe(true);
+    });
+
+    it("disables Load more while the next page is fetching", () => {
+      mockUseMeetingLogs.mockReturnValue(
+        logs({ hasNextPage: true, isFetchingNextPage: true }),
+      );
+      renderMonth();
+      expect(
+        (screen.getByRole("button", { name: /load more/i }) as HTMLButtonElement)
+          .disabled,
+      ).toBe(true);
+    });
+
+    it("hides Load more during the initial load", () => {
+      mockUseMeetingLogs.mockReturnValue(
+        logs({ meetings: [], isLoading: true, hasNextPage: true }),
+      );
+      renderMonth();
+      expect(screen.queryByRole("button", { name: /load more/i })).toBeNull();
+    });
   });
 });

@@ -1,5 +1,6 @@
 import { HiOutlineArrowLeft, HiOutlineDocumentText } from "react-icons/hi2";
 
+import { useOnlineStatus } from "../../context/online-status";
 import { useMeetingLogs } from "../../hooks/useMeetingLogs";
 import { useMeetingPdfUrl } from "../../hooks/useMeetingPdfUrl";
 import { useVerifyMeetingSeal } from "../../hooks/useVerifyMeetingSeal";
@@ -13,6 +14,7 @@ import {
   StyledEmpty,
   StyledError,
   StyledList,
+  StyledLoadMore,
   StyledMonthHeader,
   StyledMonthTitle,
   StyledRow,
@@ -38,7 +40,15 @@ const formatHeldAt = (iso: string) =>
 /** The completed talks for one archive month, each with a signed-PDF button.
  *  Fetches only that month's range, so the archive never loads all at once. */
 export const MonthMeetings = ({ month, onBack }: MonthMeetingsProps) => {
-  const { meetings, isLoading, isError } = useMeetingLogs(monthRange(month));
+  const { isOnline } = useOnlineStatus();
+  const {
+    meetings,
+    isLoading,
+    isError,
+    hasNextPage,
+    isFetchingNextPage,
+    fetchNextPage,
+  } = useMeetingLogs(monthRange(month));
   const { projects } = useProjects();
   const { talks } = useTalks();
   const { openPdf, isPending } = useMeetingPdfUrl();
@@ -72,7 +82,8 @@ export const MonthMeetings = ({ month, onBack }: MonthMeetingsProps) => {
       {!isLoading && !isError && meetings.length === 0 && (
         <StyledEmpty>No completed meetings this month.</StyledEmpty>
       )}
-      {!isLoading && !isError && meetings.length > 0 && (
+      {/* Rows already loaded stay visible if a later page fails. */}
+      {!isLoading && meetings.length > 0 && (
         <StyledList>
           {meetings.map((meeting) => {
             const project = projects.find((p) => p.id === meeting.projectId);
@@ -113,6 +124,20 @@ export const MonthMeetings = ({ month, onBack }: MonthMeetingsProps) => {
             );
           })}
         </StyledList>
+      )}
+      {!isLoading && hasNextPage && (
+        <StyledLoadMore>
+          <Button
+            type="button"
+            variant="outline"
+            size="md"
+            loading={isFetchingNextPage}
+            disabled={!isOnline}
+            onClick={() => fetchNextPage()}
+          >
+            Load more
+          </Button>
+        </StyledLoadMore>
       )}
     </>
   );

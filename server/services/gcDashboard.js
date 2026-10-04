@@ -15,6 +15,7 @@ const { effectiveCadence, windowFor } = require("../utility/cadence");
 const { computeCompliance } = require("../utility/compliance");
 const { buildPdfFilename } = require("../utility/pdfFilename");
 const { isSubLocked } = require("../utility/subLocking");
+const { fetchAllPages } = require("../utility/fetchAllPages");
 const contentSeal = require("../utility/contentSeal");
 const companiesService = require("./companies");
 const subAccessService = require("./subAccess");
@@ -131,19 +132,22 @@ const assertGcLinkedProject = async (projectId, gcCompanyId, allowedJobsiteIds =
 const listCompletedLogsInWindow = async (projectIds, window) => {
   if (projectIds.length === 0) return [];
 
-  const { data, error } = await supabase
-    .from("meeting_logs")
-    .select("project_id, held_at")
-    .in("project_id", projectIds)
-    .not("completed_at", "is", null)
-    .gte("held_at", window.start)
-    .lt("held_at", window.end);
-
-  if (error) {
-    throw new AppError("Could not load meeting logs", 502, { cause: error });
-  }
-
-  return data;
+  // Paged: a GC portfolio's 30-day scorecard window can pass PostgREST's
+  // 1,000-row cap, which would silently undercount compliance.
+  return fetchAllPages(
+    (from, to) =>
+      supabase
+        .from("meeting_logs")
+        .select("project_id, held_at")
+        .in("project_id", projectIds)
+        .not("completed_at", "is", null)
+        .gte("held_at", window.start)
+        .lt("held_at", window.end)
+        .order("held_at", { ascending: false })
+        .order("id", { ascending: false })
+        .range(from, to),
+    { errorMessage: "Could not load meeting logs" },
+  );
 };
 
 const rosterFields = (row) => {

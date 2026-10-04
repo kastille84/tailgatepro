@@ -97,7 +97,7 @@ describe("meetingLogs controller", () => {
   describe("listMeetings", () => {
     it("should respond 200 with every meeting log visible to the caller's company", async () => {
       // Arrange
-      listForCompanySpy.mockResolvedValue([meeting]);
+      listForCompanySpy.mockResolvedValue({ meetings: [meeting], nextCursor: null });
 
       // Act
       await listMeetings(req, res, next);
@@ -111,15 +111,42 @@ describe("meetingLogs controller", () => {
       expect(res.json).toHaveBeenCalledWith({
         success: true,
         data: [meeting],
-        meta: { hiddenCount: 0, historyDays: null },
+        meta: { hiddenCount: 0, historyDays: null, nextCursor: null },
       });
       expect(next).not.toHaveBeenCalled();
+    });
+
+    it("should pass limit (as a number) and cursor through and report the next cursor", async () => {
+      // Arrange
+      req.query = { limit: "25", cursor: "abc" };
+      listForCompanySpy.mockResolvedValue({ meetings: [meeting], nextCursor: "next-abc" });
+
+      // Act
+      await listMeetings(req, res, next);
+
+      // Assert
+      expect(listForCompanySpy).toHaveBeenCalledWith("company-1", {
+        projectId: undefined,
+        historyDays: null,
+        limit: 25,
+        cursor: "abc",
+      });
+      // The hidden-count query is unaffected by paging.
+      expect(countHiddenSpy).toHaveBeenCalledWith("company-1", {
+        projectId: undefined,
+        historyDays: null,
+      });
+      expect(res.json).toHaveBeenCalledWith({
+        success: true,
+        data: [meeting],
+        meta: { hiddenCount: 0, historyDays: null, nextCursor: "next-abc" },
+      });
     });
 
     it("should pass the Free plan's 30-day history window to the service and report the hidden count", async () => {
       // Arrange
       getCompanySpy.mockResolvedValue({ id: "company-1", companyType: "subcontractor", tier: "basic" });
-      listForCompanySpy.mockResolvedValue([meeting]);
+      listForCompanySpy.mockResolvedValue({ meetings: [meeting], nextCursor: null });
       countHiddenSpy.mockResolvedValue(4);
 
       // Act
@@ -138,14 +165,14 @@ describe("meetingLogs controller", () => {
       expect(res.json).toHaveBeenCalledWith({
         success: true,
         data: [meeting],
-        meta: { hiddenCount: 4, historyDays: 30 },
+        meta: { hiddenCount: 4, historyDays: 30, nextCursor: null },
       });
     });
 
     it("should pass a projectId query param through to the service", async () => {
       // Arrange
       req.query = { projectId: "project-1" };
-      listForCompanySpy.mockResolvedValue([meeting]);
+      listForCompanySpy.mockResolvedValue({ meetings: [meeting], nextCursor: null });
 
       // Act
       await listMeetings(req, res, next);
@@ -163,7 +190,7 @@ describe("meetingLogs controller", () => {
         from: "2026-09-01T00:00:00.000Z",
         to: "2026-10-01T00:00:00.000Z",
       };
-      listForCompanySpy.mockResolvedValue([meeting]);
+      listForCompanySpy.mockResolvedValue({ meetings: [meeting], nextCursor: null });
 
       // Act
       await listMeetings(req, res, next);
