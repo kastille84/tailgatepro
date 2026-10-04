@@ -1,0 +1,51 @@
+{
+  "id": "equipment-safety-getting-on-and-off",
+  "title": "Getting On and Off Equipment Safely",
+  "primary_trade": "Heavy Equipment",
+  "trade_tags": [
+    "Heavy Equipment",
+    "General Construction"
+  ],
+  "osha_standards": [
+    "29 CFR 1926.600",
+    "29 CFR 1926.602",
+    "29 CFR 1926.20"
+  ],
+  "estimated_minutes": 5,
+  "summary": "Workers get hurt mounting and dismounting equipment when they lose footing or the machine moves. Injuries range from sprains to fatalities. This talk covers three points of contact and clean access.",
+  "talking_points": [
+    "Set the parking brake so the equipment cannot move before you climb on or off.",
+    "Check handholds and steps for mud, ice, or grease that could make them slippery.",
+    "Face the equipment and use both hands on the ladder or grab rails when climbing up or down. Do not jump.",
+    "Wear footwear that gives support and traction.",
+    "Keep work areas clear of scraps, extra material, and trash to prevent trips and slips at the landing point."
+  ],
+  "site_hazards_to_check": [
+    "Mud, ice, grease, or debris on steps, ladders, and handholds",
+    "Damaged, loose, or missing grab rails or steps",
+    "Equipment not braked or still running during mount or dismount",
+    "Cluttered or uneven ground at the entry and exit point",
+    "Worn-out or slick-soled footwear"
+  ],
+  "discussion_questions": [
+    "What are your three points of contact when climbing down from the cab?",
+    "Why is jumping off the last step a bad idea?",
+    "What needs cleaning up around the equipment before we start?"
+  ],
+  "attribution": {
+    "source": "NIOSH",
+    "publisher": "National Institute for Occupational Safety and Health (NIOSH)",
+    "copyright": "U.S. Government work — public domain.",
+    "license": "public-domain",
+    "source_url": "https://www.cdc.gov/niosh/docs/2022-144/2022-144.pdf",
+    "notice": "Adapted from a NIOSH Toolbox Talk (co-developed with CPWR). Public-domain source; not an endorsement by NIOSH or CPWR."
+  },
+  "audit": {
+    "status": "approved",
+    "audited_at": "2026-09-10T18:21:19Z",
+    "osha_accuracy_verified": true,
+    "flags": [
+      "Three-points-of-contact access/egress is not codified in a single 29 CFR 1926 section; the cited general provisions - 1926.600 (equipment), 1926.602 (material handling equipment) and 1926.20 (general safety and health provisions) - plus the General Duty Clause are the appropriate authority. Content - set the parking brake before mounting/dismounting, check handholds/steps for mud/ice/grease, face the machine and use both hands, do not jump, keep the landing area clear, wear supportive footwear - is sound. No tolerance issues."
+    ]
+  }
+}

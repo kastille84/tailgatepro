@@ -1,0 +1,107 @@
+// Pure transforms for the toolbox_talks seed loader (scripts/seed-talks.js).
+// No I/O, no Supabase — kept separate so the mapping is unit-tested
+// (scripts/lib/talkRow.test.js). CommonJS to match the server side.
+
+const { v5: uuidv5 } = require("uuid");
+const { composeTalkMarkdown } = require("../../server/utility/composeTalkMarkdown");
+
+// Fixed namespace so a talk's slug always maps to the same UUID. This is what
+// makes re-running the loader idempotent: the primary key never churns.
+const TALK_NAMESPACE = "7c9e6679-7425-40de-944b-e07fc1f90ae7";
+
+// The Trade Free library (docs/tasks.md Phase 9c): broadly applicable talks
+// (Focus Four falls/electrical/caught-in, PPE, heat, hazcom, fire, JHA) that
+// every trade runs. Every other global talk is Trade Pro/Enterprise + GC only.
+// Keyed by slug so re-seeding keeps the flag in sync with this list.
+const CORE_TALK_SLUGS = new Set([
+  "prevent-falls-guardrails",
+  "working-at-heights",
+  "falls-extension-ladders",
+  "prevent-falls-scaffolds",
+  "prevent-falls-through-holes",
+  "preventing-falling-objects",
+  "slip-trip-and-fall-prevention",
+  "harness-inspection",
+  "electrical-safety-power",
+  "electrical-safety-extension-cords",
+  "overhead-power-line-safety",
+  "trench-safety",
+  "ppe-selection-use-and-care",
+  "eye-protection",
+  "hearing-protection",
+  "respiratory-protection",
+  "silica",
+  "hot-environments",
+  "cold-environments",
+  "sun-protection",
+  "housekeeping",
+  "fire-safety",
+  "fire-extinguishers",
+  "chemical-safety",
+  "safety-data-sheets",
+  "job-hazard-analysis-and-work-plans",
+  "near-miss-reporting",
+  "emergency-evacuation",
+  "safe-use-of-hand-tools",
+  "power-saw-safety",
+]);
+
+/**
+ * True only when the safety-auditor has signed the file off.
+ * @param {object} json - a parsed data/processed/**.json file
+ */
+const isApproved = (json) => json?.audit?.status === "approved";
+
+/**
+ * Map one parsed pipeline file onto a toolbox_talks row.
+ * @param {object} json
+ * @returns {object} a row ready for supabase.upsert(..., { onConflict: "slug" })
+ */
+const buildRow = (json) => {
+  if (typeof json.id !== "string" || !json.id.trim()) {
+    throw new Error("missing `id` (slug)");
+  }
+  if (typeof json.title !== "string" || !json.title.trim()) {
+    throw new Error("missing `title`");
+  }
+
+  return {
+    id: uuidv5(json.id, TALK_NAMESPACE),
+    slug: json.id,
+    title: json.title,
+    trade_tag: json.primary_trade ?? null,
+    trade_tags: Array.isArray(json.trade_tags) ? json.trade_tags : [],
+    content: composeTalkMarkdown(json),
+    structured: {
+      summary: json.summary ?? null,
+      talking_points: json.talking_points ?? [],
+      site_hazards_to_check: json.site_hazards_to_check ?? [],
+      discussion_questions: json.discussion_questions ?? [],
+      osha_standards: json.osha_standards ?? [],
+      estimated_minutes: json.estimated_minutes ?? null,
+    },
+    // Source credit for display in the app (CPWR licensing requires the
+    // copyright markings be shown). Populated by the content pipeline from the
+    // raw file's frontmatter; see scripts/backfill-attribution.js.
+    attribution: json.attribution ?? null,
+    // Only present when the structurer captured an official, agency-published
+    // translation (never machine translation) -- see
+    // .claude/agents/talks/safety-structurer.md. `null` for the vast majority
+    // of talks today.
+    translations: json.translations ?? null,
+    is_global: true,
+    is_core: CORE_TALK_SLUGS.has(json.id),
+    company_id: null,
+  };
+};
+
+// Re-exported under its old name so nothing that already requires
+// `composeMarkdown` from this module breaks; the canonical implementation +
+// tests now live in server/utility/composeTalkMarkdown.js.
+module.exports = {
+  TALK_NAMESPACE,
+  CORE_TALK_SLUGS,
+  isApproved,
+  composeMarkdown: composeTalkMarkdown,
+  buildRow,
+};

@@ -1,0 +1,51 @@
+{
+  "id": "prevent-falls-through-holes",
+  "title": "Preventing Falls Through Floor and Roof Holes",
+  "primary_trade": "General Construction",
+  "trade_tags": [
+    "General Construction",
+    "Roofing"
+  ],
+  "osha_standards": [
+    "29 CFR 1926.501",
+    "29 CFR 1926.502"
+  ],
+  "estimated_minutes": 5,
+  "summary": "Workers are injured or killed falling through holes in floors and roofs, often through unmarked or unsecured covers. This talk covers covering, securing, labeling, and load capacity.",
+  "talking_points": [
+    "Guard or cover every hole you create, uncover, or notice before you leave the area. The next worker may not see it.",
+    "Label every cover with the word HOLE or COVER.",
+    "Watch out for coworkers. If you find an uncovered hole, cover it even if you did not create it.",
+    "Use at least 3/4-inch plywood, oriented strand board, or equal material. Secure it with nails or screws so it cannot shift.",
+    "Covers must support at least twice the weight of the workers, equipment, and materials that could cross them. If the hole is bigger than a plywood sheet, use guardrails instead."
+  ],
+  "site_hazards_to_check": [
+    "Open or unguarded holes in floors, roofs, or decking",
+    "Covers that are unsecured and can slide when stepped on",
+    "Covers with no HOLE or COVER label",
+    "Scrap plywood laid over a hole with no fasteners",
+    "Holes larger than a plywood sheet with no guardrail system"
+  ],
+  "discussion_questions": [
+    "What holes are in our work area today, and are the covers secured and labeled?",
+    "What material and fasteners make an acceptable hole cover?",
+    "What do you do when you find an uncovered hole someone else left?"
+  ],
+  "attribution": {
+    "source": "NIOSH",
+    "publisher": "National Institute for Occupational Safety and Health (NIOSH)",
+    "copyright": "U.S. Government work — public domain.",
+    "license": "public-domain",
+    "source_url": "https://www.cdc.gov/niosh/docs/2022-145/2022-145.pdf",
+    "notice": "Adapted from a NIOSH Toolbox Talk (co-developed with CPWR). Public-domain source; not an endorsement by NIOSH or CPWR."
+  },
+  "audit": {
+    "status": "approved",
+    "audited_at": "2026-09-10T18:21:19Z",
+    "osha_accuracy_verified": true,
+    "flags": [
+      "OSHA mapping and tolerances verified accurate: 29 CFR 1926.501 (fall protection duty, incl. 501(b)(4) holes) and 1926.502 (systems criteria, incl. 502(i) covers). Covers must support at least 2x the intended load (1926.502(i)(2)), be secured against displacement (1926.502(i)(3)), and be marked 'HOLE' or 'COVER' (1926.502(i)(4)).",
+      "Non-blocking: '3/4-inch plywood/OSB' is common practice, not a codified value - the governing criterion is the 2x load capacity plus secured and marked. Guidance to use guardrails when the hole exceeds a sheet is sound."
+    ]
+  }
+}

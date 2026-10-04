@@ -13,9 +13,9 @@ export const keysBasedOnEnv = () => {
       //   preset: import.meta.env.VITE_CLOUDINARY_PRESET_PROD,
       // },
       // Stripe
-      // stripe: {
-      //   publishableKey: import.meta.env.VITE_STRIPE_PUBLISHABLE_KEY_PROD,
-      // },
+      stripe: {
+        publishableKey: import.meta.env.VITE_STRIPE_PUBLISHABLE_KEY_PROD,
+      },
     };
   } else {
     // Non-Prod
@@ -31,9 +31,9 @@ export const keysBasedOnEnv = () => {
       //   preset: import.meta.env.VITE_CLOUDINARY_PRESET_TEST,
       // },
       // Stripe
-      // stripe: {
-      //   publishableKey: import.meta.env.VITE_STRIPE_PUBLISHABLE_KEY_TEST,
-      // },
+      stripe: {
+        publishableKey: import.meta.env.VITE_STRIPE_PUBLISHABLE_KEY,
+      },
     };
   }
 };

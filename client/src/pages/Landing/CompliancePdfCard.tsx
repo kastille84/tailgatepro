@@ -18,13 +18,21 @@ interface CompliancePdfCardProps {
 
 const DEFAULT_CREW = ["M. Rivera", "D. Okafor", "J. Chen", "P. Nowak"];
 
+/** Today's date, so the sample never looks stale. */
+export const todayLabel = () =>
+  new Date().toLocaleDateString("en-US", {
+    month: "long",
+    day: "numeric",
+    year: "numeric",
+  });
+
 /** A stylised sample of the compliance PDF a GC receives after a talk. */
 export const CompliancePdfCard = ({
   topic = "Fall Protection",
-  date = "May 14, 2025",
+  date = todayLabel(),
   crew = DEFAULT_CREW,
 }: CompliancePdfCardProps) => {
-  const label = `Example TailgatePro compliance PDF — a signed ${topic} toolbox talk with ${crew.length} crew signatures and a GPS-verified seal.`;
+  const label = `Example TailgatePro compliance PDF — a signed ${topic} toolbox talk with ${crew.length} crew signatures and a signed-and-locked seal.`;
 
   return (
     <StyledPdfCard role="img" aria-label={label}>
@@ -71,7 +79,7 @@ export const CompliancePdfCard = ({
         ))}
       </StyledPdfSignatures>
 
-      <StyledPdfSeal aria-hidden="true">GPS-Verified</StyledPdfSeal>
+      <StyledPdfSeal aria-hidden="true">Signed &amp; Locked</StyledPdfSeal>
 
       <StyledPdfWatermark aria-hidden="true">
         Logged via TailgatePro

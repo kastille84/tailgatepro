@@ -1,0 +1,56 @@
+{
+  "id": "debris-and-waste-disposal",
+  "title": "Debris and Waste Disposal",
+  "primary_trade": "General Construction",
+  "trade_tags": [
+    "General Construction"
+  ],
+  "osha_standards": [
+    "29 CFR 1926.252",
+    "29 CFR 1926.25"
+  ],
+  "estimated_minutes": 5,
+  "summary": "Debris thrown, dropped or left behind hurts people below and starts fires. OSHA's disposal rules cover chutes, floor-hole debris, prompt cleanup and covered containers for flammable waste.",
+  "talking_points": [
+    "When material is dropped more than 20 feet to a point outside the exterior walls of a building, use an enclosed chute of wood or an equivalent material (29 CFR 1926.252(a)).",
+    "When debris is dropped through holes in the floor without a chute, the drop area must be enclosed with barricades at least 42 inches high and set back at least 6 feet from the projected edge of the opening. Post signs warning of falling material at each level, and stop work below until the debris handling above is done (1926.252(b)).",
+    "Remove scrap lumber, waste and rubbish from the immediate work area as work progresses (1926.252(c)).",
+    "Any burning of waste must follow local fire regulations (1926.252(d)).",
+    "Keep solvent waste, oily rags and flammable liquids in fire-resistant covered containers until they are removed from the site (1926.252(e)).",
+    "Containers must be provided for the collection and separation of waste, trash, oily and used rags, and other refuse. Containers for garbage and for oily, flammable or hazardous waste, such as caustics, acids and harmful dusts, must have covers, and waste must be disposed of at frequent and regular intervals (1926.25(c)).",
+    "Remove combustible scrap and debris at regular intervals, and provide a safe way to do it (1926.25(b)).",
+    "Good practice: keep waste sorted into the right containers so hazardous waste never ends up in a general dumpster."
+  ],
+  "site_hazards_to_check": [
+    "Material dropped more than 20 feet with no enclosed chute",
+    "Debris dropped through floor openings with no barricade or warning sign",
+    "People working below an active debris drop",
+    "Scrap and rubbish piling up in the work area",
+    "Oily rags and solvent waste in open or non-fire-resistant containers",
+    "Overflowing dumpsters and uncovered waste containers"
+  ],
+  "discussion_questions": [
+    "Where on this site do we drop debris from above, and how is the area below protected?",
+    "Where do oily rags and solvent waste go at the end of the day?",
+    "How often are waste containers emptied here?"
+  ],
+  "attribution": {
+    "source": "TailgatePro",
+    "publisher": "TailgatePro",
+    "copyright": "Original TailgatePro content, written from 29 CFR 1926.252 (Disposal of waste materials) and 29 CFR 1926.25 (Housekeeping). Regulation and agency text is U.S. Government work in the public domain; the wording here is TailgatePro's own.",
+    "license": "original-work",
+    "source_url": "https://www.osha.gov/laws-regs/regulations/standardnumber/1926/1926.252",
+    "source_ref": "TBT-170",
+    "notice": "Written from 29 CFR 1926.252 (Disposal of waste materials) and 29 CFR 1926.25 (Housekeeping). General guidance only; follow your company safety program and site-specific requirements. Not an endorsement by OSHA."
+  },
+  "audit": {
+    "status": "approved",
+    "audited_at": "2026-09-25T20:37:57.253Z",
+    "osha_accuracy_verified": true,
+    "flags": [
+      "Verified 1926.252(a)-(e) verbatim (20 feet, 42 inches, 6 feet, signs at each level, removal not permitted below until handling ceases above) and 1926.25(a)-(c).",
+      "Fix: point 6 said covered containers are 'emptied at frequent and regular intervals'; source says containers must have covers and waste must be disposed of at frequent and regular intervals. Reworded to match 1926.25(c).",
+      "Not a duplicate of an approved talk."
+    ]
+  }
+}

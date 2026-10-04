@@ -1,0 +1,58 @@
+{
+  "id": "fire-safety",
+  "title": "Fire Safety",
+  "primary_trade": "General Construction",
+  "trade_tags": [
+    "General Construction"
+  ],
+  "osha_standards": [
+    "29 CFR 1926 Subpart C",
+    "29 CFR 1926 Subpart F",
+    "29 CFR 1926.34"
+  ],
+  "estimated_minutes": 5,
+  "summary": "Workers need training on fire hazards and on what to do in a fire emergency. Exits must be clear, and fire prevention means controlling ignition sources and flammable waste.",
+  "talking_points": [
+    "Learn the fire hazards of your job and what to do in a fire emergency.",
+    "Know the evacuation routes and procedures before a fire starts. Everyone must be accounted for after evacuating.",
+    "Exit doors must never be blocked or locked while people are inside. Exit routes must be free of obstructions and marked with exit signs.",
+    "Know the alarm that signals a fire emergency, such as bells, whistles, horns, or voice communication.",
+    "Only use a fire extinguisher if you have been trained. Hands-on training is needed if workers are expected to use one.",
+    "Control ignition sources such as smoking, welding, and burning.",
+    "Store and clean up flammable materials and flammable waste properly.",
+    "Keep flammables away from heat-producing equipment such as burners, boilers, ovens, and stoves. Where a fixed fire suppression system is installed and out of service, a trained fire watch must respond to fire emergencies."
+  ],
+  "site_hazards_to_check": [
+    "Blocked or locked exit doors and routes",
+    "Missing or unclear exit signs",
+    "Flammable waste and materials stored or piled up near ignition sources",
+    "Welding, burning, or smoking areas without controls",
+    "Heat-producing equipment with flammables stored nearby",
+    "Installed fire suppression system out of service with no fire watch"
+  ],
+  "discussion_questions": [
+    "What is our fire alarm signal, and where do we go when we hear it?",
+    "Which ignition sources on this site are closest to flammable materials?",
+    "Who here has been trained to use a fire extinguisher, and who should just evacuate?"
+  ],
+  "attribution": {
+    "source": "OSHA",
+    "publisher": "Occupational Safety and Health Administration (OSHA)",
+    "copyright": "U.S. Government work — public domain.",
+    "license": "public-domain",
+    "source_url": "https://www.osha.gov/sites/default/files/publications/osha3527.pdf",
+    "source_ref": "TBT-079",
+    "notice": "Adapted from OSHA published material. Reproduced with attribution for jobsite safety training; not an endorsement by OSHA."
+  },
+  "audit": {
+    "status": "approved",
+    "audited_at": "2026-09-25T18:11:08Z",
+    "osha_accuracy_verified": true,
+    "flags": [
+      "Content quote-accurate to OSHA Fact Sheet 3527 (2020): exits, alarm types, extinguisher training, ignition sources, waste, heat-producing equipment, fire watch.",
+      "FIX: 29 CFR 1910.36 (general-industry exit routes) removed and replaced with 1926.34 (means of egress, construction); Subparts C and F (1926) kept, as the source cites them. The fire-watch point derives from the general-industry fixed-systems rule, so it is now qualified with \"where a fixed system is installed\".",
+      "Non-blocking: the fact sheet is written for general-industry employers; consider adding 1926.151 hot work points from a supporting source later.",
+      "Attribution: osha.gov, public domain. No UK wording."
+    ]
+  }
+}

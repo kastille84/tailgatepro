@@ -1,0 +1,53 @@
+{
+  "id": "subcontractor-safety",
+  "title": "Subcontractor Safety",
+  "primary_trade": "General Construction",
+  "trade_tags": [
+    "General Construction"
+  ],
+  "osha_standards": [
+    "29 CFR 1926.16"
+  ],
+  "estimated_minutes": 5,
+  "summary": "On a multi-contractor site, everyone shares responsibility for safety. OSHA explains who is responsible for what, and which employers can be held responsible for a hazard.",
+  "talking_points": [
+    "A prime contractor and its subcontractors may divide jobsite duties by agreement, such as who provides first-aid facilities, but the prime contractor keeps overall responsibility for compliance (29 CFR 1926.16(a)).",
+    "A prime contractor who accepts full performance of a contract takes on all employer obligations under OSHA's construction standards, including for subcontracted work (1926.16(b)).",
+    "A subcontractor is responsible for compliance for the part of the work it takes on, so responsibility is joint (1926.16(c)).",
+    "Prime contractors and subcontractors at any tier can be subject to enforcement (1926.16(d)).",
+    "OSHA's multi-employer policy names four kinds of employer: creating (caused the hazard), exposing (its own workers are exposed), correcting (responsible for fixing the hazard) and controlling (has general supervisory authority over the site).",
+    "An exposing employer must protect its workers. If it cannot correct a hazard itself, it must ask the employer who can, tell its employees and take reasonable protective steps, such as personal fall protection.",
+    "A controlling employer must use reasonable care to prevent and find violations, including by inspecting at a suitable frequency and enforcing its rules.",
+    "Good practice: know which role your company plays on this site, and tell the controlling contractor about any hazard another trade creates."
+  ],
+  "site_hazards_to_check": [
+    "Hazard created by one trade that exposes another trade's workers",
+    "No clear agreement on who provides first aid, inspections and safety equipment",
+    "Nobody responsible for inspecting shared areas",
+    "Subcontractor crews that were not briefed on site rules",
+    "Hazard reported but nobody assigned to correct it"
+  ],
+  "discussion_questions": [
+    "Which roles does our company hold on this job, and who is the controlling employer?",
+    "What do we do when another trade's work puts our crew at risk?",
+    "Who inspects the shared areas, and how often?"
+  ],
+  "attribution": {
+    "source": "TailgatePro",
+    "publisher": "TailgatePro",
+    "copyright": "Original TailgatePro content, written from 29 CFR 1926.16 (Rules of construction) and OSHA directive CPL 2-0.124 (Multi-employer citation policy). Regulation and agency text is U.S. Government work in the public domain; the wording here is TailgatePro's own.",
+    "license": "original-work",
+    "source_url": "https://www.osha.gov/laws-regs/regulations/standardnumber/1926/1926.16",
+    "source_ref": "TBT-155",
+    "notice": "Written from 29 CFR 1926.16 (Rules of construction) and OSHA directive CPL 2-0.124 (Multi-employer citation policy). General guidance only; follow your company safety program and site-specific requirements. Not an endorsement by OSHA."
+  },
+  "audit": {
+    "status": "approved",
+    "audited_at": "2026-09-25T20:37:57.253Z",
+    "osha_accuracy_verified": true,
+    "flags": [
+      "Verified 1926.16(a)-(d) verbatim (incl. 'In no case shall the prime contractor be relieved of overall responsibility') and CPL 2-0.124 definitions of creating/exposing/correcting/controlling employers, exposing-employer steps (ask, inform, reasonable alternative protective measures; personal fall protection is the directive's example), controlling-employer periodic inspections and graduated enforcement.",
+      "No changes needed."
+    ]
+  }
+}

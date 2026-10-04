@@ -1,11 +1,21 @@
 import { useState } from "react";
-import { useSearchParams } from "react-router-dom";
+import { Link, useSearchParams } from "react-router-dom";
 import { HiCheck } from "react-icons/hi2";
 
-import { WaitlistForm } from "../Landing/WaitlistForm";
+import { useAuth } from "../../context/auth";
+import { useCurrentUser } from "../../hooks/useCurrentUser";
 import { SegmentedToggle } from "../../ui_comps/segmented-toggle";
+import { Footer } from "../../ui_comps/footer";
 import { SUB_PLANS, GC_PLANS } from "../../data/plans";
+import {
+  NO_INSTALL_ANSWER,
+  NO_PER_USER_FEES_BODY,
+  NO_PER_USER_FEES_TITLE,
+  SPONSORED_ACCESS_ANSWER,
+  SPONSORED_ACCESS_QUESTION,
+} from "../../data/sharedCopy";
 import { planCadence } from "../../utils/pricing";
+import { getPlanCtas } from "../../utils/pricingCtas";
 import type { Audience, Billing } from "../../interfaces/plan";
 import {
   StyledPage,
@@ -18,7 +28,6 @@ import {
   StyledContainer,
   StyledControls,
   StyledSaveHint,
-  StyledSelectedNote,
   StyledPlanGrid,
   StyledPlanCard,
   StyledBadge,
@@ -26,10 +35,14 @@ import {
   StyledPlanTarget,
   StyledPriceRow,
   StyledPrice,
+  StyledPricePrefix,
   StyledPriceCadence,
   StyledPriceSub,
   StyledFeatureList,
+  StyledInherits,
   StyledFeatureItem,
+  StyledSoonTag,
+  StyledPlanCtaGroup,
   StyledPlanCta,
   StyledCallout,
   StyledCalloutTitle,
@@ -41,8 +54,6 @@ import {
   StyledFaqItem,
   StyledFaqQuestion,
   StyledFaqAnswer,
-  StyledCtaSection,
-  StyledCtaInner,
 } from "./Pricing.styles";
 
 const AUDIENCE_OPTIONS: { value: Audience; label: string }[] = [
@@ -58,27 +69,25 @@ const BILLING_OPTIONS: { value: Billing; label: string }[] = [
 const FAQ: { q: string; a: string }[] = [
   {
     q: "Do my sub-foremen need to download an app from the App Store?",
-    a: "No. TailgatePro is an offline-first Progressive Web App. Foremen scan a QR code or tap a link to open it straight away in their mobile browser — nothing to install.",
+    a: NO_INSTALL_ANSWER,
   },
   {
     q: "What happens to my safety logs on the Trade Free plan after 30 days?",
-    a: "Emailed PDFs stay in your inbox forever. The in-app dashboard history locks after 30 days; Trade Pro unlocks your full 5-year legal cloud archive.",
+    a: "Every completed talk is emailed to your GC as a PDF link that stays valid for 30 days; after that, your GC can sign in to open a fresh link. The Free plan's in-app history shows the last 30 days; Trade Pro adds the 5-year legal cloud archive.",
   },
   {
-    q: "How does a general contractor sponsor subcontractors for free?",
-    a: "On GC Site Pro or GC Portfolio you get project-specific QR codes and links. Any trade subcontractor working those sites scans one to log talks under your dashboard at zero cost to them.",
+    q: SPONSORED_ACCESS_QUESTION,
+    a: SPONSORED_ACCESS_ANSWER,
   },
   {
     q: "What's the difference between GC Site Pro and GC Portfolio?",
-    a: "GC Site Pro covers a single jobsite at $149/site/mo. GC Portfolio is flat-rate multi-site — $499/mo for up to 10 sites, $799/mo unlimited — and adds cross-project subcontractor safety scorecards, top-down corporate policy push, and multi-manager roles (Superintendent vs Safety Director).",
+    a: "GC Site Pro covers a single jobsite at $149/site/mo. GC Portfolio is flat-rate multi-site — $499/mo for up to 10 sites, $799/mo unlimited — and adds multi-manager roles (assign Superintendents to specific job sites; Safety Directors and Admins still see every site), cross-project subcontractor safety scorecards, and top-down corporate policy push (push a mandatory safety topic across every active site at once). Already paying for Site Pro sites? Switching to GC Portfolio covers them all, cancels the per-site subscriptions right away and credits the unused time.",
   },
   {
     q: "When can I actually sign up?",
-    a: "We're onboarding subcontractors and general contractors for launch now. Join the waitlist and we'll set you up on the right plan the moment we go live.",
+    a: "Right now. Start on a free plan, or pick Trade Pro, Trade Enterprise or GC Portfolio and we'll take you through sign-up to secure checkout. GC Site Pro is bought per jobsite: sign up, open your job sites and choose Upgrade to Site Pro on the site you want.",
   },
 ];
-
-const WAITLIST_ANCHOR = "#pricing-waitlist";
 
 export const Pricing = () => {
   const [searchParams] = useSearchParams();
@@ -87,18 +96,10 @@ export const Pricing = () => {
     searchParams.get("audience") === "gc" ? "gc" : "sub",
   );
   const [billing, setBilling] = useState<Billing>("monthly");
-  const [selectedPlan, setSelectedPlan] = useState<string | null>(
-    searchParams.get("plan"),
-  );
+  const { user } = useAuth();
+  const { companyType, isManagerRole, plan: currentPlanId } = useCurrentUser();
 
   const plans = audience === "sub" ? SUB_PLANS : GC_PLANS;
-  const selectedPlanName =
-    plans.find((plan) => plan.id === selectedPlan)?.name ?? null;
-
-  const changeAudience = (next: Audience) => {
-    setAudience(next);
-    setSelectedPlan(null);
-  };
 
   return (
     <StyledPage>
@@ -106,12 +107,13 @@ export const Pricing = () => {
         <StyledHeroInner>
           <StyledEyebrow>Pricing</StyledEyebrow>
           <StyledHeadline id="pricing-hero-heading">
-            Safety compliance built for the field. <span>Crews start free.</span>
+            Safety compliance built for the field.{" "}
+            <span>Crews start free.</span>
           </StyledHeadline>
           <StyledLede>
             No app-store downloads. Run offline toolbox talks, collect
-            tamper-evident signatures, and send automated compliance logs to any
-            GC before the crew gears up. Subcontractors can start free — general
+            on-screen signatures, and send automated compliance logs to any GC
+            before the crew gears up. Subcontractors can start free — general
             contractors pay a flat rate per active jobsite or portfolio.
           </StyledLede>
         </StyledHeroInner>
@@ -133,7 +135,7 @@ export const Pricing = () => {
             <SegmentedToggle<Audience>
               options={AUDIENCE_OPTIONS}
               value={audience}
-              onChange={changeAudience}
+              onChange={setAudience}
               ariaLabel="Choose your audience"
             />
             <SegmentedToggle<Billing>
@@ -142,7 +144,7 @@ export const Pricing = () => {
               onChange={setBilling}
               ariaLabel="Choose a billing period"
             />
-            <StyledSaveHint>Annual saves 20%</StyledSaveHint>
+            <StyledSaveHint>Annual = 2 months free</StyledSaveHint>
           </StyledControls>
 
           <StyledPlanGrid>
@@ -155,6 +157,9 @@ export const Pricing = () => {
                   <StyledPlanTarget>{plan.target}</StyledPlanTarget>
 
                   <StyledPriceRow>
+                    {plan.pricePrefix && (
+                      <StyledPricePrefix>{plan.pricePrefix}</StyledPricePrefix>
+                    )}
                     <StyledPrice>{plan.price[billing]}</StyledPrice>
                     {cadence && (
                       <StyledPriceCadence>{cadence}</StyledPriceCadence>
@@ -166,39 +171,69 @@ export const Pricing = () => {
                       : " "}
                   </StyledPriceSub>
 
+                  {plan.inheritsFrom && (
+                    <StyledInherits>
+                      Everything in {plan.inheritsFrom}, plus:
+                    </StyledInherits>
+                  )}
                   <StyledFeatureList>
                     {plan.features.map((feature) => (
                       <StyledFeatureItem key={feature}>
                         <HiCheck aria-hidden="true" />
-                        <span>{feature}</span>
+                        <span>
+                          {feature}
+                          {plan.comingSoon?.includes(feature) && (
+                            <StyledSoonTag>Coming soon</StyledSoonTag>
+                          )}
+                        </span>
                       </StyledFeatureItem>
                     ))}
                   </StyledFeatureList>
 
-                  <StyledPlanCta
-                    href={WAITLIST_ANCHOR}
-                    $featured={plan.featured}
-                    onClick={() => setSelectedPlan(plan.id)}
-                  >
-                    Join the waitlist
-                  </StyledPlanCta>
+                  <StyledPlanCtaGroup>
+                    {getPlanCtas(plan.id, {
+                      signedIn: !!user,
+                      companyType,
+                      isManager: isManagerRole,
+                      currentPlanId,
+                      billing,
+                    }).map((cta) => {
+                      if (cta.disabled) {
+                        return (
+                          <StyledPlanCta
+                            key={cta.label}
+                            as="span"
+                            aria-disabled="true"
+                            $disabled
+                            $featured={plan.featured}
+                          >
+                            {cta.label}
+                          </StyledPlanCta>
+                        );
+                      }
+                      return (
+                        <StyledPlanCta
+                          key={cta.label}
+                          as={Link}
+                          to={cta.to}
+                          $featured={plan.featured}
+                        >
+                          {cta.label}
+                        </StyledPlanCta>
+                      );
+                    })}
+                  </StyledPlanCtaGroup>
                 </StyledPlanCard>
               );
             })}
           </StyledPlanGrid>
 
           <StyledCallout>
-            <StyledCalloutTitle>Zero subcontractor seat tax</StyledCalloutTitle>
+            <StyledCalloutTitle>{NO_PER_USER_FEES_TITLE}</StyledCalloutTitle>
             <StyledCalloutText>
-              Legacy platforms charge per user seat, penalizing you for adding
-              trade subcontractors to your project. With{" "}
-              <strong>GC Site Pro</strong> or <strong>GC Portfolio</strong> you
-              pay a flat rate per site or portfolio, and{" "}
-              <strong>
-                every subcontractor on your job gets full access for $0
-              </strong>{" "}
-              — no app-store downloads, no user-billing disputes, 100% site
-              compliance on day one.
+              {NO_PER_USER_FEES_BODY.map(({ text, strong }) =>
+                strong ? <strong key={text}>{text}</strong> : text,
+              )}
             </StyledCalloutText>
           </StyledCallout>
         </StyledContainer>
@@ -222,31 +257,7 @@ export const Pricing = () => {
         </StyledContainer>
       </StyledSection>
 
-      <StyledCtaSection
-        id="pricing-waitlist"
-        aria-labelledby="pricing-cta-heading"
-      >
-        <StyledCtaInner>
-          <StyledSectionTitle id="pricing-cta-heading">
-            Lock in your plan for launch
-          </StyledSectionTitle>
-          <StyledSectionLede>
-            Pricing goes live when we launch. Join the waitlist and we&apos;ll be
-            in touch to get you set up on the plan you picked.
-          </StyledSectionLede>
-          {selectedPlanName && (
-            <StyledSelectedNote>
-              Selected plan: <strong>{selectedPlanName}</strong>
-            </StyledSelectedNote>
-          )}
-          <WaitlistForm
-            idPrefix="pricing"
-            tone="onDark"
-            audience={audience}
-            planInterest={selectedPlan ?? undefined}
-          />
-        </StyledCtaInner>
-      </StyledCtaSection>
+      <Footer />
     </StyledPage>
   );
 };

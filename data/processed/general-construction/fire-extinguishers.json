@@ -1,0 +1,57 @@
+{
+  "id": "fire-extinguishers",
+  "title": "Fire Extinguishers",
+  "primary_trade": "General Construction",
+  "trade_tags": [
+    "General Construction"
+  ],
+  "osha_standards": [
+    "29 CFR 1926.150",
+    "29 CFR 1910.157"
+  ],
+  "estimated_minutes": 5,
+  "summary": "Portable fire extinguishers must be approved, easy to reach, fully charged, and inspected. OSHA requires monthly visual checks and an annual maintenance check.",
+  "talking_points": [
+    "Extinguishers must be mounted, located, and marked so you can reach them without getting hurt.",
+    "Only approved extinguishers can be used. Extinguishers must stay fully charged and in their designated place except during use.",
+    "Extinguishers are chosen by the class of fire expected (A, B, C, or D) and the size and degree of hazard.",
+    "Never use or provide extinguishers with carbon tetrachloride or chlorobromomethane agents.",
+    "Extinguishers must be visually inspected monthly.",
+    "Each extinguisher needs an annual maintenance check, and the date must be recorded.",
+    "Hydrostatic testing is done by trained persons at set intervals. Test again after corrosion, mechanical injury, damage, or burning in a fire.",
+    "When an extinguisher is out for maintenance or recharging, alternate equivalent protection must be provided.",
+    "Construction sites are covered by 29 CFR 1926.150(c). The monthly, annual, and hydrostatic test details above come from the general-industry standard (1910.157), so also follow the manufacturer schedule and your site fire protection plan."
+  ],
+  "site_hazards_to_check": [
+    "Extinguishers blocked, moved from their place, or hard to reach",
+    "Gauge or pressure indicator showing not fully charged",
+    "Missing monthly inspection or annual maintenance date",
+    "Corrosion, dents, or other damage on the shell",
+    "Extinguisher type that does not match the fire class of nearby hazards",
+    "Extinguisher removed for service with no replacement"
+  ],
+  "discussion_questions": [
+    "Where is the nearest extinguisher, and is the path to it clear?",
+    "What class of fire could happen in our work area, and is this the right extinguisher?",
+    "When was this extinguisher last inspected, and who checks it?"
+  ],
+  "attribution": {
+    "source": "OSHA",
+    "publisher": "Occupational Safety and Health Administration (OSHA)",
+    "copyright": "U.S. Government work — public domain.",
+    "license": "public-domain",
+    "source_url": "https://www.osha.gov/laws-regs/regulations/standardnumber/1910/1910.157",
+    "source_ref": "TBT-080",
+    "notice": "Adapted from OSHA published material. Reproduced with attribution for jobsite safety training; not an endorsement by OSHA."
+  },
+  "audit": {
+    "status": "approved",
+    "audited_at": "2026-09-25T18:11:08Z",
+    "osha_accuracy_verified": true,
+    "flags": [
+      "All points quote-accurate to 29 CFR 1910.157: charged/designated place, classes A-D, carbon tetrachloride ban, monthly visual, annual maintenance record, hydrostatic testing triggers, alternate protection.",
+      "FIX: 1910.157 is a general-industry standard with a partial construction equivalent (1926.150(c)); a point was added stating this so the talk does not present 1910 detail as the construction requirement. Both citations kept.",
+      "Non-blocking: 1926.150(c) extinguisher placement/rating rules are not spelled out here; consider adding them from the 1926 text. Attribution: osha.gov, public domain. No UK wording."
+    ]
+  }
+}

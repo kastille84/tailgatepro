@@ -1,0 +1,60 @@
+{
+  "id": "steel-erection-stability-decking-bolting",
+  "title": "Steel Erection: Keeping Columns, Joists, and Decking Stable",
+  "primary_trade": "Steel Erection",
+  "trade_tags": [
+    "Steel Erection",
+    "General Construction"
+  ],
+  "osha_standards": [
+    "29 CFR 1926.754",
+    "29 CFR 1926.755",
+    "29 CFR 1926.756",
+    "29 CFR 1926.757"
+  ],
+  "estimated_minutes": 5,
+  "summary": "Structural collapse is second only to falls as a cause of death in steel erection. Stable columns, secured connections, bridged joists, and secured decking keep the structure standing.",
+  "talking_points": [
+    "Columns need at least 4 anchor rods. A competent person must decide if a column needs guying or bracing. Anchor rods can be repaired, replaced, or field-modified only with the structural engineer of record's approval.",
+    "Do not release the hoist line on a beam until it has at least two bolts per connection, drawn up wrench-tight. A competent person decides if a cantilevered member needs more bolts.",
+    "Double connections: keep at least one wrench-tight bolt on the first member, unless a seat or equivalent device holds it.",
+    "Open web joists: do not release the hoist cable until the seat at each end is field-bolted and the joist is stabilized. Never set a joist on a support that is not stable.",
+    "No loads on joists until all bridging is installed and anchored and the bearing ends are attached, except under the limited conditions in the standard. Keep the edge of any load within 1 foot of the bearing end.",
+    "Only one worker is allowed on a joist until all bridging is installed and anchored. On some long spans (60 to 144 feet) up to two workers are allowed once the required bolted diagonal erection bridging is in, and the standard's span tables control. Joists must not be used as fall arrest anchors without written approval from a qualified person.",
+    "Decking: lay it tight and secure it right away. Do not hoist bundles by their packaging straps unless designed for it. Secure decking at the end of the shift.",
+    "Deck over or cover every hole. Covers must hold twice the expected load, be secured, and be marked \"HOLE\" or \"COVER\" or painted high-visibility. Holes that cannot be decked over need fall protection."
+  ],
+  "site_hazards_to_check": [
+    "Columns with fewer than 4 anchor rods or no bracing check",
+    "Beams released from the hoist with fewer than two wrench-tight bolts",
+    "Joists set without bridging, or on unstable supports",
+    "Bundles of decking or bridging landed on joists that are not secured",
+    "Decking that is loose, unsecured, or not fully supported when placed",
+    "Open or uncovered deck holes, or covers that are not marked or secured",
+    "Perimeter columns that are not high enough for safety cables"
+  ],
+  "discussion_questions": [
+    "How many bolts are in this connection, and are they wrench-tight before we release the load?",
+    "Is the bridging in before we land decking or other loads on these joists?",
+    "Which holes in the deck are open, and how are they covered or guarded?"
+  ],
+  "attribution": {
+    "source": "OSHA",
+    "publisher": "Occupational Safety and Health Administration (OSHA)",
+    "copyright": "U.S. Government work — public domain.",
+    "license": "public-domain",
+    "source_url": "https://www.osha.gov/etools/steel-erection/structural-stability",
+    "notice": "Adapted from OSHA Steel Erection eTool, Structural Stability (29 CFR 1926.754-.757). Reproduced with attribution for jobsite safety training; not an endorsement by OSHA."
+  },
+  "audit": {
+    "status": "approved",
+    "audited_at": "2026-09-30T14:01:48.440Z",
+    "osha_accuracy_verified": true,
+    "flags": [
+      "Verified against data/raw/osha-steel-erection-etool-structural-stability-decking-bolting.md (OSHA eTool, 1926.754-.757): 4 anchor rods, competent person guying, engineer approval for anchor rod changes, 2 wrench-tight bolts, double connection, joist hoist-line release, bridging before loads, 1-ft load rule, decking packaging/secure/holes, cover 2x load and HOLE/COVER or high-vis paint.",
+      "Edited: the joist-occupancy point misstated the rule (source: one employee on joists not needing erection bridging until all bridging is in, 1926.757(c)(3); one or two employees on spans at or over table spans per 757(d)). Reworded to what the source supports.",
+      "Scope note: talk covers stability, not the 15/30 ft fall-protection rules in 1926.760.",
+      "Harwood check: OSHA eTool."
+    ]
+  }
+}

@@ -1,0 +1,121 @@
+// Plain CommonJS — no `import` (see vitest.config.js / CLAUDE.md). Vitest
+// exposes describe/it/expect as globals.
+
+const { buildRow, isApproved, CORE_TALK_SLUGS } = require("./talkRow");
+
+const baseJson = {
+  id: "electrical-arc-flash-safety",
+  title: "Arc Flash Safety",
+  primary_trade: "Electrical",
+  trade_tags: ["Electrical", "General Construction"],
+  osha_standards: ["29 CFR 1926.416", "29 CFR 1910.333"],
+  estimated_minutes: 5,
+  summary: "Arc flash can cause severe burns; de-energize and keep clear.",
+  talking_points: ["De-energize before work", "Wear arc-rated PPE"],
+  site_hazards_to_check: ["Exposed energized parts", "Missing lockout devices"],
+  discussion_questions: ["What PPE is required for this panel?"],
+  attribution: {
+    source: "NIOSH",
+    publisher: "National Institute for Occupational Safety and Health (NIOSH)",
+    copyright: "U.S. Government work — public domain.",
+    license: "public-domain",
+    source_url: "https://www.cdc.gov/niosh/docs/2022-136/2022-136.pdf",
+    notice:
+      "Adapted from a NIOSH Toolbox Talk (co-developed with CPWR). " +
+      "Public-domain source; not an endorsement by NIOSH or CPWR.",
+  },
+  audit: {
+    status: "approved",
+    audited_at: "2026-01-01T00:00:00Z",
+    osha_accuracy_verified: true,
+    flags: [],
+  },
+};
+
+describe("isApproved", () => {
+  it("is true only when audit.status is 'approved'", () => {
+    expect(isApproved(baseJson)).toBe(true);
+    expect(isApproved({ ...baseJson, audit: { status: "needs_revision" } })).toBe(false);
+    expect(isApproved({ ...baseJson, audit: undefined })).toBe(false);
+    expect(isApproved({})).toBe(false);
+    expect(isApproved(null)).toBe(false);
+  });
+});
+
+describe("buildRow", () => {
+  it("flags only the 30 core talks as is_core", () => {
+    expect(CORE_TALK_SLUGS.size).toBe(30);
+    expect(buildRow(baseJson).is_core).toBe(false);
+    expect(buildRow({ ...baseJson, id: "silica" }).is_core).toBe(true);
+  });
+
+  it("maps pipeline fields onto toolbox_talks columns", () => {
+    const row = buildRow(baseJson);
+    expect(row.slug).toBe("electrical-arc-flash-safety");
+    expect(row.title).toBe("Arc Flash Safety");
+    expect(row.trade_tag).toBe("Electrical");
+    expect(row.trade_tags).toEqual(["Electrical", "General Construction"]);
+    expect(row.is_global).toBe(true);
+    expect(row.company_id).toBeNull();
+    expect(row.structured).toEqual({
+      summary: baseJson.summary,
+      talking_points: baseJson.talking_points,
+      site_hazards_to_check: baseJson.site_hazards_to_check,
+      discussion_questions: baseJson.discussion_questions,
+      osha_standards: baseJson.osha_standards,
+      estimated_minutes: 5,
+    });
+    expect(row.content).toContain("Arc Flash Safety");
+    expect(row.attribution).toEqual(baseJson.attribution);
+  });
+
+  it("passes attribution straight through, defaulting to null when absent", () => {
+    expect(buildRow({ id: "x", title: "X", audit: { status: "approved" } }).attribution).toBeNull();
+    expect(buildRow(baseJson).attribution).toEqual(baseJson.attribution);
+  });
+
+  it("passes translations straight through, defaulting to null when absent (official-source-only, never machine-translated)", () => {
+    expect(buildRow(baseJson).translations).toBeNull();
+    const translations = {
+      es: {
+        title: "Seguridad contra arcos eléctricos",
+        summary: null,
+        talking_points: [],
+        site_hazards_to_check: [],
+        discussion_questions: [],
+      },
+    };
+    expect(buildRow({ ...baseJson, translations }).translations).toEqual(translations);
+  });
+
+  it("derives a deterministic v5 UUID from the slug", () => {
+    const a = buildRow(baseJson).id;
+    const b = buildRow({ ...baseJson, title: "Different title" }).id;
+    expect(a).toBe(b); // same slug -> same id, regardless of other fields
+    expect(a).toMatch(
+      /^[0-9a-f]{8}-[0-9a-f]{4}-5[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/
+    );
+    expect(buildRow({ ...baseJson, id: "roofing-ladder-safety" }).id).not.toBe(a);
+  });
+
+  it("defaults missing optional collections to [] / null", () => {
+    const row = buildRow({ id: "x", title: "X", audit: { status: "approved" } });
+    expect(row.trade_tag).toBeNull();
+    expect(row.trade_tags).toEqual([]);
+    expect(row.structured.talking_points).toEqual([]);
+    expect(row.structured.osha_standards).toEqual([]);
+    expect(row.structured.summary).toBeNull();
+    expect(row.structured.estimated_minutes).toBeNull();
+  });
+
+  it("coerces a non-array trade_tags to []", () => {
+    expect(buildRow({ ...baseJson, trade_tags: "Electrical" }).trade_tags).toEqual([]);
+  });
+
+  it("throws when the slug (id) or title is missing or blank", () => {
+    expect(() => buildRow({ title: "No id" })).toThrow(/id/);
+    expect(() => buildRow({ id: "  ", title: "Blank id" })).toThrow(/id/);
+    expect(() => buildRow({ id: "no-title" })).toThrow(/title/);
+    expect(() => buildRow({ id: "blank-title", title: "   " })).toThrow(/title/);
+  });
+});

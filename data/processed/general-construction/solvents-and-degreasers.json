@@ -1,0 +1,59 @@
+{
+  "id": "solvents-and-degreasers",
+  "title": "Solvents and Degreasers",
+  "primary_trade": "General Construction",
+  "trade_tags": [
+    "General Construction"
+  ],
+  "osha_standards": [
+    "29 CFR 1926.55",
+    "29 CFR 1926.57",
+    "29 CFR 1926.95",
+    "29 CFR 1910.1200"
+  ],
+  "estimated_minutes": 5,
+  "summary": "Solvents thin or dissolve paint, grease, epoxies, adhesives, and coatings. They can harm your health when breathed in, absorbed through the skin, or swallowed, and they are flammable.",
+  "talking_points": [
+    "Check the product label or Safety Data Sheet (SDS) to find out if a product contains a solvent that could harm you.",
+    "Common solvents include acetone, MEK, toluene, xylene, mineral spirits, turpentine, and denatured alcohols.",
+    "OSHA requires employers to train workers who use hazardous chemicals and to provide protective equipment.",
+    "Wear chemical-resistant gloves, long sleeves, and eye protection.",
+    "Use a NIOSH-approved respirator with the correct, color-coded cartridge for the chemical.",
+    "If solvent gets on your skin, wash right away with soap and water. Do not wash your hands with a solvent, even if they are covered in paint.",
+    "Make sure the work area is ventilated. Employers must provide proper ventilation.",
+    "Solvents are flammable. Keep them away from electrical hazards, heat, and other fire-starting hazards. Ask if a water-based product can be used instead."
+  ],
+  "site_hazards_to_check": [
+    "Bare hands used to scrub tools or brushes in solvent",
+    "Poor ventilation where solvents are used",
+    "Solvents near electrical equipment, heat, or other ignition sources",
+    "Products with no label or SDS to identify the solvent",
+    "Workers without chemical-resistant gloves, eye protection, or a respirator with the right cartridge",
+    "Confined spaces entered with no competent person checking that the space is safe"
+  ],
+  "discussion_questions": [
+    "Mary cleaned brushes with thinner using bare hands and ended up with red, dry, cracked skin. What caused this, and how could it be prevented?",
+    "Has anyone you know been hurt or made sick by solvents? What happened?",
+    "What will we do at the worksite today to prevent exposure to solvents?"
+  ],
+  "attribution": {
+    "source": "CPWR",
+    "publisher": "CPWR — The Center for Construction Research and Training",
+    "copyright": "© 2019 CPWR — The Center for Construction Research and Training. All rights reserved.",
+    "license": "free-use-with-attribution",
+    "source_url": "https://www.cpwr.com/wp-content/uploads/TT-Solvents.pdf",
+    "source_ref": "TBT-116",
+    "notice": "Adapted from a CPWR/NIOSH Toolbox Talk, produced under NIOSH cooperative agreement OH 009762. Reproduced with attribution for jobsite safety training; not an endorsement by CPWR or NIOSH."
+  },
+  "audit": {
+    "status": "approved",
+    "audited_at": "2026-09-25T18:11:25Z",
+    "osha_accuracy_verified": true,
+    "flags": [
+      "Verified against CPWR Solvents toolbox talk: definition, label/SDS check, solvent list (subset), OSHA training and PPE, chemical-resistant gloves/long sleeves/eye protection, NIOSH-approved respirator with color-coded cartridge, wash with soap and water not solvent, employer ventilation duty, flammability, water-based alternative, confined-space competent person (in hazard list). Nothing invented.",
+      "Citations 1926.55, 1926.57, 1926.95 and 1910.1200 are exactly those printed in the source; all exist and match (contaminants, ventilation, PPE criteria, hazard communication which applies to construction via 1926.59).",
+      "Attribution: printed copyright line is 2019 (source front matter rights line says 2017); the talk correctly uses '© 2019 CPWR'. Source rights line says 'Verify reuse terms'; talk is under free-use-with-attribution with copyright and no-endorsement notice retained and is bundled, not sold standalone, so the docs/content-attribution.md CPWR conditions are met. Owner should still be aware CPWR is 'all rights reserved' and not public domain.",
+      "Non-blocking: the confined-space competent-person item appears only in site_hazards_to_check, not in the talking points."
+    ]
+  }
+}

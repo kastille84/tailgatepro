@@ -6,5 +6,6 @@ export {
   FormField,
   Input,
   Label,
+  Textarea,
   TextInput,
 } from "./Input";

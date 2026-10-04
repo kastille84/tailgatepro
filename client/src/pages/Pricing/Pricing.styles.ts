@@ -1,13 +1,9 @@
 import styled from "styled-components";
+import { PageShell } from "../../ui_comps/page-shell";
 
 /* ---------- page + section scaffolding ---------- */
 
-export const StyledPage = styled.main`
-  display: flex;
-  flex-direction: column;
-  width: 100%;
-  overflow-x: hidden;
-`;
+export const StyledPage = PageShell;
 
 export const StyledSection = styled.section`
   padding: 5.6rem 1.6rem;
@@ -62,7 +58,7 @@ export const StyledEyebrow = styled.p`
   margin: 0;
   text-transform: uppercase;
   letter-spacing: 0.12em;
-  font-size: 1.3rem;
+  font-size: 1.4rem;
   font-weight: 700;
   color: ${({ theme }) => theme.colors.orange[400]};
 `;
@@ -109,22 +105,10 @@ export const StyledSaveHint = styled.span`
   border-radius: 999rem;
   background-color: ${({ theme }) => theme.colors.green[50]};
   color: ${({ theme }) => theme.colors.green[800]};
-  font-size: 1.2rem;
+  font-size: 1.4rem;
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.04em;
-`;
-
-export const StyledSelectedNote = styled.p`
-  margin: 0;
-  font-size: 1.4rem;
-  font-weight: 600;
-  color: ${({ theme }) => theme.colors.navy[200]};
-
-  strong {
-    color: ${({ theme }) => theme.colors.orange[400]};
-    font-weight: 800;
-  }
 `;
 
 /* ---------- plan cards ---------- */
@@ -158,7 +142,8 @@ export const StyledPlanCard = styled.article<{ $featured?: boolean }>`
     $featured ? theme.shadows.lg : theme.shadows.sm};
 
   @media (min-width: ${({ theme }) => theme.breakpoints.lg}) {
-    transform: ${({ $featured }) => ($featured ? "translateY(-1.2rem)" : "none")};
+    transform: ${({ $featured }) =>
+      $featured ? "translateY(-1.2rem)" : "none"};
   }
 `;
 
@@ -169,9 +154,9 @@ export const StyledBadge = styled.span`
   transform: translate(-50%, -50%);
   padding: 0.5rem 1.4rem;
   border-radius: 999rem;
-  background-color: ${({ theme }) => theme.colors.orange[500]};
+  background-color: ${({ theme }) => theme.colors.orange[700]};
   color: ${({ theme }) => theme.colors.concrete[100]};
-  font-size: 1.1rem;
+  font-size: 1.2rem;
   font-weight: 800;
   text-transform: uppercase;
   letter-spacing: 0.08em;
@@ -190,7 +175,7 @@ export const StyledPlanTarget = styled.p`
   font-size: 1.4rem;
   font-weight: 500;
   line-height: 1.5;
-  color: ${({ theme }) => theme.colors.navy[400]};
+  color: ${({ theme }) => theme.colors.navy[500]};
 `;
 
 export const StyledPriceRow = styled.div`
@@ -208,18 +193,32 @@ export const StyledPrice = styled.span`
   color: ${({ theme }) => theme.colors.navy[700]};
 `;
 
+export const StyledPricePrefix = styled.span`
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: ${({ theme }) => theme.colors.navy[600]};
+`;
+
 export const StyledPriceCadence = styled.span`
   font-size: 1.5rem;
   font-weight: 600;
-  color: ${({ theme }) => theme.colors.navy[400]};
+  color: ${({ theme }) => theme.colors.navy[500]};
 `;
 
 export const StyledPriceSub = styled.p`
   margin: 0;
-  font-size: 1.3rem;
+  font-size: 1.4rem;
   font-weight: 600;
   color: ${({ theme }) => theme.colors.green[700]};
   min-height: 1.6rem;
+`;
+
+export const StyledInherits = styled.p`
+  margin: 0.4rem 0 0;
+  font-size: 1.5rem;
+  font-weight: 800;
+  line-height: 1.4;
+  color: ${({ theme }) => theme.colors.navy[700]};
 `;
 
 export const StyledFeatureList = styled.ul`
@@ -248,8 +247,33 @@ export const StyledFeatureItem = styled.li`
   }
 `;
 
-export const StyledPlanCta = styled.a<{ $featured?: boolean }>`
+export const StyledSoonTag = styled.span`
+  display: inline-block;
+  margin-left: 0.8rem;
+  padding: 0.2rem 0.8rem;
+  border: 1px solid ${({ theme }) => theme.colors.navy[400]};
+  border-radius: 999rem;
+  color: ${({ theme }) => theme.colors.navy[600]};
+  font-size: 1.2rem;
+  font-weight: 800;
+  line-height: 1.4;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  white-space: nowrap;
+  vertical-align: middle;
+`;
+
+export const StyledPlanCtaGroup = styled.div`
   margin-top: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 1.2rem;
+`;
+
+export const StyledPlanCta = styled.a<{
+  $featured?: boolean;
+  $disabled?: boolean;
+}>`
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -258,13 +282,14 @@ export const StyledPlanCta = styled.a<{ $featured?: boolean }>`
   border-radius: ${({ theme }) => theme.borderRadius.md};
   border: 0.2rem solid
     ${({ theme, $featured }) =>
-      $featured ? theme.colors.orange[500] : theme.colors.navy[200]};
+      $featured ? theme.colors.orange[700] : theme.colors.navy[200]};
   background-color: ${({ theme, $featured }) =>
-    $featured ? theme.colors.orange[500] : "transparent"};
+    $featured ? theme.colors.orange[700] : "transparent"};
   color: ${({ theme, $featured }) =>
     $featured ? theme.colors.concrete[100] : theme.colors.navy[700]};
   font-size: 1.5rem;
   font-weight: 700;
+  text-align: center;
   text-decoration: none;
   transition:
     background-color 0.15s ease,
@@ -273,15 +298,30 @@ export const StyledPlanCta = styled.a<{ $featured?: boolean }>`
 
   &:hover {
     background-color: ${({ theme, $featured }) =>
-      $featured ? theme.colors.orange[600] : theme.colors.concrete[200]};
+      $featured ? theme.colors.orange[800] : theme.colors.concrete[200]};
     border-color: ${({ theme, $featured }) =>
-      $featured ? theme.colors.orange[600] : theme.colors.navy[400]};
+      $featured ? theme.colors.orange[800] : theme.colors.navy[400]};
   }
 
   &:focus-visible {
     outline: 0.2rem solid ${({ theme }) => theme.colors.orange[500]};
     outline-offset: 0.2rem;
   }
+
+  ${({ $disabled, theme }) =>
+    $disabled &&
+    `
+    cursor: default;
+    opacity: 0.7;
+    background-color: ${theme.colors.concrete[200]};
+    border-color: ${theme.colors.navy[200]};
+    color: ${theme.colors.navy[600]};
+
+    &:hover {
+      background-color: ${theme.colors.concrete[200]};
+      border-color: ${theme.colors.navy[200]};
+    }
+  `}
 `;
 
 /* ---------- zero seat-tax callout ---------- */
@@ -403,31 +443,4 @@ export const StyledFaqAnswer = styled.p`
   line-height: 1.65;
   font-weight: 500;
   color: ${({ theme }) => theme.colors.navy[500]};
-`;
-
-/* ---------- closing waitlist CTA ---------- */
-
-export const StyledCtaSection = styled.section`
-  scroll-margin-top: 8rem;
-  padding: 5.6rem 1.6rem;
-  background: linear-gradient(
-    160deg,
-    ${({ theme }) => theme.colors.navy[500]} 0%,
-    ${({ theme }) => theme.colors.navy[700]} 100%
-  );
-  color: ${({ theme }) => theme.colors.concrete[100]};
-
-  @media (min-width: ${({ theme }) => theme.breakpoints.md}) {
-    padding: 8rem 2.4rem;
-  }
-`;
-
-export const StyledCtaInner = styled.div`
-  width: 100%;
-  max-width: 56rem;
-  margin: 0 auto;
-  text-align: center;
-  display: flex;
-  flex-direction: column;
-  gap: 1.6rem;
 `;

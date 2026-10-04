@@ -9,6 +9,10 @@ import {
   StyledEyebrow,
   StyledMediaImg,
 } from "./Landing.styles";
+import {
+  NO_PER_USER_FEES_BODY,
+  NO_PER_USER_FEES_TITLE,
+} from "../../data/sharedCopy";
 import { GcDashboardMockup } from "./GcDashboardMockup";
 import {
   StyledGcLayout,
@@ -21,15 +25,24 @@ import {
   StyledCalloutText,
 } from "./GcSection.styles";
 
-const GC_POINTS = [
-  "Flat rate per site or portfolio — never per user seat.",
-  "Every subcontractor on your job gets full access for $0.",
-  "Auto-SMS nudges non-compliant foremen every Monday at 7:00 AM.",
-  "1-click OSHA Defense Bundle — an indexed ZIP of every site log.",
+interface GcPoint {
+  text: string;
+}
+
+const GC_POINTS: GcPoint[] = [
+  { text: "Flat rate per site or portfolio — never per user seat." },
+  {
+    text: "Invite subcontractors to your jobsite — no seat fees for the subs.",
+  },
+  { text: "See who has logged a talk today and open each signed PDF." },
+  {
+    text: "Auto-SMS nudges non-compliant foremen every Monday at 7:00 AM.",
+  },
+  { text: "1-click OSHA Defense Bundle — an indexed ZIP of every site log." },
 ];
 
 export const GcSection = () => (
-  <StyledSection $tone="muted" aria-labelledby="gc-heading">
+  <StyledSection $tone="muted" id="for-gcs" aria-labelledby="gc-heading">
     <StyledContainer>
       <StyledSectionHead>
         <StyledEyebrow>For general contractors</StyledEyebrow>
@@ -58,26 +71,20 @@ export const GcSection = () => (
 
         <StyledGcAside>
           <StyledGcList>
-            {GC_POINTS.map((point) => (
-              <StyledGcItem key={point}>
+            {GC_POINTS.map(({ text }) => (
+              <StyledGcItem key={text}>
                 <HiCheck aria-hidden="true" />
-                <span>{point}</span>
+                <span>{text}</span>
               </StyledGcItem>
             ))}
           </StyledGcList>
 
           <StyledCallout>
-            <StyledCalloutTitle>Zero subcontractor seat tax</StyledCalloutTitle>
+            <StyledCalloutTitle>{NO_PER_USER_FEES_TITLE}</StyledCalloutTitle>
             <StyledCalloutText>
-              Legacy platforms charge per user seat, penalizing you for adding
-              trade subcontractors to your project. With <strong>GC Site Pro</strong>{" "}
-              or <strong>GC Portfolio</strong> you pay a flat rate per site or
-              portfolio, and{" "}
-              <strong>
-                every subcontractor on your job gets full access for $0
-              </strong>{" "}
-              — no app-store downloads, no user-billing disputes, 100% site
-              compliance on day one.
+              {NO_PER_USER_FEES_BODY.map(({ text, strong }) =>
+                strong ? <strong key={text}>{text}</strong> : text,
+              )}
             </StyledCalloutText>
           </StyledCallout>
         </StyledGcAside>

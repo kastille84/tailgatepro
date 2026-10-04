@@ -1,0 +1,1750 @@
+// Plain CommonJS — see requireAuth.test.js for why (nested require() sharing).
+const { supabase } = require("../utility/supabaseClient");
+const pdfGenerationQueue = require("./pdfGenerationQueue");
+const storageService = require("./storage");
+const projectsService = require("./projects");
+const companiesService = require("./companies");
+const auditLogService = require("./auditLog");
+const contentSeal = require("../utility/contentSeal");
+const {
+  create,
+  listForCompany,
+  listMonthSummaries,
+  countHiddenForCompany,
+  getById,
+  complete,
+  verifySeal,
+  assertNotCompleted,
+  uploadCrewPhoto,
+  getCrewPhotoUrl,
+  setFinalPdfUrl,
+  getPdfUrl,
+  getDefenseBundleEntries,
+} = require("./meetingLogs");
+
+// contentSeal.js throws if this is unset — set once for the whole file so
+// every describe block below can compute the same seal the service does.
+process.env.MEETING_LOG_SEAL_SECRET = "test-only-seal-secret";
+
+const MEETING_LOG_COLUMNS =
+  "id, project_id, talk_id, foreman_id, company_id, crew_photo_url, final_pdf_url, completed_at, held_at, held_tz_offset, synced_at, created_at, content_seal, sealed_at";
+
+const dbRow = {
+  id: "meeting-1",
+  project_id: "project-1",
+  talk_id: "talk-1",
+  foreman_id: "user-1",
+  company_id: "company-1",
+  crew_photo_url: null,
+  final_pdf_url: null,
+  completed_at: null,
+  held_at: null,
+  synced_at: null,
+  created_at: "2026-09-14T00:00:00.000Z",
+  content_seal: null,
+  sealed_at: null,
+};
+
+const mappedMeetingLog = {
+  id: "meeting-1",
+  projectId: "project-1",
+  talkId: "talk-1",
+  foremanId: "user-1",
+  companyId: "company-1",
+  crewPhotoUrl: null,
+  finalPdfUrl: null,
+  completedAt: null,
+  heldAt: null,
+  heldTzOffset: null,
+  syncedAt: null,
+  createdAt: "2026-09-14T00:00:00.000Z",
+  contentSeal: null,
+  sealedAt: null,
+};
+
+const { encodeCursor, decodeCursor } = require("../utility/cursor");
+
+const fromSpy = vi.spyOn(supabase, "from");
+
+describe("meetingLogs service: create", () => {
+  let projectSingle;
+  let projectEqCompany;
+  let projectEqId;
+  let projectSelect;
+  let insertSingle;
+  let insertSelect;
+  let insertFn;
+
+  beforeEach(() => {
+    projectSingle = vi
+      .fn()
+      .mockResolvedValue({ data: { id: "project-1" }, error: null });
+    projectEqCompany = vi.fn(() => ({ single: projectSingle }));
+    projectEqId = vi.fn(() => ({ eq: projectEqCompany }));
+    projectSelect = vi.fn(() => ({ eq: projectEqId }));
+
+    insertSingle = vi.fn().mockResolvedValue({ data: dbRow, error: null });
+    insertSelect = vi.fn(() => ({ single: insertSingle }));
+    insertFn = vi.fn(() => ({ select: insertSelect }));
+
+    fromSpy.mockReset();
+    fromSpy.mockImplementation((table) => {
+      if (table === "projects") return { select: projectSelect };
+      if (table === "meeting_logs") return { insert: insertFn };
+      throw new Error(`Unexpected table: ${table}`);
+    });
+
+    vi.spyOn(auditLogService, "record").mockReset().mockResolvedValue(undefined);
+  });
+
+  const payload = {
+    id: "meeting-1",
+    companyId: "company-1",
+    projectId: "project-1",
+    talkId: "talk-1",
+    foremanId: "user-1",
+  };
+
+  it("should verify the project belongs to the caller's company, insert the meeting log, and map it to camelCase", async () => {
+    // Act
+    const result = await create(payload);
+
+    // Assert
+    expect(projectSelect).toHaveBeenCalledWith("id");
+    expect(projectEqId).toHaveBeenCalledWith("id", "project-1");
+    expect(projectEqCompany).toHaveBeenCalledWith(
+      "owner_company_id",
+      "company-1",
+    );
+    expect(insertFn).toHaveBeenCalledWith({
+      id: "meeting-1",
+      project_id: "project-1",
+      talk_id: "talk-1",
+      foreman_id: "user-1",
+      company_id: "company-1",
+    });
+    expect(insertSelect).toHaveBeenCalledWith(MEETING_LOG_COLUMNS);
+    expect(result).toEqual(mappedMeetingLog);
+  });
+
+  it("should record a 'created' audit event", async () => {
+    // Act
+    await create(payload);
+
+    // Assert
+    expect(auditLogService.record).toHaveBeenCalledWith({
+      meetingLogId: "meeting-1",
+      eventType: "created",
+      actorId: "user-1",
+      metadata: { projectId: "project-1", talkId: "talk-1" },
+    });
+  });
+
+  it("should default talkId to null when omitted", async () => {
+    // Act
+    await create({ ...payload, talkId: undefined });
+
+    // Assert
+    expect(insertFn).toHaveBeenCalledWith(
+      expect.objectContaining({ talk_id: null }),
+    );
+  });
+
+  it("should throw a 404 AppError when the project doesn't exist or isn't owned by the caller's company", async () => {
+    // Arrange
+    projectSingle.mockResolvedValue({
+      data: null,
+      error: { code: "PGRST116", message: "no rows" },
+    });
+
+    // Act & Assert
+    await expect(create(payload)).rejects.toMatchObject({
+      statusCode: 404,
+      message: "Project not found",
+    });
+    expect(insertFn).not.toHaveBeenCalled();
+  });
+
+  it("should throw a 502 AppError when the project-ownership query fails", async () => {
+    // Arrange
+    projectSingle.mockResolvedValue({ data: null, error: { code: "OTHER" } });
+
+    // Act & Assert
+    await expect(create(payload)).rejects.toMatchObject({
+      statusCode: 502,
+      message: "Could not verify the project",
+    });
+  });
+
+  it("should throw a 409 AppError when the id already exists", async () => {
+    // Arrange
+    insertSingle.mockResolvedValue({ data: null, error: { code: "23505" } });
+
+    // Act & Assert
+    await expect(create(payload)).rejects.toMatchObject({
+      statusCode: 409,
+      message: "This meeting already exists",
+    });
+  });
+
+  it("should throw a 502 AppError on any other insert failure", async () => {
+    // Arrange
+    insertSingle.mockResolvedValue({ data: null, error: { code: "OTHER" } });
+
+    // Act & Assert
+    await expect(create(payload)).rejects.toMatchObject({
+      statusCode: 502,
+      message: "Could not create the meeting",
+    });
+  });
+});
+
+describe("meetingLogs service: listForCompany", () => {
+  let limit;
+  let builder;
+  let select;
+
+  beforeEach(() => {
+    limit = vi.fn().mockResolvedValue({ data: [dbRow], error: null });
+    builder = { limit };
+    builder.eq = vi.fn(() => builder);
+    builder.gte = vi.fn(() => builder);
+    builder.order = vi.fn(() => builder);
+    select = vi.fn(() => builder);
+
+    fromSpy.mockReset();
+    fromSpy.mockImplementation((table) => {
+      if (table === "meeting_logs") return { select };
+      throw new Error(`Unexpected table: ${table}`);
+    });
+  });
+
+  it("should not apply a date cutoff when the plan has no history window", async () => {
+    // Act
+    await listForCompany("company-1");
+
+    // Assert
+    expect(builder.gte).not.toHaveBeenCalled();
+  });
+
+  it("should hide meetings older than the plan's history window", async () => {
+    // Arrange
+    const before = Date.now();
+
+    // Act
+    await listForCompany("company-1", { historyDays: 30 });
+
+    // Assert
+    const [column, cutoff] = builder.gte.mock.calls[0];
+    expect(column).toBe("created_at");
+    const cutoffMs = new Date(cutoff).getTime();
+    const thirtyDays = 30 * 24 * 60 * 60 * 1000;
+    expect(cutoffMs).toBeGreaterThanOrEqual(before - thirtyDays);
+    expect(cutoffMs).toBeLessThanOrEqual(Date.now() - thirtyDays);
+  });
+
+  it("should query every meeting log owned by the caller's company, newest first with an id tiebreaker, mapped to camelCase", async () => {
+    // Act
+    const result = await listForCompany("company-1");
+
+    // Assert
+    expect(select).toHaveBeenCalledWith(MEETING_LOG_COLUMNS);
+    expect(builder.eq).toHaveBeenCalledWith("company_id", "company-1");
+    expect(builder.eq).not.toHaveBeenCalledWith(
+      "project_id",
+      expect.anything(),
+    );
+    expect(builder.order).toHaveBeenNthCalledWith(1, "created_at", { ascending: false });
+    expect(builder.order).toHaveBeenNthCalledWith(2, "id", { ascending: false });
+    expect(result).toEqual({ meetings: [mappedMeetingLog], nextCursor: null });
+  });
+
+  it("should additionally scope by projectId when given", async () => {
+    // Act
+    await listForCompany("company-1", { projectId: "project-1" });
+
+    // Assert
+    expect(builder.eq).toHaveBeenCalledWith("project_id", "project-1");
+  });
+
+  it("should narrow to completed meetings held in a from/to range, newest held first", async () => {
+    // Arrange
+    builder.not = vi.fn(() => builder);
+    builder.or = vi.fn(() => builder);
+
+    // Act
+    await listForCompany("company-1", {
+      from: "2026-09-01T00:00:00.000Z",
+      to: "2026-10-01T00:00:00.000Z",
+    });
+
+    // Assert
+    expect(builder.not).toHaveBeenCalledWith("completed_at", "is", null);
+    expect(builder.or).toHaveBeenCalledWith(
+      "and(held_at.gte.2026-09-01T00:00:00.000Z,held_at.lt.2026-10-01T00:00:00.000Z),and(held_at.is.null,completed_at.gte.2026-09-01T00:00:00.000Z,completed_at.lt.2026-10-01T00:00:00.000Z)",
+    );
+    expect(builder.order).toHaveBeenNthCalledWith(1, "held_at", { ascending: false });
+    expect(builder.order).toHaveBeenNthCalledWith(2, "id", { ascending: false });
+  });
+
+  it("should throw a 502 AppError when the query fails", async () => {
+    // Arrange
+    limit.mockResolvedValue({ data: null, error: new Error("db down") });
+
+    // Act & Assert
+    await expect(listForCompany("company-1")).rejects.toMatchObject({
+      statusCode: 502,
+      message: "Could not load meetings",
+    });
+  });
+
+  describe("pagination", () => {
+    const uuid = (n) => `00000000-0000-4000-8000-${String(n).padStart(12, "0")}`;
+    const rows = (count) =>
+      Array.from({ length: count }, (_, i) => ({
+        ...dbRow,
+        id: uuid(i),
+        created_at: `2026-09-14T00:00:${String(59 - i).padStart(2, "0")}.000Z`,
+      }));
+
+    it("should default to a page of 50 and peek one extra row", async () => {
+      // Act
+      await listForCompany("company-1");
+
+      // Assert
+      expect(limit).toHaveBeenCalledWith(51);
+    });
+
+    it("should honour a smaller limit and clamp one above the ceiling", async () => {
+      // Act
+      await listForCompany("company-1", { limit: 5 });
+      await listForCompany("company-1", { limit: 5000 });
+
+      // Assert
+      expect(limit).toHaveBeenNthCalledWith(1, 6);
+      expect(limit).toHaveBeenNthCalledWith(2, 201);
+    });
+
+    it("should return a nextCursor from the last row of the page when more rows exist", async () => {
+      // Arrange — 3 rows come back for a page size of 2: the third is only the peek.
+      limit.mockResolvedValue({ data: rows(3), error: null });
+
+      // Act
+      const result = await listForCompany("company-1", { limit: 2 });
+
+      // Assert
+      expect(result.meetings.map((m) => m.id)).toEqual([uuid(0), uuid(1)]);
+      expect(decodeCursor(result.nextCursor)).toEqual({
+        value: rows(3)[1].created_at,
+        id: uuid(1),
+      });
+    });
+
+    it("should return a null nextCursor on the last (exactly full) page", async () => {
+      // Arrange
+      limit.mockResolvedValue({ data: rows(2), error: null });
+
+      // Act
+      const result = await listForCompany("company-1", { limit: 2 });
+
+      // Assert
+      expect(result.meetings).toHaveLength(2);
+      expect(result.nextCursor).toBeNull();
+    });
+
+    it("should resume strictly after the cursor on (created_at, id)", async () => {
+      // Arrange
+      builder.or = vi.fn(() => builder);
+      const cursor = encodeCursor({ value: "2026-09-14T00:00:30.000Z", id: uuid(7) });
+
+      // Act
+      await listForCompany("company-1", { cursor });
+
+      // Assert
+      expect(builder.or).toHaveBeenCalledWith(
+        `created_at.lt.2026-09-14T00:00:30.000Z,and(created_at.eq.2026-09-14T00:00:30.000Z,id.lt.${uuid(7)})`,
+      );
+    });
+
+    it("should key the cursor on held_at in the month view and keep the month filter", async () => {
+      // Arrange
+      builder.not = vi.fn(() => builder);
+      builder.or = vi.fn(() => builder);
+      const cursor = encodeCursor({ value: "2026-09-14T00:00:30.000Z", id: uuid(7) });
+
+      // Act
+      await listForCompany("company-1", {
+        from: "2026-09-01T00:00:00.000Z",
+        to: "2026-10-01T00:00:00.000Z",
+        cursor,
+      });
+
+      // Assert — two separate .or() calls: PostgREST ANDs repeated `or` params.
+      expect(builder.or).toHaveBeenCalledTimes(2);
+      expect(builder.or).toHaveBeenLastCalledWith(
+        `held_at.lt.2026-09-14T00:00:30.000Z,and(held_at.eq.2026-09-14T00:00:30.000Z,id.lt.${uuid(7)})`,
+      );
+    });
+
+    it("should keep the history-window cutoff alongside a cursor", async () => {
+      // Arrange
+      builder.or = vi.fn(() => builder);
+      const cursor = encodeCursor({ value: "2026-09-14T00:00:30.000Z", id: uuid(7) });
+
+      // Act
+      await listForCompany("company-1", { historyDays: 30, cursor });
+
+      // Assert
+      expect(builder.gte).toHaveBeenCalledWith("created_at", expect.any(String));
+      expect(builder.or).toHaveBeenCalledTimes(1);
+    });
+
+    it("should reject a malformed cursor with a 400 before querying", async () => {
+      // Act & Assert
+      await expect(
+        listForCompany("company-1", { cursor: "garbage" }),
+      ).rejects.toMatchObject({ statusCode: 400, message: "Invalid cursor" });
+      expect(limit).not.toHaveBeenCalled();
+    });
+  });
+});
+
+describe("meetingLogs service: listMonthSummaries", () => {
+  let range;
+  let builder;
+  let select;
+
+  const row = {
+    held_at: "2026-09-02T12:00:00.000Z",
+    completed_at: "2026-09-02T12:05:00.000Z",
+  };
+
+  beforeEach(() => {
+    range = vi.fn().mockResolvedValue({ data: [], error: null });
+    builder = {};
+    builder.eq = vi.fn(() => builder);
+    builder.not = vi.fn(() => builder);
+    builder.gte = vi.fn(() => builder);
+    builder.order = vi.fn(() => builder);
+    builder.range = range;
+    select = vi.fn(() => builder);
+
+    fromSpy.mockReset();
+    fromSpy.mockImplementation((table) => {
+      if (table === "meeting_logs") return { select };
+      throw new Error(`Unexpected table: ${table}`);
+    });
+  });
+
+  it("should return an empty list when there are no completed meetings", async () => {
+    // Act & Assert
+    await expect(listMonthSummaries("company-1")).resolves.toEqual([]);
+    expect(select).toHaveBeenCalledWith("held_at, completed_at");
+    expect(builder.eq).toHaveBeenCalledWith("company_id", "company-1");
+    expect(builder.not).toHaveBeenCalledWith("completed_at", "is", null);
+    expect(builder.gte).not.toHaveBeenCalled();
+    expect(range).toHaveBeenCalledWith(0, 999);
+  });
+
+  it("should count meetings per held month, newest month first, falling back to completed_at", async () => {
+    // Arrange
+    range.mockResolvedValue({
+      data: [
+        { held_at: "2026-08-15T12:00:00.000Z", completed_at: "2026-08-15T12:05:00.000Z" },
+        row,
+        { held_at: "2026-09-20T12:00:00.000Z", completed_at: "2026-09-20T12:05:00.000Z" },
+        { held_at: null, completed_at: "2026-09-21T12:05:00.000Z" },
+      ],
+      error: null,
+    });
+
+    // Act & Assert
+    await expect(listMonthSummaries("company-1")).resolves.toEqual([
+      { month: "2026-09", count: 3 },
+      { month: "2026-08", count: 1 },
+    ]);
+  });
+
+  it("should bucket by the viewer's local month across a timezone boundary", async () => {
+    // Arrange — 02:00 UTC on Oct 1 is still Sept 30 evening in UTC-5
+    // (tzOffset 300, the Date#getTimezoneOffset sign).
+    range.mockResolvedValue({
+      data: [
+        { held_at: "2026-10-01T02:00:00.000Z", completed_at: "2026-10-01T02:05:00.000Z" },
+      ],
+      error: null,
+    });
+
+    // Act & Assert
+    await expect(
+      listMonthSummaries("company-1", { tzOffset: 300 }),
+    ).resolves.toEqual([{ month: "2026-09", count: 1 }]);
+    await expect(
+      listMonthSummaries("company-1", { tzOffset: 0 }),
+    ).resolves.toEqual([{ month: "2026-10", count: 1 }]);
+  });
+
+  it("should apply the plan's history window", async () => {
+    // Act
+    await listMonthSummaries("company-1", { historyDays: 30 });
+
+    // Assert
+    expect(builder.gte.mock.calls[0][0]).toBe("created_at");
+  });
+
+  it("should page past the 1,000-row response cap", async () => {
+    // Arrange — a full first page forces a second request
+    range
+      .mockResolvedValueOnce({ data: Array(1000).fill(row), error: null })
+      .mockResolvedValueOnce({ data: Array(5).fill(row), error: null });
+
+    // Act & Assert
+    await expect(listMonthSummaries("company-1")).resolves.toEqual([
+      { month: "2026-09", count: 1005 },
+    ]);
+    expect(range).toHaveBeenNthCalledWith(1, 0, 999);
+    expect(range).toHaveBeenNthCalledWith(2, 1000, 1999);
+  });
+
+  it("should throw a 502 AppError when the query fails", async () => {
+    // Arrange
+    range.mockResolvedValue({ data: null, error: new Error("db down") });
+
+    // Act & Assert
+    await expect(listMonthSummaries("company-1")).rejects.toMatchObject({
+      statusCode: 502,
+      message: "Could not load meetings",
+    });
+  });
+});
+
+describe("meetingLogs service: countHiddenForCompany", () => {
+  let result;
+  let builder;
+  let select;
+
+  beforeEach(() => {
+    result = { count: 4, error: null };
+    builder = {};
+    builder.eq = vi.fn(() => builder);
+    builder.lt = vi.fn(() => builder);
+    // The query is awaited directly, so the builder itself is thenable.
+    builder.then = (resolve) => resolve(result);
+    select = vi.fn(() => builder);
+
+    fromSpy.mockReset();
+    fromSpy.mockImplementation((table) => {
+      if (table === "meeting_logs") return { select };
+      throw new Error(`Unexpected table: ${table}`);
+    });
+  });
+
+  it("should return 0 without querying when the plan has no history window", async () => {
+    // Act
+    const count = await countHiddenForCompany("company-1");
+
+    // Assert
+    expect(count).toBe(0);
+    expect(fromSpy).not.toHaveBeenCalled();
+  });
+
+  it("should count the company's rows older than the history window", async () => {
+    // Act
+    const count = await countHiddenForCompany("company-1", { historyDays: 30 });
+
+    // Assert
+    expect(select).toHaveBeenCalledWith("id", { count: "exact", head: true });
+    expect(builder.eq).toHaveBeenCalledWith("company_id", "company-1");
+    expect(builder.eq).not.toHaveBeenCalledWith("project_id", expect.anything());
+    const [column, cutoff] = builder.lt.mock.calls[0];
+    expect(column).toBe("created_at");
+    expect(new Date(cutoff).getTime()).toBeLessThanOrEqual(
+      Date.now() - 30 * 24 * 60 * 60 * 1000,
+    );
+    expect(count).toBe(4);
+  });
+
+  it("should additionally scope by projectId when given", async () => {
+    // Act
+    await countHiddenForCompany("company-1", { projectId: "project-1", historyDays: 30 });
+
+    // Assert
+    expect(builder.eq).toHaveBeenCalledWith("project_id", "project-1");
+  });
+
+  it("should treat a null count as 0", async () => {
+    // Arrange
+    result = { count: null, error: null };
+
+    // Act & Assert
+    await expect(countHiddenForCompany("company-1", { historyDays: 30 })).resolves.toBe(0);
+  });
+
+  it("should throw a 502 AppError when the query fails", async () => {
+    // Arrange
+    result = { count: null, error: new Error("db down") };
+
+    // Act & Assert
+    await expect(
+      countHiddenForCompany("company-1", { historyDays: 30 }),
+    ).rejects.toMatchObject({
+      statusCode: 502,
+      message: "Could not load meetings",
+    });
+  });
+});
+
+describe("meetingLogs service: getById", () => {
+  let single;
+  let eqCompany;
+  let eqId;
+  let select;
+
+  beforeEach(() => {
+    single = vi.fn().mockResolvedValue({ data: dbRow, error: null });
+    eqCompany = vi.fn(() => ({ single }));
+    eqId = vi.fn(() => ({ eq: eqCompany }));
+    select = vi.fn(() => ({ eq: eqId }));
+
+    fromSpy.mockReset();
+    fromSpy.mockImplementation((table) => {
+      if (table === "meeting_logs") return { select };
+      throw new Error(`Unexpected table: ${table}`);
+    });
+  });
+
+  it("should fetch one meeting log scoped to the caller's company, mapped to camelCase", async () => {
+    // Act
+    const result = await getById("meeting-1", "company-1");
+
+    // Assert
+    expect(select).toHaveBeenCalledWith(MEETING_LOG_COLUMNS);
+    expect(eqId).toHaveBeenCalledWith("id", "meeting-1");
+    expect(eqCompany).toHaveBeenCalledWith("company_id", "company-1");
+    expect(result).toEqual(mappedMeetingLog);
+  });
+
+  it("should throw a 403 PLAN_LIMIT AppError for a meeting older than the plan's history window", async () => {
+    // Arrange
+    single.mockResolvedValue({
+      data: { ...dbRow, created_at: new Date(Date.now() - 31 * 24 * 60 * 60 * 1000).toISOString() },
+      error: null,
+    });
+
+    // Act & Assert
+    await expect(
+      getById("meeting-1", "company-1", { historyDays: 30 }),
+    ).rejects.toMatchObject({
+      statusCode: 403,
+      data: { code: "PLAN_LIMIT", limit: 30 },
+    });
+  });
+
+  it("should return a meeting inside the plan's history window", async () => {
+    // Arrange
+    single.mockResolvedValue({
+      data: { ...dbRow, created_at: new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString() },
+      error: null,
+    });
+
+    // Act
+    const result = await getById("meeting-1", "company-1", { historyDays: 30 });
+
+    // Assert
+    expect(result.id).toBe("meeting-1");
+  });
+
+  it("should throw a 404 AppError when no row matches the id and company", async () => {
+    // Arrange
+    single.mockResolvedValue({ data: null, error: { code: "PGRST116" } });
+
+    // Act & Assert
+    await expect(getById("missing", "company-1")).rejects.toMatchObject({
+      statusCode: 404,
+      message: "Meeting not found",
+    });
+  });
+
+  it("should throw a 502 AppError on any other query failure", async () => {
+    // Arrange
+    single.mockResolvedValue({ data: null, error: { code: "OTHER" } });
+
+    // Act & Assert
+    await expect(getById("meeting-1", "company-1")).rejects.toMatchObject({
+      statusCode: 502,
+      message: "Could not load the meeting",
+    });
+  });
+});
+
+describe("meetingLogs service: assertNotCompleted", () => {
+  let single;
+  let eqCompany;
+  let eqId;
+  let select;
+
+  beforeEach(() => {
+    single = vi.fn().mockResolvedValue({
+      data: {
+        id: "meeting-1",
+        project_id: "project-1",
+        talk_id: "talk-1",
+        foreman_id: "user-1",
+        crew_photo_url: null,
+        completed_at: null,
+      },
+      error: null,
+    });
+    eqCompany = vi.fn(() => ({ single }));
+    eqId = vi.fn(() => ({ eq: eqCompany }));
+    select = vi.fn(() => ({ eq: eqId }));
+
+    fromSpy.mockReset();
+    fromSpy.mockImplementation((table) => {
+      if (table === "meeting_logs") return { select };
+      throw new Error(`Unexpected table: ${table}`);
+    });
+  });
+
+  it("should return the meeting's fields when it exists, is owned by the caller's company, and isn't completed", async () => {
+    // Act
+    const result = await assertNotCompleted("meeting-1", "company-1");
+
+    // Assert
+    expect(select).toHaveBeenCalledWith(
+      "id, project_id, talk_id, foreman_id, crew_photo_url, completed_at",
+    );
+    expect(result).toEqual({
+      id: "meeting-1",
+      projectId: "project-1",
+      talkId: "talk-1",
+      foremanId: "user-1",
+      crewPhotoUrl: null,
+    });
+  });
+
+  it("should throw a 409 AppError when the meeting is already completed", async () => {
+    // Arrange
+    single.mockResolvedValue({
+      data: {
+        id: "meeting-1",
+        project_id: "project-1",
+        talk_id: "talk-1",
+        foreman_id: "user-1",
+        crew_photo_url: null,
+        completed_at: "2026-09-13T00:00:00.000Z",
+      },
+      error: null,
+    });
+
+    // Act & Assert
+    await expect(
+      assertNotCompleted("meeting-1", "company-1"),
+    ).rejects.toMatchObject({
+      statusCode: 409,
+      message: "This meeting has already been completed and can't be changed.",
+    });
+  });
+
+  it("should throw a 404 AppError when no row matches the id and company", async () => {
+    // Arrange
+    single.mockResolvedValue({ data: null, error: { code: "PGRST116" } });
+
+    // Act & Assert
+    await expect(
+      assertNotCompleted("missing", "company-1"),
+    ).rejects.toMatchObject({ statusCode: 404, message: "Meeting not found" });
+  });
+
+  it("should throw a 502 AppError on any other query failure", async () => {
+    // Arrange
+    single.mockResolvedValue({ data: null, error: { code: "OTHER" } });
+
+    // Act & Assert
+    await expect(
+      assertNotCompleted("meeting-1", "company-1"),
+    ).rejects.toMatchObject({
+      statusCode: 502,
+      message: "Could not verify the meeting's status",
+    });
+  });
+});
+
+describe("meetingLogs service: complete", () => {
+  let guardSingle;
+  let guardEqCompany;
+  let guardEqId;
+  let guardSelect;
+
+  let sigEq;
+  let sigSelect;
+
+  let updateSingle;
+  let updateSelectAfter;
+  let updateEqCompany;
+  let updateEqId;
+  let updateFn;
+
+  const receiptTime = "2026-09-21T12:00:00.000Z";
+
+  const guardRow = {
+    id: "meeting-1",
+    project_id: "project-1",
+    talk_id: "talk-1",
+    foreman_id: "user-1",
+    crew_photo_url: null,
+    completed_at: null,
+  };
+  const sigRows = [
+    { id: "sig-1", worker_name: "Jane Doe", quiz_score: 3, quiz_passed: true },
+  ];
+
+  // The exact seal the service should compute for a given held_at, given the
+  // fixed guardRow/sigRows/companyId/receiptTime above — computed the same
+  // way the service does, rather than hardcoded, so this test doesn't break
+  // if the canonical payload's JSON formatting ever changes.
+  const expectedSeal = (heldAt) =>
+    contentSeal.computeSeal(
+      contentSeal.buildCanonicalPayload({
+        meetingLog: {
+          id: "meeting-1",
+          projectId: "project-1",
+          talkId: "talk-1",
+          companyId: "company-1",
+          foremanId: "user-1",
+          crewPhotoUrl: null,
+          heldAt,
+          completedAt: receiptTime,
+        },
+        signatures: [
+          { id: "sig-1", workerName: "Jane Doe", quizScore: 3, quizPassed: true },
+        ],
+      }),
+    );
+
+  // held_at deliberately differs from completed_at (the meeting was held the
+  // evening before it synced), so a test can't pass by reading the wrong column.
+  const completedRow = {
+    ...dbRow,
+    completed_at: "2026-09-14T01:00:00.000Z",
+    held_at: "2026-09-13T22:30:00.000Z",
+    content_seal: "stored-seal",
+    sealed_at: "2026-09-14T01:00:00.000Z",
+  };
+  const mappedCompleted = {
+    ...mappedMeetingLog,
+    completedAt: "2026-09-14T01:00:00.000Z",
+    heldAt: "2026-09-13T22:30:00.000Z",
+    contentSeal: "stored-seal",
+    sealedAt: "2026-09-14T01:00:00.000Z",
+  };
+
+  beforeEach(() => {
+    guardSingle = vi.fn().mockResolvedValue({ data: guardRow, error: null });
+    guardEqCompany = vi.fn(() => ({ single: guardSingle }));
+    guardEqId = vi.fn(() => ({ eq: guardEqCompany }));
+    guardSelect = vi.fn(() => ({ eq: guardEqId }));
+
+    sigEq = vi.fn().mockResolvedValue({ data: sigRows, error: null });
+    sigSelect = vi.fn(() => ({ eq: sigEq }));
+
+    updateSingle = vi.fn().mockResolvedValue({ data: completedRow, error: null });
+    updateSelectAfter = vi.fn(() => ({ single: updateSingle }));
+    updateEqCompany = vi.fn(() => ({ select: updateSelectAfter }));
+    updateEqId = vi.fn(() => ({ eq: updateEqCompany }));
+    updateFn = vi.fn(() => ({ eq: updateEqId }));
+
+    fromSpy.mockReset();
+    fromSpy.mockImplementation((table) => {
+      if (table === "meeting_logs") {
+        return { select: guardSelect, update: updateFn };
+      }
+      if (table === "signatures") return { select: sigSelect };
+      throw new Error(`Unexpected table: ${table}`);
+    });
+
+    vi.spyOn(pdfGenerationQueue, "enqueue").mockReset().mockResolvedValue(undefined);
+    vi.spyOn(auditLogService, "record").mockReset().mockResolvedValue(undefined);
+
+    // Pin "server receipt" so the stamped timestamps can be asserted exactly.
+    vi.useFakeTimers({ toFake: ["Date"] });
+    vi.setSystemTime(new Date(receiptTime));
+  });
+
+  afterEach(() => {
+    vi.useRealTimers();
+  });
+
+  it("should complete a meeting with >=1 signature, stamp completed_at/held_at/content_seal/sealed_at, record a 'completed' audit event, and enqueue PDF generation", async () => {
+    // Act
+    const result = await complete({
+      id: "meeting-1",
+      companyId: "company-1",
+      actorId: "user-2",
+    });
+
+    // Assert
+    expect(guardEqId).toHaveBeenCalledWith("id", "meeting-1");
+    expect(guardEqCompany).toHaveBeenCalledWith("company_id", "company-1");
+    expect(sigEq).toHaveBeenCalledWith("meeting_id", "meeting-1");
+    expect(sigSelect).toHaveBeenCalledWith("id, worker_name, quiz_score, quiz_passed");
+    expect(updateFn).toHaveBeenCalledWith({
+      completed_at: receiptTime,
+      held_at: receiptTime,
+      held_tz_offset: null,
+      content_seal: expectedSeal(receiptTime),
+      sealed_at: receiptTime,
+    });
+    expect(updateEqId).toHaveBeenCalledWith("id", "meeting-1");
+    expect(updateEqCompany).toHaveBeenCalledWith("company_id", "company-1");
+    expect(auditLogService.record).toHaveBeenCalledWith({
+      meetingLogId: "meeting-1",
+      eventType: "completed",
+      actorId: "user-2",
+      metadata: { signatureCount: 1 },
+    });
+    expect(pdfGenerationQueue.enqueue).toHaveBeenCalledWith(
+      "meeting-1",
+      "company-1",
+    );
+    expect(result).toEqual(mappedCompleted);
+  });
+
+  it("should default actorId to null on the audit event when the caller omits it", async () => {
+    // Act
+    await complete({ id: "meeting-1", companyId: "company-1" });
+
+    // Assert
+    expect(auditLogService.record).toHaveBeenCalledWith(
+      expect.objectContaining({ actorId: null }),
+    );
+  });
+
+  it("should seal against the client-reported held_at, separate from the server-receipt completed_at, when one is given", async () => {
+    // Arrange — an offline crew held the meeting the previous evening
+    const heldAt = "2026-09-20T22:30:00.000Z";
+
+    // Act
+    await complete({ id: "meeting-1", companyId: "company-1", heldAt });
+
+    // Assert
+    expect(updateFn).toHaveBeenCalledWith({
+      completed_at: receiptTime,
+      held_at: heldAt,
+      held_tz_offset: null,
+      content_seal: expectedSeal(heldAt),
+      sealed_at: receiptTime,
+    });
+  });
+
+  it("should store the foreman's timezone offset alongside held_at, outside the seal", async () => {
+    // Arrange
+    const heldAt = "2026-09-20T22:30:00.000Z";
+
+    // Act
+    await complete({
+      id: "meeting-1",
+      companyId: "company-1",
+      heldAt,
+      heldTzOffset: 420,
+    });
+
+    // Assert � same seal as without an offset: it's display-only
+    expect(updateFn).toHaveBeenCalledWith({
+      completed_at: receiptTime,
+      held_at: heldAt,
+      held_tz_offset: 420,
+      content_seal: expectedSeal(heldAt),
+      sealed_at: receiptTime,
+    });
+  });
+
+  it("should still complete, storing a null offset, when the reported offset is out of range", async () => {
+    // Act
+    await complete({ id: "meeting-1", companyId: "company-1", heldTzOffset: 9999 });
+
+    // Assert
+    expect(updateFn).toHaveBeenCalledWith(
+      expect.objectContaining({ held_tz_offset: null }),
+    );
+  });
+
+  it("should still complete, falling back to receipt time, when the reported held_at is older than the backdate limit", async () => {
+    // Arrange — 10 days old. Rejecting would strand the completion in the
+    // client's retry-forever outbox, so it must succeed instead.
+    const tooOld = "2026-09-11T12:00:00.000Z";
+
+    // Act
+    const result = await complete({
+      id: "meeting-1",
+      companyId: "company-1",
+      heldAt: tooOld,
+    });
+
+    // Assert
+    expect(updateFn).toHaveBeenCalledWith({
+      completed_at: receiptTime,
+      held_at: receiptTime,
+      held_tz_offset: null,
+      content_seal: expectedSeal(receiptTime),
+      sealed_at: receiptTime,
+    });
+    expect(pdfGenerationQueue.enqueue).toHaveBeenCalledWith("meeting-1", "company-1");
+    expect(result).toEqual(mappedCompleted);
+  });
+
+  it("should still complete, falling back to receipt time, when the reported held_at is in the future", async () => {
+    // Act
+    await complete({
+      id: "meeting-1",
+      companyId: "company-1",
+      heldAt: "2026-09-22T12:00:00.000Z",
+    });
+
+    // Assert
+    expect(updateFn).toHaveBeenCalledWith({
+      completed_at: receiptTime,
+      held_at: receiptTime,
+      held_tz_offset: null,
+      content_seal: expectedSeal(receiptTime),
+      sealed_at: receiptTime,
+    });
+  });
+
+  it("should map heldAt to completedAt when the completed row's held_at was never populated", async () => {
+    // Arrange — a legacy completed row from before held_at existed
+    updateSingle.mockResolvedValue({
+      data: { ...completedRow, held_at: null },
+      error: null,
+    });
+
+    // Act
+    const result = await complete({ id: "meeting-1", companyId: "company-1" });
+
+    // Assert
+    expect(result.heldAt).toBe("2026-09-14T01:00:00.000Z");
+    expect(result.completedAt).toBe("2026-09-14T01:00:00.000Z");
+  });
+
+  it("should throw a 409 AppError when the meeting is already completed, without checking signatures", async () => {
+    // Arrange
+    guardSingle.mockResolvedValue({
+      data: { ...guardRow, completed_at: "2026-09-13T00:00:00.000Z" },
+      error: null,
+    });
+
+    // Act & Assert
+    await expect(
+      complete({ id: "meeting-1", companyId: "company-1" }),
+    ).rejects.toMatchObject({
+      statusCode: 409,
+      message: "This meeting has already been completed and can't be changed.",
+    });
+    expect(sigSelect).not.toHaveBeenCalled();
+  });
+
+  it("should throw a 404 AppError when the meeting doesn't exist or isn't owned by the caller's company", async () => {
+    // Arrange
+    guardSingle.mockResolvedValue({ data: null, error: { code: "PGRST116" } });
+
+    // Act & Assert
+    await expect(
+      complete({ id: "meeting-1", companyId: "company-1" }),
+    ).rejects.toMatchObject({ statusCode: 404, message: "Meeting not found" });
+  });
+
+  it("should throw a 409 AppError when the meeting has zero signatures, without updating meeting_logs", async () => {
+    // Arrange
+    sigEq.mockResolvedValue({ data: [], error: null });
+
+    // Act & Assert
+    await expect(
+      complete({ id: "meeting-1", companyId: "company-1" }),
+    ).rejects.toMatchObject({
+      statusCode: 409,
+      message: "A meeting needs at least one signature before it can be completed.",
+    });
+    expect(updateFn).not.toHaveBeenCalled();
+  });
+
+  it("should throw a 502 AppError when the signatures check fails", async () => {
+    // Arrange
+    sigEq.mockResolvedValue({ data: null, error: new Error("db down") });
+
+    // Act & Assert
+    await expect(
+      complete({ id: "meeting-1", companyId: "company-1" }),
+    ).rejects.toMatchObject({
+      statusCode: 502,
+      message: "Could not verify the meeting has signatures",
+    });
+  });
+
+  it("should throw a 502 AppError when the final update fails, without recording an audit event or enqueuing a PDF", async () => {
+    // Arrange
+    updateSingle.mockResolvedValue({ data: null, error: { code: "OTHER" } });
+
+    // Act & Assert
+    await expect(
+      complete({ id: "meeting-1", companyId: "company-1" }),
+    ).rejects.toMatchObject({
+      statusCode: 502,
+      message: "Could not complete the meeting",
+    });
+    expect(auditLogService.record).not.toHaveBeenCalled();
+    expect(pdfGenerationQueue.enqueue).not.toHaveBeenCalled();
+  });
+});
+
+describe("meetingLogs service: verifySeal", () => {
+  let single;
+  let eqCompany;
+  let eqId;
+  let select;
+
+  let sigEq;
+  let sigSelect;
+
+  const sealedRow = {
+    id: "meeting-1",
+    project_id: "project-1",
+    talk_id: "talk-1",
+    foreman_id: "user-1",
+    crew_photo_url: null,
+    held_at: "2026-09-14T01:00:00.000Z",
+    completed_at: "2026-09-14T01:00:00.000Z",
+    content_seal: null, // set per-test to either a valid or tampered value
+    sealed_at: "2026-09-14T01:00:00.000Z",
+  };
+  const sigRows = [
+    { id: "sig-1", worker_name: "Jane Doe", quiz_score: 3, quiz_passed: true },
+  ];
+
+  const validSeal = contentSeal.computeSeal(
+    contentSeal.buildCanonicalPayload({
+      meetingLog: {
+        id: "meeting-1",
+        projectId: "project-1",
+        talkId: "talk-1",
+        companyId: "company-1",
+        foremanId: "user-1",
+        crewPhotoUrl: null,
+        heldAt: "2026-09-14T01:00:00.000Z",
+        completedAt: "2026-09-14T01:00:00.000Z",
+      },
+      signatures: [
+        { id: "sig-1", workerName: "Jane Doe", quizScore: 3, quizPassed: true },
+      ],
+    }),
+  );
+
+  beforeEach(() => {
+    single = vi
+      .fn()
+      .mockResolvedValue({ data: { ...sealedRow, content_seal: validSeal }, error: null });
+    eqCompany = vi.fn(() => ({ single }));
+    eqId = vi.fn(() => ({ eq: eqCompany }));
+    select = vi.fn(() => ({ eq: eqId }));
+
+    sigEq = vi.fn().mockResolvedValue({ data: sigRows, error: null });
+    sigSelect = vi.fn(() => ({ eq: sigEq }));
+
+    fromSpy.mockReset();
+    fromSpy.mockImplementation((table) => {
+      if (table === "meeting_logs") return { select };
+      if (table === "signatures") return { select: sigSelect };
+      throw new Error(`Unexpected table: ${table}`);
+    });
+
+    vi.spyOn(auditLogService, "record").mockReset().mockResolvedValue(undefined);
+  });
+
+  it("should return valid:true and record a seal_verified audit event when the recomputed seal matches", async () => {
+    // Act
+    const result = await verifySeal("meeting-1", "company-1", "user-2");
+
+    // Assert
+    expect(eqId).toHaveBeenCalledWith("id", "meeting-1");
+    expect(eqCompany).toHaveBeenCalledWith("company_id", "company-1");
+    expect(result).toEqual({ valid: true, sealedAt: "2026-09-14T01:00:00.000Z" });
+    expect(auditLogService.record).toHaveBeenCalledWith({
+      meetingLogId: "meeting-1",
+      eventType: "seal_verified",
+      actorId: "user-2",
+      metadata: { valid: true, via: "sub" },
+    });
+  });
+
+  it("should return valid:true when held_at/completed_at come back from the DB in a different lexical timestamp format than what was used to compute the stored seal (regression: PostgREST's timestamptz round-trip vs. the JS Date#toISOString() used at seal time must not read as tampering)", async () => {
+    // Arrange — same instants as sealedRow's held_at/completed_at
+    // ("2026-09-14T01:00:00.000Z"), but formatted the way Postgres/PostgREST
+    // actually returns a TIMESTAMPTZ column (offset instead of "Z", no
+    // fractional digits since it's exactly zero).
+    single.mockResolvedValue({
+      data: {
+        ...sealedRow,
+        content_seal: validSeal,
+        held_at: "2026-09-14T01:00:00+00:00",
+        completed_at: "2026-09-14T01:00:00+00:00",
+      },
+      error: null,
+    });
+
+    // Act
+    const result = await verifySeal("meeting-1", "company-1");
+
+    // Assert
+    expect(result.valid).toBe(true);
+  });
+
+  it("should return valid:false when the stored seal no longer matches the row's current fields", async () => {
+    // Arrange — a field changed after sealing (a direct DB edit, e.g. a
+    // service-role write bypassing the app)
+    single.mockResolvedValue({
+      data: { ...sealedRow, content_seal: validSeal, talk_id: "talk-tampered" },
+      error: null,
+    });
+
+    // Act
+    const result = await verifySeal("meeting-1", "company-1");
+
+    // Assert
+    expect(result.valid).toBe(false);
+    expect(auditLogService.record).toHaveBeenCalledWith(
+      expect.objectContaining({ metadata: { valid: false, via: "sub" } }),
+    );
+  });
+
+  it("should throw a 404 AppError when the meeting hasn't been sealed yet", async () => {
+    // Arrange
+    single.mockResolvedValue({ data: { ...sealedRow, content_seal: null }, error: null });
+
+    // Act & Assert
+    await expect(verifySeal("meeting-1", "company-1")).rejects.toMatchObject({
+      statusCode: 404,
+      message: "This meeting hasn't been sealed yet",
+    });
+    expect(sigSelect).not.toHaveBeenCalled();
+    expect(auditLogService.record).not.toHaveBeenCalled();
+  });
+
+  it("should throw a 404 AppError when no row matches the id and company", async () => {
+    // Arrange
+    single.mockResolvedValue({ data: null, error: { code: "PGRST116" } });
+
+    // Act & Assert
+    await expect(verifySeal("missing", "company-1")).rejects.toMatchObject({
+      statusCode: 404,
+      message: "Meeting not found",
+    });
+  });
+
+  it("should throw a 502 AppError when loading the meeting fails", async () => {
+    // Arrange
+    single.mockResolvedValue({ data: null, error: { code: "OTHER" } });
+
+    // Act & Assert
+    await expect(verifySeal("meeting-1", "company-1")).rejects.toMatchObject({
+      statusCode: 502,
+      message: "Could not load the meeting",
+    });
+  });
+
+  it("should throw a 502 AppError when loading the signatures fails", async () => {
+    // Arrange
+    sigEq.mockResolvedValue({ data: null, error: new Error("db down") });
+
+    // Act & Assert
+    await expect(verifySeal("meeting-1", "company-1")).rejects.toMatchObject({
+      statusCode: 502,
+      message: "Could not verify the meeting's signatures",
+    });
+  });
+});
+
+describe("meetingLogs service: uploadCrewPhoto", () => {
+  let guardSingle;
+  let guardEqCompany;
+  let guardEqId;
+  let guardSelect;
+
+  let updateSingle;
+  let updateSelectAfter;
+  let updateEqCompany;
+  let updateEqId;
+  let updateFn;
+
+  const photoRow = { ...dbRow, crew_photo_url: "meeting-1/photo.jpg" };
+  const mappedPhoto = { ...mappedMeetingLog, crewPhotoUrl: "meeting-1/photo.jpg" };
+
+  beforeEach(() => {
+    guardSingle = vi.fn().mockResolvedValue({
+      data: { id: "meeting-1", talk_id: "talk-1", completed_at: null },
+      error: null,
+    });
+    guardEqCompany = vi.fn(() => ({ single: guardSingle }));
+    guardEqId = vi.fn(() => ({ eq: guardEqCompany }));
+    guardSelect = vi.fn(() => ({ eq: guardEqId }));
+
+    updateSingle = vi.fn().mockResolvedValue({ data: photoRow, error: null });
+    updateSelectAfter = vi.fn(() => ({ single: updateSingle }));
+    updateEqCompany = vi.fn(() => ({ select: updateSelectAfter }));
+    updateEqId = vi.fn(() => ({ eq: updateEqCompany }));
+    updateFn = vi.fn(() => ({ eq: updateEqId }));
+
+    fromSpy.mockReset();
+    fromSpy.mockImplementation((table) => {
+      if (table === "meeting_logs") return { select: guardSelect, update: updateFn };
+      throw new Error(`Unexpected table: ${table}`);
+    });
+
+    vi.spyOn(storageService, "uploadBlob").mockReset().mockResolvedValue(undefined);
+  });
+
+  it("should confirm the meeting isn't completed, upload to its deterministic path, and persist crew_photo_url", async () => {
+    // Act
+    const result = await uploadCrewPhoto({
+      id: "meeting-1",
+      companyId: "company-1",
+      buffer: Buffer.from("jpg-bytes"),
+      contentType: "image/jpeg",
+    });
+
+    // Assert
+    expect(guardEqId).toHaveBeenCalledWith("id", "meeting-1");
+    expect(storageService.uploadBlob).toHaveBeenCalledWith(
+      "crew-photos",
+      "meeting-1/photo.jpg",
+      Buffer.from("jpg-bytes"),
+      "image/jpeg",
+    );
+    expect(updateFn).toHaveBeenCalledWith({ crew_photo_url: "meeting-1/photo.jpg" });
+    expect(result).toEqual(mappedPhoto);
+  });
+
+  it("should throw a 409 AppError when the meeting is already completed, without uploading", async () => {
+    // Arrange
+    guardSingle.mockResolvedValue({
+      data: {
+        id: "meeting-1",
+        talk_id: "talk-1",
+        completed_at: "2026-09-13T00:00:00.000Z",
+      },
+      error: null,
+    });
+
+    // Act & Assert
+    await expect(
+      uploadCrewPhoto({
+        id: "meeting-1",
+        companyId: "company-1",
+        buffer: Buffer.from("x"),
+        contentType: "image/jpeg",
+      }),
+    ).rejects.toMatchObject({ statusCode: 409 });
+    expect(storageService.uploadBlob).not.toHaveBeenCalled();
+  });
+
+  it("should throw a 502 AppError when persisting crew_photo_url fails", async () => {
+    // Arrange
+    updateSingle.mockResolvedValue({ data: null, error: { code: "OTHER" } });
+
+    // Act & Assert
+    await expect(
+      uploadCrewPhoto({
+        id: "meeting-1",
+        companyId: "company-1",
+        buffer: Buffer.from("x"),
+        contentType: "image/jpeg",
+      }),
+    ).rejects.toMatchObject({
+      statusCode: 502,
+      message: "Could not save the crew photo",
+    });
+  });
+});
+
+describe("meetingLogs service: getCrewPhotoUrl", () => {
+  let single;
+  let eqCompany;
+  let eqId;
+  let select;
+
+  beforeEach(() => {
+    single = vi.fn().mockResolvedValue({
+      data: { ...dbRow, crew_photo_url: "meeting-1/photo.jpg" },
+      error: null,
+    });
+    eqCompany = vi.fn(() => ({ single }));
+    eqId = vi.fn(() => ({ eq: eqCompany }));
+    select = vi.fn(() => ({ eq: eqId }));
+
+    fromSpy.mockReset();
+    fromSpy.mockImplementation((table) => {
+      if (table === "meeting_logs") return { select };
+      throw new Error(`Unexpected table: ${table}`);
+    });
+
+    vi.spyOn(storageService, "getSignedUrl")
+      .mockReset()
+      .mockResolvedValue("https://signed.example/photo.jpg");
+  });
+
+  it("should return a 5-minute signed URL for an existing crew photo", async () => {
+    // Act
+    const url = await getCrewPhotoUrl("meeting-1", "company-1");
+
+    // Assert
+    expect(storageService.getSignedUrl).toHaveBeenCalledWith(
+      "crew-photos",
+      "meeting-1/photo.jpg",
+      300,
+    );
+    expect(url).toBe("https://signed.example/photo.jpg");
+  });
+
+  it("should throw a 404 AppError when the meeting has no crew photo yet", async () => {
+    // Arrange
+    single.mockResolvedValue({ data: dbRow, error: null }); // crew_photo_url: null
+
+    // Act & Assert
+    await expect(getCrewPhotoUrl("meeting-1", "company-1")).rejects.toMatchObject({
+      statusCode: 404,
+      message: "No crew photo has been uploaded for this meeting",
+    });
+    expect(storageService.getSignedUrl).not.toHaveBeenCalled();
+  });
+
+  it("should propagate the meeting-not-found error", async () => {
+    // Arrange
+    single.mockResolvedValue({ data: null, error: { code: "PGRST116" } });
+
+    // Act & Assert
+    await expect(getCrewPhotoUrl("missing", "company-1")).rejects.toMatchObject({
+      statusCode: 404,
+      message: "Meeting not found",
+    });
+  });
+});
+
+describe("meetingLogs service: setFinalPdfUrl", () => {
+  let eqCompany;
+  let eqId;
+  let updateFn;
+
+  beforeEach(() => {
+    eqCompany = vi.fn().mockResolvedValue({ error: null });
+    eqId = vi.fn(() => ({ eq: eqCompany }));
+    updateFn = vi.fn(() => ({ eq: eqId }));
+
+    fromSpy.mockReset();
+    fromSpy.mockImplementation((table) => {
+      if (table === "meeting_logs") return { update: updateFn };
+      throw new Error(`Unexpected table: ${table}`);
+    });
+  });
+
+  it("should persist final_pdf_url scoped to the meeting's company", async () => {
+    // Act
+    await setFinalPdfUrl("meeting-1", "company-1", "meeting-1/report.pdf");
+
+    // Assert
+    expect(updateFn).toHaveBeenCalledWith({
+      final_pdf_url: "meeting-1/report.pdf",
+    });
+    expect(eqId).toHaveBeenCalledWith("id", "meeting-1");
+    expect(eqCompany).toHaveBeenCalledWith("company_id", "company-1");
+  });
+
+  it("should throw a 502 AppError when the update fails", async () => {
+    // Arrange
+    eqCompany.mockResolvedValue({ error: new Error("db down") });
+
+    // Act & Assert
+    await expect(
+      setFinalPdfUrl("meeting-1", "company-1", "meeting-1/report.pdf"),
+    ).rejects.toMatchObject({
+      statusCode: 502,
+      message: "Could not save the generated PDF",
+    });
+  });
+});
+
+describe("meetingLogs service: getPdfUrl", () => {
+  let single;
+  let eqCompany;
+  let eqId;
+  let select;
+
+  beforeEach(() => {
+    single = vi.fn().mockResolvedValue({
+      data: { ...dbRow, final_pdf_url: "meeting-1/report.pdf" },
+      error: null,
+    });
+    eqCompany = vi.fn(() => ({ single }));
+    eqId = vi.fn(() => ({ eq: eqCompany }));
+    select = vi.fn(() => ({ eq: eqId }));
+
+    fromSpy.mockReset();
+    fromSpy.mockImplementation((table) => {
+      if (table === "meeting_logs") return { select };
+      throw new Error(`Unexpected table: ${table}`);
+    });
+
+    vi.spyOn(storageService, "getSignedUrl")
+      .mockReset()
+      .mockResolvedValue("https://signed.example/report.pdf");
+
+    vi.spyOn(projectsService, "getById").mockReset().mockResolvedValue({
+      id: "project-1",
+      ownerCompanyId: "company-1",
+      name: "Downtown Highrise",
+      gcCompanyId: null,
+      gcNameCustom: "Acme GC",
+      gcContactEmail: null,
+      status: "active",
+      archivedAt: null,
+      createdAt: "2026-09-09T00:00:00.000Z",
+    });
+
+    vi.spyOn(companiesService, "getById").mockReset().mockResolvedValue({
+      id: "company-1",
+      name: "Acme Roofing",
+      companyType: "subcontractor",
+      tier: "premium",
+    });
+  });
+
+  it("should return a 5-minute signed URL, named with a friendly filename built from the company, project, and meeting", async () => {
+    // Act
+    const url = await getPdfUrl("meeting-1", "company-1");
+
+    // Assert
+    expect(projectsService.getById).toHaveBeenCalledWith("project-1", "company-1");
+    expect(companiesService.getById).toHaveBeenCalledWith("company-1");
+    expect(storageService.getSignedUrl).toHaveBeenCalledWith(
+      "meeting-pdfs",
+      "meeting-1/report.pdf",
+      300,
+      "acme-roofing-downtown-highrise-undated-meeting1.pdf",
+    );
+    expect(url).toBe("https://signed.example/report.pdf");
+  });
+
+  it("should refuse a PDF older than the plan's history window with a 403", async () => {
+    // Arrange — dbRow was created 2026-09-14, well outside a 1-day window
+    // Act & Assert
+    await expect(
+      getPdfUrl("meeting-1", "company-1", { historyDays: 1 }),
+    ).rejects.toMatchObject({ statusCode: 403 });
+    expect(storageService.getSignedUrl).not.toHaveBeenCalled();
+  });
+
+  it("should date the filename by when the meeting was held, not when the server received the completion", async () => {
+    // Arrange — held Sept 18, synced and completed Sept 19
+    single.mockResolvedValue({
+      data: {
+        ...dbRow,
+        final_pdf_url: "meeting-1/report.pdf",
+        completed_at: "2026-09-19T06:15:00.000Z",
+        held_at: "2026-09-18T15:30:00.000Z",
+      },
+      error: null,
+    });
+
+    // Act
+    await getPdfUrl("meeting-1", "company-1");
+
+    // Assert
+    expect(storageService.getSignedUrl).toHaveBeenCalledWith(
+      "meeting-pdfs",
+      "meeting-1/report.pdf",
+      300,
+      "acme-roofing-downtown-highrise-2026-09-18-meeting1.pdf",
+    );
+  });
+
+  it("should fall back to the completion date in the filename when held_at was never populated", async () => {
+    // Arrange — a legacy completed row
+    single.mockResolvedValue({
+      data: {
+        ...dbRow,
+        final_pdf_url: "meeting-1/report.pdf",
+        completed_at: "2026-09-19T06:15:00.000Z",
+        held_at: null,
+      },
+      error: null,
+    });
+
+    // Act
+    await getPdfUrl("meeting-1", "company-1");
+
+    // Assert
+    expect(storageService.getSignedUrl).toHaveBeenCalledWith(
+      "meeting-pdfs",
+      "meeting-1/report.pdf",
+      300,
+      "acme-roofing-downtown-highrise-2026-09-19-meeting1.pdf",
+    );
+  });
+
+  it("should throw a 404 AppError when no PDF has been generated yet, without looking up the project or company", async () => {
+    // Arrange
+    single.mockResolvedValue({ data: dbRow, error: null }); // final_pdf_url: null
+
+    // Act & Assert
+    await expect(getPdfUrl("meeting-1", "company-1")).rejects.toMatchObject({
+      statusCode: 404,
+      message: "No PDF has been generated for this meeting yet",
+    });
+    expect(projectsService.getById).not.toHaveBeenCalled();
+    expect(companiesService.getById).not.toHaveBeenCalled();
+    expect(storageService.getSignedUrl).not.toHaveBeenCalled();
+  });
+
+  it("should propagate the meeting-not-found error", async () => {
+    // Arrange
+    single.mockResolvedValue({ data: null, error: { code: "PGRST116" } });
+
+    // Act & Assert
+    await expect(getPdfUrl("missing", "company-1")).rejects.toMatchObject({
+      statusCode: 404,
+      message: "Meeting not found",
+    });
+  });
+});
+
+describe("meetingLogs service: getDefenseBundleEntries", () => {
+  let order;
+  let notFn;
+  let eqFn;
+  let select;
+
+  const dbLog = (overrides) => ({
+    id: "meeting-1",
+    held_at: "2026-09-21T14:00:00.000Z",
+    completed_at: "2026-09-21T14:05:00.000Z",
+    final_pdf_url: "meeting-1/report.pdf",
+    toolbox_talks: { title: "Fall Protection" },
+    projects: { name: "Riverside Tower", gc_name_custom: "Acme GC" },
+    ...overrides,
+  });
+
+  beforeEach(() => {
+    order = vi.fn().mockResolvedValue({ data: [dbLog()], error: null });
+    notFn = vi.fn(() => ({ order }));
+    eqFn = vi.fn(() => ({ not: notFn }));
+    select = vi.fn(() => ({ eq: eqFn }));
+
+    fromSpy.mockReset();
+    fromSpy.mockImplementation((table) => {
+      if (table === "meeting_logs") return { select };
+      throw new Error(`Unexpected table: ${table}`);
+    });
+
+    vi.spyOn(companiesService, "getById").mockReset().mockResolvedValue({
+      id: "company-1",
+      name: "Acme Roofing",
+      companyType: "subcontractor",
+      tier: "premium",
+    });
+  });
+
+  const premium = { companyType: "subcontractor", tier: "premium" };
+
+  it("should return one entry per completed log with a PDF, oldest held first, using the GC/client name as the CSV company field", async () => {
+    // Act
+    const result = await getDefenseBundleEntries("company-1", premium);
+
+    // Assert
+    expect(select).toHaveBeenCalledWith(
+      "id, held_at, held_tz_offset, completed_at, final_pdf_url, toolbox_talks(title), projects(name, gc_name_custom)",
+    );
+    expect(eqFn).toHaveBeenCalledWith("company_id", "company-1");
+    expect(notFn).toHaveBeenCalledWith("completed_at", "is", null);
+    expect(order).toHaveBeenCalledWith("held_at", { ascending: true });
+    expect(result).toEqual({
+      companyName: "Acme Roofing",
+      skippedCount: 0,
+      entries: [
+        {
+          path: "meeting-1/report.pdf",
+          filename: "acme-roofing-riverside-tower-2026-09-21-meeting1.pdf",
+          companyName: "Acme GC",
+          projectName: "Riverside Tower",
+          talkTitle: "Fall Protection",
+          heldAt: "2026-09-21T14:00:00.000Z",
+        },
+      ],
+    });
+  });
+
+  it("should throw a 403 PLAN_LIMIT for a plan with no legal archive, without querying anything", async () => {
+    // Act & Assert
+    await expect(
+      getDefenseBundleEntries("company-1", { companyType: "subcontractor", tier: "basic" }),
+    ).rejects.toMatchObject({ statusCode: 403, data: { code: "PLAN_LIMIT" } });
+    expect(fromSpy).not.toHaveBeenCalled();
+  });
+
+  it('should fall back to "Unknown client" when a project has no GC/client name', async () => {
+    // Arrange
+    order.mockResolvedValue({
+      data: [dbLog({ projects: { name: "Riverside Tower", gc_name_custom: null } })],
+      error: null,
+    });
+
+    // Act
+    const result = await getDefenseBundleEntries("company-1", premium);
+
+    // Assert
+    expect(result.entries[0].companyName).toBe("Unknown client");
+  });
+
+  it("should skip a completed log with no PDF yet and report it in skippedCount", async () => {
+    // Arrange
+    order.mockResolvedValue({
+      data: [dbLog(), dbLog({ id: "meeting-2", final_pdf_url: null })],
+      error: null,
+    });
+
+    // Act
+    const result = await getDefenseBundleEntries("company-1", premium);
+
+    // Assert
+    expect(result.skippedCount).toBe(1);
+    expect(result.entries).toHaveLength(1);
+  });
+
+  it("should 404 when every completed log is missing a PDF", async () => {
+    // Arrange
+    order.mockResolvedValue({ data: [dbLog({ final_pdf_url: null })], error: null });
+
+    // Act & Assert
+    await expect(getDefenseBundleEntries("company-1", premium)).rejects.toMatchObject({
+      statusCode: 404,
+      message: "No completed meeting logs with a generated PDF are available yet.",
+    });
+  });
+
+  it("should 404 when there are no completed logs at all", async () => {
+    // Arrange
+    order.mockResolvedValue({ data: [], error: null });
+
+    // Act & Assert
+    await expect(getDefenseBundleEntries("company-1", premium)).rejects.toMatchObject({
+      statusCode: 404,
+    });
+  });
+
+  it("should throw a 502 AppError when the query fails", async () => {
+    // Arrange
+    order.mockResolvedValue({ data: null, error: new Error("db down") });
+
+    // Act & Assert
+    await expect(getDefenseBundleEntries("company-1", premium)).rejects.toMatchObject({
+      statusCode: 502,
+      message: "Could not load meeting logs",
+    });
+  });
+});

@@ -1,5 +1,9 @@
 # Vitest Testing Standards
 
+This standard applies to both `client/` and the root-level `server/` code (confirmed with the maintainer — previously ambiguous, since root `devDependencies` also list unused `mocha`/`chai`/`sinon`). The two run under separate configs: `client/vite.config.ts` (browser-ish/jsdom, 90% coverage gate) for `client/tests/**`, and root `vitest.config.js` (plain Node) for `server/**/*.test.js`.
+
+**Server tests must be plain CommonJS** — `require()`/`module.exports`, no `import`/`export` statements (Vitest's globals, enabled via `globals: true` in the root config, provide `describe`/`it`/`expect`/`vi`/etc. without needing to import them). This isn't a style preference: a server test file written with `import` loads its CJS modules-under-test through a different module-resolution path than a plain `require()`-based test file does, and the two can end up with two separate instances of the same module — silently breaking any `vi.mock()`/spy on it, since the code under test then reads from a different, unmocked instance. See `server/middlewares/requireAuth.test.js` for a worked example, including the further wrinkle that a value destructured at require-time (e.g. `const { v4 } = require("uuid")`) can't be redirected by mutating the module later — only a property accessed fresh at call time (e.g. `supabase.from(...)`) can be reliably spied on after the fact.
+
 ## Commands
 
 - **Run All Tests:** `npm run test` or `npx vitest run`

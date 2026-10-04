@@ -1,0 +1,53 @@
+{
+  "id": "accident-prevention-signs-and-tags",
+  "title": "Accident Prevention Signs and Tags",
+  "primary_trade": "General Construction",
+  "trade_tags": [
+    "General Construction"
+  ],
+  "osha_standards": [
+    "29 CFR 1926.200"
+  ],
+  "estimated_minutes": 5,
+  "summary": "OSHA sets rules for danger signs, caution signs, safety instruction signs, traffic control signs, and accident prevention tags. Use the right one for the hazard and keep it visible.",
+  "talking_points": [
+    "Signs and symbols must be visible at all times when work is being performed. Remove or cover them promptly when the hazard no longer exists.",
+    "Use danger signs only where an immediate hazard exists. They have a red upper panel, a black outline, and a white lower panel.",
+    "Use caution signs only to warn of potential hazards or unsafe practices. They are yellow, with a black panel and yellow \"caution\" lettering.",
+    "Safety instruction signs are white with a green upper panel and white letters. Directional signs are white with a black panel and a white symbol.",
+    "Exit signs, when required, use red letters at least 6 inches high on a white field.",
+    "At points of hazard, post construction areas with legible traffic control signs and protect them with traffic control devices. Signs, signals, markings, and barricades must follow Part 6 of the MUTCD.",
+    "Accident prevention tags are a temporary warning of a hazard such as defective tools or equipment. Never use a tag in place of a sign.",
+    "The ANSI standards named in the rule add more requirements. Follow them too."
+  ],
+  "site_hazards_to_check": [
+    "Signs that are hidden, dirty, or damaged so they cannot be seen",
+    "Signs left up after the hazard is gone",
+    "Danger signs used for a potential hazard, or signs with the wrong colors",
+    "Defective tools or equipment with no accident prevention tag",
+    "Construction areas at points of hazard with no traffic control signs or devices"
+  ],
+  "discussion_questions": [
+    "What is the difference between a danger sign and a caution sign?",
+    "Which tools or equipment on this site need a tag right now?",
+    "Who checks that signs are visible and removed when the hazard is gone?"
+  ],
+  "attribution": {
+    "source": "OSHA",
+    "publisher": "Occupational Safety and Health Administration (OSHA)",
+    "copyright": "U.S. Government work — public domain.",
+    "license": "public-domain",
+    "source_url": "https://www.osha.gov/laws-regs/regulations/standardnumber/1926/1926.200",
+    "source_ref": "TBT-045",
+    "notice": "Adapted from OSHA standard 29 CFR 1926.200, Accident prevention signs and tags. Reproduced with attribution for jobsite safety training; not an endorsement by OSHA."
+  },
+  "audit": {
+    "status": "approved",
+    "audited_at": "2026-09-25T18:32:27.718Z",
+    "osha_accuracy_verified": true,
+    "flags": [
+      "Verified against 29 CFR 1926.200(a)-(i) source text: colors, 6-inch exit lettering, MUTCD Part 6, tag rules and ANSI reference all match. Retitle fits content; 1926 citation correct.",
+      "Non-blocking: the talk does not reproduce ANSI Z535 specifications; crews must consult them for additional requirements (point 8 says so)."
+    ]
+  }
+}

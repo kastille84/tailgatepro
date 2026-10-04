@@ -1,0 +1,54 @@
+{
+  "id": "suicide-prevention-in-construction",
+  "title": "Suicide Prevention in Construction",
+  "primary_trade": "General Construction",
+  "trade_tags": [
+    "General Construction"
+  ],
+  "osha_standards": [
+    "OSH Act Section 5(a)(1) General Duty Clause"
+  ],
+  "estimated_minutes": 5,
+  "summary": "Construction has one of the highest suicide rates of any industry. Learn the warning signs, ask directly, listen, and connect a coworker to help, including the 988 Suicide and Crisis Lifeline.",
+  "talking_points": [
+    "Suicide is the 10th leading cause of death in the U.S., and construction has one of the highest suicide rates of any industry. Knowing the warning signs and how to reach out could save a life.",
+    "Warning signs include talking about wanting to die, guilt or shame, or being a burden. Also feeling empty, hopeless, or trapped, or in unbearable pain.",
+    "Behavior signs include planning ways to die, withdrawing, saying goodbye, giving away possessions, rage, extreme mood swings, dangerous risks, sleeping or eating more or less, and missing work.",
+    "If someone shows these signs, do not ignore them. Start a conversation. The best way to find out if someone is having suicidal thoughts is to ask directly.",
+    "Listen without judgment. Express concern and support, and let them know help is available.",
+    "Do not tell someone to do it, debate the value of living, or argue that suicide is right or wrong. Never promise to keep their thoughts a secret.",
+    "Encourage the person to see a mental health professional, or help them find treatment.",
+    "If you or someone you know needs immediate help, call or text 988 (the Suicide and Crisis Lifeline), use the online Lifeline Chat, or text \"HOME\" to 741741 to reach the Crisis Text Line. Support is free, confidential, and available 24/7. If someone is in immediate danger, call 911 or take them to a nearby emergency room. Stay in touch afterward."
+  ],
+  "site_hazards_to_check": [
+    "Coworkers who seem withdrawn, eat lunch alone, or have big changes in mood or behavior",
+    "Coworkers who are not following safe practices or are taking dangerous risks",
+    "Increased conflict, anger, tardiness, or absences on the crew",
+    "No posted or shared crisis line information for the crew",
+    "Workers who may not know that 988 and the Crisis Text Line are free and confidential"
+  ],
+  "discussion_questions": [
+    "What are some warning signs of suicide that you might notice in a coworker?",
+    "How would you start a conversation with a coworker you are worried about?",
+    "What number do you call or text for immediate help?"
+  ],
+  "attribution": {
+    "source": "CPWR",
+    "publisher": "CPWR — The Center for Construction Research and Training",
+    "copyright": "© 2023 CPWR — The Center for Construction Research and Training. All rights reserved.",
+    "license": "free-use-with-attribution",
+    "source_url": "https://www.cpwr.com/wp-content/uploads/TT-Suicide_Prevention.pdf",
+    "source_ref": "TBT-145",
+    "notice": "Adapted from a CPWR/NIOSH Toolbox Talk, produced under NIOSH cooperative agreement OH 009762. Reproduced with attribution for jobsite safety training; not an endorsement by CPWR or NIOSH."
+  },
+  "audit": {
+    "status": "approved",
+    "audited_at": "2026-09-25T18:32:27.718Z",
+    "osha_accuracy_verified": true,
+    "flags": [
+      "Verified all facts against the CPWR source: warning signs, do/do-not guidance, and crisis resources (911, 988 call or text, Lifeline Chat, text HOME to 741741) match. Numbers are accurate; the summary and last talking point carry them. Small fix: rewrote the final talking point to lead with the crisis resources and add the source's 'free and confidential, 24/7' wording plus Lifeline Chat.",
+      "Non-blocking: no OSHA standard applies; General Duty Clause mapping is a loose pairing. Facilitator should have the 988 and 741741 numbers posted or shared with the crew (already a site-hazard item).",
+      "Non-blocking provenance: CPWR copyright (c) 2023 in footer, raw frontmatter says 2017; talk notice keeps 2023 per the document footer. CPWR reuse terms should be kept per docs/content-attribution.md. Source domain cpwr.com is allowed."
+    ]
+  }
+}

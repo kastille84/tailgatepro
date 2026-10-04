@@ -1,0 +1,51 @@
+{
+  "id": "respiratory-protection",
+  "title": "Respiratory Protection Basics",
+  "primary_trade": "General Construction",
+  "trade_tags": [
+    "General Construction",
+    "Masonry"
+  ],
+  "osha_standards": [
+    "29 CFR 1926.103",
+    "29 CFR 1910.134"
+  ],
+  "estimated_minutes": 5,
+  "summary": "Dust, fumes, and other airborne contaminants on construction sites cause serious lung disease. Respirators only work when selected right, fit tested, and used under a written program. This talk covers controls first, then respirators.",
+  "talking_points": [
+    "Control the hazard first: eliminate it, substitute a safer material, or use engineering controls like local exhaust ventilation and wet methods before relying on respirators.",
+    "When controls are not enough and exposures go above OSHA limits, respiratory protection is required.",
+    "Your employer must provide a NIOSH-approved respirator suited to the job. Check the approval label for the protection level, such as N95.",
+    "Use respirators under an OSHA-compliant program that includes medical evaluation, fit testing, and training.",
+    "Fit testing is required for tight-fitting respirators so they give the protection expected. Follow the manufacturer's instructions for putting them on and taking them off.",
+    "Inspect, maintain, and store respirators as the manufacturer directs. Replace filters and cartridges when they are damaged, soiled, hard to breathe through, or below the required airflow."
+  ],
+  "site_hazards_to_check": [
+    "Dusty or fume-generating tasks with no wet method, ventilation, or other engineering control",
+    "Workers in respirators with no fit test, medical evaluation, or training on record",
+    "Wrong respirator or filter/cartridge type for the contaminant present",
+    "Damaged, soiled, or hard-to-breathe-through respirators and filters still in use",
+    "Respirators stored in dust, sun, or a dirty gang box"
+  ],
+  "discussion_questions": [
+    "What controls can cut the dust or fumes on this task before we reach for a respirator?",
+    "Has everyone using a tight-fitting respirator been fit tested for this model?",
+    "How do you know when a filter or cartridge needs to be replaced?"
+  ],
+  "attribution": {
+    "source": "NIOSH",
+    "publisher": "National Institute for Occupational Safety and Health (NIOSH)",
+    "copyright": "U.S. Government work — public domain.",
+    "license": "public-domain",
+    "source_url": "https://www.cdc.gov/niosh/docs/2022-102/pdfs/2022-102revised022022.pdf",
+    "notice": "Adapted from a NIOSH Toolbox Talk (co-developed with CPWR). Public-domain source; not an endorsement by NIOSH or CPWR."
+  },
+  "audit": {
+    "status": "approved",
+    "audited_at": "2026-09-10T18:21:19Z",
+    "osha_accuracy_verified": true,
+    "flags": [
+      "OSHA mapping verified accurate: 29 CFR 1926.103 (construction respiratory protection, which adopts 1910.134) and 1910.134. Content correctly puts the hierarchy of controls first (eliminate/substitute/engineering controls before respirators), requires NIOSH-approved selection matched to the contaminant, and requires a written program with medical evaluation, fit testing for tight-fitting respirators, training, and maintenance/storage. No tolerance issues."
+    ]
+  }
+}

@@ -1,0 +1,57 @@
+{
+  "id": "slip-trip-and-fall-prevention",
+  "title": "Slip, Trip and Fall Prevention",
+  "primary_trade": "General Construction",
+  "trade_tags": [
+    "General Construction",
+    "Carpentry"
+  ],
+  "osha_standards": [
+    "29 CFR 1926.25",
+    "29 CFR 1926.1052"
+  ],
+  "estimated_minutes": 5,
+  "summary": "Same-level falls start with debris, nails, waste, and slippery or uneven stairs. OSHA's housekeeping and stairway rules give the basics for keeping walking surfaces safe.",
+  "talking_points": [
+    "Keep form and scrap lumber with protruding nails, and all other debris, cleared from work areas, passageways and stairs (29 CFR 1926.25(a)).",
+    "Remove combustible scrap and debris at regular intervals, and provide a safe way to do it (1926.25(b)).",
+    "Use containers to collect waste, trash, oily rags and refuse. Containers for oily, flammable or hazardous waste need covers and must be emptied at frequent and regular intervals (1926.25(c)).",
+    "Stairways must be free of hazardous projections such as protruding nails (1926.1052(a)(6)).",
+    "Slippery conditions on stairways must be eliminated before the stairs are used (1926.1052(a)(7)).",
+    "Riser height and tread depth must be uniform within a flight of stairs, with no more than 1/4 inch of variation in any stairway system (1926.1052(a)(3)).",
+    "Stairways with four or more risers, or rising more than 30 inches, need at least one handrail (1926.1052(c)(1)(i)).",
+    "Good practice: clean up a spill or clear debris the moment you see it, and tell the crew if you cannot fix it right away."
+  ],
+  "site_hazards_to_check": [
+    "Scrap lumber with protruding nails",
+    "Debris or materials in walkways, passageways and stairs",
+    "Wet, muddy or icy stairs and walking surfaces",
+    "Stair risers or treads that are not uniform",
+    "Stairways with no handrail where one is required",
+    "Uncovered or overflowing waste containers"
+  ],
+  "discussion_questions": [
+    "Where on this site are people most likely to trip, and who is responsible for clearing it?",
+    "What do you do when you find a slippery or damaged stair you cannot fix yourself?",
+    "How often is scrap removed from our work area?"
+  ],
+  "attribution": {
+    "source": "TailgatePro",
+    "publisher": "TailgatePro",
+    "copyright": "Original TailgatePro content, written from 29 CFR 1926.25 (Housekeeping) and 29 CFR 1926.1052 (Stairways). Regulation and agency text is U.S. Government work in the public domain; the wording here is TailgatePro's own.",
+    "license": "original-work",
+    "source_url": "https://www.osha.gov/laws-regs/regulations/standardnumber/1926/1926.25",
+    "source_ref": "TBT-043",
+    "notice": "Written from 29 CFR 1926.25 (Housekeeping) and 29 CFR 1926.1052 (Stairways). General guidance only; follow your company safety program and site-specific requirements. Not an endorsement by OSHA."
+  },
+  "audit": {
+    "status": "approved",
+    "audited_at": "2026-09-25T20:37:49Z",
+    "osha_accuracy_verified": true,
+    "flags": [
+      "Verified 1926.25(a)-(c) and 1926.1052(a)(3),(a)(6),(a)(7),(c)(1)(i) verbatim on osha.gov; the 1/4 inch and four-risers/30-inch figures match.",
+      "Partial topical overlap with approved general-construction/housekeeping.json (1926.25); this talk adds stairway rules and slip/trip focus, so treated as distinct.",
+      "US English; no unsupported claims."
+    ]
+  }
+}

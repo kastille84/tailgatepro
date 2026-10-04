@@ -1,0 +1,58 @@
+{
+  "id": "sun-protection",
+  "title": "Sun Protection",
+  "primary_trade": "General Construction",
+  "trade_tags": [
+    "General Construction",
+    "Roofing"
+  ],
+  "osha_standards": [
+    "OSH Act Section 5(a)(1) General Duty Clause",
+    "29 CFR 1926.102"
+  ],
+  "estimated_minutes": 5,
+  "summary": "Working outside exposes you to ultraviolet (UV) radiation, even on cloudy days, and it raises your risk of skin cancer. Use sunscreen, cover up, use shade, and check your skin every month.",
+  "talking_points": [
+    "Skin cancer is the most common type of cancer. Working outside for all or part of the day exposes you to UV radiation from the sun, even when it is cloudy.",
+    "Use a broad-spectrum, water-resistant sunscreen with an SPF of 30 or higher. Reapply every two hours, or after heavy sweating. Wear it even when it is cloudy and regardless of your skin tone.",
+    "Water, snow, sand, concrete, and metal reflect and intensify UV radiation, which raises your chance of sunburn.",
+    "Wear tightly woven, loose-fitting long-sleeved shirts and pants.",
+    "Protect the back of your neck with a cloth flap that attaches to your hard hat.",
+    "Ask your employer for safety glasses that also protect against UVA and UVB. They can be clear. Lens color has nothing to do with UV protection.",
+    "Stay in the shade as much as possible, including on breaks. The sun is strongest between 10 a.m. and 4 p.m.",
+    "Check your skin head to toe every month. Look for moles that change in size, color, or shape, new growths, and sores or patches that bleed and do not heal."
+  ],
+  "site_hazards_to_check": [
+    "Work areas with no shade for breaks",
+    "Reflective surfaces such as concrete, metal, or water that add to UV exposure",
+    "Workers in short sleeves or with no neck protection on their hard hats",
+    "Sunscreen not available on site, or safety glasses without UV protection",
+    "Outdoor tasks scheduled during the peak sun hours of 10 a.m. to 4 p.m."
+  ],
+  "discussion_questions": [
+    "What sunscreen and clothing will each of us use today?",
+    "Why do we still need sun protection on a cloudy day?",
+    "What skin changes should you look for, and who should you see if you find one?"
+  ],
+  "attribution": {
+    "source": "CPWR",
+    "publisher": "CPWR — The Center for Construction Research and Training",
+    "copyright": "© 2018 CPWR — The Center for Construction Research and Training. All rights reserved.",
+    "license": "free-use-with-attribution",
+    "source_url": "https://www.cpwr.com/wp-content/uploads/TT-Skin_Cancer.pdf",
+    "source_ref": "TBT-136",
+    "notice": "Adapted from a CPWR/NIOSH Toolbox Talk, produced under NIOSH cooperative agreement OH 009762. Reproduced with attribution for jobsite safety training; not an endorsement by CPWR or NIOSH."
+  },
+  "audit": {
+    "status": "approved",
+    "audited_at": "2026-09-25T18:10:19Z",
+    "osha_accuracy_verified": true,
+    "flags": [
+      "All figures (SPF 30+, reapply every 2 hours, 10 a.m.-4 p.m., monthly head-to-toe skin check, UVA/UVB glasses) are quote-accurate to CPWR TT-Skin_Cancer; nothing invented; 8 substantive points; covers the title.",
+      "OSHA mapping verified: no 1926 sun-exposure standard exists, so the General Duty Clause is appropriate; 29 CFR 1926.102 (eye and face protection, includes potentially injurious light radiation) is a valid, correct structurer addition for UV-rated safety glasses.",
+      "Copyright line (c) 2018 matches the document footer (source front-matter says 2017; footer governs).",
+      "RIGHTS (non-blocking): source file rights line says 'Verify reuse terms with CPWR before redistribution'. Per docs/content-attribution.md the CPWR condition set is met (bundled in a subscription product, never sold standalone; CPWR copyright line and no-endorsement notice retained in attribution; no endorsement claimed). Keep the reminder to confirm terms before public launch.",
+      "No UK wording found."
+    ]
+  }
+}

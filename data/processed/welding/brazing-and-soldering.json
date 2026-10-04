@@ -1,0 +1,60 @@
+{
+  "id": "brazing-and-soldering",
+  "title": "Brazing and Soldering",
+  "primary_trade": "Welding",
+  "trade_tags": [
+    "Welding",
+    "HVAC & Refrigeration",
+    "Plumbing"
+  ],
+  "osha_standards": [
+    "29 CFR 1926.350",
+    "29 CFR 1926.352",
+    "29 CFR 1926.353"
+  ],
+  "estimated_minutes": 5,
+  "summary": "Brazing and soldering with a gas torch adds fire, fuel gas and fume hazards. This talk covers OSHA's rules for torch and hose checks, fire prevention and ventilation.",
+  "talking_points": [
+    "Fuel gas and oxygen hoses must be easily distinguishable from each other and must not be interchangeable (29 CFR 1926.350(f)(1)).",
+    "Inspect all gas hose at the beginning of each shift, and remove defective hose from service (1926.350(f)(3)).",
+    "Inspect torches at the beginning of each shift for leaking shutoff valves, hose couplings and tip connections. Do not use a defective torch (1926.350(g)(2)).",
+    "Light torches with a friction lighter or other approved device, never with matches or from hot work (1926.350(g)(3)).",
+    "Keep gas cylinders secured upright at all times, and never take oxygen or fuel gas cylinders into a confined space (1926.350(a)(9), (b)(4)).",
+    "Move fire hazards away from the work or shield them. Do not work where flammable paints, other flammable compounds or heavy dust concentrations create a hazard (1926.352(a)-(c)).",
+    "Keep suitable fire extinguishing equipment immediately available in the work area. When normal fire precautions are not enough, assign additional personnel as a fire watch during the work and for long enough afterward to be sure no possibility of fire exists (1926.352(d)-(e)).",
+    "In enclosed spaces, work on zinc-, lead-, cadmium- or chromium-bearing metals or fillers needs general or local exhaust ventilation (1926.353(c)(1)). Lead, cadmium and mercury-coated metals need local exhaust ventilation or air line respirators, and open-air work on them needs filter-type respirators (1926.353(c)(2)-(3)). Never use oxygen to ventilate or to blow dust off clothing (1926.353(a)(6))."
+  ],
+  "site_hazards_to_check": [
+    "Fuel gas and oxygen hoses that look alike or have worn spots",
+    "Torch with a leaking valve, coupling or tip connection",
+    "Combustible materials, flammable paint or dust near the work",
+    "Cylinders not secured upright",
+    "Cadmium, lead, zinc, chromium or mercury in the solder, filler metal or coating",
+    "No fire watch or extinguisher on hand"
+  ],
+  "discussion_questions": [
+    "What do you check on a torch and hoses at the start of the shift?",
+    "Who is the fire watch if one is needed, and how long do they stay after we finish?",
+    "How do we know if the solder or coating we are heating contains cadmium or lead?"
+  ],
+  "attribution": {
+    "source": "TailgatePro",
+    "publisher": "TailgatePro",
+    "copyright": "Original TailgatePro content, written from 29 CFR 1926.350 (Gas welding and cutting), 1926.352 (Fire prevention) and 1926.353 (Ventilation and protection). Regulation and agency text is U.S. Government work in the public domain; the wording here is TailgatePro's own.",
+    "license": "original-work",
+    "source_url": "https://www.osha.gov/laws-regs/regulations/standardnumber/1926/1926.350",
+    "source_ref": "TBT-018",
+    "notice": "Written from 29 CFR 1926.350 (Gas welding and cutting), 1926.352 (Fire prevention) and 1926.353 (Ventilation and protection). General guidance only; follow your company safety program and site-specific requirements. Not an endorsement by OSHA."
+  },
+  "audit": {
+    "status": "approved",
+    "audited_at": "2026-09-25T20:37:49Z",
+    "osha_accuracy_verified": true,
+    "flags": [
+      "Verified 1926.350(a)(9),(b)(4),(f)(1),(f)(3),(g)(2),(g)(3) verbatim on osha.gov 1926.350.",
+      "Verified 1926.352(a)-(e) verbatim. Fixed: fire watch was stated as always required; 352(e) requires it only when normal fire prevention precautions are not sufficient (discussion question reworded too).",
+      "Verified 1926.353(a)(6) (oxygen) and (c)(1)-(c)(3). Fixed: ventilation point was overgeneralized; now states enclosed-space (c)(1), lead/cadmium/mercury (c)(2) and open-air respirator (c)(3) conditions.",
+      "US English; no UK terms. Existing processed welding/brazing-and-soldering.json is needs_revision, not an approved duplicate."
+    ]
+  }
+}

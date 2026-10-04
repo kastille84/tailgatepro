@@ -1,0 +1,222 @@
+{
+  "101": {
+    "status": "no-source",
+    "note": "ledger reconstructed after a tooling error; shares a source already claimed within this import (osha-permit-required-confined-spaces.md); "
+  },
+  "102": {
+    "status": "no-source",
+    "note": "ledger reconstructed after a tooling error; shares a source already claimed within this import (osha-permit-required-confined-spaces.md); "
+  },
+  "103": {
+    "status": "no-source",
+    "note": "ledger reconstructed after a tooling error; shares a source already claimed within this import (osha-permit-required-confined-spaces.md); "
+  },
+  "105": {
+    "status": "no-source",
+    "note": "first source rejected by auditor; second search found nothing suitable on allowed domains: Only regulation text (1926.302, 1910.242, 1915.131), OSHA interpretation letters, and OSHA 3080 (claimed by TBT-011) exist on allowed domains; Cal/OSHA construction pocket guide has only 1-2 line pneumatic tool rules. No worker-level compressed-air talk (air on skin, dead-ending, whip checks, <30 psi) found."
+  },
+  "106": {
+    "status": "no-source",
+    "note": "source is a Susan Harwood grantee-authored work; OSHA permits reuse only for non-commercial use with no fee and no modification, which a paid product adapting the text cannot meet; reverted to Word-library content"
+  },
+  "107": {
+    "status": "matched",
+    "raw_file": "osha-hazcom-safety-data-sheets-brief.md",
+    "source_url": "https://www.osha.gov/sites/default/files/publications/OSHA3514.pdf",
+    "agency": "OSHA",
+    "note": "ledger reconstructed after a tooling error; "
+  },
+  "109": {
+    "status": "matched",
+    "raw_file": "osha-hazcom-labels-and-pictograms.md",
+    "source_url": "https://www.osha.gov/sites/default/files/publications/osha3636.pdf",
+    "agency": "OSHA",
+    "note": "ledger reconstructed after a tooling error; "
+  },
+  "045": {
+    "status": "matched",
+    "raw_file": "osha-accident-prevention-signs-and-tags-1926-200.md",
+    "source_url": "https://www.osha.gov/laws-regs/regulations/standardnumber/1926/1926.200",
+    "agency": "OSHA",
+    "note": "ledger reconstructed after a tooling error; "
+  },
+  "036": {
+    "status": "matched",
+    "raw_file": "osha-control-of-hazardous-energy.md",
+    "source_url": "https://www.osha.gov/sites/default/files/publications/osha3120.pdf",
+    "agency": "OSHA",
+    "note": "ledger reconstructed after a tooling error; "
+  },
+  "003": {
+    "status": "matched",
+    "raw_file": "osha-fall-protection-in-construction.md",
+    "source_url": "https://www.osha.gov/sites/default/files/publications/OSHA3146.pdf",
+    "agency": "OSHA",
+    "note": "ledger reconstructed after a tooling error; "
+  },
+  "079": {
+    "status": "matched",
+    "raw_file": "osha-fire-safety-fact-sheet.md",
+    "source_url": "https://www.osha.gov/sites/default/files/publications/osha3527.pdf",
+    "agency": "OSHA",
+    "note": "ledger reconstructed after a tooling error; "
+  },
+  "085": {
+    "status": "matched",
+    "raw_file": "osha-fundamentals-of-workplace-first-aid-program.md",
+    "source_url": "https://www.osha.gov/sites/default/files/publications/OSHA3317FIRST-AID.pdf",
+    "agency": "OSHA",
+    "note": "ledger reconstructed after a tooling error; "
+  },
+  "058": {
+    "status": "matched",
+    "raw_file": "osha-general-requirements-for-storage-1926-250.md",
+    "source_url": "https://www.osha.gov/laws-regs/regulations/standardnumber/1926/1926.250",
+    "agency": "OSHA",
+    "note": "ledger reconstructed after a tooling error; "
+  },
+  "049": {
+    "status": "matched",
+    "raw_file": "osha-guide-to-scaffold-use.md",
+    "source_url": "https://www.osha.gov/sites/default/files/publications/OSHA3150.pdf",
+    "agency": "OSHA",
+    "note": "ledger reconstructed after a tooling error; "
+  },
+  "082": {
+    "status": "matched",
+    "raw_file": "osha-how-to-plan-for-workplace-emergencies.md",
+    "source_url": "https://www.osha.gov/sites/default/files/publications/osha3088.pdf",
+    "agency": "OSHA",
+    "note": "ledger reconstructed after a tooling error; "
+  },
+  "087": {
+    "status": "matched",
+    "raw_file": "osha-incident-investigation-guide.md",
+    "source_url": "https://www.osha.gov/sites/default/files/IncInvGuide4Empl_Dec2015.pdf",
+    "agency": "OSHA",
+    "note": "ledger reconstructed after a tooling error; "
+  },
+  "095": {
+    "status": "matched",
+    "raw_file": "osha-job-hazard-analysis.md",
+    "source_url": "https://www.osha.gov/sites/default/files/publications/OSHA3071.pdf",
+    "agency": "OSHA",
+    "note": "ledger reconstructed after a tooling error; "
+  },
+  "099": {
+    "status": "matched",
+    "raw_file": "osha-permit-required-confined-spaces.md",
+    "source_url": "https://www.osha.gov/sites/default/files/publications/OSHA3138.pdf",
+    "agency": "OSHA",
+    "note": "ledger reconstructed after a tooling error; "
+  },
+  "001": {
+    "status": "matched",
+    "raw_file": "osha-personal-protective-equipment.md",
+    "source_url": "https://www.osha.gov/sites/default/files/publications/osha3151.pdf",
+    "agency": "OSHA",
+    "note": "ledger reconstructed after a tooling error; "
+  },
+  "080": {
+    "status": "matched",
+    "raw_file": "osha-portable-fire-extinguishers-1910-157.md",
+    "source_url": "https://www.osha.gov/laws-regs/regulations/standardnumber/1910/1910.157",
+    "agency": "OSHA",
+    "note": "ledger reconstructed after a tooling error; "
+  },
+  "088": {
+    "status": "matched",
+    "raw_file": "osha-recordkeeping-requirements.md",
+    "source_url": "https://www.osha.gov/recordkeeping",
+    "agency": "OSHA",
+    "note": "ledger reconstructed after a tooling error; "
+  },
+  "086": {
+    "status": "matched",
+    "raw_file": "osha-reporting-fatalities-and-hospitalizations-1904-39.md",
+    "source_url": "https://www.osha.gov/laws-regs/regulations/standardnumber/1904/1904.39",
+    "agency": "OSHA",
+    "note": "ledger reconstructed after a tooling error; "
+  },
+  "091": {
+    "status": "matched",
+    "raw_file": "osha-safety-and-health-programs-in-construction.md",
+    "source_url": "https://www.osha.gov/Publications/OSHA3886.pdf",
+    "agency": "OSHA",
+    "note": "ledger reconstructed after a tooling error; "
+  },
+  "043": {
+    "status": "no-source",
+    "note": "second-pass source was a general-industry, grantee-authored handout (TPMA); auditor found it thin for construction and license unverified; reverted to Word-library content"
+  },
+  "040": {
+    "status": "no-source",
+    "note": "ledger reconstructed after a tooling error; no dedicated agency publication"
+  },
+  "041": {
+    "status": "no-source",
+    "note": "ledger reconstructed after a tooling error; no dedicated agency publication"
+  },
+  "090": {
+    "status": "no-source",
+    "note": "ledger reconstructed after a tooling error; no dedicated agency publication"
+  },
+  "092": {
+    "status": "no-source",
+    "note": "ledger reconstructed after a tooling error; no dedicated agency publication"
+  },
+  "094": {
+    "status": "no-source",
+    "note": "ledger reconstructed after a tooling error; no dedicated agency publication"
+  },
+  "097": {
+    "status": "no-source",
+    "note": "ledger reconstructed after a tooling error; no dedicated agency publication"
+  },
+  "044": {
+    "status": "duplicate-of-existing",
+    "existing_raw": "cpwr-housekeeping.md",
+    "note": "ledger reconstructed after a tooling error; covered by existing CPWR housekeeping talk"
+  },
+  "057": {
+    "status": "duplicate-of-existing",
+    "existing_raw": "niosh-preventing-falling-objects.md",
+    "note": "ledger reconstructed after a tooling error; tools at height / dropped objects"
+  },
+  "020": {
+    "status": "no-source",
+    "note": "ledger reconstructed after a tooling error; shares a source already claimed within this import (osha-1926-350-gas-welding-and-cutting.md); "
+  },
+  "039": {
+    "status": "no-source",
+    "note": "ledger reconstructed after a tooling error; shares a source already claimed within this import (osha-safety-and-health-programs-in-construction.md); "
+  },
+  "054": {
+    "status": "no-source",
+    "note": "ledger reconstructed after a tooling error; shares a source already claimed within this import (osha-fall-protection-in-construction.md); "
+  },
+  "055": {
+    "status": "no-source",
+    "note": "ledger reconstructed after a tooling error; shares a source already claimed within this import (osha-fall-protection-in-construction.md); "
+  },
+  "083": {
+    "status": "no-source",
+    "note": "ledger reconstructed after a tooling error; shares a source already claimed within this import (osha-how-to-plan-for-workplace-emergencies.md); "
+  },
+  "084": {
+    "status": "no-source",
+    "note": "ledger reconstructed after a tooling error; shares a source already claimed within this import (osha-how-to-plan-for-workplace-emergencies.md); "
+  },
+  "089": {
+    "status": "no-source",
+    "note": "ledger reconstructed after a tooling error; shares a source already claimed within this import (osha-incident-investigation-guide.md); "
+  },
+  "093": {
+    "status": "no-source",
+    "note": "ledger reconstructed after a tooling error; shares a source already claimed within this import (osha-job-hazard-analysis.md); "
+  },
+  "096": {
+    "status": "no-source",
+    "note": "ledger reconstructed after a tooling error; shares a source already claimed within this import (osha-job-hazard-analysis.md); "
+  }
+}

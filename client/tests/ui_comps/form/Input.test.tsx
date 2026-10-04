@@ -10,6 +10,7 @@ import {
   FormField,
   Input,
   Label,
+  Textarea,
 } from "../../../src/ui_comps/form";
 import theme from "../../../src/styles/theme";
 
@@ -36,6 +37,23 @@ describe("Input", () => {
 
     const input = screen.getByLabelText(/company/i);
     expect(input.getAttribute("aria-invalid")).toBe("true");
+  });
+
+  it("renders a read-only input that is still focusable and styled as read-only", () => {
+    render(
+      <ThemeProvider theme={theme}>
+        <Input aria-label="Locked" readOnly defaultValue="Big GC" />
+      </ThemeProvider>,
+    );
+
+    const input = screen.getByLabelText(/locked/i) as HTMLInputElement;
+    expect(input.readOnly).toBe(true);
+    expect(input.value).toBe("Big GC");
+    input.focus();
+    expect(document.activeElement).toBe(input);
+    // Dashed border is part of the read-only look (not color alone). This
+    // relies on jsdom resolving the `[readonly]` attribute selector.
+    expect(getComputedStyle(input).borderStyle).toBe("dashed");
   });
 
   it("exposes reusable form primitives for shared field layouts", () => {
@@ -204,5 +222,32 @@ describe("Input", () => {
     const input = screen.getByLabelText(/dark field/i) as HTMLInputElement;
     expect(input.id).toBe("dark-field");
     expect(screen.getByText("Visible on dark mode")).toBeDefined();
+  });
+});
+
+describe("Textarea", () => {
+  it("renders an accessible textarea with the expected placeholder", () => {
+    render(
+      <ThemeProvider theme={theme}>
+        <Textarea aria-label="Summary" placeholder="One or two sentences." />
+      </ThemeProvider>,
+    );
+
+    const textarea = screen.getByLabelText(/summary/i);
+    expect(textarea).toBeDefined();
+    expect(textarea.getAttribute("placeholder")).toBe("One or two sentences.");
+    expect(textarea.getAttribute("aria-invalid")).toBe("false");
+  });
+
+  it("marks the control invalid when the hasError prop is set", () => {
+    render(
+      <ThemeProvider theme={theme}>
+        <Textarea aria-label="Summary" hasError />
+      </ThemeProvider>,
+    );
+
+    expect(
+      screen.getByLabelText(/summary/i).getAttribute("aria-invalid"),
+    ).toBe("true");
   });
 });

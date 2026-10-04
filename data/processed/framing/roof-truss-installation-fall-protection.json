@@ -1,0 +1,58 @@
+{
+  "id": "roof-truss-installation-fall-protection",
+  "title": "Roof Trusses: Staying Safe Until They Are Braced",
+  "primary_trade": "Framing",
+  "trade_tags": [
+    "Framing",
+    "Carpentry",
+    "Roofing"
+  ],
+  "osha_standards": [
+    "29 CFR 1926.501(b)(13)",
+    "29 CFR 1926.502(d)",
+    "29 CFR 1926.453"
+  ],
+  "estimated_minutes": 5,
+  "summary": "Trusses are weak from the side until they are restrained and braced. A single truss is not a safe anchor, and a fall on one can pull down the whole assembly.",
+  "talking_points": [
+    "Truss work happens high up, and trusses are not stable until they are properly restrained and braced. They are built to carry weight from the top down, not a pull from the side.",
+    "Never tie off to a single truss with a strap anchor or bolt-on anchor. If a worker falls, the whole truss assembly can collapse.",
+    "For the first trusses, use other methods: assemble a section on the ground, or work from a scaffold, aerial lift, or ladder.",
+    "Ground assembly: build and sheathe a truss section on the ground, and install peak anchors and lifelines before the crane lifts it into place.",
+    "Lifts: stay inside the basket and follow all lift rules. Scaffolds and ladders must meet OSHA's scaffold and ladder rules. Bracket scaffolds give big, stable work areas.",
+    "A spreader that is engineered for the job spreads a fall's force across several trusses. Install it by the manufacturer's instructions. A qualified person decides if it can be used as an anchor.",
+    "After a full truss section is set, restrained, braced, and sheathed, you can attach anchors to it and use PFAS for the next trusses and the sheathing. Anchors must hold 5,000 pounds per worker attached, or have a safety factor of at least two under a qualified person.",
+    "Use a full-body harness. Body belts are not allowed for fall arrest."
+  ],
+  "site_hazards_to_check": [
+    "Trusses that are not yet restrained and braced",
+    "A worker tied off to only one truss",
+    "Anchors, spreaders, or peak anchors that are damaged or not installed by the instructions",
+    "Ladders, scaffolds, or lifts that are not set up for truss work",
+    "Workers without full-body harnesses or with no plan for fall protection at 6 feet or more"
+  ],
+  "discussion_questions": [
+    "Which trusses are fully braced right now, and which are not?",
+    "What are we using to stay safe while we set the first trusses?",
+    "Who is the qualified person who says our anchors and spreaders are good to use?"
+  ],
+  "attribution": {
+    "source": "OSHA",
+    "publisher": "Occupational Safety and Health Administration (OSHA)",
+    "copyright": "U.S. Government work — public domain.",
+    "license": "public-domain",
+    "source_url": "https://www.osha.gov/sites/default/files/publications/reducing-falls-installing-roof-trusses-factsheet.pdf",
+    "notice": "Adapted from OSHA Fact Sheet FS-3477, Reducing Falls During Residential Construction: Installing Roof Trusses (2011). Reproduced with attribution for jobsite safety training; not an endorsement by OSHA."
+  },
+  "audit": {
+    "status": "approved",
+    "audited_at": "2026-09-30T14:01:48.440Z",
+    "osha_accuracy_verified": true,
+    "flags": [
+      "Verified against data/raw/osha-reducing-falls-installing-roof-trusses.md (OSHA FS-3477): single-truss anchor prohibition, ground assembly, spreader, full truss section, 1926.502(d)(15) anchorage, body belts, 1926.453 lifts.",
+      "Edited: added \"per worker attached\" (source / 1926.502(d)(15)).",
+      "Edited: removed 29 CFR 1926.502(k) from osha_standards because no talking point uses the written-plan rule.",
+      "Harwood check: OSHA-authored fact sheet."
+    ]
+  }
+}

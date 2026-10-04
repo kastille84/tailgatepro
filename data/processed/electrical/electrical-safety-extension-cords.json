@@ -1,0 +1,51 @@
+{
+  "id": "electrical-safety-extension-cords",
+  "title": "Extension Cord Safety on the Jobsite",
+  "primary_trade": "Electrical",
+  "trade_tags": [
+    "Electrical",
+    "General Construction"
+  ],
+  "osha_standards": [
+    "29 CFR 1926.404",
+    "29 CFR 1926.405"
+  ],
+  "estimated_minutes": 5,
+  "summary": "Loose, damaged extension cords cause trips, shocks, burns, and even heart failure. This talk covers inspecting cords, using GFCIs, and what not to do with cords.",
+  "talking_points": [
+    "Inspect every extension cord before use for damage and missing grounding prongs.",
+    "Use a Ground Fault Circuit Interrupter (GFCI) to protect against electrical faults.",
+    "Keep cords out of foot traffic to prevent trips and cord damage.",
+    "Do not use an extension cord where it is hard to inspect, where damage is likely, or as a substitute for permanent wiring.",
+    "Do not use a metal outlet box, Romex, or nonmetallic cable as an extension cord.",
+    "Do not staple or nail cords in place, and do not join several cords together - use one cord long enough for the job."
+  ],
+  "site_hazards_to_check": [
+    "Cords with cuts, cracked insulation, or missing ground prongs",
+    "Cords run through walkways, doorways, or standing water",
+    "No GFCI protection on the circuit or cord",
+    "Multiple cords chained together, or cords stapled or nailed down",
+    "Extension cords used in place of permanent wiring"
+  ],
+  "discussion_questions": [
+    "How do you check a cord before you plug it in?",
+    "Where is the GFCI on this circuit, and how do you test it?",
+    "What is wrong with linking two shorter cords together?"
+  ],
+  "attribution": {
+    "source": "NIOSH",
+    "publisher": "National Institute for Occupational Safety and Health (NIOSH)",
+    "copyright": "U.S. Government work — public domain.",
+    "license": "public-domain",
+    "source_url": "https://www.cdc.gov/niosh/docs/2022-143/2022-143.pdf",
+    "notice": "Adapted from a NIOSH Toolbox Talk (co-developed with CPWR). Public-domain source; not an endorsement by NIOSH or CPWR."
+  },
+  "audit": {
+    "status": "approved",
+    "audited_at": "2026-09-10T18:21:19Z",
+    "osha_accuracy_verified": true,
+    "flags": [
+      "OSHA mapping verified accurate: 1926.404 (wiring design and protection, incl. GFCI at 404(b)(1)) and 1926.405 (flexible cords/extension cords at 405(a)(2) and (g)). Inspect before use, GFCI protection, no chaining cords, no substitute for permanent wiring, no stapling/nailing - all consistent with the standard. No tolerance issues."
+    ]
+  }
+}

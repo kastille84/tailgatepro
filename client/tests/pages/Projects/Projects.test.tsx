@@ -1,0 +1,299 @@
+import React from "react";
+import { describe, it, expect, vi, beforeEach } from "vitest";
+import { render, screen, fireEvent } from "@testing-library/react";
+import { ThemeProvider } from "styled-components";
+
+import { Projects } from "../../../src/pages/Projects/Projects";
+import theme from "../../../src/styles/theme";
+
+const mockUseAuth = vi.fn();
+const mockUseProjects = vi.fn();
+const mockUseCurrentUser = vi.fn();
+const mockUseJobsiteMemberships = vi.fn();
+
+vi.mock("../../../src/context/auth", () => ({
+  useAuth: () => mockUseAuth(),
+}));
+vi.mock("../../../src/hooks/useCurrentUser", () => ({
+  useCurrentUser: () => mockUseCurrentUser(),
+}));
+vi.mock("../../../src/hooks/useJobsiteMemberships", () => ({
+  useJobsiteMemberships: (...args: unknown[]) => mockUseJobsiteMemberships(...args),
+}));
+vi.mock("../../../src/hooks/useProjects", () => ({
+  useProjects: (...args: unknown[]) => mockUseProjects(...args),
+}));
+vi.mock("../../../src/hooks/useUnsyncedProjectIds", () => ({
+  useUnsyncedProjectIds: () => new Set(["queued-1", "queued-2"]),
+}));
+
+// The feature components have their own tests; stub them so the page test
+// stays focused on page state (guards, loading/error, opening the form).
+vi.mock("../../../src/features/projects", () => ({
+  ProjectList: ({
+    projects,
+    onEdit,
+    onLinkGc,
+    onManageIntegrations,
+    cadenceByJobsiteId,
+    unsyncedProjectIds,
+  }: {
+    projects: { id: string }[];
+    onEdit: (p: { id: string }) => void;
+    onLinkGc?: (p: { id: string }) => void;
+    onManageIntegrations?: (p: { id: string }) => void;
+    cadenceByJobsiteId?: Map<string, unknown>;
+    unsyncedProjectIds?: Set<string>;
+  }) => (
+    <div data-testid="project-list">
+      {projects.length} projects
+      <span data-testid="unsynced-count">{unsyncedProjectIds?.size}</span>
+      <span data-testid="cadence-count">{cadenceByJobsiteId?.size}</span>
+      <button type="button" onClick={() => onEdit({ id: "p1" })}>
+        stub-edit
+      </button>
+      {onLinkGc && (
+        <button type="button" onClick={() => onLinkGc({ id: "p1" })}>
+          stub-link
+        </button>
+      )}
+      {onManageIntegrations && (
+        <button type="button" onClick={() => onManageIntegrations({ id: "p1" })}>
+          stub-integrations
+        </button>
+      )}
+    </div>
+  ),
+  ProjectIntegrationsModal: ({
+    project,
+    onClose,
+  }: {
+    project: { id: string };
+    onClose: () => void;
+  }) => (
+    <div role="dialog">
+      integrations {project.id}
+      <button type="button" onClick={onClose}>
+        stub-integrations-close
+      </button>
+    </div>
+  ),
+  GcLinkModal: ({
+    project,
+    onClose,
+  }: {
+    project: { id: string };
+    onClose: () => void;
+  }) => (
+    <div role="dialog">
+      link {project.id}
+      <button type="button" onClick={onClose}>
+        stub-link-close
+      </button>
+    </div>
+  ),
+  ProjectForm: ({
+    isOpen,
+    onClose,
+    project,
+  }: {
+    isOpen: boolean;
+    onClose: () => void;
+    project?: { id: string };
+  }) =>
+    isOpen ? (
+      <div role="dialog">
+        {project ? `edit ${project.id}` : "new"}
+        <button type="button" onClick={onClose}>
+          stub-close
+        </button>
+      </div>
+    ) : null,
+}));
+
+vi.mock("../../../src/features/jobsites", () => ({
+  JobsiteManager: () => <div data-testid="jobsite-manager" />,
+}));
+
+const renderPage = () =>
+  render(
+    <ThemeProvider theme={theme}>
+      <Projects />
+    </ThemeProvider>,
+  );
+
+describe("Projects page", () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+    mockUseAuth.mockReturnValue({ user: { email: "a@b.com" }, loading: false });
+    mockUseCurrentUser.mockReturnValue({ isSubcontractor: true });
+    mockUseJobsiteMemberships.mockReturnValue({ memberships: [] });
+    mockUseProjects.mockReturnValue({
+      projects: [],
+      isLoading: false,
+      isError: false,
+    });
+  });
+
+  it("passes a subcontractor's job-site memberships to the project list", () => {
+    mockUseJobsiteMemberships.mockReturnValue({
+      memberships: [{ jobsiteId: "j1" }, { jobsiteId: "j2" }],
+    });
+    renderPage();
+
+    expect(mockUseJobsiteMemberships).toHaveBeenCalledWith({ enabled: true });
+    expect(screen.getByTestId("cadence-count").textContent).toBe("2");
+  });
+
+  it("passes the ids of still-queued (unsynced) projects to the project list", () => {
+    renderPage();
+
+    expect(screen.getByTestId("unsynced-count").textContent).toBe("2");
+  });
+
+  it("does not load memberships for a GC", () => {
+    mockUseCurrentUser.mockReturnValue({ isSubcontractor: false, isGc: true });
+    renderPage();
+
+    expect(mockUseJobsiteMemberships).toHaveBeenCalledWith({ enabled: false });
+  });
+
+  it("shows a GC the job-site manager instead of the project list and controls", () => {
+    mockUseCurrentUser.mockReturnValue({ isSubcontractor: false, isGc: true });
+    renderPage();
+
+    expect(screen.getByTestId("jobsite-manager")).toBeDefined();
+    expect(screen.queryByTestId("project-list")).toBeNull();
+    expect(
+      screen.queryByRole("button", { name: /new project/i }),
+    ).toBeNull();
+  });
+
+  it("does not show the job-site manager to a subcontractor", () => {
+    renderPage();
+    expect(screen.queryByTestId("jobsite-manager")).toBeNull();
+  });
+
+  it("shows a loading status while auth resolves", () => {
+    mockUseAuth.mockReturnValue({ user: null, loading: true });
+    renderPage();
+    expect(screen.getByText(/loading/i)).toBeDefined();
+  });
+
+  it("shows an access-denied fallback when there is no user", () => {
+    mockUseAuth.mockReturnValue({ user: null, loading: false });
+    renderPage();
+    expect(screen.getByText(/access denied/i)).toBeDefined();
+  });
+
+  it("shows a spinner while the projects query is loading", () => {
+    mockUseProjects.mockReturnValue({
+      projects: [],
+      isLoading: true,
+      isError: false,
+    });
+    renderPage();
+    expect(screen.getByRole("status")).toBeDefined();
+  });
+
+  it("shows an error message when the projects query fails", () => {
+    mockUseProjects.mockReturnValue({
+      projects: [],
+      isLoading: false,
+      isError: true,
+    });
+    renderPage();
+    expect(screen.getByRole("alert")).toBeDefined();
+  });
+
+  it("renders the list and opens/closes the form from the page controls", () => {
+    mockUseProjects.mockReturnValue({
+      projects: [{ id: "p1" }],
+      isLoading: false,
+      isError: false,
+    });
+    renderPage();
+
+    expect(screen.getByTestId("project-list")).toBeDefined();
+    expect(
+      screen.getByText(
+        new RegExp(`© ${new Date().getFullYear()} TailgatePro`, "i"),
+      ),
+    ).toBeTruthy();
+    expect(screen.queryByRole("dialog")).toBeNull();
+
+    fireEvent.click(screen.getByRole("button", { name: /new project/i }));
+    expect(screen.getByRole("dialog").textContent).toContain("new");
+
+    fireEvent.click(screen.getByRole("button", { name: /stub-close/i }));
+    expect(screen.queryByRole("dialog")).toBeNull();
+  });
+
+  it("opens the form in edit mode when a list row requests it", () => {
+    mockUseProjects.mockReturnValue({
+      projects: [{ id: "p1" }],
+      isLoading: false,
+      isError: false,
+    });
+    renderPage();
+
+    fireEvent.click(screen.getByRole("button", { name: /stub-edit/i }));
+    expect(screen.getByRole("dialog").textContent).toContain("edit p1");
+  });
+
+  it("lets a subcontractor open the link-to-GC modal from a list row and close it again", () => {
+    renderPage();
+    expect(screen.queryByRole("dialog")).toBeNull();
+
+    fireEvent.click(screen.getByRole("button", { name: /stub-link$/i }));
+    expect(screen.getByRole("dialog").textContent).toContain("link p1");
+
+    fireEvent.click(screen.getByRole("button", { name: /stub-link-close/i }));
+    expect(screen.queryByRole("dialog")).toBeNull();
+  });
+
+  it("lets a subcontractor manager open and close the integrations modal from a list row", () => {
+    mockUseCurrentUser.mockReturnValue({ isSubcontractor: true, isManagerRole: true });
+    renderPage();
+    expect(screen.queryByRole("dialog")).toBeNull();
+
+    fireEvent.click(screen.getByRole("button", { name: /stub-integrations$/i }));
+    expect(screen.getByRole("dialog").textContent).toContain("integrations p1");
+
+    fireEvent.click(screen.getByRole("button", { name: /stub-integrations-close/i }));
+    expect(screen.queryByRole("dialog")).toBeNull();
+  });
+
+  it("offers no integrations action to a foreman", () => {
+    mockUseCurrentUser.mockReturnValue({ isSubcontractor: true, isManagerRole: false });
+    renderPage();
+
+    expect(screen.queryByRole("button", { name: /stub-integrations$/i })).toBeNull();
+  });
+
+  it("offers no link-to-GC action to a GC company or while the profile is still loading", () => {
+    mockUseCurrentUser.mockReturnValue({ isSubcontractor: false });
+    renderPage();
+
+    expect(screen.queryByRole("button", { name: /stub-link$/i })).toBeNull();
+  });
+
+  it("hides the New project control from a GC company or while the profile is still loading", () => {
+    mockUseCurrentUser.mockReturnValue({ isSubcontractor: false });
+    renderPage();
+
+    expect(
+      screen.queryByRole("button", { name: /new project/i }),
+    ).toBeNull();
+  });
+
+  it("asks useProjects to include archived projects when the toggle is checked", () => {
+    renderPage();
+
+    expect(mockUseProjects).toHaveBeenLastCalledWith(false);
+
+    fireEvent.click(screen.getByLabelText(/show archived/i));
+
+    expect(mockUseProjects).toHaveBeenLastCalledWith(true);
+  });
+});

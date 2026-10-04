@@ -1,0 +1,55 @@
+{
+  "id": "equipment-pre-use-checks",
+  "title": "Equipment Pre-Use Checks",
+  "primary_trade": "General Construction",
+  "trade_tags": [
+    "General Construction"
+  ],
+  "osha_standards": [
+    "29 CFR 1926.20(a)(1)",
+    "29 CFR 1926.20(b)"
+  ],
+  "estimated_minutes": 5,
+  "summary": "OSHA requires frequent and regular inspections of job sites, materials and equipment. This talk covers what employers must do and what crews should do when equipment does not pass.",
+  "talking_points": [
+    "Employers must set up programs for frequent and regular inspections of job sites, materials and equipment.",
+    "Competent persons designated by the employer make those inspections.",
+    "Good practice, not a stated requirement of 1926.20: check your tool or machine before each use so problems are found before work starts.",
+    "Machinery, tools, material or equipment that does not comply with OSHA construction requirements may not be used.",
+    "Noncompliant equipment must be tagged as unsafe, have its controls locked to make it inoperable, or be physically removed from where it operates.",
+    "Only employees qualified by training or experience may operate equipment and machinery.",
+    "Under 1926.20(a)(1), contractors may not require a laborer or mechanic to work in surroundings or conditions that are unsanitary, hazardous, or dangerous to health or safety.",
+    "If a piece of equipment fails the check, tell your supervisor. Do not use it."
+  ],
+  "site_hazards_to_check": [
+    "Equipment with no recent inspection by a competent person",
+    "Tools or machines with missing guards, damaged parts or failed safety devices",
+    "Damaged equipment that is not tagged, locked out or removed",
+    "Operators without the training or experience for the equipment",
+    "Unsafe equipment mixed in with good equipment in the same area"
+  ],
+  "discussion_questions": [
+    "Who is the designated competent person for equipment inspections on this job?",
+    "What do we check on our equipment before we use it each day?",
+    "How do we tag or lock out a machine that fails a check?"
+  ],
+  "attribution": {
+    "source": "OSHA",
+    "publisher": "Occupational Safety and Health Administration (OSHA)",
+    "copyright": "U.S. Government work — public domain.",
+    "license": "public-domain",
+    "source_url": "https://www.osha.gov/laws-regs/regulations/standardnumber/1926/1926.20",
+    "source_ref": "TBT-296",
+    "notice": "Adapted from 29 CFR 1926.20, General safety and health provisions. Reproduced with attribution for jobsite safety training; not an endorsement by OSHA."
+  },
+  "audit": {
+    "status": "approved",
+    "audited_at": "2026-09-25T18:10:19Z",
+    "osha_accuracy_verified": true,
+    "flags": [
+      "Points 1, 2, 4, 5, 6 quote-accurate to 1926.20(b)(2)-(4). Concern checked: 1926.20 requires frequent and regular inspections by competent persons, not inspection before each use.",
+      "FIXES MADE: (1) point 3 now labels pre-use checks as good practice rather than an OSHA requirement (the summary already said frequent and regular inspections). (2) Point 7 was a bare absolute quoting 1926.20(a)(1), a Section 107 contract condition; reworded to attribute it to the paragraph. Added 1926.20(a)(1) to osha_standards.",
+      "Non-blocking: content is mostly a paraphrase of the regulation with few concrete pre-use check items (cord, guard, controls, fluid, tags); consider adding a short generic checklist. Public domain, osha.gov. No UK wording."
+    ]
+  }
+}

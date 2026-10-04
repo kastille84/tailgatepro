@@ -19,26 +19,15 @@ Each package has its own `node_modules` and its own `.env`. Run `npm install` in
 
 ## Commands
 
-### Running the app (from repo root)
-
-- `npm run dev` — runs server + client together via `concurrently`.
-- `npm run server` — server only (`nodemon server.js`), port `5000`.
-- `npm run client` — client only (proxies to `npm run dev --prefix client`).
-- `npm run start-prod` — builds the client, then starts the server, which serves `client/dist` statically and falls back to `index.html` for SPA routes.
-
 ### Client (from `client/`)
 
 - `npm run dev` — Vite dev server on **`https://localhost:5173`**. It runs over HTTPS with a self-signed cert (`@vitejs/plugin-basic-ssl`) and binds all interfaces (`host: true`). Expect a browser cert warning.
-- `npm run build` — `tsc -b && vite build` (type errors fail the build).
-- `npm run lint` — ESLint (flat config, `client/eslint.config.js`).
-- `npm run preview` — serve the production build locally.
 
 ### Tests
 
 - Unit testing standard is **Vitest only — never Jest** (`.github/copilot-instructions.md`, `docs/unit-testing.md`).
-- Run all: `npx vitest run` (from `client/`). Watch: `npx vitest`. Single file: `npx vitest path/to/file.test.tsx`. By name: `npx vitest -t "should validate password"`. Coverage: `npx vitest run --coverage`.
 - Client Vitest config (in `client/vite.config.ts`) runs in **browser mode** (Playwright, Chromium, `headless: false`), expects specs under `client/tests/**/*.test.{ts,tsx}`, loads `client/setupTests.ts`, and enforces **90% coverage thresholds**. Those test dirs/files do not exist yet — create them when adding the first test.
-- The root `npm test` is still the stub (`exit 1`). Root devDependencies list `mocha`/`chai`/`sinon`, but the documented standard is Vitest; confirm with the maintainer before adding server tests.
+- Server-side tests use Vitest too (confirmed with the maintainer as of the auth feature): a root `vitest.config.js` runs specs matching `server/**/*.test.js` (`npm run test:server`, or `npm test` from root, which runs both server and client suites). Root devDependencies still list `mocha`/`chai`/`sinon` — these are unused legacy leftovers, not the standard. Server test files must be plain CommonJS (`require`/`module.exports`, no `import` statements) — see the note at the top of `server/middlewares/requireAuth.test.js` for why: mixing `import` in a test file with a `require()`-based CJS module under test can produce two separate module instances, silently defeating any mock/spy on the CJS one.
 
 ## Architecture
 
@@ -56,8 +45,6 @@ Per `docs/coding-style.md` and `docs/folder-structure.md`, keep strict separatio
 
 ### Client
 
-Folder conventions (`docs/folder-structure.md`) — most of these are planned, not present: `features/`, `services/` (API-call functions per domain, e.g. `apiAuth`), `pages/`, `partials/` (modal contents), `ui_comps/` (reusable primitives), `context/`, `hooks/`, `interfaces/`, `constants/`, `data/`, `utils/`, `styles/`.
-
 `client/src/App.tsx` composes providers in this order: `AuthProvider` → styled-components `ThemeProvider` → `QueryClientProvider` → `GlobalStyles` → `BrowserRouter`. `main.tsx` currently renders without `StrictMode`.
 
 - **Server state:** TanStack Query. Do not hand-roll loading/error flags with `useEffect` (`docs/coding-style.md`). The `QueryClient` is currently configured with `staleTime: 0, gcTime: 0`.
@@ -70,7 +57,7 @@ Folder conventions (`docs/folder-structure.md`) — most of these are planned, n
 - One Supabase client only, created in `client/src/context/auth/auth-provider.ts`. Never call `createClient` or `supabase.auth.getUser()` elsewhere.
 - Consume auth via the `useAuth()` hook (`client/src/context/auth/use-auth.ts`), which uses the React 19 `use()` API and throws if used outside `<AuthProvider>`.
 - `AuthProvider` seeds state from `getSession()` and subscribes to `onAuthStateChange` (unsubscribes on unmount). It exposes `user`, `loading`, `loginWithGoogle` (Google OAuth), and `logout`.
-- Protected routes should redirect unauthenticated users at the routing layer (not yet implemented).
+- Protected routes should redirect unauthenticated users at the routing layer (it is now implemented via RequireAuth).
 
 ### Environment config
 
@@ -83,8 +70,7 @@ Add new keys to both the prod and non-prod branches of the relevant function.
 
 ### Database (Supabase / PostgreSQL)
 
-Schema is documented in `Supabase_Schema.md`; the runnable DDL is `Supabase_SQL.sql`. Core tables: `companies`, `users` (id references `auth.users`), `projects`, `project_subcontractors` (composite PK), `toolbox_talks` (content library, `trade_tag`-indexed), `meeting_logs`, `signatures`.
-
+Schema is documented in `Supabase_Schema.md`; the runnable DDL is `Supabase_SQL.sql`.
 **Offline-sync rule:** every table's `id` is a `UUID` with no DB default. Primary keys must be **generated client-side** (`crypto.randomUUID()`) before writing to IndexedDB, so offline records don't collide on sync. `meeting_logs.synced_at` tracks sync state.
 
 ## Styling conventions
@@ -108,9 +94,15 @@ Schema is documented in `Supabase_Schema.md`; the runnable DDL is `Supabase_SQL.
 other docs files:
 
 - `pricing-and-positioning-strategy_V2.md`
+- `offline-todo.md`
+- `wcag.md`
+- `data-access.md`
+- `content-attribution.md` (toolbox-talk source credit + CPWR licensing conditions)
+- `pricing-promise-gaps.md` (audit of pricing/landing-page promises vs. what the code delivers; tracked as Phase 9 in `tasks.md`)
 
 ### Known code/doc mismatches (verify before relying on either)
 
 - `docs/coding-style.md` says the server uses ES Modules (`import/export`); `server.js` and `server/utility/envUtils.js` are CommonJS (`require`/`exports`).
 - Docs reference client primitives at `src/components/ui-comps/`; the actual path is `client/src/ui_comps/`.
 - `docs/ui-styling.md` mentions `theme.spacing`, `theme.typography`, and named breakpoints (`mobile`/`tablet`/`desktop`); `theme.ts` currently defines `colors`, `shadows`, `borderRadius`, and numeric `breakpoints` keys (`xs`–`2xl`) only.
+- This file (above) says client Vitest runs in **browser mode** (Playwright, Chromium) with **90%** coverage thresholds; `client/vite.config.ts` actually configures `environment: "jsdom"` and 100% global coverage thresholds (statements/branches/functions/lines). Write new client tests against the real jsdom config and expect full coverage, not 90%.

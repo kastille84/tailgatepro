@@ -1,0 +1,718 @@
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+
+import {
+  completeMeeting,
+  createMeetingLog,
+  getDefenseBundle,
+  getMeetingLogs,
+  getMeetingMonths,
+  getMeetingPdfUrl,
+  uploadCrewPhoto,
+  verifyMeetingSeal,
+} from "../../src/services/apiMeetingLogs";
+import { DEFAULT_FETCH_TIMEOUT_MS } from "../../src/utils/fetchWithTimeout";
+import { PlanLimitError } from "../../src/utils/PlanLimitError";
+
+const meetingLog = {
+  id: "meeting-1",
+  projectId: "project-1",
+  talkId: "talk-1",
+  foremanId: "user-1",
+  companyId: "company-1",
+  crewPhotoUrl: null,
+  finalPdfUrl: null,
+  completedAt: null,
+  heldAt: null,
+  syncedAt: null,
+  createdAt: "2026-09-15T00:00:00.000Z",
+};
+
+const GENERIC = "Something went wrong. Please try again.";
+
+describe("apiMeetingLogs", () => {
+  beforeEach(() => {
+    vi.restoreAllMocks();
+    vi.unstubAllGlobals();
+  });
+
+  afterEach(() => {
+    vi.useRealTimers();
+  });
+
+  describe("createMeetingLog", () => {
+    it("POSTs the exact input, including the caller-supplied id, and returns the created meeting log", async () => {
+      const fetchMock = vi.fn().mockResolvedValue({
+        ok: true,
+        status: 201,
+        json: async () => ({ success: true, data: meetingLog }),
+      });
+      vi.stubGlobal("fetch", fetchMock);
+
+      const input = { id: "meeting-1", projectId: "project-1", talkId: "talk-1" };
+
+      await expect(createMeetingLog("token-123", input)).resolves.toEqual(
+        meetingLog,
+      );
+      expect(fetchMock).toHaveBeenCalledWith(
+        "/api/meetings",
+        expect.objectContaining({
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: "Bearer token-123",
+          },
+          body: JSON.stringify(input),
+          signal: expect.any(AbortSignal),
+        }),
+      );
+    });
+
+    it("rejects with the backend error message on an error response", async () => {
+      vi.stubGlobal(
+        "fetch",
+        vi.fn().mockResolvedValue({
+          ok: false,
+          status: 404,
+          json: async () => ({
+            success: false,
+            error: "That project doesn't exist",
+          }),
+        }),
+      );
+      await expect(
+        createMeetingLog("token-123", { id: "meeting-1", projectId: "project-1" }),
+      ).rejects.toThrow("That project doesn't exist");
+    });
+
+    it("rejects with the generic message when the response is unsuccessful without a body", async () => {
+      vi.stubGlobal(
+        "fetch",
+        vi.fn().mockResolvedValue({
+          ok: false,
+          status: 500,
+          json: async () => null,
+        }),
+      );
+      await expect(
+        createMeetingLog("token-123", { id: "meeting-1", projectId: "project-1" }),
+      ).rejects.toThrow(GENERIC);
+    });
+
+    it("rejects (rather than hanging forever) when the request never gets a response", async () => {
+      vi.useFakeTimers();
+      vi.stubGlobal(
+        "fetch",
+        vi.fn((_url: string, init?: RequestInit) => {
+          return new Promise((_resolve, reject) => {
+            init?.signal?.addEventListener("abort", () => {
+              reject(
+                new DOMException("The operation was aborted.", "AbortError"),
+              );
+            });
+          });
+        }),
+      );
+
+      const promise = createMeetingLog("token-123", {
+        id: "meeting-1",
+        projectId: "project-1",
+      });
+      const assertion = expect(promise).rejects.toMatchObject({
+        name: "AbortError",
+      });
+
+      await vi.advanceTimersByTimeAsync(DEFAULT_FETCH_TIMEOUT_MS);
+      await assertion;
+
+      vi.useRealTimers();
+    });
+  });
+
+  describe("uploadCrewPhoto", () => {
+    it("PUTs the raw blob body with its mime type and the bearer token", async () => {
+      const fetchMock = vi.fn().mockResolvedValue({
+        ok: true,
+        status: 200,
+        json: async () => ({
+          success: true,
+          data: { ...meetingLog, crewPhotoUrl: "meeting-1/photo.jpg" },
+        }),
+      });
+      vi.stubGlobal("fetch", fetchMock);
+
+      const blob = new Blob(["jpg-bytes"], { type: "image/jpeg" });
+
+      await expect(
+        uploadCrewPhoto("token-123", "meeting-1", blob),
+      ).resolves.toMatchObject({ crewPhotoUrl: "meeting-1/photo.jpg" });
+
+      expect(fetchMock).toHaveBeenCalledWith(
+        "/api/meetings/meeting-1/crew-photo",
+        expect.objectContaining({
+          method: "PUT",
+          headers: {
+            Authorization: "Bearer token-123",
+            "Content-Type": "image/jpeg",
+          },
+          body: blob,
+          signal: expect.any(AbortSignal),
+        }),
+      );
+    });
+
+    it("falls back to image/jpeg when the blob has no type set", async () => {
+      const fetchMock = vi.fn().mockResolvedValue({
+        ok: true,
+        status: 200,
+        json: async () => ({ success: true, data: meetingLog }),
+      });
+      vi.stubGlobal("fetch", fetchMock);
+
+      await uploadCrewPhoto("token-123", "meeting-1", new Blob(["x"]));
+
+      expect(fetchMock).toHaveBeenCalledWith(
+        "/api/meetings/meeting-1/crew-photo",
+        expect.objectContaining({
+          headers: {
+            Authorization: "Bearer token-123",
+            "Content-Type": "image/jpeg",
+          },
+        }),
+      );
+    });
+
+    it("rejects with the backend error message once the meeting is completed", async () => {
+      vi.stubGlobal(
+        "fetch",
+        vi.fn().mockResolvedValue({
+          ok: false,
+          status: 409,
+          json: async () => ({
+            success: false,
+            error:
+              "This meeting has already been completed and can't be changed.",
+          }),
+        }),
+      );
+      await expect(
+        uploadCrewPhoto("token-123", "meeting-1", new Blob(["x"])),
+      ).rejects.toThrow("can't be changed.");
+    });
+
+    it("rejects with the generic message when the response body has no error field", async () => {
+      vi.stubGlobal(
+        "fetch",
+        vi.fn().mockResolvedValue({
+          ok: false,
+          status: 500,
+          json: async () => ({ success: false }),
+        }),
+      );
+      await expect(
+        uploadCrewPhoto("token-123", "meeting-1", new Blob(["x"])),
+      ).rejects.toThrow(GENERIC);
+    });
+  });
+
+  describe("completeMeeting", () => {
+    it("PATCHes a JSON body carrying heldAt (when the meeting was held) alongside the bearer token", async () => {
+      const fetchMock = vi.fn().mockResolvedValue({
+        ok: true,
+        status: 200,
+        json: async () => ({
+          success: true,
+          data: {
+            ...meetingLog,
+            completedAt: "2026-09-21T06:00:00.000Z",
+            heldAt: "2026-09-20T22:30:00.000Z",
+          },
+        }),
+      });
+      vi.stubGlobal("fetch", fetchMock);
+
+      await expect(
+        completeMeeting("token-123", "meeting-1", "2026-09-20T22:30:00.000Z"),
+      ).resolves.toMatchObject({ heldAt: "2026-09-20T22:30:00.000Z" });
+
+      expect(fetchMock).toHaveBeenCalledWith(
+        "/api/meetings/meeting-1/complete",
+        expect.objectContaining({
+          method: "PATCH",
+          headers: {
+            Authorization: "Bearer token-123",
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ heldAt: "2026-09-20T22:30:00.000Z" }),
+        }),
+      );
+    });
+
+    it("includes heldTzOffset in the JSON body when given, even when it is 0 (UTC)", async () => {
+      const fetchMock = vi.fn().mockResolvedValue({
+        ok: true,
+        status: 200,
+        json: async () => ({ success: true, data: meetingLog }),
+      });
+      vi.stubGlobal("fetch", fetchMock);
+
+      await completeMeeting("token-123", "meeting-1", "2026-09-20T22:30:00.000Z", 0);
+
+      expect(fetchMock).toHaveBeenCalledWith(
+        "/api/meetings/meeting-1/complete",
+        expect.objectContaining({
+          body: JSON.stringify({
+            heldAt: "2026-09-20T22:30:00.000Z",
+            heldTzOffset: 0,
+          }),
+        }),
+      );
+    });
+
+    it("PATCHes with only the bearer token (no body) and returns the completed meeting log", async () => {
+      const fetchMock = vi.fn().mockResolvedValue({
+        ok: true,
+        status: 200,
+        json: async () => ({
+          success: true,
+          data: { ...meetingLog, completedAt: "2026-09-17T00:00:00.000Z" },
+        }),
+      });
+      vi.stubGlobal("fetch", fetchMock);
+
+      await expect(
+        completeMeeting("token-123", "meeting-1"),
+      ).resolves.toMatchObject({ completedAt: "2026-09-17T00:00:00.000Z" });
+
+      expect(fetchMock).toHaveBeenCalledWith(
+        "/api/meetings/meeting-1/complete",
+        expect.objectContaining({
+          method: "PATCH",
+          headers: { Authorization: "Bearer token-123" },
+          signal: expect.any(AbortSignal),
+        }),
+      );
+      expect(fetchMock.mock.calls[0][1]).not.toHaveProperty("body");
+    });
+
+    it("rejects with the backend error message on an error response", async () => {
+      vi.stubGlobal(
+        "fetch",
+        vi.fn().mockResolvedValue({
+          ok: false,
+          status: 409,
+          json: async () => ({
+            success: false,
+            error: "A meeting needs at least one signature before it can be completed.",
+          }),
+        }),
+      );
+      await expect(
+        completeMeeting("token-123", "meeting-1"),
+      ).rejects.toThrow("at least one signature");
+    });
+
+    it("rejects with the generic message when the response is unsuccessful without a body", async () => {
+      vi.stubGlobal(
+        "fetch",
+        vi.fn().mockResolvedValue({
+          ok: false,
+          status: 500,
+          json: async () => null,
+        }),
+      );
+      await expect(
+        completeMeeting("token-123", "meeting-1"),
+      ).rejects.toThrow(GENERIC);
+    });
+  });
+
+  describe("getMeetingLogs", () => {
+    it("GETs the list and returns the meetings", async () => {
+      const fetchMock = vi.fn().mockResolvedValue({
+        ok: true,
+        status: 200,
+        json: async () => ({ success: true, data: [meetingLog] }),
+      });
+      vi.stubGlobal("fetch", fetchMock);
+
+      await expect(getMeetingLogs("token-123")).resolves.toEqual({
+        meetings: [meetingLog],
+        nextCursor: null,
+      });
+      expect(fetchMock).toHaveBeenCalledWith(
+        "/api/meetings",
+        expect.objectContaining({
+          method: "GET",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: "Bearer token-123",
+          },
+        }),
+      );
+    });
+
+    it("sends the projectId and from/to month range as query params", async () => {
+      const fetchMock = vi.fn().mockResolvedValue({
+        ok: true,
+        status: 200,
+        json: async () => ({ success: true, data: [meetingLog] }),
+      });
+      vi.stubGlobal("fetch", fetchMock);
+
+      await getMeetingLogs("token-123", {
+        projectId: "project-1",
+        from: "2026-09-01T00:00:00.000Z",
+        to: "2026-10-01T00:00:00.000Z",
+      });
+
+      const url = new URL(fetchMock.mock.calls[0][0], "http://localhost");
+      expect(url.pathname).toBe("/api/meetings");
+      expect(url.searchParams.get("projectId")).toBe("project-1");
+      expect(url.searchParams.get("from")).toBe("2026-09-01T00:00:00.000Z");
+      expect(url.searchParams.get("to")).toBe("2026-10-01T00:00:00.000Z");
+    });
+
+    it("sends limit and cursor as query params and returns the next cursor", async () => {
+      const fetchMock = vi.fn().mockResolvedValue({
+        ok: true,
+        status: 200,
+        json: async () => ({
+          success: true,
+          data: [meetingLog],
+          meta: { hiddenCount: 0, historyDays: null, nextCursor: "next-abc" },
+        }),
+      });
+      vi.stubGlobal("fetch", fetchMock);
+
+      const page = await getMeetingLogs("token-123", {}, { limit: 25, cursor: "abc" });
+
+      const url = new URL(fetchMock.mock.calls[0][0], "http://localhost");
+      expect(url.searchParams.get("limit")).toBe("25");
+      expect(url.searchParams.get("cursor")).toBe("abc");
+      expect(page).toEqual({ meetings: [meetingLog], nextCursor: "next-abc" });
+    });
+
+    it("rejects with the backend error message on an error response", async () => {
+      vi.stubGlobal(
+        "fetch",
+        vi.fn().mockResolvedValue({
+          ok: false,
+          status: 502,
+          json: async () => ({ success: false, error: "Could not load meetings" }),
+        }),
+      );
+      await expect(getMeetingLogs("token-123")).rejects.toThrow(
+        "Could not load meetings",
+      );
+    });
+
+    it("rejects with the generic message when the response has no body", async () => {
+      vi.stubGlobal(
+        "fetch",
+        vi.fn().mockResolvedValue({
+          ok: false,
+          status: 500,
+          json: async () => {
+            throw new Error("not json");
+          },
+        }),
+      );
+      await expect(getMeetingLogs("token-123")).rejects.toThrow(GENERIC);
+    });
+  });
+
+  describe("getMeetingMonths", () => {
+    it("GETs the months with the tzOffset and returns them with the history meta", async () => {
+      const fetchMock = vi.fn().mockResolvedValue({
+        ok: true,
+        status: 200,
+        json: async () => ({
+          success: true,
+          data: [{ month: "2026-09", count: 3 }],
+          meta: { hiddenCount: 3, historyDays: 30 },
+        }),
+      });
+      vi.stubGlobal("fetch", fetchMock);
+
+      await expect(getMeetingMonths("token-123", 300)).resolves.toEqual({
+        months: [{ month: "2026-09", count: 3 }],
+        hiddenCount: 3,
+        historyDays: 30,
+      });
+      expect(fetchMock).toHaveBeenCalledWith(
+        "/api/meetings/months?tzOffset=300",
+        expect.objectContaining({ method: "GET" }),
+      );
+    });
+
+    it("defaults a missing meta to no hidden rows and no window", async () => {
+      vi.stubGlobal(
+        "fetch",
+        vi.fn().mockResolvedValue({
+          ok: true,
+          status: 200,
+          json: async () => ({ success: true, data: [] }),
+        }),
+      );
+
+      await expect(getMeetingMonths("token-123", 0)).resolves.toEqual({
+        months: [],
+        hiddenCount: 0,
+        historyDays: null,
+      });
+    });
+
+    it("rejects with the backend error message on an error response", async () => {
+      vi.stubGlobal(
+        "fetch",
+        vi.fn().mockResolvedValue({
+          ok: false,
+          status: 400,
+          json: async () => ({
+            success: false,
+            error: "tzOffset must be minutes between -840 and 840",
+          }),
+        }),
+      );
+      await expect(getMeetingMonths("token-123", 9999)).rejects.toThrow(
+        "tzOffset must be minutes",
+      );
+    });
+
+    it("rejects with the generic message when the response has no body", async () => {
+      vi.stubGlobal(
+        "fetch",
+        vi.fn().mockResolvedValue({
+          ok: false,
+          status: 500,
+          json: async () => null,
+        }),
+      );
+      await expect(getMeetingMonths("token-123", 0)).rejects.toThrow(GENERIC);
+    });
+  });
+
+  describe("getMeetingPdfUrl", () => {
+    it("GETs the pdf-url endpoint and returns the signed url", async () => {
+      const fetchMock = vi.fn().mockResolvedValue({
+        ok: true,
+        status: 200,
+        json: async () => ({
+          success: true,
+          data: { url: "https://signed.example/report.pdf" },
+        }),
+      });
+      vi.stubGlobal("fetch", fetchMock);
+
+      await expect(getMeetingPdfUrl("token-123", "meeting-1")).resolves.toBe(
+        "https://signed.example/report.pdf",
+      );
+      expect(fetchMock).toHaveBeenCalledWith(
+        "/api/meetings/meeting-1/pdf-url",
+        expect.objectContaining({ method: "GET" }),
+      );
+    });
+
+    it("rejects with the plan-limit message for a meeting outside the window", async () => {
+      vi.stubGlobal(
+        "fetch",
+        vi.fn().mockResolvedValue({
+          ok: false,
+          status: 403,
+          json: async () => ({
+            success: false,
+            error: "This meeting is older than your plan's history. Upgrade to view it.",
+          }),
+        }),
+      );
+      await expect(getMeetingPdfUrl("token-123", "meeting-1")).rejects.toThrow(
+        "older than your plan's history",
+      );
+    });
+
+    it("rejects with the generic message when the response has no body", async () => {
+      vi.stubGlobal(
+        "fetch",
+        vi.fn().mockResolvedValue({
+          ok: false,
+          status: 500,
+          json: async () => null,
+        }),
+      );
+      await expect(getMeetingPdfUrl("token-123", "meeting-1")).rejects.toThrow(
+        GENERIC,
+      );
+    });
+  });
+
+  describe("verifyMeetingSeal", () => {
+    it("GETs the verify-seal endpoint and returns the result", async () => {
+      const fetchMock = vi.fn().mockResolvedValue({
+        ok: true,
+        status: 200,
+        json: async () => ({
+          success: true,
+          data: { valid: true, sealedAt: "2026-09-21T06:00:00.000Z" },
+        }),
+      });
+      vi.stubGlobal("fetch", fetchMock);
+
+      await expect(verifyMeetingSeal("token-123", "meeting-1")).resolves.toEqual({
+        valid: true,
+        sealedAt: "2026-09-21T06:00:00.000Z",
+      });
+      expect(fetchMock).toHaveBeenCalledWith(
+        "/api/meetings/meeting-1/verify-seal",
+        expect.objectContaining({
+          method: "GET",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: "Bearer token-123",
+          },
+        }),
+      );
+    });
+
+    it("rejects with the backend error message when the meeting hasn't been sealed yet", async () => {
+      vi.stubGlobal(
+        "fetch",
+        vi.fn().mockResolvedValue({
+          ok: false,
+          status: 404,
+          json: async () => ({
+            success: false,
+            error: "This meeting hasn't been sealed yet",
+          }),
+        }),
+      );
+      await expect(verifyMeetingSeal("token-123", "meeting-1")).rejects.toThrow(
+        "This meeting hasn't been sealed yet",
+      );
+    });
+
+    it("rejects with the generic message when the response has no body", async () => {
+      vi.stubGlobal(
+        "fetch",
+        vi.fn().mockResolvedValue({
+          ok: false,
+          status: 500,
+          json: async () => null,
+        }),
+      );
+      await expect(verifyMeetingSeal("token-123", "meeting-1")).rejects.toThrow(
+        GENERIC,
+      );
+    });
+  });
+
+  describe("getDefenseBundle", () => {
+    const zipResponse = (overrides: Partial<Response> = {}) => ({
+      ok: true,
+      status: 200,
+      headers: new Headers({
+        "Content-Disposition": 'attachment; filename="acme-roofing-defense-bundle.zip"',
+      }),
+      blob: async () => new Blob(["zip bytes"], { type: "application/zip" }),
+      ...overrides,
+    });
+
+    it("GETs /api/meetings/defense-bundle and resolves the blob with the server's filename", async () => {
+      const fetchMock = vi.fn().mockResolvedValue(zipResponse());
+      vi.stubGlobal("fetch", fetchMock);
+
+      const result = await getDefenseBundle("token-123");
+
+      expect(fetchMock).toHaveBeenCalledWith(
+        "/api/meetings/defense-bundle",
+        expect.objectContaining({
+          method: "GET",
+          headers: expect.objectContaining({ Authorization: "Bearer token-123" }),
+        }),
+      );
+      expect(result.filename).toBe("acme-roofing-defense-bundle.zip");
+      expect(result.blob).toBeInstanceOf(Blob);
+    });
+
+    it("falls back to a default filename when no Content-Disposition header is present", async () => {
+      vi.stubGlobal(
+        "fetch",
+        vi.fn().mockResolvedValue(zipResponse({ headers: new Headers() })),
+      );
+
+      const result = await getDefenseBundle("token-123");
+
+      expect(result.filename).toBe("defense-bundle.zip");
+    });
+
+    it("rejects with a PlanLimitError when the caller's plan has no legal archive", async () => {
+      vi.stubGlobal(
+        "fetch",
+        vi.fn().mockResolvedValue({
+          ok: false,
+          status: 403,
+          json: async () => ({
+            success: false,
+            error: "Upgrade to Trade Pro to download your OSHA Defense Bundle",
+            data: { code: "PLAN_LIMIT" },
+          }),
+        }),
+      );
+
+      const error = await getDefenseBundle("token-123").catch((e) => e);
+      expect(error).toBeInstanceOf(PlanLimitError);
+      expect(error.message).toBe(
+        "Upgrade to Trade Pro to download your OSHA Defense Bundle",
+      );
+      expect(error.limit).toBeNull();
+    });
+
+    it("falls back to the generic message and carries a limit when a bare PLAN_LIMIT response has one", async () => {
+      vi.stubGlobal(
+        "fetch",
+        vi.fn().mockResolvedValue({
+          ok: false,
+          status: 403,
+          json: async () => ({ success: false, data: { code: "PLAN_LIMIT", limit: 1 } }),
+        }),
+      );
+
+      const error = await getDefenseBundle("token-123").catch((e) => e);
+      expect(error).toBeInstanceOf(PlanLimitError);
+      expect(error.message).toBe(GENERIC);
+      expect(error.limit).toBe(1);
+    });
+
+    it("rejects with the backend error message on a 404 (nothing to bundle yet)", async () => {
+      vi.stubGlobal(
+        "fetch",
+        vi.fn().mockResolvedValue({
+          ok: false,
+          status: 404,
+          json: async () => ({
+            success: false,
+            error: "No completed meeting logs with a generated PDF are available yet.",
+          }),
+        }),
+      );
+
+      await expect(getDefenseBundle("token-123")).rejects.toThrow(
+        "No completed meeting logs with a generated PDF are available yet.",
+      );
+    });
+
+    it("rejects with the generic message when the error response has no JSON body", async () => {
+      vi.stubGlobal(
+        "fetch",
+        vi.fn().mockResolvedValue({
+          ok: false,
+          status: 500,
+          json: async () => {
+            throw new Error("bad json");
+          },
+        }),
+      );
+
+      await expect(getDefenseBundle("token-123")).rejects.toThrow(GENERIC);
+    });
+  });
+});

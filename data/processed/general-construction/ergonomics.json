@@ -1,0 +1,56 @@
+{
+  "id": "ergonomics",
+  "title": "Ergonomics",
+  "primary_trade": "General Construction",
+  "trade_tags": [
+    "General Construction"
+  ],
+  "osha_standards": [
+    "OSH Act Section 5(a)(1) General Duty Clause"
+  ],
+  "estimated_minutes": 5,
+  "summary": "Construction has one of the highest rates of back injuries of any industry, often from lifting and carrying heavy materials. Use equipment, plan your lifts, and get help.",
+  "talking_points": [
+    "Back injuries come from lifting and carrying heavy materials, working in awkward positions, and bending often to lift from the ground. Construction has one of the highest rates of back injuries of any industry.",
+    "Whenever possible, use mechanical equipment like a dolly to move heavy objects horizontally.",
+    "Never try to lift an item weighing over 50 pounds by yourself.",
+    "Plan your lifts. Make sure the path is clear and you are facing the direction of travel before you lift.",
+    "While lifting, tuck in your chin to keep your neck straight, and keep your back as straight as possible.",
+    "Lift with your leg muscles, which helps protect your back.",
+    "Ask for help with heavy or awkward objects. Coordinate and practice team lifting before you use it to move objects.",
+    "Avoid twisting your body while carrying an object. Do not write off back pain as part of the job."
+  ],
+  "site_hazards_to_check": [
+    "Heavy bags, blocks, or materials being moved by hand when a cart, dolly, or forklift could do it",
+    "Blocked or uneven paths between the pile and the work area",
+    "Materials stored on the ground that force repeated bending",
+    "Items over 50 pounds that workers plan to lift alone",
+    "Awkward loads that need two or more people"
+  ],
+  "discussion_questions": [
+    "What is the heaviest item we will move today, and what equipment will move it?",
+    "How do you plan a lift before you pick something up?",
+    "When do you ask for help or use a team lift?"
+  ],
+  "attribution": {
+    "source": "CPWR",
+    "publisher": "CPWR — The Center for Construction Research and Training",
+    "copyright": "© 2017 CPWR — The Center for Construction Research and Training. All rights reserved.",
+    "license": "free-use-with-attribution",
+    "source_url": "https://www.cpwr.com/wp-content/uploads/TT-Lifting_Carrying_Materials.pdf",
+    "source_ref": "TBT-142",
+    "notice": "Adapted from a CPWR/NIOSH Toolbox Talk, produced under NIOSH cooperative agreement OH 009762. Reproduced with attribution for jobsite safety training; not an endorsement by CPWR or NIOSH."
+  },
+  "audit": {
+    "status": "approved",
+    "audited_at": "2026-09-25T18:10:19Z",
+    "osha_accuracy_verified": true,
+    "flags": [
+      "All points (dolly for horizontal moves, never lift over 50 lb alone, plan lift path, chin tucked, leg lift, team lift practice, avoid twisting) are quote-accurate to CPWR TT-Lifting_Carrying_Materials.",
+      "OSHA mapping verified: source cites Section 5(a)(1); there is no 1926 ergonomics standard.",
+      "NON-BLOCKING scope note: the title 'Ergonomics' is broader than the content, which covers manual lifting and carrying only (summary already states this). Consider retitling 'Ergonomics: Lifting and Carrying' when convenient.",
+      "RIGHTS (non-blocking): source file rights line says 'Verify reuse terms with CPWR before redistribution'. Per docs/content-attribution.md the CPWR condition set is met (bundled in a subscription product, never sold standalone; CPWR copyright line and no-endorsement notice retained in attribution; no endorsement claimed). Keep the reminder to confirm terms before public launch.",
+      "No UK wording found."
+    ]
+  }
+}

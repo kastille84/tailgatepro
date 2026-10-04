@@ -1,0 +1,55 @@
+{
+  "id": "pollution-prevention",
+  "title": "Pollution Prevention",
+  "primary_trade": "General Construction",
+  "trade_tags": [
+    "General Construction"
+  ],
+  "osha_standards": [
+    "OSH Act Section 5(a)(1) General Duty Clause"
+  ],
+  "estimated_minutes": 5,
+  "summary": "When it rains, stormwater picks up sediment, chemicals and debris from a construction site and carries them to storm sewers and waterways. This talk covers what crews must do to keep pollutants on site.",
+  "talking_points": [
+    "Rain washes over loose soil and materials stored outside. It can carry sediment, debris and chemicals into storm sewers, rivers, lakes or coastal waters.",
+    "Common site pollutants include sediment, solid and sanitary wastes, oil and grease, concrete truck washout, construction chemicals, construction debris, phosphorus, nitrogen and pesticides.",
+    "A Clean Water Act permit is required when construction disturbs 1 acre or more, or less than 1 acre if it is part of a common plan that will disturb 1 or more acres.",
+    "Design, install and maintain effective erosion and sediment controls and pollution prevention measures.",
+    "Stabilize disturbed areas immediately when work has stopped and will not resume for more than 14 days.",
+    "Do not discharge concrete washout wastewater unless it is managed by an appropriate control. The same goes for washout or cleanout of stucco, paint and form release oils.",
+    "Do not discharge fuels, oils or other vehicle pollutants. Do not use soaps or solvents to wash vehicles and equipment.",
+    "Do not discharge dewatering water unless it is managed by appropriate controls."
+  ],
+  "site_hazards_to_check": [
+    "Loose soil or stockpiles with no erosion or sediment controls",
+    "Materials, chemicals or fuel stored outside where rain can reach them",
+    "Concrete, stucco or paint washout done without an approved control",
+    "Vehicle or equipment washing with soap or solvents",
+    "Dewatering hoses discharging without controls",
+    "Disturbed areas left open for more than 14 days"
+  ],
+  "discussion_questions": [
+    "Where does the water go when it rains on our site, and what would it pick up on the way?",
+    "Where is our concrete washout area, and does everyone know to use it?",
+    "Which disturbed areas on this job have been idle and need to be stabilized?"
+  ],
+  "attribution": {
+    "source": "EPA",
+    "publisher": "U.S. Environmental Protection Agency (EPA)",
+    "copyright": "U.S. Government work — public domain.",
+    "license": "public-domain",
+    "source_url": "https://www.epa.gov/npdes/stormwater-discharges-construction-activities",
+    "source_ref": "TBT-177",
+    "notice": "Adapted from EPA's Stormwater Discharges from Construction Activities page. Reproduced with attribution for jobsite safety training; not an endorsement by EPA."
+  },
+  "audit": {
+    "status": "approved",
+    "audited_at": "2026-09-25T18:10:19Z",
+    "osha_accuracy_verified": true,
+    "flags": [
+      "Content is quote-accurate to EPA Stormwater Discharges from Construction Activities (1 acre / common plan, 14-day stabilization, washout, fuels, soaps/solvents, dewatering, pollutant list). Public domain, epa.gov, notice preserved.",
+      "OSHA mapping: no OSHA 1926 standard governs stormwater. The General Duty Clause entry is nominal and should not be read as an OSHA requirement; the real basis is the Clean Water Act / 40 CFR 450.21 (C&D rule). Non-blocking: structurer may note this in osha_standards or a note field. Judgment: an environmental site-controls talk is acceptable in a construction toolbox library because crews perform these tasks (washout, dewatering, stockpiles).",
+      "Legal caution (non-blocking): point 3 states the permit requirement flatly. Permit authority varies (EPA CGP vs state programs); crews should defer to the project's SWPPP/permit. Not an OSHA-accuracy defect. No UK wording."
+    ]
+  }
+}

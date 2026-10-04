@@ -1,6 +1,6 @@
 import React from "react";
 import { describe, it, expect, beforeEach, vi } from "vitest";
-import { render, screen } from "@testing-library/react";
+import { render, screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { MemoryRouter, Route, Routes } from "react-router-dom";
 import { ThemeProvider } from "styled-components";
@@ -9,19 +9,14 @@ import { Pricing } from "../../../src/pages/Pricing/Pricing";
 import theme from "../../../src/styles/theme";
 import { planCadence } from "../../../src/utils/pricing";
 
-const waitlistFormSpy = vi.fn(
-  ({ audience, planInterest }: { audience: string; planInterest?: string }) => (
-    <div
-      data-testid="waitlist-form"
-      data-audience={audience}
-      data-plan-interest={planInterest ?? ""}
-    />
-  ),
-);
+const mockUseAuth = vi.fn();
+vi.mock("../../../src/context/auth", () => ({
+  useAuth: () => mockUseAuth(),
+}));
 
-vi.mock("../../../src/pages/Landing/WaitlistForm", () => ({
-  WaitlistForm: (props: { audience: string; planInterest?: string }) =>
-    waitlistFormSpy(props),
+const mockUseCurrentUser = vi.fn();
+vi.mock("../../../src/hooks/useCurrentUser", () => ({
+  useCurrentUser: () => mockUseCurrentUser(),
 }));
 
 vi.mock("../../../src/ui_comps/segmented-toggle", () => ({
@@ -54,16 +49,17 @@ vi.mock("../../../src/ui_comps/segmented-toggle", () => ({
 vi.mock("../../../src/data/plans", () => ({
   SUB_PLANS: [
     {
-      id: "sub-free",
+      id: "trade-free",
       name: "Trade Free",
       target: "Small crews",
       featured: false,
       price: { monthly: "$0", annual: "$0" },
       annualSub: "Always free",
       features: ["Feature A", "Feature B"],
+      comingSoon: ["Feature B"],
     },
     {
-      id: "sub-pro",
+      id: "trade-pro",
       name: "Trade Pro",
       target: "Growing crews",
       featured: true,
@@ -111,73 +107,126 @@ const renderPricing = (route = "/pricing") =>
     </ThemeProvider>,
   );
 
+const hrefOf = (name: string | RegExp) =>
+  screen.getByRole("link", { name }).getAttribute("href");
+
 describe("Pricing page", () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    mockUseAuth.mockReturnValue({ user: null });
+    mockUseCurrentUser.mockReturnValue({
+      companyType: null,
+      isManagerRole: false,
+      plan: null,
+    });
   });
 
-  it("renders subcontractor plans by default and passes default waitlist props", () => {
+  it("renders subcontractor plans by default", () => {
     renderPricing();
 
     expect(screen.getByRole("heading", { name: "Trade Free" })).toBeTruthy();
     expect(screen.getByRole("heading", { name: "Trade Pro" })).toBeTruthy();
     expect(screen.queryByRole("heading", { name: "GC Site Pro" })).toBeNull();
-
-    const waitlist = screen.getByTestId("waitlist-form");
-    expect(waitlist.getAttribute("data-audience")).toBe("sub");
-    expect(waitlist.getAttribute("data-plan-interest")).toBe("");
-
-    expect(screen.queryByText("Selected plan:")).toBeNull();
   });
 
-  it("hydrates audience and selected plan from query params", () => {
-    renderPricing("/pricing?audience=gc&plan=gc-portfolio");
+  it("no longer shows an SMS waitlist now that SMS nudges are live", () => {
+    renderPricing("/pricing?audience=gc");
+
+    expect(screen.queryByRole("heading", { name: /sms nudges are coming soon/i })).toBeNull();
+    expect(screen.queryByText(/join the waitlist/i)).toBeNull();
+  });
+
+  it("starts on the GC plans when the audience query param says so", () => {
+    renderPricing("/pricing?audience=gc");
 
     expect(screen.getByRole("heading", { name: "GC Site Pro" })).toBeTruthy();
     expect(screen.getByRole("heading", { name: "GC Portfolio" })).toBeTruthy();
     expect(screen.queryByRole("heading", { name: "Trade Free" })).toBeNull();
-
-    const selectedPlanNote = screen.getByText(/Selected plan:/i);
-    expect(selectedPlanNote).toBeTruthy();
-    expect(selectedPlanNote.textContent).toContain("GC Portfolio");
-
-    const waitlist = screen.getByTestId("waitlist-form");
-    expect(waitlist.getAttribute("data-audience")).toBe("gc");
-    expect(waitlist.getAttribute("data-plan-interest")).toBe("gc-portfolio");
   });
 
-  it("sets selected plan when clicking a plan CTA", async () => {
+  it("switches audience with the toggle", async () => {
     const user = userEvent.setup();
     renderPricing();
-
-    const ctas = screen.getAllByRole("link", { name: /join the waitlist/i });
-    await user.click(ctas[1]);
-
-    const selectedPlanNote = screen.getByText(/Selected plan:/i);
-    expect(selectedPlanNote).toBeTruthy();
-    expect(selectedPlanNote.textContent).toContain("Trade Pro");
-
-    const waitlist = screen.getByTestId("waitlist-form");
-    expect(waitlist.getAttribute("data-plan-interest")).toBe("sub-pro");
-  });
-
-  it("resets selected plan when audience changes", async () => {
-    const user = userEvent.setup();
-    renderPricing("/pricing?plan=sub-pro");
-
-    const selectedPlanNote = screen.getByText(/Selected plan:/i);
-    expect(selectedPlanNote).toBeTruthy();
-    expect(selectedPlanNote.textContent).toContain("Trade Pro");
 
     await user.click(
       screen.getByRole("button", { name: "For general contractors" }),
     );
 
-    expect(screen.queryByText(/Selected plan:/i)).toBeNull();
+    expect(screen.getByRole("heading", { name: "GC Portfolio" })).toBeTruthy();
+    expect(screen.queryByRole("heading", { name: "Trade Pro" })).toBeNull();
+  });
 
-    const waitlist = screen.getByTestId("waitlist-form");
-    expect(waitlist.getAttribute("data-audience")).toBe("gc");
-    expect(waitlist.getAttribute("data-plan-interest")).toBe("");
+  describe("for a visitor", () => {
+    it("sends the free plan to signup and a paid plan to signup with the plan", () => {
+      renderPricing();
+
+      expect(hrefOf("Get started free")).toBe("/signup");
+      expect(hrefOf("Get started")).toBe("/signup?plan=trade-pro&interval=monthly");
+    });
+
+    it("carries the annual interval into the signup link", async () => {
+      const user = userEvent.setup();
+      renderPricing();
+
+      await user.click(screen.getByRole("button", { name: "Annual" }));
+
+      expect(hrefOf("Get started")).toBe("/signup?plan=trade-pro&interval=annual");
+    });
+
+    it("offers both GC Portfolio sizes and sends Site Pro to signup", () => {
+      renderPricing("/pricing?audience=gc");
+
+      expect(hrefOf("Get started: up to 10 sites")).toBe(
+        "/signup?plan=gc-portfolio-10&interval=monthly",
+      );
+      expect(hrefOf("Get started: unlimited sites")).toBe(
+        "/signup?plan=gc-portfolio-unlimited&interval=monthly",
+      );
+      expect(hrefOf("Get started")).toBe("/signup");
+    });
+  });
+
+  describe("for a signed-in user", () => {
+    beforeEach(() => {
+      mockUseAuth.mockReturnValue({ user: { id: "user-1" } });
+      mockUseCurrentUser.mockReturnValue({
+        companyType: "subcontractor",
+        isManagerRole: true,
+        plan: "trade-free",
+      });
+    });
+
+    it("sends a manager straight to checkout", () => {
+      renderPricing();
+
+      expect(hrefOf("Go to dashboard")).toBe("/dashboard");
+      expect(hrefOf("Subscribe")).toBe("/checkout?plan=trade-pro&interval=monthly");
+    });
+
+    it("shows their own plan as the current plan", () => {
+      mockUseCurrentUser.mockReturnValue({
+        companyType: "subcontractor",
+        isManagerRole: true,
+        plan: "trade-pro",
+      });
+      renderPricing();
+
+      const current = screen.getByText("Current plan");
+      expect(current.getAttribute("aria-disabled")).toBe("true");
+      expect(screen.queryByRole("link", { name: "Subscribe" })).toBeNull();
+    });
+  });
+
+  it("tags only the comingSoon features with a Coming soon label", () => {
+    renderPricing();
+
+    expect(
+      within(screen.getByText("Feature B")).getByText("Coming soon"),
+    ).toBeTruthy();
+    expect(
+      within(screen.getByText("Feature A")).queryByText("Coming soon"),
+    ).toBeNull();
+    expect(screen.getAllByText("Coming soon")).toHaveLength(1);
   });
 
   it("updates billing and recalculates cadence when annual is selected", async () => {

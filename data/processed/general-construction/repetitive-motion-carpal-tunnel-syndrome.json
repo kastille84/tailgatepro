@@ -1,0 +1,48 @@
+{
+  "id": "repetitive-motion-carpal-tunnel-syndrome",
+  "title": "Repetitive Motion and Carpal Tunnel Syndrome",
+  "primary_trade": "General Construction",
+  "trade_tags": [
+    "General Construction"
+  ],
+  "osha_standards": [
+    "OSH Act Section 5(a)(1) General Duty Clause"
+  ],
+  "estimated_minutes": 5,
+  "summary": "Carpal tunnel syndrome comes from a nerve in the wrist being pinched over and over, causing pain, weakness, and tingling that can become disabling. This talk covers tool choice, wrist position, and rest.",
+  "talking_points": [
+    "Use tools designed for the job and for the task at hand.",
+    "Choose tools that keep your wrist straight and neutral, not bent forward or back, to lower the force you use.",
+    "Use two-handled tools with a spring return so the handle opens on its own, and a locking position when constant force is needed.",
+    "Wear gloves or anti-vibration wraps to improve grip and cut down shock from vibrating tools.",
+    "Rest your hands regularly, reduce repeated movements, and change your arm position often during a task."
+  ],
+  "site_hazards_to_check": [
+    "Tools that force the wrist into a bent position",
+    "Vibrating tools used without anti-vibration gloves or wraps",
+    "Tasks with constant repeated hand motions and no rotation or breaks",
+    "Worn or wrong-sized tools that need extra grip force",
+    "Cold hands, which raise the risk from vibration"
+  ],
+  "discussion_questions": [
+    "Which tasks today involve the most repeated hand and wrist motion?",
+    "Can any of those tasks be rotated among the crew?",
+    "What tool or glove changes would keep your wrist in a neutral position?"
+  ],
+  "attribution": {
+    "source": "NIOSH",
+    "publisher": "National Institute for Occupational Safety and Health (NIOSH)",
+    "copyright": "U.S. Government work — public domain.",
+    "license": "public-domain",
+    "source_url": "https://www.cdc.gov/niosh/docs/2022-131/2022-131.pdf",
+    "notice": "Adapted from a NIOSH Toolbox Talk (co-developed with CPWR). Public-domain source; not an endorsement by NIOSH or CPWR."
+  },
+  "audit": {
+    "status": "approved",
+    "audited_at": "2026-09-10T18:21:19Z",
+    "osha_accuracy_verified": true,
+    "flags": [
+      "OSHA authority correctly stated as the General Duty Clause - there is no federal ergonomics standard as of the audit date. NIOSH-sourced (raw file data/raw/niosh-repetitive-motion-carpal-tunnel-syndrome.md), U.S. Government work, public domain. Content - task-appropriate tools, neutral wrist posture, spring-return two-handled tools with a locking option, anti-vibration gloves/wraps, rest and task rotation, cold hands raise vibration risk - is technically accurate. No tolerance issues."
+    ]
+  }
+}

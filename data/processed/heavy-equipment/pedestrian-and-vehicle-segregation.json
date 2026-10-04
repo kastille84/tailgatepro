@@ -1,0 +1,58 @@
+{
+  "id": "pedestrian-and-vehicle-segregation",
+  "title": "Pedestrian and Vehicle Segregation",
+  "primary_trade": "Heavy Equipment",
+  "trade_tags": [
+    "Heavy Equipment",
+    "General Construction"
+  ],
+  "osha_standards": [
+    "29 CFR 1926.201",
+    "29 CFR 1926.602(a)(9)",
+    "29 CFR 1926.601(b)(4)"
+  ],
+  "estimated_minutes": 5,
+  "summary": "Workers on foot can be struck by trucks and other mobile equipment, often when they are in a blind spot. Stay alert, stay visible, and make eye contact with the operator before you cross.",
+  "talking_points": [
+    "OSHA says transportation incidents and workers struck by vehicles or mobile equipment account for the highest number of fatal work injuries.",
+    "Stay alert and look out for other workers.",
+    "Make eye contact with the operator, flagger, or spotter before you walk in front of or behind a vehicle or mobile equipment.",
+    "Do not stand or walk in front of or behind equipment unless the operator signals that it is safe. Avoid the operator's blind spot.",
+    "Do not stand in shadows or areas where the driver may not see you.",
+    "Obey signs. Do not stray into traffic or truck delivery lanes.",
+    "Listen for horns and back-up alarms and pay attention to them.",
+    "Wear high-visibility clothing such as vests. Flaggers should check the label for performance class 2 or 3. Other workers should wear class 1, 2, or 3."
+  ],
+  "site_hazards_to_check": [
+    "Places where walking routes cross truck and equipment routes",
+    "Blind spots behind and beside trucks and mobile equipment",
+    "Shadowed areas where drivers may not see workers",
+    "Missing or hard-to-see signs marking traffic and truck delivery lanes",
+    "High-visibility clothing that is missing or does not have the right class label"
+  ],
+  "discussion_questions": [
+    "Where do our walking routes cross vehicle routes on this site?",
+    "A worker crossing a construction vehicle route was almost hit by a large truck turning a corner because he was in the driver's blind spot. What put him in danger, and what could have prevented it?",
+    "What will we do at this worksite today to avoid being backed over or struck by a truck or other large equipment?"
+  ],
+  "attribution": {
+    "source": "CPWR",
+    "publisher": "CPWR — The Center for Construction Research and Training",
+    "copyright": "CPWR — The Center for Construction Research and Training. The source document carries no copyright year or rights line; CPWR materials are all rights reserved and free to use with attribution.",
+    "license": "free-use-with-attribution",
+    "source_url": "https://www.cpwr.com/wp-content/uploads/TT-Work_Zone_Safety_Working_Around_Vehicles.pdf",
+    "source_ref": "TBT-009",
+    "notice": "Adapted from a CPWR/NIOSH Toolbox Talk, produced under NIOSH cooperative agreement OH 009762. Reproduced with attribution for jobsite safety training; not an endorsement by CPWR or NIOSH."
+  },
+  "audit": {
+    "status": "approved",
+    "audited_at": "2026-09-25T18:11:08Z",
+    "osha_accuracy_verified": true,
+    "flags": [
+      "All 8 points are quote-accurate to the CPWR Toolbox Talk (nothing invented). Ryan's Story was not in the talk, so the discussion question referencing it was rewritten to be self-contained (FIX).",
+      "Citations: 1926.201 (signaling/flaggers, high-visibility garments) and 1926.602(a)(9) (earthmoving equipment reverse alarm/observer) exist and are 1926; added 1926.601(b)(4) (motor vehicle reverse alarm) since the talk mentions back-up alarms. The CFR mapping is ours (the source cites none); class 1/2/3 garment labels are taken from the source.",
+      "Attribution: the source PDF has no copyright line at all, so the structurer's '(c) CPWR ... All rights reserved' string was not source-backed; replaced with a neutral line (FIX). Free-use-with-attribution license and the CPWR/NIOSH notice retained. CPWR licensing: free-use-with-attribution is satisfied (talk is a bundled feature of a subscription product, CPWR/NIOSH credit and no-endorsement notice retained in attribution, no endorsement implied; see docs/content-attribution.md).",
+      "Non-blocking: the source covers worker awareness around vehicles, not physical segregation (separate routes, barriers, traffic plan). Consider retitling \"Working Around Vehicles and Mobile Equipment\" or adding a segregation point from a supporting source."
+    ]
+  }
+}

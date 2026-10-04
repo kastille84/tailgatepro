@@ -1,0 +1,188 @@
+<!--
+  Mailgun template: jobsite-invite (see server/constants/templates.js's
+  MAILGUN_TEMPLATES.JOBSITE_INVITE). Paste the <!doctype html> document below
+  into the Mailgun portal's template editor for a template with that exact
+  name. Leave the template's own subject blank -- server/services/email.js's
+  sendJobsiteInviteEmail sets `subject` per-send so it can reference the GC +
+  job site dynamically.
+
+  Handlebars variables sent by email.js's h:X-Mailgun-Variables payload:
+    {{gcCompanyName}} - the general contractor inviting the subcontractor
+    {{jobsiteName}}   - the job site the subcontractor is being invited to
+    {{inviterName}}   - the GC admin/safety_manager who sent the invite
+    {{acceptUrl}}     - the accept-invite link (expires 7 days from send -- server/utility/inviteToken.js)
+-->
+<!doctype html>
+<html lang="en" xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="color-scheme" content="light" />
+    <meta name="supported-color-schemes" content="light" />
+    <title>You're invited to a job site on TailgatePro</title>
+  </head>
+  <body
+    style="
+      margin: 0;
+      padding: 0;
+      background-color: #f4f5f7;
+      -webkit-text-size-adjust: 100%;
+      -ms-text-size-adjust: 100%;
+    "
+  >
+    <div style="display: none; max-height: 0; overflow: hidden; mso-hide: all">
+      {{gcCompanyName}} invited you to {{jobsiteName}} on TailgatePro.
+    </div>
+
+    <table
+      role="presentation"
+      width="100%"
+      cellpadding="0"
+      cellspacing="0"
+      border="0"
+      style="background-color: #f4f5f7"
+    >
+      <tr>
+        <td align="center" style="padding: 32px 16px">
+          <table
+            role="presentation"
+            width="600"
+            cellpadding="0"
+            cellspacing="0"
+            border="0"
+            style="
+              width: 100%;
+              max-width: 600px;
+              background-color: #ffffff;
+              border-radius: 8px;
+              overflow: hidden;
+            "
+          >
+            <tr>
+              <td style="background-color: #1a2a3a; padding: 24px 32px">
+                <span
+                  style="
+                    font-family: Arial, Helvetica, sans-serif;
+                    font-size: 20px;
+                    font-weight: bold;
+                    color: #ffffff;
+                  "
+                  >Tailgate<span style="color: #ff5f15">Pro</span></span
+                >
+              </td>
+            </tr>
+
+            <tr>
+              <td
+                style="
+                  padding: 32px;
+                  font-family: Arial, Helvetica, sans-serif;
+                  color: #1a2a3a;
+                "
+              >
+                <h1
+                  style="
+                    margin: 0 0 16px;
+                    font-size: 20px;
+                    line-height: 28px;
+                    color: #1a2a3a;
+                  "
+                >
+                  You're invited to {{jobsiteName}}
+                </h1>
+                <p
+                  style="
+                    margin: 0 0 24px;
+                    font-size: 15px;
+                    line-height: 22px;
+                    color: #1a2a3a;
+                  "
+                >
+                  <strong>{{inviterName}}</strong> at
+                  <strong>{{gcCompanyName}}</strong> invited your company to
+                  the <strong>{{jobsiteName}}</strong> job site on TailgatePro.
+                  Accept the invite to run your safety talks on this site and
+                  share your compliance records with {{gcCompanyName}}.
+                </p>
+
+                <table
+                  role="presentation"
+                  cellpadding="0"
+                  cellspacing="0"
+                  border="0"
+                >
+                  <tr>
+                    <td style="border-radius: 6px; background-color: #ff5f15">
+                      <a
+                        href="{{acceptUrl}}"
+                        target="_blank"
+                        style="
+                          display: inline-block;
+                          padding: 14px 28px;
+                          font-family: Arial, Helvetica, sans-serif;
+                          font-size: 15px;
+                          font-weight: bold;
+                          color: #ffffff;
+                          text-decoration: none;
+                          border-radius: 6px;
+                        "
+                        >Accept invite</a
+                      >
+                    </td>
+                  </tr>
+                </table>
+
+                <p
+                  style="
+                    margin: 24px 0 0;
+                    font-size: 13px;
+                    line-height: 20px;
+                    color: #738699;
+                  "
+                >
+                  If the button doesn't work, copy and paste this link into your
+                  browser:<br />
+                  <a
+                    href="{{acceptUrl}}"
+                    style="color: #ff5f15; word-break: break-all"
+                    >{{acceptUrl}}</a
+                  >
+                </p>
+                <p
+                  style="
+                    margin: 16px 0 0;
+                    font-size: 13px;
+                    line-height: 20px;
+                    color: #738699;
+                  "
+                >
+                  This invite link expires 7 days from when it was sent. If it
+                  has expired, ask {{inviterName}} to send a new one.
+                </p>
+              </td>
+            </tr>
+
+            <tr>
+              <td style="padding: 20px 32px; background-color: #f4f5f7">
+                <p
+                  style="
+                    margin: 0;
+                    font-size: 12px;
+                    line-height: 18px;
+                    color: #9fa5ac;
+                    font-family: Arial, Helvetica, sans-serif;
+                  "
+                >
+                  This is an automated invitation sent by TailgatePro on
+                  behalf of {{inviterName}} at {{gcCompanyName}}. If you weren't
+                  expecting this, you can safely ignore it.
+                </p>
+              </td>
+            </tr>
+          </table>
+        </td>
+      </tr>
+    </table>
+  </body>
+</html>

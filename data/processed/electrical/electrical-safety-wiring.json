@@ -1,0 +1,49 @@
+{
+  "id": "electrical-safety-wiring",
+  "title": "Electrical Wiring Safety",
+  "primary_trade": "Electrical",
+  "trade_tags": [
+    "Electrical"
+  ],
+  "osha_standards": [
+    "29 CFR 1926.416",
+    "29 CFR 1926.417"
+  ],
+  "estimated_minutes": 5,
+  "summary": "Electrical hazards are a leading cause of construction deaths. Wiring a circuit that is still live causes shock, burns, and falls. This talk covers de-energizing, verifying, and insulated tools.",
+  "talking_points": [
+    "De-energize circuits before doing any work on them.",
+    "Use lockout devices so the circuit cannot go live, and tag the locked device so no one turns it on.",
+    "Clearly identify which power source and circuits are disconnected.",
+    "Use an AC voltage tester to verify the power is actually off before you touch conductors.",
+    "Use insulated tools and insulated gloves when working on wires."
+  ],
+  "site_hazards_to_check": [
+    "Panel or circuit not locked and tagged before wiring work",
+    "No voltage tester used to confirm the circuit is dead",
+    "Uninsulated or damaged hand tools used on or near conductors",
+    "Wet conditions around the wiring work area",
+    "Unlabeled disconnects, so it is unclear which circuits are off"
+  ],
+  "discussion_questions": [
+    "What steps do you take before stripping or landing a wire?",
+    "How do you know the tester itself is working before you trust it?",
+    "Which tools in your bag are rated and insulated for live-adjacent work?"
+  ],
+  "attribution": {
+    "source": "NIOSH",
+    "publisher": "National Institute for Occupational Safety and Health (NIOSH)",
+    "copyright": "U.S. Government work — public domain.",
+    "license": "public-domain",
+    "source_url": "https://www.cdc.gov/niosh/docs/2022-142/2022-142.pdf",
+    "notice": "Adapted from a NIOSH Toolbox Talk (co-developed with CPWR). Public-domain source; not an endorsement by NIOSH or CPWR."
+  },
+  "audit": {
+    "status": "approved",
+    "audited_at": "2026-09-10T18:21:19Z",
+    "osha_accuracy_verified": true,
+    "flags": [
+      "OSHA mapping verified accurate: 1926.416 (general requirements, incl. insulated tools/PPE at 416(a)) and 1926.417 (lockout and tagging of circuits). De-energize, lock/tag, identify the source, verify with an AC tester, use insulated tools and gloves - all consistent with the standard. No tolerance issues."
+    ]
+  }
+}

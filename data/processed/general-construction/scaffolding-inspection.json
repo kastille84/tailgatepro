@@ -1,0 +1,56 @@
+{
+  "id": "scaffolding-inspection",
+  "title": "Scaffolding Inspection",
+  "primary_trade": "General Construction",
+  "trade_tags": [
+    "General Construction",
+    "Masonry"
+  ],
+  "osha_standards": [
+    "29 CFR 1926.451",
+    "29 CFR 1926.454"
+  ],
+  "estimated_minutes": 5,
+  "summary": "A competent person must inspect a scaffold before each work shift and after anything that could affect its strength. Problems must be corrected before anyone uses it.",
+  "talking_points": [
+    "A competent person must inspect the scaffold and its components for visible defects before each work shift and after any occurrence that could affect structural integrity.",
+    "A competent person can identify existing and predictable hazards and has authority to take prompt corrective action.",
+    "On suspended scaffolds, a competent person must inspect the ropes before each work shift and after any occurrence that could affect structural integrity.",
+    "Support scaffold footings must be level and able to support the loaded scaffold. Legs, poles, frames, and uprights must bear on base plates and mud sills.",
+    "Supported scaffold platforms must be fully planked or decked, and each platform and walkway must be at least 18 inches wide. Do not work on platforms cluttered with debris.",
+    "Employees more than 10 feet above a lower level need guardrails or fall arrest. Toprails on newer scaffolds must be between 38 and 45 inches high, with midrails about halfway. Steel or plastic banding cannot be used as a toprail or midrail.",
+    "Scaffolds must support their own weight and at least 4 times the maximum intended load. Do not overload them. Supported scaffolds with a height-to-base ratio of more than 4:1 must be guyed, tied, or braced.",
+    "A competent person decides if it is safe to work on a scaffold during storms or high winds. Everyone working on a scaffold must be trained on its hazards."
+  ],
+  "site_hazards_to_check": [
+    "Footings that are not level or sound, or missing base plates and mud sills",
+    "Platforms not fully planked, or cluttered with debris",
+    "Missing guardrails or midrails, or steel or plastic banding used as rails",
+    "Damaged scaffold components, or worn ropes on suspended scaffolds",
+    "Tall supported scaffolds (height-to-base more than 4:1) with no ties, guys, or braces",
+    "Storms or high winds"
+  ],
+  "discussion_questions": [
+    "Who is the competent person for this scaffold, and when was it last inspected?",
+    "What defects would make you refuse to climb this scaffold?",
+    "What has changed since the last inspection, such as weather, loads, or moves, that needs a re-check?"
+  ],
+  "attribution": {
+    "source": "OSHA",
+    "publisher": "Occupational Safety and Health Administration (OSHA)",
+    "copyright": "U.S. Government work — public domain.",
+    "license": "public-domain",
+    "source_url": "https://www.osha.gov/sites/default/files/publications/OSHA3150.pdf",
+    "source_ref": "TBT-049",
+    "notice": "Adapted from OSHA Publication 3150, A Guide to Scaffold Use in the Construction Industry (2002 revised). Reproduced with attribution for jobsite safety training; not an endorsement by OSHA."
+  },
+  "audit": {
+    "status": "approved",
+    "audited_at": "2026-09-25T18:11:08Z",
+    "osha_accuracy_verified": true,
+    "flags": [
+      "All figures verified against OSHA 3150 (2002 rev.): competent-person inspection before each shift and after occurrences affecting integrity, rope inspection on suspended scaffolds, footing/base plate/mud sill, full planking and 18 in platform width, guardrails/fall arrest above 10 ft, toprail 38-45 in (post-2000 scaffolds), 4x load capacity, 4:1 height-to-base ties, wind/storm decision by competent person, training.",
+      "Citations 1926.451 and 1926.454 exist, are Subpart L, and match. Attribution: osha.gov, public domain, notice preserved. No UK wording. Non-blocking: 1926.452 (specific scaffold types) could be added, not required."
+    ]
+  }
+}

@@ -1,0 +1,59 @@
+{
+  "id": "residential-framing-fall-protection",
+  "title": "Fall Protection Through Each Stage of Residential Framing",
+  "primary_trade": "Framing",
+  "trade_tags": [
+    "Framing",
+    "Carpentry",
+    "Roofing"
+  ],
+  "osha_standards": [
+    "29 CFR 1926.501(b)(13)",
+    "29 CFR 1926.502",
+    "29 CFR 1926.502(k)"
+  ],
+  "estimated_minutes": 5,
+  "summary": "Falls are the leading cause of death for residential construction workers. OSHA requires fall protection at 6 feet or more, and the right method changes at each stage of the build.",
+  "talking_points": [
+    "Fall protection is required when you work 6 feet or more above a lower level in residential construction. That means guardrails, safety nets, or a personal fall arrest system (PFAS).",
+    "Trusses: use a bracket scaffold, platform ladder, or step ladder for a stable work surface. A spreader can act as an anchor and spreads fall forces across several trusses. A qualified person must decide if the trusses can take the load.",
+    "Roof sheathing and roofing: use safety nets, bracket scaffolds, or anchors with retractable lifelines. Inspect reusable and permanent anchors before every use.",
+    "Foundation work: strap anchors can be looped over rebar or set into the concrete. Straps that were poured in concrete or shock loaded are usually not reusable. Follow the manufacturer's instructions.",
+    "Floors and subfloors: use a truss bracket anchor system, mobile scaffolds, or wall bracket scaffolds. Put guardrails around floor openings. Add toeboards to protect people below from falling objects.",
+    "Walls: raise walls with a crane, boom truck, forklift, or jacks so fewer workers are exposed to falls. Guardrails across window and door openings help. Do not reuse a strap anchor that was cut or nailed off unless the manufacturer refurbishes it.",
+    "Exterior and interior finishing: use aerial lifts, ladders, or pump jack scaffolds outside. Use guardrails with toeboards at stairways, landings, and window openings inside.",
+    "If ordinary fall protection is truly not workable or is more dangerous, the employer must use a written fall protection plan under 29 CFR 1926.502(k). Some states have extra rules."
+  ],
+  "site_hazards_to_check": [
+    "Roof trusses or rafters with no stable place to tie off",
+    "Open floor edges, stairwells, and basement openings",
+    "Unguarded window and door openings in framed walls",
+    "Damaged, cut, or shock-loaded anchor straps",
+    "Scaffold brackets, pump jacks, or ladder jacks that are loose or overloaded",
+    "Workers at the roof edge with no guardrail, net, or lifeline"
+  ],
+  "discussion_questions": [
+    "At what height do we need fall protection on this house, and what are we using at this stage?",
+    "Where is our anchor point today, and who checked that it can hold a fall?",
+    "What is our plan if our normal fall protection will not work for a task?"
+  ],
+  "attribution": {
+    "source": "OSHA",
+    "publisher": "Occupational Safety and Health Administration (OSHA)",
+    "copyright": "U.S. Government work — public domain.",
+    "license": "public-domain",
+    "source_url": "https://www.osha.gov/residential-fall-protection/guidance",
+    "notice": "Adapted from OSHA Guidance Document, Fall Protection in Residential Construction. Reproduced with attribution for jobsite safety training; not an endorsement by OSHA."
+  },
+  "audit": {
+    "status": "approved",
+    "audited_at": "2026-09-30T14:01:48.440Z",
+    "osha_accuracy_verified": true,
+    "flags": [
+      "Verified claim-by-claim against data/raw/osha-fall-protection-in-residential-construction-guidance.md (OSHA guidance, public domain): 6 ft rule, 1926.501(b)(13), 502 and 502(k) plan, each stage (trusses, sheathing, foundation, floors, walls, finishing), anchor reuse limits.",
+      "Edited: floor-opening point reworded because the source makes toeboards optional (falling-object protection), not a fall-protection requirement.",
+      "Source is guidance (creates no new obligations); talk does not present it as a regulation and notes some states have extra rules.",
+      "Harwood check: OSHA-authored page, not grantee material."
+    ]
+  }
+}

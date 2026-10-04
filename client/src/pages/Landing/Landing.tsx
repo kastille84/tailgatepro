@@ -3,15 +3,15 @@ import {
   HiMagnifyingGlass,
   HiClock,
   HiSun,
-  HiQrCode,
   HiSignalSlash,
-  HiBolt,
-  HiChartBar,
   HiCheck,
+  HiLink,
+  HiDocumentCheck,
 } from "react-icons/hi2";
 import type { IconType } from "react-icons";
+import { Link } from "react-router-dom";
 
-import { WaitlistForm } from "./WaitlistForm";
+import { ButtonLink } from "../../ui_comps/button";
 import { PricingTeaser } from "./PricingTeaser";
 import { HowItWorks } from "./HowItWorks";
 import { ProductShowcase } from "./ProductShowcase";
@@ -26,7 +26,12 @@ import {
   StyledEyebrow,
   StyledHeadline,
   StyledLede,
+  StyledBenefitList,
+  StyledBenefitItem,
+  StyledTextLink,
   StyledFormWrap,
+  StyledCtaRow,
+  StyledHeroSecondaryCta,
   StyledFootnote,
   StyledHeroFigure,
   StyledHeroImage,
@@ -45,10 +50,8 @@ import {
   StyledMediaImg,
   StyledReassureList,
   StyledReassureItem,
-  StyledFooter,
-  StyledFooterMark,
-  StyledFooterText,
 } from "./Landing.styles";
+import { Footer } from "../../ui_comps/footer";
 
 interface InfoCard {
   icon: IconType;
@@ -79,38 +82,19 @@ const PROBLEM_CARDS: InfoCard[] = [
   },
 ];
 
-const SOLUTION_CARDS: InfoCard[] = [
-  {
-    icon: HiQrCode,
-    title: "Zero app-store friction",
-    body: "Open the talk from a browser link or QR code. Nothing to install, even five floors underground or on a remote site.",
-  },
-  {
-    icon: HiSignalSlash,
-    title: "Works offline, always",
-    body: "Run the whole talk with no signal. Attendance, signatures and photos sync automatically once the phone is back on data.",
-  },
-  {
-    icon: HiBolt,
-    title: "Fast to run, every shift",
-    body: "Pick a topic, the crew signs on-screen or you snap a photo, you submit. A timestamp and GPS location lock to the record so it can't be back-dated or redone later.",
-  },
-  {
-    icon: HiChartBar,
-    title: "Instant compliance for the GC",
-    body: "Every completed talk lands on the general contractor's dashboard the moment the meeting ends — as a tamper-evident, GPS-verified PDF.",
-  },
+const HERO_BENEFITS: { icon: IconType; label: string }[] = [
+  { icon: HiLink, label: "No app to install" },
+  { icon: HiSignalSlash, label: "Works with no signal" },
+  { icon: HiDocumentCheck, label: "Signed PDF to your GC" },
 ];
 
 const REASSURANCES = [
   "No credit card, no app to install.",
-  "Crews start free — keep your emailed PDFs forever.",
-  "One email when we launch. No spam.",
+  "Crews start free — keep your signed PDFs.",
+  "Start free, upgrade anytime.",
 ];
 
 export const Landing = () => {
-  const year = new Date().getFullYear();
-
   return (
     <StyledPage>
       <StyledHero aria-labelledby="landing-hero-heading">
@@ -125,20 +109,41 @@ export const Landing = () => {
           <StyledHeroCopy>
             <StyledEyebrow>Digital Toolbox Safety Talks</StyledEyebrow>
             <StyledHeadline id="landing-hero-heading">
-              The toolbox talk, done before the crew gears up.{" "}
-              <span>Proof that holds up in an audit.</span>
+              Run your toolbox talk on your phone.{" "}
+              <span>Give the GC proof in seconds.</span>
             </StyledHeadline>
             <StyledLede>
-              OSHA expects a toolbox talk before every shift. On paper that means
-              lost sign-in sheets, illegible signatures, and GCs chasing proof
-              across every trade. Run the talk on any phone — no app to install,
-              no signal required — and a tamper-evident record reaches the GC the
-              moment you hit send.
+              OSHA expects a toolbox talk before every shift. Skip the lost
+              sign-in sheets: the crew signs on-screen and your general
+              contractor (GC) gets a signed, timestamped record the moment you
+              hit send.
             </StyledLede>
+            <StyledBenefitList>
+              {HERO_BENEFITS.map(({ icon: Icon, label }) => (
+                <StyledBenefitItem key={label}>
+                  <Icon aria-hidden="true" />
+                  <span>{label}</span>
+                </StyledBenefitItem>
+              ))}
+            </StyledBenefitList>
             <StyledFormWrap>
-              <WaitlistForm idPrefix="hero" tone="onDark" />
+              <StyledCtaRow>
+                <ButtonLink to="/signup" size="lg">
+                  I'm a foreman — start free
+                </ButtonLink>
+                <StyledHeroSecondaryCta
+                  href="#for-gcs"
+                  size="lg"
+                  variant="outline"
+                >
+                  I'm a GC — see the dashboard
+                </StyledHeroSecondaryCta>
+              </StyledCtaRow>
               <StyledFootnote>
-                Join the launch waitlist. No spam — one email when we go live.
+                Free plans need no credit card.{" "}
+                <StyledTextLink as={Link} to="/pricing">
+                  See pricing
+                </StyledTextLink>
               </StyledFootnote>
             </StyledFormWrap>
           </StyledHeroCopy>
@@ -173,31 +178,6 @@ export const Landing = () => {
 
       <ProductShowcase />
 
-      <StyledSection $tone="light" aria-labelledby="solution-heading">
-        <StyledContainer>
-          <StyledSectionHead>
-            <StyledSectionTitle id="solution-heading">
-              Why crews are going digital
-            </StyledSectionTitle>
-            <StyledSectionLede>
-              Same five-minute talk. A compliance record the GC can see
-              immediately.
-            </StyledSectionLede>
-          </StyledSectionHead>
-          <StyledCardGrid>
-            {SOLUTION_CARDS.map(({ icon: Icon, title, body }) => (
-              <StyledCard key={title}>
-                <StyledCardIcon>
-                  <Icon aria-hidden="true" />
-                </StyledCardIcon>
-                <StyledCardTitle>{title}</StyledCardTitle>
-                <StyledCardText>{body}</StyledCardText>
-              </StyledCard>
-            ))}
-          </StyledCardGrid>
-        </StyledContainer>
-      </StyledSection>
-
       <GcSection />
 
       <ComparisonTable />
@@ -223,11 +203,14 @@ export const Landing = () => {
             Be ready on day one
           </StyledSectionTitle>
           <StyledSectionLede>
-            We're onboarding subcontractors and general contractors for launch.
-            Add your name and we'll set you up on the right plan the day we go
-            live.
+            Create your free account and run your first talk today — on the
+            right plan for your crew or your jobsites.
           </StyledSectionLede>
-          <WaitlistForm idPrefix="cta" tone="onDark" />
+          <StyledCtaRow>
+            <ButtonLink to="/signup" size="lg">
+              Get started free
+            </ButtonLink>
+          </StyledCtaRow>
           <StyledReassureList>
             {REASSURANCES.map((item) => (
               <StyledReassureItem key={item}>
@@ -239,14 +222,7 @@ export const Landing = () => {
         </StyledCtaInner>
       </StyledSection>
 
-      <StyledFooter>
-        <StyledFooterMark>
-          TAILGATE<span>PRO</span>
-        </StyledFooterMark>
-        <StyledFooterText>
-          Digital Toolbox Safety Talks · © {year} TailgatePro
-        </StyledFooterText>
-      </StyledFooter>
+      <Footer />
     </StyledPage>
   );
 };

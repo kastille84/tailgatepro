@@ -1,0 +1,54 @@
+{
+  "id": "material-storage",
+  "title": "Material Storage",
+  "primary_trade": "General Construction",
+  "trade_tags": [
+    "General Construction"
+  ],
+  "osha_standards": [
+    "29 CFR 1926.250"
+  ],
+  "estimated_minutes": 5,
+  "summary": "Stack, block, and store materials so they cannot slide, fall, or collapse. Keep aisles clear, stay within floor load limits, and keep materials back from openings and edges.",
+  "talking_points": [
+    "Materials stored in tiers must be stacked, racked, blocked, interlocked, or otherwise secured to prevent sliding, falling, or collapse.",
+    "Do not exceed the maximum safe load limits of floors. Post the limits in pounds per square foot in storage areas, except on a floor or slab on grade. Posting is not required in single-family residential and wood-framed multi-family residential structures.",
+    "Keep aisles and passageways clear so people and material handling equipment can move safely. Keep them in good repair.",
+    "Inside buildings under construction, do not store material within 6 feet of any hoistway or floor opening, or within 10 feet of an exterior wall that does not extend above the top of the material.",
+    "Separate noncompatible materials. Do not store more on scaffolds or runways than is needed for immediate operations.",
+    "Bagged materials: step back the layers and cross-key the bags at least every 10 bags high. Brick stacks must not be more than 7 feet high. Taper a loose brick stack back 2 inches per foot above 4 feet. Taper masonry blocks stacked over 6 feet back one-half block per tier.",
+    "Lumber: pull nails from used lumber, stack on level, solid sills, and keep piles stable and self-supporting. Piles must not exceed 20 feet, or 16 feet if handled manually. Block or rack steel, poles, pipe, and bar stock so they cannot spread or tilt.",
+    "Keep storage areas free of material that creates trip, fire, explosion, or pest hazards."
+  ],
+  "site_hazards_to_check": [
+    "Leaning, unblocked, or too-tall stacks",
+    "Materials stored near floor openings, hoistways, or unprotected exterior walls",
+    "Floors loaded beyond safe limits, or with no posted limits",
+    "Blocked aisles and passageways",
+    "Used lumber with nails still in it, or lumber on uneven sills",
+    "Excess materials on scaffolds or runways, or noncompatible materials stored together"
+  ],
+  "discussion_questions": [
+    "How high can we stack lumber, brick, and block on this job?",
+    "Where are the floor load limits posted, and what is stored near openings?",
+    "What will you do if you see a stack that is leaning or unstable?"
+  ],
+  "attribution": {
+    "source": "OSHA",
+    "publisher": "Occupational Safety and Health Administration (OSHA)",
+    "copyright": "U.S. Government work — public domain.",
+    "license": "public-domain",
+    "source_url": "https://www.osha.gov/laws-regs/regulations/standardnumber/1926/1926.250",
+    "source_ref": "TBT-058",
+    "notice": "Adapted from OSHA standard 29 CFR 1926.250, General requirements for storage. Reproduced with attribution for jobsite safety training; not an endorsement by OSHA."
+  },
+  "audit": {
+    "status": "approved",
+    "audited_at": "2026-09-25T18:11:08Z",
+    "osha_accuracy_verified": true,
+    "flags": [
+      "Every point verified against 29 CFR 1926.250: tier stacking, floor load posting and residential exception, aisles, 6 ft / 10 ft setbacks, noncompatible segregation, bagged materials every 10 bags, brick 7 ft and 2 in per ft above 4 ft, block 6 ft, lumber 20/16 ft and nail removal, housekeeping.",
+      "Citation 1926.250 correct and 1926. Attribution: osha.gov, public domain. No UK wording."
+    ]
+  }
+}

@@ -1,0 +1,56 @@
+{
+  "id": "safe-use-of-hand-tools",
+  "title": "Safe Use of Hand Tools",
+  "primary_trade": "Carpentry",
+  "trade_tags": [
+    "Carpentry",
+    "General Construction"
+  ],
+  "osha_standards": [
+    "29 CFR 1926.301"
+  ],
+  "estimated_minutes": 5,
+  "summary": "Using the wrong hand tool, or the right tool the wrong way, can injure the muscles, tendons, or nerves in your hand, wrist, or arm. These injuries build up over time, so choose and use tools to protect your hands.",
+  "talking_points": [
+    "Choose a tool designed for the job that fits your hand size and is comfortable to hold. It should not weigh more than the job requires.",
+    "Pick a tool that keeps your wrist straight, needs the least force, and is balanced, so it does not tip forward or back when held.",
+    "Look for handles with no sharp edges that extend beyond your palm. Two-handled tools should have a spring return and a locking position.",
+    "Keep your wrist as straight as possible. Do not raise or extend your elbow when holding a heavy tool.",
+    "If the grip is too small, the right gloves may add cushion. If it is too big, adjust the handle or pick a smaller tool. Gloves and anti-vibration wraps improve grip and reduce vibration.",
+    "Use caps or guards on striking tools to avoid overstrike injuries. Keep tools sharp and in good condition.",
+    "Rest your hands during the day. Use a power tool when it is safe and feasible, such as a power drill or nail gun instead of a screwdriver and hammer.",
+    "Watch for early signs: achy, tired hands and wrists that feel better after rest. If they happen more often or make you stop to rest a lot, you may already be injured."
+  ],
+  "site_hazards_to_check": [
+    "Tools with handles too small or too large for the hands using them",
+    "Tools that vibrate, force an awkward wrist position, or need a lot of grip strength",
+    "Dull or damaged tools that need more force to use",
+    "Striking tools without caps or guards",
+    "Heavy tools that tip forward or back when held",
+    "Handles with sharp edges or that do not extend beyond the palm"
+  ],
+  "discussion_questions": [
+    "What early signs, like achy or tired hands and wrists, have you noticed, and when will you report them?",
+    "Which hand tool we use most does not fit our hands well, and what could we switch to?",
+    "Where could a power tool safely replace a hand tool for today's task?"
+  ],
+  "attribution": {
+    "source": "CPWR",
+    "publisher": "CPWR — The Center for Construction Research and Training",
+    "copyright": "© 2025 CPWR — The Center for Construction Research and Training. All rights reserved.",
+    "license": "free-use-with-attribution",
+    "source_url": "https://www.cpwr.com/wp-content/uploads/HA-Hand_Tools.pdf",
+    "source_ref": "TBT-010",
+    "notice": "Adapted from a CPWR/NIOSH Hazard Alert, produced under NIOSH cooperative agreement OH 009762. Reproduced with attribution for jobsite safety training; not an endorsement by CPWR or NIOSH."
+  },
+  "audit": {
+    "status": "approved",
+    "audited_at": "2026-09-25T18:11:08Z",
+    "osha_accuracy_verified": true,
+    "flags": [
+      "All 8 points quote-accurate to the CPWR/NIOSH Hazard Alert \"Hand Tools\" (2025); copyright year 2025 matches the source. Covers choosing and using tools plus early symptoms; ergonomic emphasis is the source's.",
+      "Citation 29 CFR 1926.301 (hand tools: employer shall not permit unsafe hand tools) exists and is the correct construction section; there is no ergonomic-specific OSHA standard, so the mapping is general. Talk makes no legal claim.",
+      "Non-blocking: no mention of inspecting for cracked/splintered handles or mushroomed heads (not in source, so not added). CPWR licensing: free-use-with-attribution is satisfied (talk is a bundled feature of a subscription product, CPWR/NIOSH credit and no-endorsement notice retained in attribution, no endorsement implied; see docs/content-attribution.md)."
+    ]
+  }
+}

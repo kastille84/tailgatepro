@@ -1,0 +1,55 @@
+{
+  "id": "hearing-protection",
+  "title": "Hearing Protection",
+  "primary_trade": "General Construction",
+  "trade_tags": [
+    "General Construction"
+  ],
+  "osha_standards": [
+    "29 CFR 1926.52",
+    "29 CFR 1926.101"
+  ],
+  "estimated_minutes": 5,
+  "summary": "Occupational hearing loss is permanent but 100% preventable. Choose earplugs, earmuffs, or canal caps that fit you and give enough noise reduction, and wear them correctly.",
+  "talking_points": [
+    "Work-related hearing loss is permanent. It is linked to trouble communicating, safety concerns, tinnitus (ringing in the ears), high blood pressure, heart problems, cognitive decline, and poor mental health.",
+    "If you have to raise your voice to be heard when you are 2-3 feet from the person, you probably need hearing protection.",
+    "Regular 8-hour exposures to 85 decibels (dBA) can damage your hearing. At 100 dBA, as little as 1 hour a day of repeated exposure can do it. A belt sander is about 93 dBA and a jackhammer about 110 dBA.",
+    "Employers should buy quieter tools first and use controls such as isolation, barriers, dampeners, and rotating workers. When those are not enough, wear hearing protection.",
+    "Pick protection that is comfortable and works with the job: earplugs, earmuffs, or canal caps. Earplugs and earmuffs must be properly selected and fitted to each user.",
+    "Check earplug fit by counting out loud while you slowly cup and uncup your hands over your ears. With a good fit, your voice sounds about the same.",
+    "Aim for just enough noise reduction to bring exposure down to 75-85 dBA. Too much can make you less aware of your surroundings, or you may take the protectors off to hear.",
+    "At 100 dBA or more, or impulse sounds over 140 dB, consider protection with more attenuation or double protection, such as earplugs plus muffs. Tell your supervisor about signs of hearing damage."
+  ],
+  "site_hazards_to_check": [
+    "Jackhammers, stud welders, belt sanders, and other loud tools in use without hearing protection",
+    "Earplugs or earmuffs that are worn out, poorly fitted, or not compatible with hard hats and other PPE",
+    "Work areas where people must raise their voices to be heard from 2-3 feet away",
+    "Impulse noise sources, such as powder-actuated or impact tools, with no double protection",
+    "Quieter tools, barriers, or job rotation not in use where noise stays high"
+  ],
+  "discussion_questions": [
+    "How can each of us check that our earplugs fit before we start work?",
+    "Why can overprotection be a problem, and what noise reduction should we aim for?",
+    "What loud tasks today could use a quieter tool, a barrier, or a rotation?"
+  ],
+  "attribution": {
+    "source": "OSHA",
+    "publisher": "Occupational Safety and Health Administration (OSHA)",
+    "copyright": "U.S. Government work — public domain.",
+    "license": "public-domain",
+    "source_url": "https://www.osha.gov/sites/default/files/HearingConservationInConstruction-ToolboxTalk.pdf",
+    "source_ref": "TBT-123",
+    "notice": "Adapted from an OSHA publication (U.S. Government work). Reproduced with attribution for jobsite safety training; not an endorsement by OSHA."
+  },
+  "audit": {
+    "status": "approved",
+    "audited_at": "2026-09-25T18:11:25Z",
+    "osha_accuracy_verified": true,
+    "flags": [
+      "Verified against OSHA Hearing Conservation in Construction toolbox talk: permanent/100% preventable, associated conditions list, raised voice at 2-3 feet, 85 dBA 8-hour and 100 dBA 1 hour, belt sander 93 and jackhammer 110 dBA, engineering/administrative controls, earplugs/earmuffs/canal caps, counting fit test, 75-85 dBA target and overprotection, 100 dBA or impulse over 140 dB double protection. Nothing invented.",
+      "Citations are structurer-added (source cites none): 29 CFR 1926.52 (occupational noise exposure) and 1926.101 (hearing protection: protectors provided where noise cannot be reduced, individually fitted by a competent person, plain cotton not acceptable) both exist and match. No 1910 citation.",
+      "Non-blocking: 85 dBA damage figure is OSHA's consumer guidance; the construction 1926.52 PEL is 90 dBA 8-hour. Talk does not state a legal limit, so no misstatement."
+    ]
+  }
+}

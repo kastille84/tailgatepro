@@ -1,0 +1,56 @@
+{
+  "id": "battery-charging",
+  "title": "Battery Charging",
+  "primary_trade": "Electrical",
+  "trade_tags": [
+    "Electrical",
+    "General Construction"
+  ],
+  "osha_standards": [
+    "29 CFR 1926.441"
+  ],
+  "estimated_minutes": 5,
+  "summary": "OSHA's construction battery standard sets rules for battery areas and charging. This talk covers ventilation, protective gear, quick drench facilities, and where and how to charge.",
+  "talking_points": [
+    "Place unsealed batteries in enclosed spaces with outside vents or in well-ventilated areas so fumes, gases and electrolyte spray do not reach other spaces.",
+    "Ventilation must help gases spread out and keep an explosive mixture from building up.",
+    "Battery racks and trays must be sturdy and treated to resist damage from electrolyte.",
+    "Floors in battery areas must be acid-resistant or have a protective coating.",
+    "Workers who handle acids or batteries must have face shields, aprons and rubber gloves available.",
+    "Quick drenching facilities for the eyes and body must be within 25 feet of battery handling areas.",
+    "Keep spill response and fire suppression equipment available for electrolyte incidents.",
+    "Charge batteries only in designated locations. Protect charging equipment from vehicle damage and keep vent caps in place during charging."
+  ],
+  "site_hazards_to_check": [
+    "Battery storage or charging in a closed space with poor ventilation",
+    "Damaged, corroded or untreated battery racks and trays",
+    "No eyewash or drench facility within 25 feet of the battery area",
+    "Missing face shield, apron or rubber gloves",
+    "Charging done outside a designated area, or chargers exposed to vehicle traffic",
+    "Vent caps missing or damaged on batteries being charged"
+  ],
+  "discussion_questions": [
+    "Where is our designated battery charging area, and why is it there?",
+    "Where is the nearest eye and body drench station to the batteries?",
+    "What would you do if electrolyte spilled or sprayed during charging?"
+  ],
+  "attribution": {
+    "source": "OSHA",
+    "publisher": "Occupational Safety and Health Administration (OSHA)",
+    "copyright": "U.S. Government work — public domain.",
+    "license": "public-domain",
+    "source_url": "https://www.osha.gov/laws-regs/regulations/standardnumber/1926/1926.441",
+    "source_ref": "TBT-244",
+    "notice": "Adapted from 29 CFR 1926.441, Batteries and battery charging. Reproduced with attribution for jobsite safety training; not an endorsement by OSHA."
+  },
+  "audit": {
+    "status": "approved",
+    "audited_at": "2026-09-25T18:10:19Z",
+    "osha_accuracy_verified": true,
+    "flags": [
+      "Content matches 29 CFR 1926.441(a)-(b) as summarized in the source (unsealed batteries ventilated, racks/trays treated, acid-resistant floors, face shield/apron/rubber gloves, drench within 25 ft, spill and fire equipment, designated charging area, protect chargers from vehicles, vent caps in place). Citation is a correct 1926 section.",
+      "Source note: the raw file is a condensed summary, not verbatim (only paragraphs a-b). Non-blocking: the talk omits hydrogen-ignition precautions (no smoking, open flame, or sparks near charging) that are standard practice but not in 1926.441; consider adding from a further source.",
+      "Public domain, osha.gov. No UK wording."
+    ]
+  }
+}

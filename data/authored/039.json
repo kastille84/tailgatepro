@@ -1,0 +1,53 @@
+{
+  "n": "039",
+  "title": "Site Induction",
+  "primary_trade": "General Construction",
+  "trade_tags": [
+    "General Construction"
+  ],
+  "osha_standards": [
+    "29 CFR 1926.21",
+    "29 CFR 1926.20"
+  ],
+  "source_url": "https://www.osha.gov/laws-regs/regulations/standardnumber/1926/1926.21",
+  "source_agency": "OSHA",
+  "source_checked": [
+    "https://www.osha.gov/laws-regs/regulations/standardnumber/1926/1926.21",
+    "https://www.osha.gov/laws-regs/regulations/standardnumber/1926/1926.20"
+  ],
+  "basis": "29 CFR 1926.21 (Safety training and education) and 29 CFR 1926.20 (General safety and health provisions)",
+  "summary": "Before anyone starts work, the employer must teach them how to recognize and avoid unsafe conditions and the rules that apply to their work. A good site induction covers those hazards, the chemicals on site, and who is allowed to run what.",
+  "talking_points": [
+    "The employer must instruct each employee in the recognition and avoidance of unsafe conditions and in the regulations that apply to the work environment (29 CFR 1926.21(b)(2)).",
+    "Anyone who handles poisons, caustics or other harmful substances must be taught how to handle and use them safely, the hazards, the hygiene practices and the protective measures required (1926.21(b)(3)).",
+    "Anyone who handles flammable liquids, gases or toxic materials must be taught safe handling and use and made aware of the rules that apply (1926.21(b)(5)).",
+    "If harmful plants or animals are present on the site, exposed workers must be told about the hazards, how to prevent injury and the first aid to use (1926.21(b)(4)).",
+    "The employer must run a safety program that includes frequent and regular inspections of the job site, materials and equipment by competent persons (1926.20(b)(1)-(2)).",
+    "Only workers qualified by training or experience may operate equipment and machinery (1926.20(b)(4)).",
+    "Protections such as PPE and training are owed to each employee individually. Missing PPE or training for one worker is a separate failure (1926.20(f)).",
+    "Good practice: ask questions during the induction. If you do not know a hazard, a rule or who to call, say so before you start work."
+  ],
+  "site_hazards_to_check": [
+    "New workers starting with no hazard orientation",
+    "Chemicals, flammable liquids or gases on site that a worker has not been trained to handle",
+    "Workers running equipment they are not qualified to operate",
+    "Required PPE not issued or not worn",
+    "No one named to carry out regular site inspections",
+    "Site-specific hazards (harmful plants or animals, restricted areas) not explained"
+  ],
+  "discussion_questions": [
+    "What hazards on this site would a brand-new person not know about?",
+    "What training must a worker have before handling flammable liquids or gases here?",
+    "Who does the regular inspections on this job, and how do we report a problem?"
+  ],
+  "audit": {
+    "status": "approved",
+    "audited_at": "2026-09-25T20:37:49Z",
+    "osha_accuracy_verified": true,
+    "flags": [
+      "Verified 1926.21(b)(2),(b)(3),(b)(4),(b)(5) and 1926.20(b)(1)-(4),(f) on osha.gov; wording matches. (b)(3) and (b)(4) verbatim match.",
+      "1926.20(f) point paraphrases the individual PPE/training compliance duty; kept as written.",
+      "US English; no invented figures; not a duplicate of an approved talk."
+    ]
+  }
+}

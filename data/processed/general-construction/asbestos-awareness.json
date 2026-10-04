@@ -1,0 +1,54 @@
+{
+  "id": "asbestos-awareness",
+  "title": "Asbestos Awareness",
+  "primary_trade": "General Construction",
+  "trade_tags": [
+    "General Construction"
+  ],
+  "osha_standards": [
+    "29 CFR 1926.1101"
+  ],
+  "estimated_minutes": 5,
+  "summary": "Asbestos fibers are too small to see and are released when asbestos-containing materials are disturbed. Inhaled fibers can cause lung disease and cancer years later. OSHA's construction standard covers renovation and demolition of structures with asbestos.",
+  "talking_points": [
+    "Asbestos is a mineral fiber once used in many building materials. You cannot see individual fibers, so you can breathe them in without knowing it.",
+    "Asbestos is a known human carcinogen. It can cause chronic lung disease and lung and other cancers. Symptoms or cancer may take many years to show up.",
+    "Fibers are released when asbestos-containing materials are disturbed, such as during renovation, demolition, and cleanup.",
+    "Some materials are presumed to contain asbestos if installed before 1981. Examples include thermal system insulation, roofing and siding shingles, vinyl floor tiles, plaster, cement, putties, caulk, ceiling tiles, and spray-on coatings.",
+    "For construction, the standard is 29 CFR 1926.1101. It covers alteration, repair, maintenance, renovation, and demolition of structures containing asbestos.",
+    "The PEL is 0.1 fiber per cubic centimeter of air as an eight-hour average. The excursion limit is 1.0 fiber per cubic centimeter over 30 minutes. The employer must make sure no one is exposed above these limits.",
+    "Areas with exposure above the limits need warning signs. No smoking, eating, or drinking there. Workers must get the right PPE and separate decontamination and lunch areas.",
+    "Workers exposed at or above the PEL must be trained before work begins and yearly after, in a language they understand. Good practice: stop and ask before you disturb any material that may contain asbestos."
+  ],
+  "site_hazards_to_check": [
+    "Old insulation, pipe wrap, floor tiles, ceiling tiles, shingles, or plaster that may contain asbestos",
+    "Materials installed before 1981 with no asbestos assessment done",
+    "Damaged or deteriorating suspect materials that could release fibers",
+    "Warning signs and marked work areas missing where exposure may be above the limits",
+    "No separate decontamination or lunch area, or eating and drinking near the work"
+  ],
+  "discussion_questions": [
+    "Which materials in this building could contain asbestos, and has anyone assessed them?",
+    "Why is it dangerous that you cannot see asbestos fibers?",
+    "Who do you tell before you disturb a suspect material?"
+  ],
+  "attribution": {
+    "source": "OSHA",
+    "publisher": "Occupational Safety and Health Administration (OSHA)",
+    "copyright": "U.S. Government work — public domain.",
+    "license": "public-domain",
+    "source_url": "https://www.osha.gov/sites/default/files/publications/OSHA3507.pdf",
+    "source_ref": "TBT-128",
+    "notice": "Adapted from an OSHA publication (U.S. Government work). Reproduced with attribution for jobsite safety training; not an endorsement by OSHA."
+  },
+  "audit": {
+    "status": "approved",
+    "audited_at": "2026-09-25T18:12:26Z",
+    "osha_accuracy_verified": true,
+    "flags": [
+      "Verified against OSHA FS-3507: hazard description, carcinogen, latency, presumed ACM installed before 1981 with material examples, 1926.1101 construction scope, PEL 0.1 f/cc 8-hour TWA and 1.0 f/cc 30-minute excursion limit, warning signs, no smoking/eating/drinking, PPE, decontamination and lunch areas, training before work and yearly in a language the worker understands.",
+      "FIX: 'Stop and ask before you disturb any material' is not in the source; labelled as good practice. Citation 29 CFR 1926.1101 exists and is the correct construction asbestos standard; no 1910 citation.",
+      "Non-blocking: the 'before 1981' date is the fact sheet's; 29 CFR 1926.1101 defines presumed asbestos-containing material for thermal system insulation and surfacing in buildings constructed no later than 1980, so foremen should treat 'pre-1981' as a rule of thumb and rely on an asbestos survey. Talk is PEL-focused; workers who only may disturb ACM are covered by awareness training (Class IV) not detailed here."
+    ]
+  }
+}

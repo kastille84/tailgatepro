@@ -1,0 +1,362 @@
+import styled from "styled-components";
+
+export const StyledList = styled.ul`
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 1.2rem;
+`;
+
+/** `$isRequired` highlights the GC's currently pushed topic (Phase 9e,
+ *  docs/policy-push-design.md) -- a pure nudge, never used to disable or
+ *  otherwise gate the card. */
+export const StyledCard = styled.li<{ $isRequired?: boolean }>`
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 1.2rem;
+  padding: 1.6rem;
+  border: 0.1rem solid
+    ${({ theme, $isRequired }) =>
+      $isRequired ? theme.colors.orange[400] : theme.colors.navy[100]};
+  border-radius: ${({ theme }) => theme.borderRadius.md};
+  background-color: ${({ theme }) => theme.colors.concrete[100]};
+
+  @media (min-width: ${({ theme }) => theme.breakpoints.sm}) {
+    flex-direction: row;
+    align-items: center;
+    gap: 1.6rem;
+  }
+`;
+
+export const StyledCardMain = styled.div`
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+`;
+
+export const StyledName = styled.h3`
+  margin: 0;
+  font-size: 1.6rem;
+  font-weight: 700;
+  color: ${({ theme }) => theme.colors.navy[700]};
+  overflow-wrap: anywhere;
+`;
+
+export const StyledMeta = styled.p`
+  margin: 0;
+  font-size: 1.3rem;
+  font-weight: 500;
+  color: ${({ theme }) => theme.colors.navy[400]};
+  overflow-wrap: anywhere;
+`;
+
+export const StyledTradeBadge = styled.span`
+  flex-shrink: 0;
+  padding: 0.4rem 0.9rem;
+  border-radius: ${({ theme }) => theme.borderRadius.sm};
+  font-size: 1.2rem;
+  font-weight: 700;
+  color: ${({ theme }) => theme.colors.orange[700]};
+  background-color: ${({ theme }) => theme.colors.orange[100]};
+`;
+
+/** Marks a company's own custom talk in the list/detail views — navy rather
+ *  than the trade taxonomy's orange, so it reads as ownership, not a trade. */
+export const StyledCustomBadge = styled.span`
+  flex-shrink: 0;
+  padding: 0.4rem 0.9rem;
+  border-radius: ${({ theme }) => theme.borderRadius.sm};
+  font-size: 1.2rem;
+  font-weight: 700;
+  color: ${({ theme }) => theme.colors.navy[700]};
+  background-color: ${({ theme }) => theme.colors.navy[100]};
+`;
+
+/** Marks the GC's currently pushed required topic (Phase 9e,
+ *  docs/policy-push-design.md) in the meeting wizard's talk picker. Orange,
+ *  matching the trade badge's color family (this is a GC-set attribute, not
+ *  an ownership marker like StyledCustomBadge). */
+export const StyledRequiredBadge = styled.span`
+  flex-shrink: 0;
+  padding: 0.4rem 0.9rem;
+  border-radius: ${({ theme }) => theme.borderRadius.sm};
+  font-size: 1.2rem;
+  font-weight: 700;
+  color: ${({ theme }) => theme.colors.navy[700]};
+  background-color: ${({ theme }) => theme.colors.navy[200]};
+`;
+
+export const StyledEmpty = styled.p`
+  margin: 0;
+  padding: 3.2rem 1.6rem;
+  text-align: center;
+  font-size: 1.5rem;
+  font-weight: 500;
+  line-height: 1.6;
+  color: ${({ theme }) => theme.colors.navy[400]};
+`;
+
+export const StyledBadgeRow = styled.div`
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.8rem;
+  margin-bottom: 1.6rem;
+`;
+
+export const StyledSummary = styled.p`
+  margin: 0 0 1.6rem;
+  font-size: 1.5rem;
+  font-weight: 600;
+  line-height: 1.6;
+  color: ${({ theme }) => theme.colors.navy[600]};
+`;
+
+export const StyledSection = styled.section`
+  margin-bottom: 1.6rem;
+
+  ul {
+    margin: 0.8rem 0 0;
+    padding-left: 1.8rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.6rem;
+  }
+
+  li {
+    font-size: 1.4rem;
+    line-height: 1.6;
+    color: ${({ theme }) => theme.colors.navy[600]};
+  }
+`;
+
+export const StyledSectionTitle = styled.h4`
+  margin: 0;
+  font-size: 1.3rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: ${({ theme }) => theme.colors.navy[400]};
+`;
+
+export const StyledOshaLine = styled.p`
+  margin: 0 0 1.6rem;
+  font-size: 1.3rem;
+  font-weight: 600;
+  color: ${({ theme }) => theme.colors.navy[500]};
+`;
+
+/** CPWR licensing condition: copyright + no-endorsement notice must travel
+ *  with the content wherever a talk's body is shown. See
+ *  docs/content-attribution.md. */
+export const StyledAttribution = styled.p`
+  margin: 1.6rem 0 0;
+  padding-top: 1.6rem;
+  border-top: 0.1rem solid ${({ theme }) => theme.colors.navy[100]};
+  font-size: 1.2rem;
+  line-height: 1.5;
+  color: ${({ theme }) => theme.colors.navy[400]};
+`;
+
+export const StyledButtonContainer = styled.div`
+  display: flex;
+  justify-content: flex-end;
+  align-items: flex-end;
+  gap: 0.8rem;
+  width: 100%;
+
+  @media (min-width: ${({ theme }) => theme.breakpoints.sm}) {
+    width: inherit;
+    margin-top: 0;
+  }
+`;
+
+/** Colors just the bookmark icon inside FavoriteButton — Button's "outline"
+ *  variant is orange-on-transparent by default (no neutral/gray variant
+ *  exists in this app), so the fill has to carry the favorited/unfavorited
+ *  distinction instead of the button chrome. */
+export const StyledFavoriteIcon = styled.span<{ $isFavorited: boolean }>`
+  display: inline-flex;
+  color: ${({ theme, $isFavorited }) =>
+    $isFavorited ? theme.colors.orange[600] : theme.colors.navy[400]};
+`;
+
+/** TalkDetail's modal title row: the talk title plus its favorite toggle,
+ *  spaced to opposite ends of the header. */
+export const StyledDetailTitleRow = styled.div`
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1.2rem;
+  width: 100%;
+`;
+
+/** Explains why an own talk has no Edit button: a meeting log already uses it. */
+export const StyledLockedNote = styled.p`
+  margin: 1.6rem 0 0;
+  padding: 1.2rem 1.6rem;
+  border-radius: ${({ theme }) => theme.borderRadius.md};
+  background: ${({ theme }) => theme.colors.concrete[100]};
+  font-size: 1.4rem;
+  line-height: 1.5;
+  color: ${({ theme }) => theme.colors.navy[600]};
+`;
+
+export const StyledActions = styled.div`
+  display: flex;
+  justify-content: flex-end;
+  gap: 1.2rem;
+  margin-top: 0.8rem;
+`;
+
+/** One row of TalkForm's OSHA-standards add/remove list: the text input plus
+ *  its "Remove" button. */
+export const StyledListRow = styled.div`
+  display: flex;
+  gap: 0.8rem;
+  align-items: center;
+`;
+
+/** TalkForm's edit-only Delete affordance, same treatment as ProjectForm's
+ *  danger zone (client/src/pages/Projects/Projects.styles.ts). */
+export const StyledDangerZone = styled.div`
+  margin-top: 2.4rem;
+  padding-top: 1.6rem;
+  border-top: 0.1rem solid ${({ theme }) => theme.colors.navy[100]};
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1.2rem;
+`;
+
+export const StyledDangerZoneTitle = styled.h4`
+  flex-basis: 100%;
+  margin: 0;
+  font-size: 1.3rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: ${({ theme }) => theme.colors.navy[400]};
+`;
+
+/** TalkForm's upfront note (shown in both create and edit mode) that a talk
+ *  used in a logged safety talk can no longer be edited or deleted. */
+export const StyledLockNotice = styled.p`
+  margin: 0 0 1.6rem;
+  padding: 1.2rem 1.4rem;
+  border-radius: ${({ theme }) => theme.borderRadius.sm};
+  background-color: ${({ theme }) => theme.colors.concrete[200]};
+  font-size: 1.3rem;
+  font-weight: 500;
+  line-height: 1.5;
+  color: ${({ theme }) => theme.colors.red[400]};
+  display: flex;
+  align-items: center;
+
+  & svg {
+    margin-right: 0.8rem;
+    flex-shrink: 0;
+  }
+`;
+
+/** TalkFilters' toolbar (trade Select + search TextInput), shared by
+ *  ContentLibrary and the meeting wizard's talk-picker step. */
+export const StyledToolbar = styled.div`
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: 1.6rem;
+  margin-bottom: 2.4rem;
+
+  > * {
+    flex: 1 1 20rem;
+  }
+`;
+
+export const StyledCheckboxContainer = styled.div`
+  display: flex;
+  align-items: flex-start;
+  flex-direction: column;
+  justify-content: flex-start;
+
+  @media (min-width: ${({ theme }) => theme.breakpoints.md}) {
+    flex-direction: row;
+    justify-content: flex-start;
+    align-items: center;
+    gap: 1.6rem;
+  }
+`;
+
+/** TalkForm's translation section: either the "Translate into" checklist, or
+ *  one of two explanatory notes (no tier access / offline) in its place. */
+export const StyledTranslationsList = styled.div`
+  display: flex;
+  flex-direction: column;
+  gap: 0.8rem;
+  max-height: 20rem;
+  overflow-y: auto;
+`;
+
+export const StyledTranslationsNote = styled.p`
+  margin: 0;
+  padding: 1.2rem 1.4rem;
+  border-radius: ${({ theme }) => theme.borderRadius.sm};
+  background-color: ${({ theme }) => theme.colors.concrete[200]};
+  font-size: 1.3rem;
+  font-weight: 500;
+  line-height: 1.5;
+  color: ${({ theme }) => theme.colors.navy[500]};
+
+  & a {
+    color: ${({ theme }) => theme.colors.orange[600]};
+    font-weight: 700;
+  }
+`;
+
+/** TalkForm's AI Talk Builder panel (docs/ai-talk-builder-design.md): a topic
+ *  input + "Draft with AI" button above the form, and the "verify before use"
+ *  banner shown once a draft has been applied. */
+export const StyledAiPanel = styled.div`
+  display: flex;
+  flex-direction: column;
+  gap: 1.2rem;
+  margin-bottom: 1.6rem;
+  padding: 1.4rem;
+  border: 0.1rem solid ${({ theme }) => theme.colors.navy[100]};
+  border-radius: ${({ theme }) => theme.borderRadius.md};
+  background-color: ${({ theme }) => theme.colors.concrete[100]};
+`;
+
+export const StyledAiRow = styled.div`
+  display: flex;
+  flex-direction: column;
+  gap: 1.2rem;
+
+  @media (min-width: ${({ theme }) => theme.breakpoints.sm}) {
+    flex-direction: row;
+    align-items: flex-end;
+  }
+`;
+
+export const StyledAiBanner = styled.p`
+  margin: 0;
+  padding: 1.2rem 1.4rem;
+  border-radius: ${({ theme }) => theme.borderRadius.sm};
+  background-color: ${({ theme }) => theme.colors.orange[100]};
+  font-size: 1.3rem;
+  font-weight: 600;
+  line-height: 1.5;
+  color: ${({ theme }) => theme.colors.navy[500]};
+`;
+
+export const StyledBadgeContainer = styled.div`
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  justify-content: center;
+  gap: 0.8rem;
+  margin-bottom: 1.6rem;
+`;

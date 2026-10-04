@@ -1,0 +1,748 @@
+import React from "react";
+import { describe, it, expect, vi, beforeEach } from "vitest";
+import { render, screen, fireEvent, waitFor } from "@testing-library/react";
+import { MemoryRouter } from "react-router-dom";
+import { ThemeProvider } from "styled-components";
+
+import { TalkForm } from "../../../src/features/content-library/TalkForm";
+import theme from "../../../src/styles/theme";
+import type { Talk } from "../../../src/interfaces/talk";
+
+const mockCreate = vi.fn();
+const mockUpdate = vi.fn();
+const mockDelete = vi.fn();
+const mockUseTalks = vi.fn();
+const mockUseCurrentUser = vi.fn();
+const mockUseOnlineStatus = vi.fn();
+const mockUseTranslationLanguages = vi.fn();
+const mockUseGenerateTalk = vi.fn();
+const mockGenerateDraft = vi.fn();
+
+vi.mock("../../../src/hooks/useCreateTalk", () => ({
+  useCreateTalk: () => ({ createTalk: mockCreate, isCreating: false }),
+}));
+vi.mock("../../../src/hooks/useUpdateTalk", () => ({
+  useUpdateTalk: () => ({ updateTalk: mockUpdate, isUpdating: false }),
+}));
+vi.mock("../../../src/hooks/useDeleteTalk", () => ({
+  useDeleteTalk: () => ({ deleteTalk: mockDelete, isDeleting: false }),
+}));
+vi.mock("../../../src/hooks/useTalks", () => ({
+  useTalks: (...args: unknown[]) => mockUseTalks(...args),
+}));
+vi.mock("../../../src/hooks/useCurrentUser", () => ({
+  useCurrentUser: () => mockUseCurrentUser(),
+}));
+vi.mock("../../../src/context/online-status", () => ({
+  useOnlineStatus: () => mockUseOnlineStatus(),
+}));
+vi.mock("../../../src/hooks/useTranslationLanguages", () => ({
+  useTranslationLanguages: () => mockUseTranslationLanguages(),
+}));
+vi.mock("../../../src/hooks/useGenerateTalk", () => ({
+  useGenerateTalk: () => mockUseGenerateTalk(),
+}));
+
+// BulletListEditor has its own tests (ui_comps/bullet-list-editor); stub it
+// here as a plain textarea (one line per bullet) so TalkForm's tests stay
+// focused on TalkForm's own logic — assembling the payload, wiring
+// Controller, surfacing validation and mutation errors. Like the real editor
+// it only reads `value` once, on mount (a `defaultValue` would NOT do: jsdom
+// keeps updating an untouched textarea's text), so a test fails if TalkForm
+// forgets to remount it after pushing new values in with `reset()`.
+vi.mock("../../../src/ui_comps/bullet-list-editor", async () => {
+  const { useEffect, useRef } = await import("react");
+  return {
+    BulletListEditor: ({
+      id,
+      value,
+      onChange,
+      hasError,
+      "aria-describedby": ariaDescribedBy,
+    }: {
+      id?: string;
+      value: string[];
+      onChange: (items: string[]) => void;
+      hasError?: boolean;
+      "aria-describedby"?: string;
+    }) => {
+      const ref = useRef<HTMLTextAreaElement>(null);
+      useEffect(() => {
+        if (ref.current) ref.current.value = value.join("\n");
+        // Seed once on mount, like Tiptap's `content`.
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+      }, []);
+      return (
+        <textarea
+          ref={ref}
+          id={id}
+          aria-invalid={hasError}
+          aria-describedby={ariaDescribedBy}
+          onChange={(event) =>
+            onChange(event.target.value.split("\n").filter((line) => line.trim() !== ""))
+          }
+        />
+      );
+    },
+  };
+});
+
+const renderForm = (
+  props: Partial<React.ComponentProps<typeof TalkForm>> = {},
+) =>
+  render(
+    <MemoryRouter>
+      <ThemeProvider theme={theme}>
+        <TalkForm isOpen onClose={vi.fn()} {...props} />
+      </ThemeProvider>
+    </MemoryRouter>,
+  );
+
+const editTalk: Talk = {
+  id: "talk-1",
+  slug: null,
+  title: "Ladder Safety Refresher",
+  tradeTag: "Roofing",
+  tradeTags: ["Roofing"],
+  content: "# Ladder Safety Refresher\n",
+  structured: {
+    summary: "Keep three points of contact.",
+    talking_points: ["Inspect rungs before use"],
+    site_hazards_to_check: ["Uneven ground"],
+    discussion_questions: ["What PPE is required?"],
+    osha_standards: ["29 CFR 1926.1053"],
+    estimated_minutes: 5,
+  },
+  attribution: null,
+  quiz: null,
+  translations: null,
+  isGlobal: false,
+  companyId: "company-1",
+  createdAt: "2026-09-12T00:00:00.000Z",
+};
+
+describe("TalkForm", () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+    mockCreate.mockResolvedValue(undefined);
+    mockUpdate.mockResolvedValue(undefined);
+    mockDelete.mockResolvedValue(undefined);
+    mockUseTalks.mockReturnValue({
+      talks: [],
+      tradeOptions: [
+        { value: "Electrical", label: "Electrical" },
+        { value: "Roofing", label: "Roofing" },
+      ],
+      isLoading: false,
+      isError: false,
+    });
+    mockUseCurrentUser.mockReturnValue({ hasTranslationAccess: true });
+    mockUseOnlineStatus.mockReturnValue({ isOnline: true });
+    // Empty by default so pre-existing tests' `targetLanguages: []` payload
+    // expectation holds without every test needing to think about it.
+    mockUseTranslationLanguages.mockReturnValue({ languages: [], isAvailable: false });
+    // Access on by default; the AI panel's own tests override per case.
+    mockUseGenerateTalk.mockReturnValue({
+      generateDraft: mockGenerateDraft,
+      isGenerating: false,
+      usage: null,
+      hasAccess: true,
+      isOnline: true,
+    });
+  });
+
+  it("renders nothing when closed", () => {
+    renderForm({ isOpen: false });
+    expect(screen.queryByRole("dialog")).toBeNull();
+  });
+
+  it("creates a talk with the minimum required fields and closes on submit", async () => {
+    const onClose = vi.fn();
+    renderForm({ onClose });
+
+    expect(screen.getByText("New talk")).toBeDefined();
+    fireEvent.change(screen.getByLabelText(/^title$/i), {
+      target: { value: "Ladder Safety Refresher" },
+    });
+    fireEvent.change(screen.getByLabelText(/talking points/i), {
+      target: { value: "Inspect rungs before use" },
+    });
+    fireEvent.click(screen.getByRole("button", { name: /create talk/i }));
+
+    await waitFor(() =>
+      expect(mockCreate).toHaveBeenCalledWith({
+        title: "Ladder Safety Refresher",
+        tradeTag: undefined,
+        summary: undefined,
+        talkingPoints: ["Inspect rungs before use"],
+        siteHazardsToCheck: [],
+        discussionQuestions: [],
+        oshaStandards: [],
+        estimatedMinutes: undefined,
+        targetLanguages: [],
+      }),
+    );
+    await waitFor(() => expect(onClose).toHaveBeenCalled());
+  });
+
+  it("shows validation errors and does not submit when required fields are empty", async () => {
+    renderForm();
+    fireEvent.click(screen.getByRole("button", { name: /create talk/i }));
+
+    await waitFor(() =>
+      expect(screen.getByText(/title is required/i)).toBeDefined(),
+    );
+    expect(screen.getByText(/add at least one talking point/i)).toBeDefined();
+    expect(mockCreate).not.toHaveBeenCalled();
+  });
+
+  it("keeps the modal open when the mutation rejects", async () => {
+    const onClose = vi.fn();
+    mockCreate.mockRejectedValue(new Error("This talk already exists"));
+    renderForm({ onClose });
+
+    fireEvent.change(screen.getByLabelText(/^title$/i), {
+      target: { value: "Dupe" },
+    });
+    fireEvent.change(screen.getByLabelText(/talking points/i), {
+      target: { value: "A point" },
+    });
+    fireEvent.click(screen.getByRole("button", { name: /create talk/i }));
+
+    await waitFor(() => expect(mockCreate).toHaveBeenCalled());
+    expect(onClose).not.toHaveBeenCalled();
+  });
+
+  it("sends the full structured payload when every field is filled in", async () => {
+    renderForm();
+
+    fireEvent.change(screen.getByLabelText(/^title$/i), {
+      target: { value: "Arc Flash Refresher" },
+    });
+    fireEvent.change(screen.getByLabelText(/^trade/i), {
+      target: { value: "Electrical" },
+    });
+    fireEvent.change(screen.getByLabelText(/summary/i), {
+      target: { value: "Keep clear of energized panels." },
+    });
+    fireEvent.change(screen.getByLabelText(/talking points/i), {
+      target: { value: "De-energize first\nWear arc-rated PPE" },
+    });
+    fireEvent.change(screen.getByLabelText(/hazards to check on site/i), {
+      target: { value: "Exposed wiring" },
+    });
+    fireEvent.change(screen.getByLabelText(/discussion questions/i), {
+      target: { value: "What PPE is required?" },
+    });
+
+    fireEvent.click(screen.getByRole("button", { name: /add osha standard/i }));
+    fireEvent.change(screen.getByLabelText(/^osha standard 1$/i), {
+      target: { value: "29 CFR 1926.416" },
+    });
+
+    fireEvent.change(screen.getByLabelText(/estimated minutes/i), {
+      target: { value: "5" },
+    });
+
+    fireEvent.click(screen.getByRole("button", { name: /create talk/i }));
+
+    await waitFor(() =>
+      expect(mockCreate).toHaveBeenCalledWith({
+        title: "Arc Flash Refresher",
+        tradeTag: "Electrical",
+        summary: "Keep clear of energized panels.",
+        talkingPoints: ["De-energize first", "Wear arc-rated PPE"],
+        siteHazardsToCheck: ["Exposed wiring"],
+        discussionQuestions: ["What PPE is required?"],
+        oshaStandards: ["29 CFR 1926.416"],
+        estimatedMinutes: 5,
+        targetLanguages: [],
+      }),
+    );
+  });
+
+  it("removes an OSHA standard row before submit, sending only what remains", async () => {
+    renderForm();
+
+    fireEvent.change(screen.getByLabelText(/^title$/i), {
+      target: { value: "T" },
+    });
+    fireEvent.change(screen.getByLabelText(/talking points/i), {
+      target: { value: "A point" },
+    });
+
+    fireEvent.click(screen.getByRole("button", { name: /add osha standard/i }));
+    fireEvent.click(screen.getByRole("button", { name: /add osha standard/i }));
+    fireEvent.change(screen.getByLabelText(/^osha standard 1$/i), {
+      target: { value: "29 CFR 1926.416" },
+    });
+    // Row 2 is left blank, then removed before submit — a blank row that's
+    // still present would fail validation instead (see the next test).
+    fireEvent.click(
+      screen.getByRole("button", { name: /remove osha standard 2/i }),
+    );
+
+    fireEvent.click(screen.getByRole("button", { name: /create talk/i }));
+
+    await waitFor(() =>
+      expect(mockCreate).toHaveBeenCalledWith(
+        expect.objectContaining({ oshaStandards: ["29 CFR 1926.416"] }),
+      ),
+    );
+  });
+
+  it("blocks submission when an OSHA standard row is left blank", async () => {
+    renderForm();
+
+    fireEvent.change(screen.getByLabelText(/^title$/i), {
+      target: { value: "T" },
+    });
+    fireEvent.change(screen.getByLabelText(/talking points/i), {
+      target: { value: "A point" },
+    });
+    fireEvent.click(screen.getByRole("button", { name: /add osha standard/i }));
+    fireEvent.click(screen.getByRole("button", { name: /create talk/i }));
+
+    await waitFor(() => expect(screen.getByText(/can't be blank/i)).toBeDefined());
+    expect(mockCreate).not.toHaveBeenCalled();
+  });
+
+  it("rejects a non-numeric estimated-minutes value", async () => {
+    renderForm();
+
+    fireEvent.change(screen.getByLabelText(/^title$/i), {
+      target: { value: "T" },
+    });
+    fireEvent.change(screen.getByLabelText(/talking points/i), {
+      target: { value: "A point" },
+    });
+    fireEvent.change(screen.getByLabelText(/estimated minutes/i), {
+      target: { value: "600" },
+    });
+    fireEvent.click(screen.getByRole("button", { name: /create talk/i }));
+
+    await waitFor(() =>
+      expect(
+        screen.getByText(/estimated minutes must be a positive number/i),
+      ).toBeDefined(),
+    );
+    expect(mockCreate).not.toHaveBeenCalled();
+  });
+
+  it("flags an over-long trade or summary", async () => {
+    renderForm();
+
+    fireEvent.change(screen.getByLabelText(/^title$/i), {
+      target: { value: "T" },
+    });
+    fireEvent.change(screen.getByLabelText(/talking points/i), {
+      target: { value: "A point" },
+    });
+    fireEvent.change(screen.getByLabelText(/^trade/i), {
+      target: { value: "x".repeat(61) },
+    });
+    fireEvent.change(screen.getByLabelText(/summary/i), {
+      target: { value: "x".repeat(1001) },
+    });
+    fireEvent.click(screen.getByRole("button", { name: /create talk/i }));
+
+    await waitFor(() =>
+      expect(screen.getByText(/trade is too long/i)).toBeDefined(),
+    );
+    expect(screen.getByText(/summary is too long/i)).toBeDefined();
+    expect(mockCreate).not.toHaveBeenCalled();
+  });
+
+  it("offers the known trades as datalist suggestions", () => {
+    renderForm();
+    const tradeInput = screen.getByLabelText(/^trade/i) as HTMLInputElement;
+    const datalist = document.getElementById(tradeInput.getAttribute("list")!);
+    expect(datalist?.querySelectorAll("option")).toHaveLength(2);
+  });
+
+  it("closes without creating when Cancel is clicked", () => {
+    const onClose = vi.fn();
+    renderForm({ onClose });
+
+    fireEvent.click(screen.getByRole("button", { name: /^cancel$/i }));
+
+    expect(onClose).toHaveBeenCalled();
+    expect(mockCreate).not.toHaveBeenCalled();
+  });
+
+  it("shows the meeting-log lock notice in create mode", () => {
+    renderForm();
+    expect(
+      screen.getByText(/can no longer be edited or deleted/i),
+    ).toBeDefined();
+  });
+
+  it("pre-fills fields and updates with the id in edit mode", async () => {
+    renderForm({ talk: editTalk });
+
+    expect(screen.getByText("Edit talk")).toBeDefined();
+    expect(
+      screen.getByText(/can no longer be edited or deleted/i),
+    ).toBeDefined();
+    expect((screen.getByLabelText(/^title$/i) as HTMLInputElement).value).toBe(
+      "Ladder Safety Refresher",
+    );
+    expect((screen.getByLabelText(/^trade/i) as HTMLInputElement).value).toBe(
+      "Roofing",
+    );
+
+    fireEvent.change(screen.getByLabelText(/^title$/i), {
+      target: { value: "Ladder Safety Refresher (Updated)" },
+    });
+    fireEvent.click(screen.getByRole("button", { name: /save changes/i }));
+
+    await waitFor(() =>
+      expect(mockUpdate).toHaveBeenCalledWith({
+        id: "talk-1",
+        input: expect.objectContaining({
+          title: "Ladder Safety Refresher (Updated)",
+          tradeTag: "Roofing",
+          summary: "Keep three points of contact.",
+          talkingPoints: ["Inspect rungs before use"],
+          siteHazardsToCheck: ["Uneven ground"],
+          discussionQuestions: ["What PPE is required?"],
+          oshaStandards: ["29 CFR 1926.1053"],
+          estimatedMinutes: 5,
+        }),
+      }),
+    );
+  });
+
+  it("has no danger zone in create mode", () => {
+    renderForm();
+    expect(screen.queryByRole("button", { name: /delete talk/i })).toBeNull();
+  });
+
+  it("deletes only after the confirm dialog is confirmed", async () => {
+    const onClose = vi.fn();
+    renderForm({ talk: editTalk, onClose });
+
+    // Opening the danger-zone Delete button does not delete on its own.
+    fireEvent.click(screen.getByRole("button", { name: /delete talk/i }));
+    expect(mockDelete).not.toHaveBeenCalled();
+
+    // The confirm dialog's own confirm button does.
+    const confirmButtons = screen.getAllByRole("button", {
+      name: /delete talk/i,
+    });
+    fireEvent.click(confirmButtons[confirmButtons.length - 1]);
+
+    await waitFor(() => expect(mockDelete).toHaveBeenCalledWith("talk-1"));
+    await waitFor(() => expect(onClose).toHaveBeenCalled());
+  });
+
+  it("keeps the form open when delete fails after confirmation", async () => {
+    const onClose = vi.fn();
+    mockDelete.mockRejectedValue(new Error("delete failed"));
+    renderForm({ talk: editTalk, onClose });
+
+    fireEvent.click(screen.getByRole("button", { name: /delete talk/i }));
+    const confirmButtons = screen.getAllByRole("button", {
+      name: /delete talk/i,
+    });
+    fireEvent.click(confirmButtons[confirmButtons.length - 1]);
+
+    await waitFor(() => expect(mockDelete).toHaveBeenCalledWith("talk-1"));
+    expect(onClose).not.toHaveBeenCalled();
+  });
+
+  describe("translations", () => {
+    it("hides the note/checklist behind a toggle, collapsed by default for a talk with no existing translations", () => {
+      mockUseTranslationLanguages.mockReturnValue({
+        languages: [{ code: "es", name: "Spanish" }],
+        isAvailable: true,
+      });
+      renderForm();
+
+      expect(
+        (screen.getByLabelText(/add translations for this talk/i) as HTMLInputElement)
+          .checked,
+      ).toBe(false);
+      expect(screen.queryByLabelText(/^spanish$/i)).toBeNull();
+      expect(screen.queryByText(/trade pro feature/i)).toBeNull();
+      expect(screen.queryByText(/unavailable offline/i)).toBeNull();
+    });
+
+    it("shows an upgrade note, not the checklist, once toggled on when the caller's tier lacks translation access", () => {
+      mockUseCurrentUser.mockReturnValue({ hasTranslationAccess: false });
+      mockUseTranslationLanguages.mockReturnValue({
+        languages: [{ code: "es", name: "Spanish" }],
+        isAvailable: false,
+      });
+      renderForm();
+
+      fireEvent.click(screen.getByLabelText(/add translations for this talk/i));
+
+      expect(screen.getByText(/trade pro feature/i)).toBeDefined();
+      expect(screen.queryByLabelText(/^spanish$/i)).toBeNull();
+    });
+
+    it("shows an offline note, not the checklist, once toggled on when access exists but the device is offline", () => {
+      mockUseOnlineStatus.mockReturnValue({ isOnline: false });
+      mockUseTranslationLanguages.mockReturnValue({
+        languages: [{ code: "es", name: "Spanish" }],
+        isAvailable: false,
+      });
+      renderForm();
+
+      fireEvent.click(screen.getByLabelText(/add translations for this talk/i));
+
+      expect(screen.getByText(/unavailable offline/i)).toBeDefined();
+      expect(screen.queryByLabelText(/^spanish$/i)).toBeNull();
+    });
+
+    it("shows the checklist once toggled on and includes checked languages in the submit payload", async () => {
+      mockUseTranslationLanguages.mockReturnValue({
+        languages: [{ code: "es", name: "Spanish" }],
+        isAvailable: true,
+      });
+      renderForm();
+
+      fireEvent.change(screen.getByLabelText(/^title$/i), {
+        target: { value: "T" },
+      });
+      fireEvent.change(screen.getByLabelText(/talking points/i), {
+        target: { value: "A point" },
+      });
+      fireEvent.click(screen.getByLabelText(/add translations for this talk/i));
+      fireEvent.click(screen.getByLabelText(/^spanish$/i));
+      fireEvent.click(screen.getByRole("button", { name: /create talk/i }));
+
+      await waitFor(() =>
+        expect(mockCreate).toHaveBeenCalledWith(
+          expect.objectContaining({ targetLanguages: ["es"] }),
+        ),
+      );
+    });
+
+    it("clears any checked languages when the toggle is switched back off", async () => {
+      mockUseTranslationLanguages.mockReturnValue({
+        languages: [{ code: "es", name: "Spanish" }],
+        isAvailable: true,
+      });
+      renderForm();
+
+      fireEvent.change(screen.getByLabelText(/^title$/i), {
+        target: { value: "T" },
+      });
+      fireEvent.change(screen.getByLabelText(/talking points/i), {
+        target: { value: "A point" },
+      });
+      fireEvent.click(screen.getByLabelText(/add translations for this talk/i));
+      fireEvent.click(screen.getByLabelText(/^spanish$/i));
+      // Collapse the section again -- a hidden section should never silently
+      // submit a stale selection.
+      fireEvent.click(screen.getByLabelText(/add translations for this talk/i));
+      expect(screen.queryByLabelText(/^spanish$/i)).toBeNull();
+
+      fireEvent.click(screen.getByRole("button", { name: /create talk/i }));
+
+      await waitFor(() =>
+        expect(mockCreate).toHaveBeenCalledWith(
+          expect.objectContaining({ targetLanguages: [] }),
+        ),
+      );
+    });
+
+    it("starts expanded with pre-checked languages the talk already has a translation for in edit mode", async () => {
+      mockUseTranslationLanguages.mockReturnValue({
+        languages: [{ code: "es", name: "Spanish" }],
+        isAvailable: true,
+      });
+      renderForm({
+        talk: {
+          ...editTalk,
+          translations: {
+            es: {
+              title: "Refuerzo de seguridad de escaleras",
+              summary: null,
+              talking_points: [],
+              site_hazards_to_check: [],
+              discussion_questions: [],
+            },
+          },
+        },
+      });
+
+      expect(
+        (screen.getByLabelText(/add translations for this talk/i) as HTMLInputElement)
+          .checked,
+      ).toBe(true);
+      expect(
+        (screen.getByLabelText(/^spanish$/i) as HTMLInputElement).checked,
+      ).toBe(true);
+
+      // Unchecking and submitting drops it (full-replace).
+      fireEvent.click(screen.getByLabelText(/^spanish$/i));
+      fireEvent.click(screen.getByRole("button", { name: /save changes/i }));
+
+      await waitFor(() =>
+        expect(mockUpdate).toHaveBeenCalledWith(
+          expect.objectContaining({
+            input: expect.objectContaining({ targetLanguages: [] }),
+          }),
+        ),
+      );
+    });
+  });
+
+  describe("AI Talk Builder panel", () => {
+    const aiDraft = {
+      title: "Trench Safety",
+      tradeTag: "General",
+      summary: "Trenches collapse without warning.",
+      talkingPoints: ["Never enter an unprotected trench."],
+      siteHazardsToCheck: ["Spoil pile at the edge"],
+      discussionQuestions: ["Where is our ladder?"],
+      oshaStandards: ["29 CFR 1926.651"],
+      estimatedMinutes: 6,
+    };
+
+    const draftButton = () => screen.getByRole("button", { name: /^draft with ai$/i });
+    const topicInput = () => screen.getByLabelText(/topic for the ai draft/i);
+
+    it("pre-fills the form from the draft, shows the verify banner, and saves through the normal create flow", async () => {
+      mockGenerateDraft.mockResolvedValue({
+        draft: aiDraft,
+        usage: { used: 1, limit: 10, remaining: 9 },
+      });
+      renderForm();
+
+      expect(screen.queryByRole("status")).toBeNull();
+      fireEvent.change(topicInput(), { target: { value: "  trenching  " } });
+      fireEvent.click(draftButton());
+
+      await waitFor(() => expect(screen.getByRole("status")).toBeDefined());
+      expect(mockGenerateDraft).toHaveBeenCalledWith({
+        topic: "trenching",
+        tradeTag: undefined,
+      });
+      expect(screen.getByRole("status").textContent).toMatch(/verify every point against osha/i);
+      expect((screen.getByLabelText(/^title$/i) as HTMLInputElement).value).toBe(
+        "Trench Safety",
+      );
+      expect((screen.getByLabelText(/talking points/i) as HTMLTextAreaElement).value).toBe(
+        "Never enter an unprotected trench.",
+      );
+      expect(
+        (screen.getByLabelText(/hazards to check on site/i) as HTMLTextAreaElement).value,
+      ).toBe("Spoil pile at the edge");
+      expect(
+        (screen.getByLabelText(/discussion questions/i) as HTMLTextAreaElement).value,
+      ).toBe("Where is our ladder?");
+      expect((screen.getByLabelText(/estimated minutes/i) as HTMLInputElement).value).toBe("6");
+      expect(
+        (screen.getByLabelText(/^osha standard 1$/i) as HTMLInputElement).value,
+      ).toBe("29 CFR 1926.651");
+
+      fireEvent.click(screen.getByRole("button", { name: /create talk/i }));
+
+      await waitFor(() =>
+        expect(mockCreate).toHaveBeenCalledWith(
+          expect.objectContaining({
+            title: "Trench Safety",
+            tradeTag: "General",
+            talkingPoints: aiDraft.talkingPoints,
+            siteHazardsToCheck: aiDraft.siteHazardsToCheck,
+            discussionQuestions: aiDraft.discussionQuestions,
+            oshaStandards: ["29 CFR 1926.651"],
+            estimatedMinutes: 6,
+          }),
+        ),
+      );
+    });
+
+    it("passes an already-typed trade along to the draft", async () => {
+      mockGenerateDraft.mockResolvedValue({ draft: aiDraft, usage: {} });
+      renderForm();
+
+      fireEvent.change(screen.getByLabelText(/^trade/i), { target: { value: " Roofing " } });
+      fireEvent.change(topicInput(), { target: { value: "fall protection" } });
+      fireEvent.click(draftButton());
+
+      await waitFor(() =>
+        expect(mockGenerateDraft).toHaveBeenCalledWith({
+          topic: "fall protection",
+          tradeTag: "Roofing",
+        }),
+      );
+    });
+
+    it("leaves the form untouched and shows no banner when generation fails", async () => {
+      mockGenerateDraft.mockRejectedValue(new Error("cap reached"));
+      renderForm();
+
+      fireEvent.change(screen.getByLabelText(/^title$/i), { target: { value: "My talk" } });
+      fireEvent.change(topicInput(), { target: { value: "trenching" } });
+      fireEvent.click(draftButton());
+
+      await waitFor(() => expect(mockGenerateDraft).toHaveBeenCalled());
+      expect(screen.queryByRole("status")).toBeNull();
+      expect((screen.getByLabelText(/^title$/i) as HTMLInputElement).value).toBe("My talk");
+    });
+
+    it("disables the button until the topic has 3 characters", () => {
+      renderForm();
+
+      expect((draftButton() as HTMLButtonElement).disabled).toBe(true);
+      fireEvent.change(topicInput(), { target: { value: "ab" } });
+      expect((draftButton() as HTMLButtonElement).disabled).toBe(true);
+      fireEvent.change(topicInput(), { target: { value: "abc" } });
+      expect((draftButton() as HTMLButtonElement).disabled).toBe(false);
+    });
+
+    it("shows the remaining allowance and disables the button once it is used up", () => {
+      mockUseGenerateTalk.mockReturnValue({
+        generateDraft: mockGenerateDraft,
+        isGenerating: false,
+        usage: { used: 10, limit: 10, remaining: 0 },
+        hasAccess: true,
+        isOnline: true,
+      });
+      renderForm();
+
+      expect(screen.getByText(/0 of 10 ai drafts left this month/i)).toBeDefined();
+      fireEvent.change(topicInput(), { target: { value: "trenching" } });
+      expect((draftButton() as HTMLButtonElement).disabled).toBe(true);
+    });
+
+    it("shows an upgrade note instead of the input when the plan has no access", () => {
+      mockUseGenerateTalk.mockReturnValue({
+        generateDraft: mockGenerateDraft,
+        isGenerating: false,
+        usage: null,
+        hasAccess: false,
+        isOnline: true,
+      });
+      renderForm();
+
+      expect(screen.getByText(/ai talk builder is a trade pro feature/i)).toBeDefined();
+      expect(screen.queryByLabelText(/topic for the ai draft/i)).toBeNull();
+    });
+
+    it("shows an offline note instead of the input when offline", () => {
+      mockUseGenerateTalk.mockReturnValue({
+        generateDraft: mockGenerateDraft,
+        isGenerating: false,
+        usage: null,
+        hasAccess: true,
+        isOnline: false,
+      });
+      renderForm();
+
+      expect(screen.getByText(/unavailable offline/i)).toBeDefined();
+      expect(screen.queryByLabelText(/topic for the ai draft/i)).toBeNull();
+    });
+
+    it("is not offered when editing an existing talk", () => {
+      renderForm({ talk: editTalk });
+
+      expect(screen.queryByText(/draft with ai/i)).toBeNull();
+    });
+  });
+});

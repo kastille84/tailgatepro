@@ -1,0 +1,55 @@
+{
+  "id": "site-dust-suppression-for-air-quality",
+  "title": "Site Dust Suppression for Air Quality",
+  "primary_trade": "General Construction",
+  "trade_tags": [
+    "General Construction"
+  ],
+  "osha_standards": [
+    "OSH Act Section 5(a)(1) General Duty Clause"
+  ],
+  "estimated_minutes": 5,
+  "summary": "Construction sites can create dust from disturbed soil that harms air quality and worker health. This talk covers common ways to control dust and the limits of each method.",
+  "talking_points": [
+    "Dust from disturbed soil adds fine particles (PM2.5 and PM10) to the air. These particles can contribute to respiratory health problems and create unpleasant working conditions.",
+    "Earthmoving, especially hauling cut and fill material, is the major source of dust. Traffic and general disturbance also add to it.",
+    "Disturb only small areas at a time. Less exposed soil means less dust.",
+    "Sprinkle the ground with water until it is moist, especially on haul roads and traffic routes. Water needs frequent reapplication.",
+    "Too much water can run off the site or lead to vehicles tracking mud onto public roads.",
+    "Other controls include mulch, vegetative cover, wind breaks, stone on roads and entrances, and tillage.",
+    "Chemical dust suppressants should follow the manufacturer's specifications. Misuse can create hazardous working conditions, pollute water, and present a health risk.",
+    "Water and chemical controls need more monitoring than structural or vegetative controls.",
+    "This talk covers soil dust from earthmoving and traffic. It is not a silica or respirable-dust exposure talk. If work creates dust from cutting, grinding, or drilling concrete or masonry, OSHA's silica standard (29 CFR 1926.1153) applies. State or local requirements may also apply."
+  ],
+  "site_hazards_to_check": [
+    "Large areas of bare, dry soil exposed to wind",
+    "Haul roads and traffic routes with no dust control",
+    "Dust blowing off site or toward neighbors and waterbodies",
+    "Mud tracked onto public roads or runoff from over-watering",
+    "Chemical dust suppressant used without manufacturer directions"
+  ],
+  "discussion_questions": [
+    "Where is the most dust coming from on our site today?",
+    "What dust control are we using, and how often does it need to be redone?",
+    "How can we sequence the work to expose less soil at a time?"
+  ],
+  "attribution": {
+    "source": "EPA",
+    "publisher": "U.S. Environmental Protection Agency (EPA)",
+    "copyright": "U.S. Government work — public domain.",
+    "license": "public-domain",
+    "source_url": "https://www.epa.gov/system/files/documents/2021-11/bmp-dust-control.pdf",
+    "source_ref": "TBT-183",
+    "notice": "Adapted from EPA's Stormwater Best Management Practice fact sheet, Dust Control (EPA-832-F-21-028R). Reproduced with attribution for jobsite safety training; not an endorsement by EPA. EPA notes that state or local requirements may apply."
+  },
+  "audit": {
+    "status": "approved",
+    "audited_at": "2026-09-25T18:32:27.718Z",
+    "osha_accuracy_verified": true,
+    "flags": [
+      "Verified facts against the EPA fact sheet: PM2.5/PM10, earthmoving as major source, small disturbed areas, sprinkling and reapplication, over-watering runoff/tracking, other controls, manufacturer specs, monitoring. Fixed one overstatement: 'must follow' manufacturer specs changed to 'should' (source says 'should').",
+      "Decision: acceptable with non-blocking flags, consistent with EPA stormwater talks 177/180. Dust from disturbed soil is a legitimate site air-quality and worker-comfort/health topic and the controls are actionable for crews. Weak spots: mapping is General Duty Clause only, source is environmental (stormwater BMP), and it gives no worker exposure limits or respirator guidance. Added a point clarifying it is not a silica talk (1926.1153) and that state/local rules may apply.",
+      "For the structurer: trade_tags include Masonry and Drywall, but the source is about earthmoving soil dust; consider dropping those tags (and syncing data/processed/index-by-trade.json). Source domain epa.gov is allowed and public-domain notice is preserved. No UK wording found."
+    ]
+  }
+}

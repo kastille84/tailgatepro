@@ -4,14 +4,19 @@
   "description": "Server for tailgatepro app",
   "main": "server.js",
   "scripts": {
-    "test": "npm --prefix client run test -- --run",
+    "test": "npm run test:server && npm --prefix client run test -- --run",
+    "test:server": "vitest run",
     "server": "nodemon server.js",
     "client": "npm run dev --prefix client",
     "dev": "concurrently \"npm run server\" \"npm run client\"",
-    "start-prod": "npm run build --prefix client && npm run server"
+    "start-prod": "npm run build --prefix client && npm run server",
+    "seed:talks": "node scripts/seed-talks.js",
+    "setup:storage": "node scripts/setup-storage-buckets.js"
   },
   "dependencies": {
+    "@anthropic-ai/sdk": "^0.131.0",
     "@supabase/supabase-js": "^2.49.4",
+    "archiver": "^7.0.1",
     "bcryptjs": "^2.4.3",
     "body-parser": "^1.20.2",
     "cloudinary": "^2.8.0",
@@ -28,6 +33,7 @@
     "node-cron": "^4.2.1",
     "nodemailer": "^6.9.1",
     "openai": "^6.15.0",
+    "pdfkit": "^0.20.2",
     "stripe": "^12.4.0",
     "uuid": "^9.0.0",
     "uuidv4": "^6.2.13"
@@ -36,7 +42,8 @@
     "chai": "^4.3.7",
     "mocha": "^10.2.0",
     "nodemon": "^3.1.10",
-    "sinon": "^15.0.1"
+    "sinon": "^15.0.1",
+    "vitest": "^3.1.4"
   },
   "repository": {
     "type": "git",

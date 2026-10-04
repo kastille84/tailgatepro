@@ -1,0 +1,50 @@
+{
+  "id": "preventing-falling-objects",
+  "title": "Preventing Falling Objects and Struck-By Injuries",
+  "primary_trade": "General Construction",
+  "trade_tags": [
+    "General Construction"
+  ],
+  "osha_standards": [
+    "29 CFR 1926.501",
+    "29 CFR 1926.100"
+  ],
+  "estimated_minutes": 5,
+  "summary": "Struck-by falling objects is a leading cause of construction deaths. Even a small tool dropped from height can kill. This talk covers securing tools, toeboards, and hard hats.",
+  "talking_points": [
+    "Secure tools in elevated work areas, especially near leading edges. Use a tool lanyard or holster for hand tools.",
+    "Secure loads before lifting or moving them with a lift or crane. Do not hoist or pass loads over people.",
+    "Stack materials neatly so they cannot topple.",
+    "Ask your employer for debris nets or toeboards on scaffolding and open edges to catch tools and material.",
+    "Always wear a hard hat and the other PPE for the job."
+  ],
+  "site_hazards_to_check": [
+    "Unsecured tools or material near edges, floor openings, or scaffold platforms",
+    "Loads carried or swung over workers below",
+    "Missing toeboards or debris nets on elevated platforms",
+    "Poorly stacked or leaning material piles",
+    "Workers below overhead work without hard hats or a barricaded exclusion zone"
+  ],
+  "discussion_questions": [
+    "What tools and materials are overhead today, and how are they secured?",
+    "Where can people walk under overhead work, and should that area be barricaded?",
+    "How do you tie off a hand tool when working near a leading edge?"
+  ],
+  "attribution": {
+    "source": "NIOSH",
+    "publisher": "National Institute for Occupational Safety and Health (NIOSH)",
+    "copyright": "U.S. Government work — public domain.",
+    "license": "public-domain",
+    "source_url": "https://www.cdc.gov/niosh/docs/2022-134/2022-134.pdf",
+    "notice": "Adapted from a NIOSH Toolbox Talk (co-developed with CPWR). Public-domain source; not an endorsement by NIOSH or CPWR."
+  },
+  "audit": {
+    "status": "approved",
+    "audited_at": "2026-09-10T18:21:19Z",
+    "osha_accuracy_verified": true,
+    "flags": [
+      "OSHA mapping accurate: 29 CFR 1926.501(c) (falling-object protection duty) and 1926.100 (head protection). Content - secure tools at height / use lanyards and holsters, secure and never suspend loads over people, stack materials so they cannot topple, request toeboards/debris nets, barricade exclusion zones, wear hard hats - is sound.",
+      "Non-blocking enhancement: consider adding 29 CFR 1926.502(j) for the falling-object system criteria (toeboard minimum height and load, canopy and debris-net specs) since the talk references toeboards."
+    ]
+  }
+}

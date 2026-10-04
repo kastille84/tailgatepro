@@ -1,21 +1,49 @@
 import React from "react";
-import { fireEvent, render, screen } from "@testing-library/react";
+import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { ThemeProvider } from "styled-components";
 import { MemoryRouter } from "react-router-dom";
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi, beforeEach } from "vitest";
 
 import Navbar from "../../../src/ui_comps/navbar/Navbar";
 import theme from "../../../src/styles/theme";
 
+const mockUseAuth = vi.fn();
+vi.mock("../../../src/context/auth", () => ({
+  useAuth: () => mockUseAuth(),
+}));
+
+const mockUseCurrentUser = vi.fn();
+vi.mock("../../../src/hooks/useCurrentUser", () => ({
+  useCurrentUser: () => mockUseCurrentUser(),
+}));
+
+// The install button has its own provider + tests; stub it here so Navbar
+// tests stay isolated from PWA-install context.
+vi.mock("../../../src/features/pwa-install", () => ({
+  InstallButton: () => <button type="button">Install app</button>,
+}));
+
+const renderNavbar = (initialEntries: string[] = ["/"]) =>
+  render(
+    <MemoryRouter initialEntries={initialEntries}>
+      <ThemeProvider theme={theme}>
+        <Navbar />
+      </ThemeProvider>
+    </MemoryRouter>,
+  );
+
 describe("Navbar", () => {
+  beforeEach(() => {
+    mockUseAuth.mockReturnValue({
+      user: null,
+      loading: false,
+      logout: vi.fn(),
+    });
+    mockUseCurrentUser.mockReturnValue({ isGc: false });
+  });
+
   it("renders the brand and toggles the mobile menu state", () => {
-    render(
-      <MemoryRouter>
-        <ThemeProvider theme={theme}>
-          <Navbar />
-        </ThemeProvider>
-      </MemoryRouter>,
-    );
+    renderNavbar();
 
     expect(
       screen.getByRole("navigation", { name: /main navigation/i }),
@@ -26,6 +54,190 @@ describe("Navbar", () => {
     expect(toggle.getAttribute("aria-expanded")).toBe("false");
 
     fireEvent.click(toggle);
+    expect(toggle.getAttribute("aria-expanded")).toBe("true");
+  });
+
+  it("shows no auth controls while loading", () => {
+    mockUseAuth.mockReturnValue({ user: null, loading: true, logout: vi.fn() });
+
+    renderNavbar();
+
+    expect(screen.queryByRole("button", { name: /^login$/i })).toBeNull();
+    expect(screen.queryByRole("button", { name: /^sign up$/i })).toBeNull();
+    expect(screen.queryByRole("link", { name: /dashboard/i })).toBeNull();
+    expect(screen.queryByRole("link", { name: /settings/i })).toBeNull();
+    expect(screen.queryByRole("button", { name: /logout/i })).toBeNull();
+  });
+
+  it("shows Login and Sign Up links when logged out", () => {
+    renderNavbar();
+
+    const loginLink = screen
+      .getByRole("button", { name: /^login$/i })
+      .closest("a");
+    expect(loginLink?.getAttribute("href")).toBe("/login");
+
+    const signUpLink = screen
+      .getByRole("button", { name: /^sign up$/i })
+      .closest("a");
+    expect(signUpLink?.getAttribute("href")).toBe("/signup");
+  });
+
+  it("shows a Dashboard link and Logout button when logged in, and Logout calls logout()", async () => {
+    const logout = vi.fn().mockResolvedValue(undefined);
+    mockUseAuth.mockReturnValue({
+      user: { id: "user-1" },
+      loading: false,
+      logout,
+    });
+
+    renderNavbar();
+
+    expect(
+      screen.getByRole("link", { name: /dashboard/i }).getAttribute("href"),
+    ).toBe("/dashboard");
+    expect(
+      screen.getByRole("link", { name: /projects/i }).getAttribute("href"),
+    ).toBe("/projects");
+    expect(
+      screen.getByRole("link", { name: /toolbox talks/i }).getAttribute("href"),
+    ).toBe("/talks");
+    expect(
+      screen.getByRole("link", { name: /history/i }).getAttribute("href"),
+    ).toBe("/meetings");
+    expect(
+      screen.getByRole("link", { name: /settings/i }).getAttribute("href"),
+    ).toBe("/settings");
+    expect(screen.queryByRole("button", { name: /^login$/i })).toBeNull();
+
+    fireEvent.click(screen.getByRole("button", { name: /logout/i }));
+
+    await waitFor(() => {
+      expect(logout).toHaveBeenCalledTimes(1);
+    });
+  });
+
+  it("hides the Toolbox Talks link for a GC company and shows Subcontractors instead", () => {
+    mockUseAuth.mockReturnValue({
+      user: { id: "user-1" },
+      loading: false,
+      logout: vi.fn(),
+    });
+    mockUseCurrentUser.mockReturnValue({ isGc: true });
+
+    renderNavbar();
+
+    expect(screen.queryByRole("link", { name: /toolbox talks/i })).toBeNull();
+    expect(screen.queryByRole("link", { name: /history/i })).toBeNull();
+    expect(
+      screen.getByRole("link", { name: /dashboard/i }).getAttribute("href"),
+    ).toBe("/dashboard");
+    // Always visible for every GC regardless of plan tier -- the page itself
+    // shows an upgrade banner to a non-Portfolio GC (Phase 9e).
+    expect(
+      screen.getByRole("link", { name: /subcontractors/i }).getAttribute("href"),
+    ).toBe("/gc/subcontractors");
+    expect(
+      screen.getByRole("link", { name: /policy push/i }).getAttribute("href"),
+    ).toBe("/gc/policy-push");
+    expect(
+      screen.getByRole("link", { name: /company talks/i }).getAttribute("href"),
+    ).toBe("/gc/talks");
+  });
+
+  it("hides the Subcontractors, Company Talks and Policy Push links for a non-GC company", () => {
+    mockUseAuth.mockReturnValue({
+      user: { id: "user-1" },
+      loading: false,
+      logout: vi.fn(),
+    });
+
+    renderNavbar();
+
+    expect(screen.queryByRole("link", { name: /subcontractors/i })).toBeNull();
+    expect(screen.queryByRole("link", { name: /policy push/i })).toBeNull();
+    expect(screen.queryByRole("link", { name: /company talks/i })).toBeNull();
+  });
+
+  describe("active page highlight", () => {
+    const loggedIn = (isGc: boolean) => {
+      mockUseAuth.mockReturnValue({
+        user: { id: "user-1" },
+        loading: false,
+        logout: vi.fn(),
+      });
+      mockUseCurrentUser.mockReturnValue({ isGc });
+    };
+    const current = (name: RegExp) =>
+      screen.getByRole("link", { name }).getAttribute("aria-current");
+
+    it("marks only the link for the current page", () => {
+      loggedIn(false);
+      renderNavbar(["/projects"]);
+
+      expect(current(/projects/i)).toBe("page");
+      expect(current(/dashboard/i)).toBeNull();
+    });
+
+    it("marks History on /meetings but not on the /meetings/new flow", () => {
+      loggedIn(false);
+      const { unmount } = renderNavbar(["/meetings"]);
+      expect(current(/history/i)).toBe("page");
+      unmount();
+
+      renderNavbar(["/meetings/new"]);
+      expect(current(/history/i)).toBeNull();
+    });
+
+    it("keeps Subcontractors marked on a subcontractor detail page", () => {
+      loggedIn(true);
+      renderNavbar(["/gc/subcontractors/abc"]);
+
+      expect(current(/subcontractors/i)).toBe("page");
+    });
+
+    it("never marks the Login or Sign Up links", () => {
+      renderNavbar(["/login"]);
+
+      const loginLink = screen
+        .getByRole("button", { name: /^login$/i })
+        .closest("a");
+      expect(loginLink?.getAttribute("aria-current")).toBeNull();
+    });
+  });
+
+  it("closes the collapsed menu when a nav link inside it is clicked", () => {
+    renderNavbar();
+    const toggle = screen.getByLabelText(/toggle menu/i);
+
+    fireEvent.click(toggle);
+    expect(toggle.getAttribute("aria-expanded")).toBe("true");
+
+    fireEvent.click(screen.getByRole("link", { name: /pricing/i }));
+    expect(toggle.getAttribute("aria-expanded")).toBe("false");
+  });
+
+  it("closes the collapsed menu when a button inside the links is clicked", () => {
+    renderNavbar();
+    const toggle = screen.getByLabelText(/toggle menu/i);
+
+    fireEvent.click(toggle);
+    expect(toggle.getAttribute("aria-expanded")).toBe("true");
+
+    fireEvent.click(screen.getByRole("button", { name: /^login$/i }));
+    expect(toggle.getAttribute("aria-expanded")).toBe("false");
+  });
+
+  it("leaves the collapsed menu open when a click misses a link or button", () => {
+    renderNavbar();
+    const toggle = screen.getByLabelText(/toggle menu/i);
+
+    fireEvent.click(toggle);
+    expect(toggle.getAttribute("aria-expanded")).toBe("true");
+
+    // Click the NavLinks container itself, not one of its items.
+    const navLinks = screen.getByRole("link", { name: /home/i }).parentElement;
+    fireEvent.click(navLinks!);
     expect(toggle.getAttribute("aria-expanded")).toBe("true");
   });
 });

@@ -1,0 +1,52 @@
+{
+  "id": "reporting-injuries-osha-recordkeeping",
+  "title": "Reporting Injuries: OSHA Recordkeeping",
+  "primary_trade": "General Construction",
+  "trade_tags": [
+    "General Construction"
+  ],
+  "osha_standards": [
+    "29 CFR 1904",
+    "29 CFR 1904.39"
+  ],
+  "estimated_minutes": 5,
+  "summary": "OSHA recordkeeping has three parts: recording work-related injuries and illnesses, reporting severe ones to OSHA, and annual electronic submission of data. Records help find and remove hazards.",
+  "talking_points": [
+    "Recording and reporting help employers, workers, and OSHA find and eliminate hazards and prevent future injuries and illnesses.",
+    "Many employers with more than 10 employees must record work-related injuries and illnesses on OSHA forms 300, 300A, and 301, or equivalent forms. Certain industries are exempt.",
+    "All employers must notify OSHA within 8 hours of a work-related death.",
+    "All employers must notify OSHA within 24 hours of a work-related in-patient hospitalization, amputation, or loss of an eye.",
+    "Some establishments must submit injury and illness data electronically once per year, from January 2 to March 2, through OSHA's Injury Tracking Application.",
+    "Good practice, not an OSHA requirement: report every injury to your supervisor so it can be recorded and reported correctly."
+  ],
+  "site_hazards_to_check": [
+    "Injuries not reported to a supervisor",
+    "No one assigned to keep the injury and illness forms up to date",
+    "Unclear who reports a severe injury to OSHA and how fast",
+    "Reporting deadlines unknown to the crew supervisors"
+  ],
+  "discussion_questions": [
+    "Who on our team keeps the injury and illness records?",
+    "What are the two OSHA reporting deadlines, and what triggers each?",
+    "Why does it help us to report even minor injuries?"
+  ],
+  "attribution": {
+    "source": "OSHA",
+    "publisher": "Occupational Safety and Health Administration (OSHA)",
+    "copyright": "U.S. Government work — public domain.",
+    "license": "public-domain",
+    "source_url": "https://www.osha.gov/recordkeeping",
+    "source_ref": "TBT-088",
+    "notice": "Adapted from OSHA published material. Reproduced with attribution for jobsite safety training; not an endorsement by OSHA."
+  },
+  "audit": {
+    "status": "approved",
+    "audited_at": "2026-09-25T18:06:17Z",
+    "osha_accuracy_verified": true,
+    "flags": [
+      "Verified against OSHA Recordkeeping page: >10 employees/forms 300, 300A, 301/certain industries exempt, 8 h and 24 h notification, ITA electronic submission Jan 2 - Mar 2 all match. 29 CFR 1904 and 1904.39 exist and match.",
+      "FIX: 'Report every injury to your supervisor' is not in the source; labelled as good practice. Not presented as a legal claim.",
+      "Non-blocking: short overview, 6 points (5 sourced); overlaps TBT-086. Electronic submission applies only to establishments meeting size/industry criteria (talk says 'some', correct)."
+    ]
+  }
+}

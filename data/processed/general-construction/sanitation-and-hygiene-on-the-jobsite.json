@@ -1,0 +1,54 @@
+{
+  "id": "sanitation-and-hygiene-on-the-jobsite",
+  "title": "Sanitation and Hygiene on the Jobsite",
+  "primary_trade": "General Construction",
+  "trade_tags": [
+    "General Construction"
+  ],
+  "osha_standards": [
+    "29 CFR 1926.51"
+  ],
+  "estimated_minutes": 5,
+  "summary": "Safe drinking water, toilets and a place to wash keep workers healthy. OSHA's sanitation rule sets the minimums for construction sites.",
+  "talking_points": [
+    "An adequate supply of drinking (potable) water must be provided in all places of employment (29 CFR 1926.51(a)(1)).",
+    "Water containers must be tightly closable and have a tap. Water may not be dipped from them, and they may not be used for anything else. The common drinking cup is prohibited (1926.51(a)(2)-(4)).",
+    "If single-service cups are used, provide sanitary storage for unused cups and a receptacle for used ones (1926.51(a)(5)).",
+    "Outlets for water that is not drinkable must be posted to say it is unsafe for drinking, washing or cooking, and the two systems may not be cross-connected (1926.51(b)).",
+    "Toilets: one toilet seat for 20 or fewer workers; for 20 or more, one toilet seat and one urinal per 40 workers; for 200 or more, one toilet seat and one urinal per 50 workers (1926.51(c)).",
+    "Employers must provide adequate washing facilities for workers applying paints, coatings, herbicides or insecticides, or in other operations where contaminants may be harmful. Lavatories need hot and cold or tepid running water, hand soap, and individual towels or air blowers, kept in sanitary condition (1926.51(f)(1)-(3)).",
+    "No one may eat or drink in a toilet room or in any area exposed to a toxic material (1926.51(g)).",
+    "In enclosed workplaces, keep rodents, insects and other vermin out, and run an extermination program if they are found (1926.51(h))."
+  ],
+  "site_hazards_to_check": [
+    "Drinking water container that is open, dipped, unlabeled or shared with other uses",
+    "Common cup in use",
+    "Not enough toilets for the crew size",
+    "No wash station where paints, coatings or chemicals are handled",
+    "Eating or drinking in areas exposed to toxic materials",
+    "Water outlet not posted as non-drinkable"
+  ],
+  "discussion_questions": [
+    "Where do we wash up after handling chemicals, and is there soap and water?",
+    "How many workers do we have, and do we have enough toilets for them?",
+    "Why is it unsafe to eat or drink where toxic materials are in use?"
+  ],
+  "attribution": {
+    "source": "TailgatePro",
+    "publisher": "TailgatePro",
+    "copyright": "Original TailgatePro content, written from 29 CFR 1926.51 (Sanitation). Regulation and agency text is U.S. Government work in the public domain; the wording here is TailgatePro's own.",
+    "license": "original-work",
+    "source_url": "https://www.osha.gov/laws-regs/regulations/standardnumber/1926/1926.51",
+    "source_ref": "TBT-133",
+    "notice": "Written from 29 CFR 1926.51 (Sanitation). General guidance only; follow your company safety program and site-specific requirements. Not an endorsement by OSHA."
+  },
+  "audit": {
+    "status": "approved",
+    "audited_at": "2026-09-25T20:37:57.253Z",
+    "osha_accuracy_verified": true,
+    "flags": [
+      "Verified 1926.51(a)(1)-(5), (b)(1)-(2), (c) toilet table, (g), (h) verbatim; (h) applies to enclosed workplaces as written.",
+      "Fix: washing-facilities point cited (f) only and omitted the 'other operations where contaminants may be harmful' clause; now cites (f)(1)-(3) with soap/towel/water details from (f)(3)(ii)-(iv)."
+    ]
+  }
+}

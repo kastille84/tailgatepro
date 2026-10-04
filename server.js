@@ -12,11 +12,25 @@ const { errorHandler } = require("./server/middlewares/errorHandler");
 
 // routes
 const waitlistRoutes = require("./server/routes/waitlist");
+const usersRoutes = require("./server/routes/users");
+const projectsRoutes = require("./server/routes/projects");
+const talksRoutes = require("./server/routes/talks");
+const favoritesRoutes = require("./server/routes/favorites");
+const meetingLogsRoutes = require("./server/routes/meetingLogs");
+const companiesRoutes = require("./server/routes/companies");
+const jobsitesRoutes = require("./server/routes/jobsites");
+const gcRoutes = require("./server/routes/gc");
 // const authRoutes = require("./server/routes/auth");
 // const assetRoutes = require("./server/routes/assets");
 // const moderateRoutes = require("./server/routes/moderate");
 // const emailRoutes = require("./server/routes/emails");
-// const stripeRoutes = require("./server/routes/stripe");
+const stripeRoutes = require("./server/routes/stripe");
+const integrationsRoutes = require("./server/routes/integrations");
+const projectIntegrationsRoutes = require("./server/routes/projectIntegrations");
+const stripeWebhookRoutes = require("./server/routes/stripeWebhook");
+const smsRoutes = require("./server/routes/sms");
+const twilioWebhookRoutes = require("./server/routes/twilioWebhook");
+const { runNudgeTick } = require("./server/services/smsNudges");
 // const {
 //   deleteFlaggedFlyers,
 //   deleteExpiredFlyers,
@@ -41,26 +55,50 @@ if ((process.env.NODE_ENV || "").toLowerCase() === "production") {
   app.use(cors());
 }
 
-// for handling stripe webhooks
-// app.use("/webhook", stripeRoutes);
+// for handling stripe webhooks -- must stay above bodyParser.json(): the
+// signature check needs the raw request body.
+app.use("/webhook/stripe", stripeWebhookRoutes);
+app.use("/webhook/twilio", twilioWebhookRoutes);
 
 app.use(bodyParser.json());
 app.use(express.urlencoded({ extended: false }));
 
 app.use("/api/waitlist", waitlistRoutes);
+app.use("/api/users", usersRoutes);
+app.use("/api/projects", projectsRoutes);
+app.use("/api/talks", talksRoutes);
+app.use("/api/favorites", favoritesRoutes);
+app.use("/api/meetings", meetingLogsRoutes);
+app.use("/api/companies", companiesRoutes);
+app.use("/api/jobsites", jobsitesRoutes);
+app.use("/api/gc", gcRoutes);
 // app.use("/api/auth", authRoutes);
 // app.use("/api/assets", assetRoutes);
 // app.use("/api/moderate", moderateRoutes);
 // app.use("/api/email", emailRoutes);
-// app.use("/api/stripe", stripeRoutes);
+app.use("/api/stripe", stripeRoutes);
+app.use("/api/sms", smsRoutes);
+app.use("/api", integrationsRoutes);
+app.use("/api", projectIntegrationsRoutes);
 
 /****  C R O N   J O B S *****/
+// SMS nudges (Phase 9e, docs/sms-nudges-design.md): hourly, because Monday
+// 7:00 AM is evaluated in each jobsite's own timezone. The tick picks the
+// sites whose local clock reads Monday 7:xx and guards against repeats.
+cron.schedule("0 * * * *", async () => {
+  try {
+    await runNudgeTick();
+  } catch (error) {
+    console.error("[sms] nudge tick failed:", error);
+  }
+});
+
 // cron jobs - delete flagged flyers
 // cron.schedule("* * * * *", () => {
-cron.schedule("0 5 * * *", () => {
-  console.log("running delete Flagged Flyers task at 5am every day");
-  deleteFlaggedFlyers();
-});
+// cron.schedule("0 5 * * *", () => {
+//   console.log("running delete Flagged Flyers task at 5am every day");
+//   deleteFlaggedFlyers();
+// });
 
 // TODO: turn this OFF when Leaflit is operational in 3 communities
 // cron jobs - delete old flyers

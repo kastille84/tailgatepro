@@ -1,0 +1,204 @@
+const express = require("express");
+const { body, param, query } = require("express-validator");
+
+const { requireAuth } = require("../middlewares/requireAuth");
+const { loadUserContext } = require("../middlewares/loadUserContext");
+const { validate } = require("../middlewares/validate");
+const {
+  listMeetings,
+  listMeetingMonths,
+  getMeeting,
+  createMeeting,
+  completeMeeting,
+  uploadCrewPhoto,
+  getCrewPhotoUrl,
+  getPdfUrl,
+  verifySeal,
+  getDefenseBundle,
+} = require("../controllers/meetingLogs");
+const { decodeCursor } = require("../utility/cursor");
+const signaturesRoutes = require("./signatures");
+
+const router = express.Router();
+
+// GET /api/meetings — the caller's company's meeting logs, optionally scoped to
+// one project or a held-at month, keyset-paginated via `limit` + `cursor`
+// (the response's `meta.nextCursor`).
+router.get(
+  "/",
+  requireAuth,
+  loadUserContext,
+  [
+    query("projectId")
+      .optional({ checkFalsy: true })
+      .isUUID()
+      .withMessage("projectId must be a valid id"),
+    query("from")
+      .optional({ checkFalsy: true })
+      .isISO8601()
+      .withMessage("from must be an ISO 8601 timestamp"),
+    query("to")
+      .optional({ checkFalsy: true })
+      .isISO8601()
+      .withMessage("to must be an ISO 8601 timestamp"),
+    query("limit")
+      .optional({ checkFalsy: true })
+      .isInt({ min: 1, max: 200 })
+      .withMessage("limit must be between 1 and 200"),
+    query("cursor")
+      .optional({ checkFalsy: true })
+      .custom((value) => {
+        decodeCursor(value);
+        return true;
+      })
+      .withMessage("cursor is invalid"),
+  ],
+  validate,
+  listMeetings,
+);
+
+// GET /api/meetings/months?tzOffset — one entry per month that has a
+// completed meeting, for the archive's month cards. Registered before
+// `/:id` so "months" isn't parsed as a meeting id. tzOffset is required: the
+// server never guesses a timezone (same rule as GET /api/gc/overview).
+router.get(
+  "/months",
+  requireAuth,
+  loadUserContext,
+  [
+    query("tzOffset")
+      .isInt({ min: -840, max: 840 })
+      .withMessage("tzOffset must be minutes between -840 and 840"),
+  ],
+  validate,
+  listMeetingMonths,
+);
+
+// GET /api/meetings/defense-bundle — the sub's own OSHA Defense Bundle: every
+// completed meeting log the caller's company has ever logged, one ZIP
+// (docs/sub-defense-bundle-design.md). Registered before "/:id" so
+// "defense-bundle" isn't parsed as a meeting id, same reasoning as "/months".
+router.get(
+  "/defense-bundle",
+  requireAuth,
+  loadUserContext,
+  getDefenseBundle,
+);
+
+// GET /api/meetings/:id — scoped the same way as the list: a meeting log
+// belonging to another company can't be fetched by guessing its id.
+router.get(
+  "/:id",
+  requireAuth,
+  loadUserContext,
+  [param("id").isUUID().withMessage("A valid meeting id is required")],
+  validate,
+  getMeeting,
+);
+
+// POST /api/meetings — start a meeting log. `id` is client-generated
+// (offline-sync convention, matches projects/talks). `talkId` is optional at
+// creation (a wizard step order that picks the talk after starting the
+// meeting is still valid) but required in practice before a signature can be
+// meaningfully quizzed.
+router.post(
+  "/",
+  requireAuth,
+  loadUserContext,
+  [
+    body("id").isUUID().withMessage("A valid meeting id is required"),
+    body("projectId").isUUID().withMessage("A valid project id is required"),
+    body("talkId")
+      .optional({ nullable: true })
+      .isUUID()
+      .withMessage("talkId must be a valid id"),
+  ],
+  validate,
+  createMeeting,
+);
+
+// PATCH /api/meetings/:id/complete — finalize a meeting once it has >=1
+// signature. There is no general-purpose edit route — a meeting log is either
+// an in-progress client-side draft or a completed record; see
+// docs/meeting-flow-design.md. `heldAt` (when the meeting was actually held)
+// is optional: completions already queued in a client's offline outbox before
+// it existed carry no body, and the service falls back to receipt time. Only
+// its format is checked here — whether it's plausible is the service's call
+// (utility/heldAt.js), and it must never reject on that.
+router.patch(
+  "/:id/complete",
+  requireAuth,
+  loadUserContext,
+  [
+    param("id").isUUID().withMessage("A valid meeting id is required"),
+    body("heldAt")
+      .optional()
+      .isISO8601()
+      .withMessage("heldAt must be an ISO 8601 timestamp"),
+    body("heldTzOffset")
+      .optional()
+      .isInt({ min: -840, max: 840 })
+      .withMessage("heldTzOffset must be minutes between -840 and 840")
+      .toInt(),
+  ],
+  validate,
+  completeMeeting,
+);
+
+// PUT /api/meetings/:id/crew-photo — replaces (or first sets) the meeting's
+// optional crew photo. `express.raw` reads the request body as a Buffer
+// (`req.body`) instead of parsing it — the global `bodyParser.json()` in
+// server.js only consumes bodies whose Content-Type is application/json, so
+// it no-ops for an image upload and leaves the stream for this middleware.
+// No new dependency (e.g. multer) needed for a single-file raw body.
+router.put(
+  "/:id/crew-photo",
+  requireAuth,
+  loadUserContext,
+  [param("id").isUUID().withMessage("A valid meeting id is required")],
+  validate,
+  express.raw({ type: "image/*", limit: "10mb" }),
+  uploadCrewPhoto,
+);
+
+// GET /api/meetings/:id/crew-photo-url — a short-lived signed URL, per
+// docs/data-access.md ("private buckets, the server issues signed URLs").
+router.get(
+  "/:id/crew-photo-url",
+  requireAuth,
+  loadUserContext,
+  [param("id").isUUID().withMessage("A valid meeting id is required")],
+  validate,
+  getCrewPhotoUrl,
+);
+
+// GET /api/meetings/:id/pdf-url — a short-lived signed URL for the generated
+// PDF report, same shape as crew-photo-url. 404s until pdfGenerationQueue has
+// finished generating one (see server/services/pdfGenerationQueue.js).
+router.get(
+  "/:id/pdf-url",
+  requireAuth,
+  loadUserContext,
+  [param("id").isUUID().withMessage("A valid meeting id is required")],
+  validate,
+  getPdfUrl,
+);
+
+// GET /api/meetings/:id/verify-seal — recomputes and compares the meeting's
+// tamper-evidence content seal (Phase 9e, docs/tamper-evidence-design.md). No
+// plan gate — see the design doc's "Gating" section.
+router.get(
+  "/:id/verify-seal",
+  requireAuth,
+  loadUserContext,
+  [param("id").isUUID().withMessage("A valid meeting id is required")],
+  validate,
+  verifySeal,
+);
+
+// Nested under /api/meetings/:meetingId/signatures — see
+// server/routes/signatures.js (mergeParams: true so it can read
+// req.params.meetingId).
+router.use("/:meetingId/signatures", signaturesRoutes);
+
+module.exports = router;

@@ -1,5 +1,8 @@
 import { expect, afterEach, vi } from "vitest";
 import { cleanup } from "@testing-library/react";
+// jsdom has no IndexedDB implementation; Dexie (client/src/utils/db) needs
+// this in-memory shim to run under Vitest. See docs/offline-sync-design.md.
+import "fake-indexeddb/auto";
 
 // Cleanup after each test
 afterEach(() => {
@@ -20,3 +23,28 @@ Object.defineProperty(window, "matchMedia", {
     dispatchEvent: vi.fn(),
   })),
 });
+
+// jsdom's Range doesn't implement getClientRects/getBoundingClientRect,
+// which ProseMirror's EditorView (via ui_comps/bullet-list-editor) queries on
+// mount/selection changes. Standard workaround for testing Tiptap under
+// jsdom — without it, mounting a BulletListEditor throws.
+document.createRange = () => {
+  const range = new Range();
+  range.getBoundingClientRect = () => ({
+    x: 0,
+    y: 0,
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    width: 0,
+    height: 0,
+    toJSON: () => {},
+  });
+  range.getClientRects = () => ({
+    item: () => null,
+    length: 0,
+    [Symbol.iterator]: function* () {},
+  });
+  return range;
+};

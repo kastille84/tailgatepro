@@ -1,0 +1,50 @@
+{
+  "n": "078",
+  "title": "Winter Driving",
+  "primary_trade": "Driving & Transportation",
+  "trade_tags": [
+    "Driving & Transportation",
+    "General Construction"
+  ],
+  "osha_standards": [],
+  "source_url": "https://www.osha.gov/sites/default/files/publications/SafeDriving.pdf",
+  "source_agency": "OSHA",
+  "source_checked": [
+    "https://www.osha.gov/sites/default/files/publications/SafeDriving.pdf"
+  ],
+  "basis": "OSHA and NHTSA's \"Safe Winter Driving\" fact sheet",
+  "summary": "Snow and ice make crashes more likely on the drive to and from the job. OSHA's winter driving sheet gives three steps: prepare for the trip, protect yourself, and prevent crashes on the road.",
+  "talking_points": [
+    "Prepare the vehicle: check the battery, tire tread and wipers, keep windows clear, put no-freeze fluid in the washer reservoir and check the antifreeze.",
+    "Keep on hand a flashlight, jumper cables, abrasive material (sand, kitty litter, even floor mats), a shovel, a snow brush and ice scraper, warning devices such as flares, and blankets. For long trips add food, water, medication and a cell phone.",
+    "Plan the route: allow plenty of time, check the weather and leave early if you need to, know the directions, and tell others your route and arrival time.",
+    "Practice cold weather driving. In daylight, rehearse maneuvers slowly on ice or snow in an empty lot.",
+    "Steer into a skid. Know what your brakes will do: stomp on antilock brakes, pump non-antilock brakes.",
+    "Stopping distances are longer on ice and on water-covered ice, so slow down and increase the distance between vehicles.",
+    "If you are stopped or stalled, stay in the vehicle, do not overexert, put bright markers on the antenna or windows and turn on the dome light. If you run the engine, clear the exhaust pipe and run it only enough to stay warm. Do not idle for long with the windows up or in an enclosed space.",
+    "Avoid fatigue: rest before the trip, stop at least every three hours and rotate drivers if you can. Drugs and alcohol never mix with driving. Buckle up."
+  ],
+  "site_hazards_to_check": [
+    "Worn tires, weak battery, or wipers and washer fluid not ready for winter",
+    "No winter emergency kit in the work vehicle",
+    "Trip started with no weather check or route plan",
+    "Driver tired, or on a long trip with no breaks",
+    "Vehicle running in a closed space or with a blocked exhaust pipe",
+    "Vehicle brakes or tires not checked before the trip"
+  ],
+  "discussion_questions": [
+    "What is in your winter emergency kit, and what is missing?",
+    "If your vehicle stalls in a snowstorm, what do you do first?",
+    "How do you brake on ice with antilock brakes compared with brakes that are not antilock?"
+  ],
+  "audit": {
+    "status": "approved",
+    "audited_at": "2026-09-25T20:37:49Z",
+    "osha_accuracy_verified": true,
+    "flags": [
+      "Verified against the OSHA/NHTSA 'Safe Winter Driving' fact sheet (SafeDriving.pdf), read in full: maintenance list, emergency kit, stalled-vehicle steps, route planning, practice/skid/brake advice, stopping distances, idling, fatigue (stop at least every three hours) and drugs/alcohol all match.",
+      "Source is advisory guidance, not a regulation; osha_standards correctly empty.",
+      "US English; no invented figures."
+    ]
+  }
+}

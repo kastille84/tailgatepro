@@ -32,7 +32,7 @@ Based on evaluation across six core operational and technical EHS categories, th
 |                             | Language Support        | Static English/Spanish text; manual form creation.                | **AI Multi-Language:** Text + AI audio playback (Spanish, Polish, Portuguese, etc.).           |
 |                             | Time-to-Complete        | 2 to 5 minutes per talk across multi-tier forms.                  | **< 45 Seconds:** Optimized 3-tap workflow built specifically for field foremen.               |
 | **2. Document & Content**   | Content Library Access  | 300–600 static OSHA safety topics or manual upload.               | **500+ OSHA Library + AI Topic Generator:** Instant custom hazard talk generation.             |
-|                             | PDF Engine Quality      | Basic clean PDF exports with timestamps & signatures.             | **Tamper-Evident Branded PDFs:** Watermarked, GPS-verified, legal compliance seal.             |
+|                             | PDF Engine Quality      | Basic clean PDF exports with timestamps & signatures.             | **Tamper-Evident Branded PDFs:** Watermarked, HMAC-sealed, legal compliance seal.              |
 |                             | Search & Categorization | Organized by trade or hazard code.                                | **Smart Tagging:** Filter by trade, site phase, equipment, or natural language query.          |
 | **3. Compliance Readiness** | Audit-Trail Speed       | Centralized cloud search (seconds to minutes).                    | **1-Click OSHA Defense Bundle:** Download indexed ZIP of all site logs instantly.              |
 |                             | Tamper-Evident Logs     | Immutable PDFs saved to cloud storage.                            | **SOC-2 & Cryptographic Timestamping:** Immutable field-generated records.                     |
@@ -80,11 +80,11 @@ The platform operates on a **Dual-Audience Freemium Model** designed to drive bo
 
 Subcontractors need affordable plans focused on field speed, professional branding, and automated distribution to GCs.
 
-| Plan | Monthly Price | Annual Price (20% Off) | Core Target | Key Included Capabilities |
+| Plan | Monthly Price | Annual Price (2 Months Free) | Core Target | Key Included Capabilities |
 | :--- | :--- | :--- | :--- | :--- |
 | **Trade Free** | **$0** / mo | **$0** / yr | Solo Foremen / Small Crews | • 1 Active Foreman / Supervisor<br>• Full offline PWA capabilities<br>• 30 core OSHA talk templates<br>• Digital signatures & photo proof<br>• Auto-email PDF exports to GCs<br>• *Limits:* 30-day in-app history lockout; app watermark |
-| **Trade Pro** *(Recommended)* | **$29** / mo | **$290** / yr ($24/mo) | Growing Specialty Subs (2–8 Foremen) | • **Up to 8 Foremen** under 1 account<br>• **5-Year Legal Archive** (OSHA audit protection)<br>• **Custom Branding:** Upload logo, remove watermark<br>• **500+ OSHA Library + AI Talk Builder**<br>• **AI Multi-Language Audio Playback** (10+ languages) |
-| **Trade Enterprise** | **$79** / mo | **$790** / yr ($65/mo) | Large Subcontractors (9+ Foremen) | • **Unlimited Foremen & Crews**<br>• Custom Safety Manual upload<br>• **Procore, JobTread, & QuickBooks Sync**<br>• Multi-crew scheduling & equipment check-ins |
+| **Trade Pro** *(Recommended)* | **$29** / mo | **$290** / yr ($24/mo) | Growing Specialty Subs (2–8 Foremen) | • **Up to 8 Foremen** under 1 account<br>• **5-Year Legal Archive** (OSHA audit protection)<br>• **1-Click OSHA Defense Bundle:** download every log as one indexed ZIP<br>• **Custom Branding:** Upload logo, remove watermark<br>• **500+ OSHA Library + AI Talk Builder** (10 AI drafts/mo)<br>• **AI Multi-Language Audio Playback** (10+ languages) |
+| **Trade Enterprise** | **$79** / mo | **$790** / yr ($65/mo) | Large Subcontractors (9+ Foremen) | • **Unlimited Foremen & Crews**<br>• **Procore & JobTread document sync**<br>• **AI Talk Builder** (100 AI drafts/mo) |
 
 ---
 
@@ -92,11 +92,18 @@ Subcontractors need affordable plans focused on field speed, professional brandi
 
 General Contractors pay for site-wide compliance tracking, automated enforcement, multi-site scale, and corporate safety policy distribution.
 
-| Plan | Monthly Price | Annual Price (20% Off) | Core Target | Key Included Capabilities |
+| Plan | Monthly Price | Annual Price (2 Months Free) | Core Target | Key Included Capabilities |
 | :--- | :--- | :--- | :--- | :--- |
 | **GC Free Portal** | **$0** / mo | **$0** / yr | GCs receiving sub safety PDFs | • **1 Active Jobsite**<br>• Dashboard inbox to view incoming sub PDFs<br>• Basic sub roster overview<br>• *Limits:* 1 sub unlocked; others blurred |
 | **GC Site Pro** | **$149** / site / mo | **$1,490** / site / yr | Single-Site GCs or testing the platform | • **SPONSOR UNLIMITED SUBCONTRACTORS FOR FREE** (on 1 site)<br>• **Automated SMS Nudges** (7:00 AM Monday alerts for 1 site)<br>• **Procore & Autodesk ACC Sync** (Single project folder)<br>• **1-Click OSHA Defense Bundle (ZIP)** for assigned site |
-| **GC Portfolio** *(Recommended)* | **$499** / mo *(up to 10 sites)*<br>**$799** / mo *(unlimited sites)* | **$4,990** / yr<br>**$7,990** / yr | Regional & Mid-Market GCs running 4+ active projects | • **Multi-Site Flat-Rate Scale** (Substantial cost savings over Site Pro)<br>• **Cross-Project Subcontractor Safety Scorecards**<br>• **Top-Down Corporate Policy Push** (Mandate topics across all sites)<br>• **Multi-Manager Permissions** (Superintendent vs Safety Director views)<br>• **Custom Company Safety Form & Manual Builder** |
+| **GC Portfolio** *(Recommended)* | **$499** / mo *(up to 10 sites)*<br>**$799** / mo *(unlimited sites)* | **$4,990** / yr<br>**$7,990** / yr | Regional & Mid-Market GCs running 4+ active projects | • **Multi-Site Flat-Rate Scale** (Substantial cost savings over Site Pro)<br>• **Cross-Project Subcontractor Safety Scorecards**<br>• **Top-Down Corporate Policy Push** (Mandate topics across all sites)<br>• **Multi-Manager Permissions** (Superintendent vs Safety Director views)<br>• **Custom Company Safety Form & Manual Builder**<br>• **AI Talk Builder** (100 AI drafts/mo; draft a site-specific talk, then push it to every sub) |
+
+> **Note (2026-09-28):** the form & manual builder is deferred and no longer on the GC Portfolio pricing
+> card (it was reworded to shipped company talks). The Trade Enterprise "Custom Safety Manual upload" was
+> likewise dropped (2026-09-28): commodity file storage that overlaps Procore/existing document tools, with its
+> job covered by custom talks. "Multi-crew scheduling & equipment check-ins" was also dropped (2026-09-29):
+> workforce/equipment-management scope that overlaps dedicated scheduling and inspection tools rather than
+> serving the core toolbox-talk compliance loop. See `docs/pricing-promise-gaps.md`.
 
 ---
 
@@ -117,6 +124,9 @@ General Contractors pay for site-wide compliance tracking, automated enforcement
 | **Top-Down Corporate Policy Push** | — | — | — | — | **✓** |
 | **Multi-Manager Role Permissions** | — | — | — | — | **✓ (Super vs Director)** |
 | **Custom Company Form Builder** | — | ✓ | — | — | **✓** |
+
+> **Note (2026-09-28):** the Custom Company Form Builder row is deferred (not built, not promised on the
+> pricing page). Overlaps Procore Forms/Inspections/Incidents; revisit after the Procore integration (9f).
 
 ---
 

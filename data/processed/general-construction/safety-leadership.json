@@ -1,0 +1,56 @@
+{
+  "id": "safety-leadership",
+  "title": "Safety Leadership",
+  "primary_trade": "General Construction",
+  "trade_tags": [
+    "General Construction"
+  ],
+  "osha_standards": [
+    "OSH Act Section 5(a)(1) General Duty Clause",
+    "OSH Act Section 11(c)"
+  ],
+  "estimated_minutes": 5,
+  "summary": "Safety programs work when owners, managers, and supervisors treat worker safety as a core value and lead by example. OSHA recommends a written policy, clear roles, open communication, and rewarding workers who speak up.",
+  "talking_points": [
+    "Leaders make worker safety and health a core value, as important as productivity, profit, and quality.",
+    "Supervisors set the example by following the same safety procedures they expect from workers.",
+    "Hold weekly or daily toolbox talks and review open safety items on a to-do list.",
+    "A written safety policy signed by top management should be shared with all workers, subcontractors, and temporary workers.",
+    "Give workers time and resources to take part in the safety program, and pledge that safety gets the budget it needs, such as safety equipment in the project budget.",
+    "Name a frontline person to lead safety efforts. Define responsibilities and hold people accountable.",
+    "Reward workers who report close calls, attend training, or do inspections. Successful programs reward workers who find problems rather than discipline them.",
+    "Workers should be able to report hazards without fear of retaliation, and to request a temporary stop to any work they believe is unsafe. Retaliation is illegal under Section 11(c)."
+  ],
+  "site_hazards_to_check": [
+    "No written safety policy shared with subs and temp workers",
+    "No named person leading safety on the job",
+    "Safety equipment missing from the project budget",
+    "No simple way for workers to report hazards, injuries, or close calls",
+    "Open safety items with no owner or follow-up",
+    "Supervisors not following the rules they set for the crew"
+  ],
+  "discussion_questions": [
+    "What does our leadership do on this job to show safety comes first?",
+    "How can any of us stop unsafe work, and who do we tell?",
+    "What happened the last time someone reported a hazard here?"
+  ],
+  "attribution": {
+    "source": "OSHA",
+    "publisher": "Occupational Safety and Health Administration (OSHA)",
+    "copyright": "U.S. Government work — public domain.",
+    "license": "public-domain",
+    "source_url": "https://www.osha.gov/Publications/OSHA3886.pdf",
+    "source_ref": "TBT-091",
+    "notice": "Adapted from OSHA published material. Reproduced with attribution for jobsite safety training; not an endorsement by OSHA."
+  },
+  "audit": {
+    "status": "approved",
+    "audited_at": "2026-09-25T18:09:06Z",
+    "osha_accuracy_verified": true,
+    "flags": [
+      "Verified against OSHA 3886 (Recommended Practices for Safety and Health Programs in Construction): core value, lead by example, toolbox talks and open-items to-do list, signed written policy shared with subs/temps, safety equipment in project budget, time for participation, frontline person, reward not discipline, empower workers to request temporary suspension of unsafe work, Section 11(c) anti-retaliation. All present.",
+      "Citations: OSH Act Section 11(c) is stated in the source and is correct for anti-retaliation. Section 5(a)(1) General Duty Clause is not stated in this source but is a valid statute; neither is a 1926 section, acceptable for a management-practice talk.",
+      "Non-blocking: OSHA 3886 is voluntary recommended practice, not a regulatory requirement; the talk phrases items as leadership practices, not legal mandates. Point 8 correctly limits 'illegal' to 11(c) retaliation."
+    ]
+  }
+}

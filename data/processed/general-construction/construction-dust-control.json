@@ -1,0 +1,57 @@
+{
+  "id": "construction-dust-control",
+  "title": "Construction Dust Control",
+  "primary_trade": "General Construction",
+  "trade_tags": [
+    "General Construction",
+    "Masonry",
+    "Drywall"
+  ],
+  "osha_standards": [
+    "29 CFR 1926.1153",
+    "29 CFR 1926.103"
+  ],
+  "estimated_minutes": 5,
+  "summary": "Cutting, grinding, drilling, or crushing concrete, brick, stone, and mortar makes tiny silica dust particles that can cause silicosis, lung cancer, and kidney disease. OSHA's construction silica standard requires dust controls such as water or vacuum systems, and respirators for some tasks.",
+  "talking_points": [
+    "Silica is in sand, stone, concrete, brick, and mortar. Cutting, grinding, drilling, or crushing them makes very small \"respirable\" dust that can travel deep into your lungs.",
+    "Silica dust causes silicosis, an incurable and sometimes deadly lung disease. It also causes lung cancer, COPD, and kidney disease. Most of these show up after years of exposure.",
+    "Common dusty tasks include masonry saws, grinders, drills, jackhammers, handheld powered chipping tools, and demolition with heavy equipment.",
+    "Use the dust control for the task. For handheld power saws, that means a saw with a built-in system that feeds water to the blade all the time. Operate and maintain the tool as the manufacturer says.",
+    "Some tasks also need a respirator. The standard's Table 1 sets this by task and by hours per shift. Using a water-fed saw outdoors for 4 hours or less a day needs none. More than 4 hours a day, or any time indoors or in an enclosed area, needs a respirator with an assigned protection factor of at least 10.",
+    "Do not use compressed air to clean off dust without a ventilation system to capture it. Do not dry sweep where a safe alternative is available.",
+    "Your employer must have a written exposure control plan and a competent person to run it. They must also train you on silica health effects and the tasks that expose you.",
+    "Workers who must wear a respirator for 30 or more days a year must be offered medical exams, including a chest X-ray and lung function test, every three years."
+  ],
+  "site_hazards_to_check": [
+    "Saws, grinders, or drills running dry with no water or vacuum dust control",
+    "Cutting or grinding indoors or in enclosed areas with no ventilation or respirator",
+    "Dust visible in the air or settling on surfaces during masonry, concrete, or demolition work",
+    "Compressed air or dry sweeping used to clean up dust",
+    "Respirators missing, wrong type, or not in use where the exposure control plan calls for them"
+  ],
+  "discussion_questions": [
+    "What tasks today will make silica dust, and what dust control goes with each one?",
+    "Is the water feed on our saw working, and how do we know before we start cutting?",
+    "When does a task need a respirator, and who checks that it is the right type?"
+  ],
+  "attribution": {
+    "source": "OSHA",
+    "publisher": "Occupational Safety and Health Administration (OSHA)",
+    "copyright": "U.S. Government work — public domain.",
+    "license": "public-domain",
+    "source_url": "https://www.osha.gov/sites/default/files/publications/OSHA3681.pdf",
+    "source_ref": "TBT-120",
+    "notice": "Adapted from an OSHA publication (U.S. Government work). Reproduced with attribution for jobsite safety training; not an endorsement by OSHA."
+  },
+  "audit": {
+    "status": "approved",
+    "audited_at": "2026-09-25T18:11:25Z",
+    "osha_accuracy_verified": true,
+    "flags": [
+      "Verified against OSHA 3681 silica fact sheet: respirable silica travels deep in lungs, silicosis incurable, task list, Table 1 handheld saw example (water continuously fed; outdoors 4 hours or less no respirator; over 4 hours or indoors APF 10), housekeeping limits on compressed air and dry sweeping, written exposure control plan, competent person, training, medical exams every three years for respirator users of 30 or more days per year.",
+      "FIX: replaced 29 CFR 1910.134 (general-industry respirator standard, cited by source only as a pointer for APFs) with 29 CFR 1926.103, the construction respiratory protection section (which adopts the 1910.134 requirements). 29 CFR 1926.1153 verified correct.",
+      "Non-blocking: title is general 'dust control' but content is silica-only; it does not cover other dusts (wood, drywall, lead, asbestos). Talk states it is a fact-sheet summary; Table 1 respirator requirements vary by task and the employer must consult the actual Table 1."
+    ]
+  }
+}

@@ -1,0 +1,58 @@
+{
+  "n": "066",
+  "title": "Loading and Unloading",
+  "primary_trade": "Heavy Equipment",
+  "trade_tags": [
+    "Heavy Equipment",
+    "Driving & Transportation",
+    "General Construction"
+  ],
+  "osha_standards": [
+    "29 CFR 1926.601",
+    "29 CFR 1926.600"
+  ],
+  "source_url": "https://www.osha.gov/laws-regs/regulations/standardnumber/1926/1926.601",
+  "source_agency": "OSHA",
+  "source_checked": [
+    "https://www.osha.gov/laws-regs/regulations/standardnumber/1926/1926.601",
+    "https://www.osha.gov/laws-regs/regulations/standardnumber/1926/1926.600"
+  ],
+  "basis": "29 CFR 1926.601 (Motor vehicles) and 29 CFR 1926.600 (Equipment)",
+  "summary": "Trucks and trailers that roll, loads that shift and dump bodies that drop cause many loading-area injuries. This talk covers the OSHA rules for motor vehicles operating on off-highway jobsites (not open to public traffic) when you load, unload and park.",
+  "talking_points": [
+    "OSHA's motor vehicle rule covers vehicles that operate within an off-highway jobsite not open to public traffic (29 CFR 1926.601(a)). Each such vehicle needs a service brake system, an emergency brake system and a parking brake system (1926.601(b)(1)).",
+    "When equipment is parked, set the parking brake. On an incline, chock the wheels and set the parking brake (1926.600(a)(3)(ii)).",
+    "Check each vehicle at the beginning of every shift so these are in safe operating condition and free of apparent damage that could cause failure: service brakes including trailer brake connections, parking brake, emergency brakes, tires, horn, steering, coupling devices, seat belts, operating controls and safety devices. All defects must be corrected before the vehicle is placed in service (1926.601(b)(14)).",
+    "Tools and materials must be secured against movement when they are carried in a vehicle with workers (1926.601(b)(7)).",
+    "A vehicle with an obstructed rear view needs a reverse signal alarm that can be heard over the surrounding noise, or an observer who signals that it is safe to back (1926.601(b)(4)).",
+    "Trucks with dump bodies must have positive means of support, permanently attached and able to be locked in position, to prevent accidental lowering of the body while maintenance or inspection work is being done (1926.601(b)(10)).",
+    "Equipment left unattended at night, next to a highway in normal use, or next to work in progress must have lights or reflectors to mark its location (1926.600(a)(1)).",
+    "Good practice: agree on hand signals with the driver, and keep everyone out of the truck's path and blind spots while it is being loaded or unloaded."
+  ],
+  "site_hazards_to_check": [
+    "Truck or trailer parked on a slope without chocks",
+    "Load that is not secured and can shift or fall",
+    "Trailer coupling, brake connection or tires not checked",
+    "Backing vehicle with no alarm or spotter",
+    "Dump body raised with no positive support",
+    "Workers standing in the path or blind spot of a moving vehicle"
+  ],
+  "discussion_questions": [
+    "Where do we chock a truck here, and who checks that it is done?",
+    "Who acts as the spotter when a vehicle has to back up?",
+    "What do we check on a trailer before it leaves the loading area?"
+  ],
+  "audit": {
+    "status": "approved",
+    "audited_at": "2026-09-25T20:37:49Z",
+    "osha_accuracy_verified": true,
+    "flags": [
+      "Verified 1926.601(a),(b)(1),(b)(4),(b)(7),(b)(10),(b)(14) and 1926.600(a)(1),(a)(3)(ii) verbatim on osha.gov.",
+      "Fixed scope: 1926.601 applies only to vehicles operating on an off-highway jobsite not open to public traffic; scope now stated in talking point 1 and summary (was unstated).",
+      "Fixed (b)(14): now says defects must be corrected before the vehicle is placed in service and items must be in safe operating condition.",
+      "Fixed (b)(10): dump-body support purpose is preventing accidental lowering during maintenance or inspection (was 'while someone is working on or under it').",
+      "1926.600(a)(3)(ii) parking brake/chock wording verbatim; 600(a)(1) lights/reflectors matches (barricades option omitted).",
+      "US English."
+    ]
+  }
+}

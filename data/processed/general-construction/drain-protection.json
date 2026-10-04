@@ -1,0 +1,55 @@
+{
+  "id": "drain-protection",
+  "title": "Drain Protection",
+  "primary_trade": "General Construction",
+  "trade_tags": [
+    "General Construction",
+    "Excavation"
+  ],
+  "osha_standards": [
+    "OSH Act Section 5(a)(1) General Duty Clause"
+  ],
+  "estimated_minutes": 5,
+  "summary": "Storm drain inlet protection keeps soil and debris from washing into storm drains while the site is under construction. This talk covers installing it, using it with other controls, and keeping it working.",
+  "talking_points": [
+    "Storm drain inlet protection traps sediment and lets water flow through. It is usually temporary and is often the last chance to treat stormwater before it leaves the site.",
+    "Install inlet protection before any soil is disturbed in the drainage area.",
+    "Inlet protection is a secondary control. Always use it with other sediment and erosion controls.",
+    "Generally, the drainage area to each control should be no greater than 1 acre per inlet.",
+    "Common types are filter fabric and filter socks, excavated drop inlet, fabric barriers, and block and gravel. Check local, state and manufacturer specifications for installation.",
+    "Check all controls after each storm event.",
+    "Remove sediment when the settling area loses half its capacity. If the control does not drain within 48 hours, clear the sediment or unclog the weep holes.",
+    "Replace tears in fabric or internal filters immediately. A clogged control can send water around the inlet and erode unprotected areas."
+  ],
+  "site_hazards_to_check": [
+    "Storm drain inlets in areas where soil is disturbed and no protection is installed",
+    "Torn fabric, filter socks or internal inserts",
+    "Sediment built up to half the capacity of the settling area",
+    "Inlet controls still holding water after 48 hours",
+    "Water bypassing the inlet because the control is set higher than a surrounding low point"
+  ],
+  "discussion_questions": [
+    "Which storm drains on our site could receive runoff from disturbed soil today?",
+    "Who checks inlet protection after a storm, and what do they look for?",
+    "What other controls are working with the inlet protection upstream?"
+  ],
+  "attribution": {
+    "source": "EPA",
+    "publisher": "U.S. Environmental Protection Agency (EPA)",
+    "copyright": "U.S. Government work — public domain.",
+    "license": "public-domain",
+    "source_url": "https://www.epa.gov/system/files/documents/2021-11/bmp-storm-drain-inlet-protection.pdf",
+    "source_ref": "TBT-180",
+    "notice": "Adapted from EPA's Stormwater Best Management Practice fact sheet, Storm Drain Inlet Protection (EPA-832-F-21-028GG). Reproduced with attribution for jobsite safety training; not an endorsement by EPA."
+  },
+  "audit": {
+    "status": "approved",
+    "audited_at": "2026-09-25T18:10:19Z",
+    "osha_accuracy_verified": true,
+    "flags": [
+      "Content is quote-accurate to EPA BMP fact sheet EPA-832-F-21-028GG (install before disturbance, 1 acre per inlet, secondary control, check after each storm, half capacity, 48 hours, replace tears immediately). Public domain, epa.gov, notice preserved.",
+      "OSHA mapping: no 1926 standard applies; General Duty Clause is nominal only (the basis is CWA/NPDES BMPs). Non-blocking, same note as TBT-177. Fact sheet says state or local requirements may apply and to follow manufacturer specs; the talk carries the manufacturer/local caution in point 5.",
+      "Non-blocking: the talk contains no worker-safety content (for example traffic/trip hazards when working at road inlets); acceptable as an environmental site-controls talk. No UK wording."
+    ]
+  }
+}

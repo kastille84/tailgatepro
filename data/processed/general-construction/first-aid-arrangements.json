@@ -1,0 +1,56 @@
+{
+  "id": "first-aid-arrangements",
+  "title": "First Aid Arrangements",
+  "primary_trade": "General Construction",
+  "trade_tags": [
+    "General Construction"
+  ],
+  "osha_standards": [
+    "29 CFR 1926.50",
+    "29 CFR 1910.1030"
+  ],
+  "estimated_minutes": 5,
+  "summary": "Prompt, properly given first aid can mean the difference between rapid or prolonged recovery, and even between life and death. Sites need trained first-aid providers, ready supplies, and a plan everyone knows.",
+  "talking_points": [
+    "First aid is emergency care for an injury or sudden illness before emergency medical treatment is available.",
+    "OSHA requires trained first-aid providers at all workplaces if there is no infirmary, clinic, or hospital in near proximity that treats all injured employees.",
+    "Know who the trained first-aid providers are on your site and what to do if a coworker is hurt or ill.",
+    "First-aid supplies must be adequate, reflect the kinds of injuries that occur, and be stored where they are readily available in an emergency.",
+    "Sudden cardiac arrest can happen at work, for example from electrocution, low oxygen, or overexertion. Using an AED within 3-4 minutes can lead to a 60% survival rate.",
+    "Some OSHA standards require CPR training, including permit-required confined spaces and construction power transmission and distribution work.",
+    "If you are expected to give first aid as part of your job, the Bloodborne Pathogens standard applies to you and you need specific training.",
+    "First-aid plans should be written down and shared with all workers, including those who do not read or speak English."
+  ],
+  "site_hazards_to_check": [
+    "First-aid kits missing, empty, or stocked with items that do not match site injuries",
+    "Kits stored where they are hard to reach in an emergency",
+    "No trained first-aid provider on the shift",
+    "No AED considered or available for sudden cardiac arrest",
+    "Unknown EMS response time to this location",
+    "Workers who do not know the first-aid procedure because of a language barrier"
+  ],
+  "discussion_questions": [
+    "Who are our trained first-aid providers today, and how do we reach them?",
+    "Where are the first-aid kit and AED, and what is in the kit?",
+    "How long would EMS take to reach us, and what do we do until they arrive?"
+  ],
+  "attribution": {
+    "source": "OSHA",
+    "publisher": "Occupational Safety and Health Administration (OSHA)",
+    "copyright": "U.S. Government work — public domain.",
+    "license": "public-domain",
+    "source_url": "https://www.osha.gov/sites/default/files/publications/OSHA3317FIRST-AID.pdf",
+    "source_ref": "TBT-085",
+    "notice": "Adapted from OSHA published material. Reproduced with attribution for jobsite safety training; not an endorsement by OSHA."
+  },
+  "audit": {
+    "status": "approved",
+    "audited_at": "2026-09-25T18:06:17Z",
+    "osha_accuracy_verified": true,
+    "flags": [
+      "Verified against OSHA 3317: near-proximity rule, supplies 'readily available', AED 3-4 minutes / 60% survival, CPR-required standards list, BBP training, language-barrier note all present in source.",
+      "FIX: removed 29 CFR 1910.151 (general industry) because 1926.50 (construction medical services and first aid) is the construction equivalent and is already mapped. 1926.50 verified to exist and match (trained first-aid persons where no infirmary/clinic/hospital in near proximity; supplies). 1910.1030 kept: it is the bloodborne pathogens standard OSHA applies to construction (no 1926 BBP standard).",
+      "Non-blocking: source is a 2006 OSHA best-practices guide (advisory). Points 5, 6 are guide statements, not 1926 mandates; wording is not overstated. Talk states 1910.1030 reference only in citations; consider noting it applies to construction."
+    ]
+  }
+}

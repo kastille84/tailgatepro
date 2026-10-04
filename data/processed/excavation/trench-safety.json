@@ -1,0 +1,53 @@
+{
+  "id": "trench-safety",
+  "title": "Trench Cave-In Prevention",
+  "primary_trade": "Excavation",
+  "trade_tags": [
+    "Excavation",
+    "General Construction"
+  ],
+  "osha_standards": [
+    "29 CFR 1926.651",
+    "29 CFR 1926.652"
+  ],
+  "estimated_minutes": 5,
+  "summary": "One cubic yard of soil can weigh 3,000 pounds or more, so a cave-in can trap and kill in seconds. This talk covers competent-person inspection, protective systems, spoil setback, and never working alone.",
+  "talking_points": [
+    "Never enter an unprotected or uninspected trench, even for a quick task. A trained competent person must inspect the trench and the area around it first.",
+    "Know and understand your employer's trench emergency plan.",
+    "Keep excavated soil and rock at least 2 feet back from the trench edge.",
+    "Never work alone in a trench, and never without a lookout standing by.",
+    "Make sure your employer provides trench protection. OSHA allows sloping or benching the walls, shoring, or shielding with supports or a trench box."
+  ],
+  "site_hazards_to_check": [
+    "No protective system (sloping, benching, shoring, or shield) for a trench 5 feet deep or more",
+    "Spoil pile, tools, or equipment within 2 feet of the trench edge",
+    "No competent-person inspection since the last rain, vibration, or soil change",
+    "No safe way out within 25 feet of workers in a trench 4 feet deep or more",
+    "Workers in the trench with no lookout and no emergency plan"
+  ],
+  "discussion_questions": [
+    "Who is the competent person, and when did they last inspect this trench?",
+    "What protective system is in use, and is the spoil pile set back far enough?",
+    "Where is the ladder or ramp out, and who is the lookout today?"
+  ],
+  "attribution": {
+    "source": "CPWR",
+    "publisher": "CPWR — The Center for Construction Research and Training",
+    "copyright": "© 2017 CPWR — The Center for Construction Research and Training. All rights reserved.",
+    "license": "free-use-with-attribution",
+    "source_url": "https://www.cpwr.com/wp-content/uploads/TT-Trench_Safety.pdf",
+    "notice": "Adapted from a CPWR/NIOSH Toolbox Talk, produced under NIOSH cooperative agreement OH 009762. Reproduced with attribution for jobsite safety training; not an endorsement by CPWR or NIOSH."
+  },
+  "audit": {
+    "status": "approved",
+    "audited_at": "2026-09-10T23:15:30Z",
+    "osha_accuracy_verified": true,
+    "flags": [
+      "LICENSING RESOLVED (2026-09-10): CPWR Toolbox Talk content is used under free-use-with-attribution. Permitted here because (1) the talk is one bundled feature of a subscription product and is never sold as a standalone paid product, (2) CPWR/NIOSH copyright markings and the no-endorsement notice are retained - held in this file's `attribution` object and appended to the rendered Markdown `content` by scripts/lib/talkRow.js `composeMarkdown` - and (3) no CPWR or NIOSH endorsement is claimed or implied (attribution.notice ends 'not an endorsement by CPWR or NIOSH'). No written CPWR redistribution permission is required; the prior LICENSING BLOCKER is cleared.",
+      "Attribution object verified: source 'CPWR', copyright '(c) 2017 CPWR', license 'free-use-with-attribution', source_url and publisher present, notice carries the no-endorsement clause.",
+      "OSHA mapping and all numeric tolerances re-verified accurate: 1926.651/.652; spoil kept >= 2 ft from the edge (1926.651(j)(2)); protective system required at 5 ft deep or more unless in stable rock (1926.652(a)(1)); means of egress within 25 ft of lateral travel for trenches 4 ft deep or more (1926.651(c)(2)); competent-person inspection before entry and after any change (1926.651(k)). 'One cubic yard can weigh 3,000 lb' is a reasonable figure. No technical defects.",
+      "Non-blocking: Display obligation: docs/content-attribution.md records that TalkDetail (Phase 2c) and the generated PDF (Phase 5) must surface attribution.copyright + attribution.notice. Today the credit is rendered into the Markdown content body by the loader; the UI/PDF display path is tracked in docs/tasks.md."
+    ]
+  }
+}

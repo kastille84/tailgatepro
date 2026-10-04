@@ -1,0 +1,57 @@
+{
+  "id": "welding-fumes",
+  "title": "Welding Fumes",
+  "primary_trade": "Welding",
+  "trade_tags": [
+    "Welding",
+    "General Construction"
+  ],
+  "osha_standards": [
+    "29 CFR 1926 Subpart J",
+    "29 CFR 1926.1126",
+    "29 CFR 1926.103"
+  ],
+  "estimated_minutes": 5,
+  "summary": "Welding makes visible smoke that contains harmful metal fume and gases. Keep fume out of your breathing zone with ventilation, good positioning, and respiratory protection when needed.",
+  "talking_points": [
+    "Welding smoke contains harmful metal fume and gas by-products. Your exposure depends on the welding process, the base and filler metals, where you work, air movement, and your work practices.",
+    "Short-term exposure can cause eye, nose, and throat irritation, dizziness, and nausea. If you feel these, leave the area right away, get fresh air, and get medical attention.",
+    "Long-term exposure can cause lung damage and cancers, including lung, larynx, and urinary tract cancer. Manganese fume can cause Parkinson's-like symptoms.",
+    "Chromium in stainless steel and some consumables becomes hexavalent chromium, Cr(VI), during welding. Cr(VI) fume is highly toxic and can cause cancer. OSHA's PEL is 5 micrograms per cubic meter as an 8-hour average.",
+    "Gases like helium, argon, and carbon dioxide can push out oxygen and cause suffocation, especially in confined or enclosed spaces. Carbon monoxide can also form. Do not weld in confined spaces without ventilation.",
+    "Welding outdoors or in open areas does not guarantee enough ventilation. Stay upwind and position yourself so fume and gases stay away from you and others.",
+    "Use local exhaust ventilation. Keep fume hoods, extractor guns, and vacuum nozzles close to the plume, and keep exhaust ports away from other workers.",
+    "Clean coatings such as paint and solvent residue off welding surfaces. Know the hazards of your materials. Use a respirator if work practices and ventilation do not lower exposure enough."
+  ],
+  "site_hazards_to_check": [
+    "Welding in confined or enclosed spaces with no ventilation or exhaust",
+    "Fume plume drifting across the welder's face or toward coworkers",
+    "Local exhaust hoods or extractor guns missing, damaged, or set far from the plume",
+    "Paint, solvent residue, or coatings left on surfaces about to be welded",
+    "Stainless steel or chromate-coated work with no plan for Cr(VI) exposure"
+  ],
+  "discussion_questions": [
+    "What is in the fume from the metals and consumables we are using today?",
+    "Where should each welder stand, and where should the exhaust be placed?",
+    "What symptoms mean you should leave the area and get fresh air?"
+  ],
+  "attribution": {
+    "source": "OSHA",
+    "publisher": "Occupational Safety and Health Administration (OSHA)",
+    "copyright": "U.S. Government work — public domain.",
+    "license": "public-domain",
+    "source_url": "https://www.osha.gov/sites/default/files/publications/OSHA_FS-3647_WELDING.pdf",
+    "source_ref": "TBT-126",
+    "notice": "Adapted from an OSHA publication (U.S. Government work). Reproduced with attribution for jobsite safety training; not an endorsement by OSHA."
+  },
+  "audit": {
+    "status": "approved",
+    "audited_at": "2026-09-25T18:12:26Z",
+    "osha_accuracy_verified": true,
+    "flags": [
+      "Verified against OSHA FS-3647: fume/gas by-products, exposure factors, acute and prolonged health effects, manganese Parkinson's-like symptoms, Cr(VI) 5 ug/m3 8-hour TWA, gases displacing oxygen, outdoors not guarantee ventilation, stay upwind, local exhaust placement, do not weld in confined spaces without ventilation, clean coatings, respirator when controls insufficient. All quote-accurate.",
+      "FIX: replaced 29 CFR 1910.134 (general-industry respiratory protection, listed in the source's generic standards list) with 29 CFR 1926.103, the construction respiratory protection section. 1926 Subpart J (Welding and Cutting, 1926.350-354) and 1926.1126 (Chromium (VI) in construction) verified correct.",
+      "Non-blocking: the source is a 2013 fact sheet; the Cr(VI) construction PEL of 5 ug/m3 is current. Talk does not mention hot-work fire precautions (Subpart J), which belong in a separate talk."
+    ]
+  }
+}

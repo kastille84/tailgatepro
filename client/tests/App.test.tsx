@@ -8,6 +8,22 @@ vi.mock("../src/context/auth", () => ({
   ),
 }));
 
+// OnlineStatusProvider calls useAuth() internally, which the mock above
+// doesn't back with a real context value — stub it out here the same way,
+// since these route-shell tests aren't exercising the offline queue.
+// useOnlineStatus is stubbed too so <SyncStatusBanner /> (rendered for real
+// in App.tsx) has a context value to read instead of throwing.
+vi.mock("../src/context/online-status", () => ({
+  OnlineStatusProvider: ({ children }: { children: React.ReactNode }) => (
+    <>{children}</>
+  ),
+  useOnlineStatus: () => ({
+    isOnline: true,
+    pendingCount: 0,
+    retryNow: () => {},
+  }),
+}));
+
 vi.mock("../src/styles/GlobalStyles", () => ({
   default: () => null,
 }));
@@ -23,6 +39,58 @@ vi.mock("../src/pages/Landing", () => ({
 vi.mock("../src/pages/Pricing", () => ({
   Pricing: () => <div data-testid="pricing-page">Pricing page</div>,
 }));
+
+vi.mock("../src/pages/Login", () => ({
+  Login: () => <div data-testid="login-page">Login page</div>,
+}));
+
+vi.mock("../src/pages/Signup", () => ({
+  Signup: () => <div data-testid="signup-page">Signup page</div>,
+}));
+
+vi.mock("../src/pages/ForgotPassword", () => ({
+  ForgotPassword: () => (
+    <div data-testid="forgot-password-page">Forgot password page</div>
+  ),
+}));
+
+vi.mock("../src/pages/ResetPassword", () => ({
+  ResetPassword: () => (
+    <div data-testid="reset-password-page">Reset password page</div>
+  ),
+}));
+
+vi.mock("../src/pages/AcceptInvite", () => ({
+  AcceptInvite: () => (
+    <div data-testid="accept-invite-page">Accept invite page</div>
+  ),
+}));
+
+vi.mock("../src/pages/JoinJobsite", () => ({
+  JoinJobsite: () => <div data-testid="join-jobsite-page">Join jobsite page</div>,
+}));
+
+vi.mock("../src/pages/Dashboard", () => ({
+  Dashboard: () => <div data-testid="dashboard-page">Dashboard page</div>,
+}));
+
+vi.mock("../src/pages/MeetingHistory", () => ({
+  MeetingHistory: () => <div data-testid="meeting-history-page">History page</div>,
+}));
+vi.mock("../src/pages/ContentLibrary", () => ({
+  ContentLibrary: () => <div data-testid="talks-page">Talks page</div>,
+}));
+
+vi.mock("../src/features/authentication", async () => {
+  const { Outlet } = await vi.importActual<typeof import("react-router-dom")>(
+    "react-router-dom",
+  );
+  return {
+    RequireAuth: () => <Outlet />,
+    RequireGc: () => <Outlet />,
+    RequireSubcontractor: () => <Outlet />,
+  };
+});
 
 vi.mock("@tanstack/react-query-devtools", () => ({
   ReactQueryDevtools: () => <div data-testid="react-query-devtools" />,
@@ -59,5 +127,68 @@ describe("App", () => {
     render(<App />);
 
     expect(screen.getByTestId("pricing-page")).toBeDefined();
+  });
+
+  it("renders the login route shell", () => {
+    window.history.pushState({}, "", "/login");
+    render(<App />);
+
+    expect(screen.getByTestId("login-page")).toBeDefined();
+  });
+
+  it("renders the signup route shell", () => {
+    window.history.pushState({}, "", "/signup");
+    render(<App />);
+
+    expect(screen.getByTestId("signup-page")).toBeDefined();
+  });
+
+  it("renders the forgot-password route shell", () => {
+    window.history.pushState({}, "", "/forgot-password");
+    render(<App />);
+
+    expect(screen.getByTestId("forgot-password-page")).toBeDefined();
+  });
+
+  it("renders the reset-password route shell", () => {
+    window.history.pushState({}, "", "/reset-password");
+    render(<App />);
+
+    expect(screen.getByTestId("reset-password-page")).toBeDefined();
+  });
+
+  it("renders the accept-invite route shell without requiring a session", () => {
+    window.history.pushState({}, "", "/invite/some-token");
+    render(<App />);
+
+    expect(screen.getByTestId("accept-invite-page")).toBeDefined();
+  });
+
+  it("renders the jobsite-join route shell without requiring a session", () => {
+    window.history.pushState({}, "", "/jobsite-join/some-token");
+    render(<App />);
+
+    expect(screen.getByTestId("join-jobsite-page")).toBeDefined();
+  });
+
+  it("renders the dashboard route shell behind the RequireAuth layout route", () => {
+    window.history.pushState({}, "", "/dashboard");
+    render(<App />);
+
+    expect(screen.getByTestId("dashboard-page")).toBeDefined();
+  });
+
+  it("renders the talks route shell behind the RequireAuth + RequireSubcontractor layout routes", () => {
+    window.history.pushState({}, "", "/talks");
+    render(<App />);
+
+    expect(screen.getByTestId("talks-page")).toBeDefined();
+  });
+
+  it("renders the meeting history route shell behind the RequireAuth + RequireSubcontractor layout routes", () => {
+    window.history.pushState({}, "", "/meetings");
+    render(<App />);
+
+    expect(screen.getByTestId("meeting-history-page")).toBeDefined();
   });
 });

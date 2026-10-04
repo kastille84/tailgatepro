@@ -1,0 +1,56 @@
+{
+  "id": "crane-signals-and-signal-persons",
+  "title": "Crane Signals and Signal Persons",
+  "primary_trade": "Heavy Equipment",
+  "trade_tags": [
+    "Heavy Equipment",
+    "General Construction"
+  ],
+  "osha_standards": [
+    "29 CFR 1926.1419"
+  ],
+  "estimated_minutes": 5,
+  "summary": "A signal person is required when the operator cannot see the point of operation or the travel path, or when site safety concerns call for one. Use standard signals, keep communication open, and stop if it is lost.",
+  "talking_points": [
+    "Provide a signal person when the point of operation is not in full view of the operator, when the view in the direction of travel is obstructed, or when site-specific safety concerns call for one.",
+    "Signals can be hand, voice, audible, or new signal methods. The method must fit the site conditions.",
+    "Hand signals must follow the Standard Method (Appendix A). Non-standard hand signals need prior agreement between the signal person, operator, and lift director.",
+    "Keep signal communication open between the operator and the signal person. If it is interrupted, operations must stop.",
+    "Only one person may signal at a time, with limited exceptions.",
+    "Anyone who is aware of a safety problem must alert others with a stop or emergency stop signal.",
+    "If the operator sees a safety problem, operations must halt until it is resolved and both agree.",
+    "Give directions from the operator's point of view. With multiple cranes or derricks, each signal must show which equipment it is for."
+  ],
+  "site_hazards_to_check": [
+    "Blind spots where the operator cannot see the point of operation",
+    "Travel paths with an obstructed view",
+    "Radios or voice signals that may be lost to noise or interference",
+    "More than one person trying to give signals",
+    "Non-standard hand signals with no prior agreement",
+    "Several cranes or derricks working near each other without clear signal identification"
+  ],
+  "discussion_questions": [
+    "Who is the signal person today, and does the operator know?",
+    "What is our stop signal, and what do we do if communication drops?",
+    "How will we make clear which crane a signal is for?"
+  ],
+  "attribution": {
+    "source": "OSHA",
+    "publisher": "Occupational Safety and Health Administration (OSHA)",
+    "copyright": "U.S. Government work — public domain.",
+    "license": "public-domain",
+    "source_url": "https://www.osha.gov/laws-regs/regulations/standardnumber/1926/1926.1419",
+    "source_ref": "TBT-065",
+    "notice": "Adapted from OSHA standard 29 CFR 1926.1419, Signals - general requirements. Reproduced with attribution for jobsite safety training; not an endorsement by OSHA."
+  },
+  "audit": {
+    "status": "approved",
+    "audited_at": "2026-09-25T18:32:27.718Z",
+    "osha_accuracy_verified": true,
+    "flags": [
+      "Verified points against the source summary of 29 CFR 1926.1419 paragraphs (a)-(h), (j), (k), (m); 1926 citation correct and title fits (covers when a signal person is required and signaling rules).",
+      "Limitation: the source is a condensed summary that omits paragraphs (i) and (l), so those could not be verified and are not covered in the talk. The talk does not cover signal person qualification (29 CFR 1926.1428); the source does not support it, so it was not added.",
+      "Non-blocking: 'must'/'shall' statements mirror the regulation text; the 'radios or voice signals lost to noise' hazard item is a practical illustration, not from the source."
+    ]
+  }
+}

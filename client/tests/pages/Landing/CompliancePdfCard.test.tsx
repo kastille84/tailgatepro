@@ -3,7 +3,7 @@ import { describe, it, expect } from "vitest";
 import { render, screen } from "@testing-library/react";
 import { ThemeProvider } from "styled-components";
 
-import { CompliancePdfCard } from "../../../src/pages/Landing/CompliancePdfCard";
+import { CompliancePdfCard, todayLabel } from "../../../src/pages/Landing/CompliancePdfCard";
 import theme from "../../../src/styles/theme";
 
 const renderCard = (ui: React.ReactElement) =>
@@ -19,9 +19,9 @@ describe("CompliancePdfCard", () => {
       }),
     ).toBeTruthy();
     expect(screen.getByText("Fall Protection")).toBeTruthy();
-    expect(screen.getByText("May 14, 2025")).toBeTruthy();
+    expect(screen.getByText(todayLabel())).toBeTruthy();
     expect(screen.getByText("P. Nowak")).toBeTruthy();
-    expect(screen.getByText(/GPS-Verified/i)).toBeTruthy();
+    expect(screen.getByText(/Signed & Locked/i)).toBeTruthy();
     expect(screen.getByText("Logged via TailgatePro")).toBeTruthy();
   });
 

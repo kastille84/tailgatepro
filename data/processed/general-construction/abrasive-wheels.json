@@ -1,0 +1,58 @@
+{
+  "id": "abrasive-wheels",
+  "title": "Abrasive Wheels",
+  "primary_trade": "General Construction",
+  "trade_tags": [
+    "General Construction",
+    "Carpentry",
+    "Welding"
+  ],
+  "osha_standards": [
+    "29 CFR 1926.303",
+    "29 CFR 1910.215"
+  ],
+  "estimated_minutes": 5,
+  "summary": "A damaged or badly mounted abrasive wheel can break apart while spinning. This talk covers guards, work rests, flanges and the ring test. The flange-size and blotter details come from OSHA's general-industry standard 29 CFR 1910.215; the construction rule is 29 CFR 1926.303.",
+  "talking_points": [
+    "Use abrasive wheels only on machines with safety guards. The guard must cover the spindle end, nut and flange projections and stay aligned with the wheel.",
+    "Right before mounting, inspect the wheel closely and ring test it. Tap it gently with a light nonmetallic tool. A cracked wheel sounds dead, not clear, and must not be used.",
+    "The wheel must be dry and free of sawdust for the ring test, or the sound will be dull.",
+    "Check that the spindle speed does not exceed the maximum operating speed marked on the wheel.",
+    "Mount wheels between flanges that are at least one-third the wheel diameter. Flanges must be clean, flat, in good balance, and free of rough surfaces or sharp edges.",
+    "Use blotters (compressible washers) between the flanges and the wheel where required. All contact surfaces must be flat and free of foreign matter.",
+    "On offhand grinders, use a work rest kept within one-eighth inch of the wheel. Clamp it securely after each adjustment, and never adjust it with the wheel in motion.",
+    "Always keep the wheel guarded, whatever type of flange is used."
+  ],
+  "site_hazards_to_check": [
+    "Missing, loose or misaligned wheel guard",
+    "Cracked or chipped wheel, or one that sounds dead in the ring test",
+    "Wheel marked for a lower speed than the machine spindle",
+    "Worn, warped or damaged flanges",
+    "Work rest more than one-eighth inch from the wheel",
+    "Dirt or debris between the wheel, blotters and flanges"
+  ],
+  "discussion_questions": [
+    "How do you perform a ring test, and what does a bad wheel sound like?",
+    "Where do we find the maximum speed for a wheel, and how do we check it against the machine?",
+    "Why must a wheel stay guarded even when flanges are in good shape?"
+  ],
+  "attribution": {
+    "source": "OSHA",
+    "publisher": "Occupational Safety and Health Administration (OSHA)",
+    "copyright": "U.S. Government work — public domain.",
+    "license": "public-domain",
+    "source_url": "https://www.osha.gov/laws-regs/regulations/standardnumber/1910/1910.215",
+    "source_ref": "TBT-253",
+    "notice": "Adapted from 29 CFR 1910.215, Abrasive wheel machinery. Reproduced with attribution for jobsite safety training; not an endorsement by OSHA."
+  },
+  "audit": {
+    "status": "approved",
+    "audited_at": "2026-09-25T18:10:19Z",
+    "osha_accuracy_verified": true,
+    "flags": [
+      "Content is quote-accurate to 29 CFR 1910.215(a)(1)-(a)(4), (c)(1)-(c)(7), (d)(1)-(d)(3): guard covers spindle, nut, flange, ring test with light nonmetallic tool, dry and sawdust-free, spindle speed vs marked speed, flanges at least 1/3 wheel diameter, blotters, 1/8-inch work rest clamped and not adjusted while running, always guarded.",
+      "FIX MADE: the source is general industry (1910.215) but the talk did not say so. 29 CFR 1926.303 (verified) is the construction equivalent and covers guards, ring testing before mounting, the 1/8-inch work rest and safety flanges, but not the 1/3-diameter and blotter details. Added a general-industry disclosure to the summary; both citations retained.",
+      "Public domain, osha.gov. No UK wording."
+    ]
+  }
+}

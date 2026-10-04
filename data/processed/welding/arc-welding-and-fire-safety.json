@@ -1,0 +1,52 @@
+{
+  "id": "arc-welding-and-fire-safety",
+  "title": "Arc Welding and Fire Prevention",
+  "primary_trade": "Welding",
+  "trade_tags": [
+    "Welding",
+    "General Construction"
+  ],
+  "osha_standards": [
+    "29 CFR 1926.351",
+    "29 CFR 1926.352"
+  ],
+  "estimated_minutes": 5,
+  "summary": "An arc welder is safe when it is inspected and used right, but misuse leads to fire, explosion, and eye burns. This talk covers fire control, grounding, and protection while welding.",
+  "talking_points": [
+    "Inspect the arc welder before you strike an arc. Ground the welder case and read the warning labels and manual.",
+    "Clear all fire hazards - oil, grease, flammables, and loose metal shavings - from at least 35 feet around the work area.",
+    "Insulate your body from the metal you are welding. Wear dry gloves in good condition, long sleeves, long pants, and the right footwear.",
+    "Never strike an arc without proper eye protection in place.",
+    "Keep the right fire extinguisher within reach. Use a combination Class A, B, C extinguisher for most welding. For magnesium fires use Class D, or smother with dry sand or magnesium foundry flux.",
+    "Post a fire watcher when you weld or cut near combustible material or anything closer than 35 feet to the work."
+  ],
+  "site_hazards_to_check": [
+    "Combustible material, flammable liquids, or gas cylinders within 35 feet of the arc",
+    "Magnesium shavings, cuttings, or other reactive metals on the floor",
+    "Missing, wrong-class, or discharged fire extinguisher",
+    "Ungrounded welder case or damaged leads and cables",
+    "Damaged, wet, or oily gloves and clothing"
+  ],
+  "discussion_questions": [
+    "What flammable materials are in our work area today, and how will we move or shield them?",
+    "Which class of fire extinguisher is staged here, and is it the right one for this job?",
+    "Who is the fire watcher, and how long do they stay after we stop welding?"
+  ],
+  "attribution": {
+    "source": "NIOSH",
+    "publisher": "National Institute for Occupational Safety and Health (NIOSH)",
+    "copyright": "U.S. Government work — public domain.",
+    "license": "public-domain",
+    "source_url": "https://www.cdc.gov/niosh/docs/2022-137/2022-137.pdf",
+    "notice": "Adapted from a NIOSH Toolbox Talk (co-developed with CPWR). Public-domain source; not an endorsement by NIOSH or CPWR."
+  },
+  "audit": {
+    "status": "approved",
+    "audited_at": "2026-09-10T18:21:19Z",
+    "osha_accuracy_verified": true,
+    "flags": [
+      "OSHA mapping and tolerances verified accurate: 29 CFR 1926.351 (arc welding and cutting - incl. grounding of the welder case) and 1926.352 (fire prevention). The 35 ft clearance for combustible material and flammables (1926.352(a)) and the fire-watch requirement (1926.352(d)-(e)) are stated correctly and consistently. Class A:B:C extinguisher for general welding, Class D or dry sand / foundry flux for magnesium fires, insulate the body from the work, and no arc without eye protection - all accurate.",
+      "Non-blocking enhancement: consider adding 29 CFR 1926.353 (ventilation and protection in welding/cutting/heating) and 1926.102 for the eye-protection point."
+    ]
+  }
+}

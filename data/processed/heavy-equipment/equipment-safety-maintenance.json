@@ -1,0 +1,52 @@
+{
+  "id": "equipment-safety-maintenance",
+  "title": "Safe Equipment Maintenance and Lockout/Tagout",
+  "primary_trade": "Heavy Equipment",
+  "trade_tags": [
+    "Heavy Equipment",
+    "General Construction"
+  ],
+  "osha_standards": [
+    "29 CFR 1926.600",
+    "29 CFR 1926.431",
+    "29 CFR 1926.417"
+  ],
+  "estimated_minutes": 5,
+  "summary": "Poorly maintained equipment causes injuries, deaths, and downtime. This talk covers inspecting before use, taking damaged equipment out of service, and controlling hazardous energy.",
+  "talking_points": [
+    "Inspect equipment before every use to confirm it is in safe working order and good repair.",
+    "Do not use damaged equipment. Tag it out and take it out of service.",
+    "Tell your supervisor when equipment needs maintenance, cleaning, or repair.",
+    "Use lockout/tagout to control every hazardous energy source before you maintain, clean, or repair equipment.",
+    "Clean up leaks and spills - oil on a step or floor is a slip hazard."
+  ],
+  "site_hazards_to_check": [
+    "Hydraulic, fuel, or oil leaks on or under the machine",
+    "Damaged equipment still in service with no out-of-service tag",
+    "Maintenance or cleaning started without locking out energy sources",
+    "Missing or incomplete pre-use inspection records",
+    "Slippery steps, grab bars, or work platforms from leaked fluid"
+  ],
+  "discussion_questions": [
+    "What energy sources need to be locked out on this machine before service?",
+    "What do you do when you find a defect during the pre-use inspection?",
+    "Who do you report maintenance needs to, and how fast?"
+  ],
+  "attribution": {
+    "source": "NIOSH",
+    "publisher": "National Institute for Occupational Safety and Health (NIOSH)",
+    "copyright": "U.S. Government work — public domain.",
+    "license": "public-domain",
+    "source_url": "https://www.cdc.gov/niosh/docs/2022-135/2022-135.pdf",
+    "notice": "Adapted from a NIOSH Toolbox Talk (co-developed with CPWR). Public-domain source; not an endorsement by NIOSH or CPWR."
+  },
+  "audit": {
+    "status": "approved",
+    "audited_at": "2026-09-10T18:21:19Z",
+    "osha_accuracy_verified": true,
+    "flags": [
+      "Core mapping is adequate: 29 CFR 1926.600 covers equipment maintenance, incl. 600(a)(3)(ii) (fully lower or block blades, buckets, and dump bodies before repair) and 600(a)(3)(i) (block suspended equipment); 1926.417 covers circuit lockout/tagging. Construction has no general hazardous-energy-control standard equivalent to 1910.147, so the talk's principle - control every energy source (hydraulic, pneumatic, gravity, electrical) before service - is correct practice.",
+      "Non-blocking: 29 CFR 1926.431 ('Maintenance of equipment') is narrow (wiring/utilization equipment in hazardous locations) and is a weak fit for a general mechanical/hydraulic maintenance talk; consider replacing it with an explicit 1926.600(a)(3) citation."
+    ]
+  }
+}

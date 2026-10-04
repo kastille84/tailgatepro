@@ -1,0 +1,483 @@
+import { beforeEach, describe, expect, it, vi } from "vitest";
+
+import {
+  acceptJobsiteInvite,
+  acceptJobsiteJoinLink,
+  createJobsite,
+  getJobsiteInvitePreview,
+  getJobsiteJoinLink,
+  getJobsiteJoinPreview,
+  inviteSubcontractor,
+  listJobsiteMembers,
+  listJobsiteMemberships,
+  listJobsites,
+  removeSubcontractor,
+  setMyJobsiteCadence,
+  setJobsiteMembers,
+  updateJobsite,
+} from "../../src/services/apiJobsites";
+import { PlanLimitError } from "../../src/utils/PlanLimitError";
+
+const GENERIC = "Something went wrong. Please try again.";
+
+const okResponse = (data: unknown) => ({
+  ok: true,
+  status: 200,
+  json: async () => ({ success: true, data }),
+});
+
+const badJsonResponse = {
+  ok: true,
+  status: 200,
+  json: async () => {
+    throw new Error("bad json");
+  },
+};
+
+describe("apiJobsites", () => {
+  beforeEach(() => {
+    vi.restoreAllMocks();
+    vi.unstubAllGlobals();
+  });
+
+  describe("listJobsites", () => {
+    it("GETs /api/jobsites with the bearer token and returns the jobsites", async () => {
+      const fetchMock = vi.fn().mockResolvedValue(okResponse([{ id: "j1" }]));
+      vi.stubGlobal("fetch", fetchMock);
+
+      await expect(listJobsites("token-123")).resolves.toEqual([{ id: "j1" }]);
+      expect(fetchMock).toHaveBeenCalledWith(
+        "/api/jobsites",
+        expect.objectContaining({
+          method: "GET",
+          headers: { Authorization: "Bearer token-123" },
+        }),
+      );
+    });
+
+    it("rejects with the backend error message", async () => {
+      vi.stubGlobal(
+        "fetch",
+        vi.fn().mockResolvedValue({
+          ok: false,
+          status: 403,
+          json: async () => ({ success: false, error: "Forbidden" }),
+        }),
+      );
+      await expect(listJobsites("t")).rejects.toThrow("Forbidden");
+    });
+
+    it("rejects with a PlanLimitError carrying the limit on a PLAN_LIMIT response", async () => {
+      vi.stubGlobal(
+        "fetch",
+        vi.fn().mockResolvedValue({
+          ok: false,
+          status: 403,
+          json: async () => ({
+            success: false,
+            error: "Your plan's job site limit is reached.",
+            data: { code: "PLAN_LIMIT", limit: 1 },
+          }),
+        }),
+      );
+
+      const error = await listJobsites("t").catch((e) => e);
+      expect(error).toBeInstanceOf(PlanLimitError);
+      expect(error.message).toBe("Your plan's job site limit is reached.");
+      expect(error.limit).toBe(1);
+    });
+
+    it("falls back to the generic message and a null limit on a bare PLAN_LIMIT response", async () => {
+      vi.stubGlobal(
+        "fetch",
+        vi.fn().mockResolvedValue({
+          ok: false,
+          status: 403,
+          json: async () => ({ success: false, data: { code: "PLAN_LIMIT" } }),
+        }),
+      );
+
+      const error = await listJobsites("t").catch((e) => e);
+      expect(error).toBeInstanceOf(PlanLimitError);
+      expect(error.message).toBe(GENERIC);
+      expect(error.limit).toBeNull();
+    });
+
+    it("rejects with the generic message when the body is not JSON", async () => {
+      vi.stubGlobal("fetch", vi.fn().mockResolvedValue(badJsonResponse));
+      await expect(listJobsites("t")).rejects.toThrow(GENERIC);
+    });
+
+    it("rejects with the generic message on an error response with no message", async () => {
+      vi.stubGlobal(
+        "fetch",
+        vi.fn().mockResolvedValue({
+          ok: false,
+          status: 500,
+          json: async () => ({ success: false }),
+        }),
+      );
+      await expect(listJobsites("t")).rejects.toThrow(GENERIC);
+    });
+  });
+
+  describe("createJobsite", () => {
+    it("POSTs the name as JSON with the bearer token", async () => {
+      const fetchMock = vi.fn().mockResolvedValue(okResponse({ id: "j1" }));
+      vi.stubGlobal("fetch", fetchMock);
+
+      await expect(
+        createJobsite("token-123", { name: "Riverside" }),
+      ).resolves.toEqual({ id: "j1" });
+      expect(fetchMock).toHaveBeenCalledWith(
+        "/api/jobsites",
+        expect.objectContaining({
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: "Bearer token-123",
+          },
+          body: JSON.stringify({ name: "Riverside" }),
+        }),
+      );
+    });
+  });
+
+  describe("updateJobsite", () => {
+    it("PATCHes the patch to /api/jobsites/:id", async () => {
+      const fetchMock = vi.fn().mockResolvedValue(okResponse({ id: "j1" }));
+      vi.stubGlobal("fetch", fetchMock);
+
+      await updateJobsite("token-123", "j1", { archived: true });
+      expect(fetchMock).toHaveBeenCalledWith(
+        "/api/jobsites/j1",
+        expect.objectContaining({
+          method: "PATCH",
+          body: JSON.stringify({ archived: true }),
+        }),
+      );
+    });
+  });
+
+  describe("inviteSubcontractor", () => {
+    it("POSTs the email to /api/jobsites/:id/invite and returns { email }", async () => {
+      const fetchMock = vi
+        .fn()
+        .mockResolvedValue(okResponse({ email: "a@b.com" }));
+      vi.stubGlobal("fetch", fetchMock);
+
+      await expect(
+        inviteSubcontractor("token-123", "j1", "a@b.com"),
+      ).resolves.toEqual({ email: "a@b.com" });
+      expect(fetchMock).toHaveBeenCalledWith(
+        "/api/jobsites/j1/invite",
+        expect.objectContaining({
+          method: "POST",
+          body: JSON.stringify({ email: "a@b.com" }),
+        }),
+      );
+    });
+  });
+
+  describe("removeSubcontractor", () => {
+    it("DELETEs /api/jobsites/:id/subcontractors/:subId", async () => {
+      const fetchMock = vi.fn().mockResolvedValue(okResponse({}));
+      vi.stubGlobal("fetch", fetchMock);
+
+      await expect(
+        removeSubcontractor("token-123", "j1", "s1"),
+      ).resolves.toBeUndefined();
+      expect(fetchMock).toHaveBeenCalledWith(
+        "/api/jobsites/j1/subcontractors/s1",
+        expect.objectContaining({
+          method: "DELETE",
+          headers: { Authorization: "Bearer token-123" },
+        }),
+      );
+    });
+
+    it("rejects with the backend error message", async () => {
+      vi.stubGlobal(
+        "fetch",
+        vi.fn().mockResolvedValue({
+          ok: false,
+          status: 404,
+          json: async () => ({ success: false, error: "Not found" }),
+        }),
+      );
+      await expect(removeSubcontractor("t", "j1", "s1")).rejects.toThrow(
+        "Not found",
+      );
+    });
+  });
+
+  describe("listJobsiteMembers", () => {
+    it("GETs /api/jobsites/:id/members with the bearer token", async () => {
+      const data = { members: [{ userId: "u-1", name: "Ann", assigned: true }] };
+      const fetchMock = vi.fn().mockResolvedValue(okResponse(data));
+      vi.stubGlobal("fetch", fetchMock);
+
+      await expect(listJobsiteMembers("token-123", "j1")).resolves.toEqual(data);
+      expect(fetchMock).toHaveBeenCalledWith(
+        "/api/jobsites/j1/members",
+        expect.objectContaining({
+          method: "GET",
+          headers: { Authorization: "Bearer token-123" },
+        }),
+      );
+    });
+
+    it("rejects with the backend error message", async () => {
+      vi.stubGlobal(
+        "fetch",
+        vi.fn().mockResolvedValue({
+          ok: false,
+          status: 404,
+          json: async () => ({ success: false, error: "Jobsite not found" }),
+        }),
+      );
+      await expect(listJobsiteMembers("t", "j1")).rejects.toThrow("Jobsite not found");
+    });
+  });
+
+  describe("setJobsiteMembers", () => {
+    it("PUTs userIds to /api/jobsites/:id/members and returns the fresh list", async () => {
+      const data = { members: [{ userId: "u-1", name: "Ann", assigned: true }] };
+      const fetchMock = vi.fn().mockResolvedValue(okResponse(data));
+      vi.stubGlobal("fetch", fetchMock);
+
+      await expect(setJobsiteMembers("token-123", "j1", ["u-1"])).resolves.toEqual(data);
+      expect(fetchMock).toHaveBeenCalledWith(
+        "/api/jobsites/j1/members",
+        expect.objectContaining({
+          method: "PUT",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: "Bearer token-123",
+          },
+          body: JSON.stringify({ userIds: ["u-1"] }),
+        }),
+      );
+    });
+
+    it("rejects with a PlanLimitError on a PLAN_LIMIT response", async () => {
+      vi.stubGlobal(
+        "fetch",
+        vi.fn().mockResolvedValue({
+          ok: false,
+          status: 403,
+          json: async () => ({
+            success: false,
+            error: "Superintendent roles are part of GC Portfolio. Upgrade to use them.",
+            data: { code: "PLAN_LIMIT" },
+          }),
+        }),
+      );
+
+      const error = await setJobsiteMembers("t", "j1", []).catch((e) => e);
+      expect(error).toBeInstanceOf(PlanLimitError);
+      expect(error.message).toBe(
+        "Superintendent roles are part of GC Portfolio. Upgrade to use them.",
+      );
+    });
+  });
+
+  describe("getJobsiteInvitePreview", () => {
+    it("GETs the public preview without an Authorization header", async () => {
+      const fetchMock = vi
+        .fn()
+        .mockResolvedValue(okResponse({ email: "a@b.com" }));
+      vi.stubGlobal("fetch", fetchMock);
+
+      await expect(getJobsiteInvitePreview("tok")).resolves.toEqual({
+        email: "a@b.com",
+      });
+      expect(fetchMock).toHaveBeenCalledWith(
+        "/api/jobsites/invite/tok",
+        expect.objectContaining({ method: "GET" }),
+      );
+      expect(fetchMock.mock.calls[0][1].headers).toBeUndefined();
+    });
+
+    it("rejects with the server message for an invalid token", async () => {
+      vi.stubGlobal(
+        "fetch",
+        vi.fn().mockResolvedValue({
+          ok: false,
+          status: 404,
+          json: async () => ({ success: false, error: "invalid or expired" }),
+        }),
+      );
+      await expect(getJobsiteInvitePreview("tok")).rejects.toThrow(
+        "invalid or expired",
+      );
+    });
+  });
+
+  describe("acceptJobsiteInvite", () => {
+    it("POSTs to the accept endpoint with the bearer token and returns the project", async () => {
+      const fetchMock = vi.fn().mockResolvedValue(okResponse({ id: "p1" }));
+      vi.stubGlobal("fetch", fetchMock);
+
+      await expect(acceptJobsiteInvite("token-123", "tok")).resolves.toEqual({
+        id: "p1",
+      });
+      expect(fetchMock).toHaveBeenCalledWith(
+        "/api/jobsites/invite/tok/accept",
+        expect.objectContaining({
+          method: "POST",
+          headers: { Authorization: "Bearer token-123" },
+        }),
+      );
+    });
+  });
+
+  describe("getJobsiteJoinLink (Phase 9e)", () => {
+    it("GETs /api/jobsites/:id/join-link with the bearer token and returns the join URL", async () => {
+      const fetchMock = vi
+        .fn()
+        .mockResolvedValue(okResponse({ joinUrl: "https://app.example.com/jobsite-join/tok" }));
+      vi.stubGlobal("fetch", fetchMock);
+
+      await expect(getJobsiteJoinLink("token-123", "j1")).resolves.toEqual({
+        joinUrl: "https://app.example.com/jobsite-join/tok",
+      });
+      expect(fetchMock).toHaveBeenCalledWith(
+        "/api/jobsites/j1/join-link",
+        expect.objectContaining({
+          method: "GET",
+          headers: { Authorization: "Bearer token-123" },
+        }),
+      );
+    });
+
+    it("rejects with a PlanLimitError on a 403 PLAN_LIMIT response", async () => {
+      vi.stubGlobal(
+        "fetch",
+        vi.fn().mockResolvedValue({
+          ok: false,
+          status: 403,
+          json: async () => ({
+            success: false,
+            error: "Job site not found",
+            data: { code: "PLAN_LIMIT", limit: 1 },
+          }),
+        }),
+      );
+      await expect(getJobsiteJoinLink("token-123", "j1")).rejects.toMatchObject({
+        message: "Job site not found",
+      });
+    });
+  });
+
+  describe("getJobsiteJoinPreview (Phase 9e)", () => {
+    it("GETs the public preview without an Authorization header", async () => {
+      const fetchMock = vi
+        .fn()
+        .mockResolvedValue(okResponse({ gcCompanyName: "Turner Construction", jobsiteName: "Riverside Tower" }));
+      vi.stubGlobal("fetch", fetchMock);
+
+      await expect(getJobsiteJoinPreview("tok")).resolves.toEqual({
+        gcCompanyName: "Turner Construction",
+        jobsiteName: "Riverside Tower",
+      });
+      expect(fetchMock).toHaveBeenCalledWith(
+        "/api/jobsites/join/tok",
+        expect.objectContaining({ method: "GET" }),
+      );
+      expect(fetchMock.mock.calls[0][1].headers).toBeUndefined();
+    });
+
+    it("rejects with the server message for an invalid token", async () => {
+      vi.stubGlobal(
+        "fetch",
+        vi.fn().mockResolvedValue({
+          ok: false,
+          status: 404,
+          json: async () => ({ success: false, error: "This job site link is invalid" }),
+        }),
+      );
+      await expect(getJobsiteJoinPreview("tok")).rejects.toThrow(
+        "This job site link is invalid",
+      );
+    });
+  });
+
+  describe("acceptJobsiteJoinLink (Phase 9e)", () => {
+    it("POSTs to the join accept endpoint with the bearer token and returns the result", async () => {
+      const fetchMock = vi
+        .fn()
+        .mockResolvedValue(okResponse({ id: "p1", name: "Riverside Tower", alreadyMember: false }));
+      vi.stubGlobal("fetch", fetchMock);
+
+      await expect(acceptJobsiteJoinLink("token-123", "tok")).resolves.toEqual({
+        id: "p1",
+        name: "Riverside Tower",
+        alreadyMember: false,
+      });
+      expect(fetchMock).toHaveBeenCalledWith(
+        "/api/jobsites/join/tok/accept",
+        expect.objectContaining({
+          method: "POST",
+          headers: { Authorization: "Bearer token-123" },
+        }),
+      );
+    });
+  });
+
+  describe("listJobsiteMemberships (Phase 11f)", () => {
+    it("GETs /api/jobsites/memberships with the bearer token", async () => {
+      const fetchMock = vi.fn().mockResolvedValue(okResponse([{ jobsiteId: "j1" }]));
+      vi.stubGlobal("fetch", fetchMock);
+
+      await expect(listJobsiteMemberships("token-123")).resolves.toEqual([{ jobsiteId: "j1" }]);
+      expect(fetchMock).toHaveBeenCalledWith(
+        "/api/jobsites/memberships",
+        expect.objectContaining({
+          method: "GET",
+          headers: { Authorization: "Bearer token-123" },
+        }),
+      );
+    });
+  });
+
+  describe("setMyJobsiteCadence (Phase 11f)", () => {
+    it("PATCHes /api/jobsites/:id/my-cadence with the cadence", async () => {
+      const fetchMock = vi.fn().mockResolvedValue(okResponse({ effectiveCadence: "daily" }));
+      vi.stubGlobal("fetch", fetchMock);
+
+      await expect(setMyJobsiteCadence("token-123", "j1", "daily")).resolves.toEqual({
+        effectiveCadence: "daily",
+      });
+      expect(fetchMock).toHaveBeenCalledWith(
+        "/api/jobsites/j1/my-cadence",
+        expect.objectContaining({
+          method: "PATCH",
+          body: JSON.stringify({ cadence: "daily" }),
+        }),
+      );
+    });
+
+    it("sends null to clear the override", async () => {
+      const fetchMock = vi.fn().mockResolvedValue(okResponse({}));
+      vi.stubGlobal("fetch", fetchMock);
+
+      await setMyJobsiteCadence("t", "j1", null);
+
+      expect(fetchMock.mock.calls[0][1].body).toBe(JSON.stringify({ cadence: null }));
+    });
+
+    it("rejects with the backend error message", async () => {
+      vi.stubGlobal(
+        "fetch",
+        vi.fn().mockResolvedValue({
+          ok: false,
+          status: 422,
+          json: async () => ({ success: false, error: "Too loose" }),
+        }),
+      );
+
+      await expect(setMyJobsiteCadence("t", "j1", "weekly")).rejects.toThrow("Too loose");
+    });
+  });
+});

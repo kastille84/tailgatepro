@@ -1,0 +1,54 @@
+{
+  "id": "assured-equipment-grounding-conductor-program",
+  "title": "Assured Equipment Grounding Conductor Program: Cord Checks and Tests",
+  "primary_trade": "Electrical",
+  "trade_tags": [
+    "Electrical",
+    "General Construction"
+  ],
+  "osha_standards": [
+    "29 CFR 1926.404(b)(1)(iii)",
+    "29 CFR 1926.404(b)(1)"
+  ],
+  "estimated_minutes": 5,
+  "summary": "If a site uses an assured equipment grounding conductor program instead of GFCIs, cords and tools must be inspected daily and tested on a schedule, and the results recorded.",
+  "talking_points": [
+    "An assured equipment grounding conductor program (AEGCP) can be used in place of GFCIs for ground-fault protection. If your site uses one, these are the minimum rules.",
+    "A written description of the program must be kept at the jobsite, with the inspection and test procedures and schedule. It must be available to OSHA and to affected workers.",
+    "One or more competent persons run the program. They can spot hazards and are authorized to take prompt corrective action.",
+    "Visually inspect all cord sets, plugs, caps, receptacles, and cord-and-plug equipment before use each day. Look for deformed or missing pins and damaged insulation.",
+    "If you see damage outside or find it inside, take the equipment out of use until it is repaired.",
+    "Two tests are required on all equipment: a continuity test and a terminal connection test. Do them before first use, after repairs, after suspected damage, and every 3 months. Some exceptions are in 29 CFR 1926.404(b)(1)(iii)(E)(4).",
+    "The continuity test shows the grounding conductor is electrically continuous. The terminal connection test shows it is connected to the right terminal at receptacles and plugs. A receptacle tester can do the second test on receptacles.",
+    "Keep a written record of the tests that shows which equipment passed and the last test date or test interval. It must be available to OSHA inspectors and affected workers."
+  ],
+  "site_hazards_to_check": [
+    "Cords with missing or bent pins, cracked insulation, or damaged plugs",
+    "Damaged equipment still in use instead of out of service",
+    "Tools or cords with no test date or record",
+    "No written program or competent person on site",
+    "Tests overdue, such as after a repair or past 3 months"
+  ],
+  "discussion_questions": [
+    "Does our site use GFCIs or an assured grounding program, and where is the written program?",
+    "Who is the competent person who checks and tests our cords and tools?",
+    "How do we tag and remove a damaged cord from use?"
+  ],
+  "attribution": {
+    "source": "OSHA",
+    "publisher": "Occupational Safety and Health Administration (OSHA)",
+    "copyright": "U.S. Government work — public domain.",
+    "license": "public-domain",
+    "source_url": "https://www.osha.gov/electrical/hazards/aegcp",
+    "notice": "Adapted from OSHA Electrical Topics page, Assured Equipment Grounding Conductor Program (AEGCP). Reproduced with attribution for jobsite safety training; not an endorsement by OSHA."
+  },
+  "audit": {
+    "status": "approved",
+    "audited_at": "2026-09-30T14:01:48.440Z",
+    "osha_accuracy_verified": true,
+    "flags": [
+      "Verified against data/raw/osha-assured-equipment-grounding-conductor-program.md (OSHA page): AEGCP as alternative to GFCIs, written program at jobsite, competent person, daily visual inspection, continuity and terminal connection tests (before first use, after repair, after suspected damage, every 3 months, exceptions at 1926.404(b)(1)(iii)(E)(4)), receptacle tester, written record. 1926.404(b)(1)(iii) and (b)(1) are the cited sections.",
+      "Harwood check: OSHA-authored page."
+    ]
+  }
+}

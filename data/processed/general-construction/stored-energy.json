@@ -1,0 +1,59 @@
+{
+  "id": "stored-energy",
+  "title": "Stored Energy",
+  "primary_trade": "General Construction",
+  "trade_tags": [
+    "General Construction",
+    "HVAC & Refrigeration",
+    "Electrical"
+  ],
+  "osha_standards": [
+    "29 CFR 1926.417",
+    "29 CFR 1910.147"
+  ],
+  "estimated_minutes": 5,
+  "summary": "Machines can start up unexpectedly or release stored energy and seriously injure or kill workers who service them. Isolate the energy, lock or tag it, release stored energy, and verify before you start.",
+  "talking_points": [
+    "Unexpected energization, startup, or release of stored energy can seriously or fatally injure workers who service or maintain machines.",
+    "Hazardous energy can be mechanical, electrical, hydraulic, pneumatic, chemical, or thermal.",
+    "Before service, follow the steps in order: prepare for shutdown, shut down, isolate from energy sources, apply the lock or tag, release or restrain stored or residual energy, and verify isolation.",
+    "If stored energy could build back up (reaccumulate) to a hazardous level, keep checking during the service that it has not.",
+    "Isolate with devices such as manually operated circuit breakers, disconnect switches, line valves, and safety blocks. Push buttons and selector switches are not energy-isolating devices.",
+    "A lock holds the device in the off position and cannot be removed without a key. A tag is only a warning and gives less protection. Use a lock when the device can be locked out.",
+    "Only the person who placed a lock or tag removes it. Before removal, check that the machine is intact and everyone is clear, and let affected workers know.",
+    "OSHA's lockout/tagout standard is written for general industry and does not cover construction, but other energy-control rules apply. Follow your site's written energy control procedure."
+  ],
+  "site_hazards_to_check": [
+    "Equipment with more than one energy source, such as electrical, hydraulic, or pneumatic",
+    "Stored or residual energy left in equipment after shutdown",
+    "Energy-isolating devices that cannot be locked out",
+    "Missing or damaged locks and tags, or tags that are not obvious to anyone trying to operate the device",
+    "Other workers nearby who do not know the machine is locked out",
+    "Chance of energy building back up while service is under way"
+  ],
+  "discussion_questions": [
+    "What kinds of stored energy could be in the equipment we will service today?",
+    "What steps do you take to verify a machine is isolated before you start?",
+    "Who is allowed to remove your lock or tag, and what must be checked first?"
+  ],
+  "attribution": {
+    "source": "OSHA",
+    "publisher": "Occupational Safety and Health Administration (OSHA)",
+    "copyright": "U.S. Government work — public domain.",
+    "license": "public-domain",
+    "source_url": "https://www.osha.gov/sites/default/files/publications/osha3120.pdf",
+    "source_ref": "TBT-036",
+    "notice": "Adapted from OSHA Publication 3120, Control of Hazardous Energy (Lockout/Tagout). Reproduced with attribution for jobsite safety training; not an endorsement by OSHA."
+  },
+  "audit": {
+    "status": "approved",
+    "audited_at": "2026-09-25T18:11:08Z",
+    "osha_accuracy_verified": true,
+    "flags": [
+      "Content verified against OSHA 3120: energy types, six-step sequence, reaccumulation, isolating devices (push buttons and selector switches are not isolating devices), lock vs tag, only the applier removes, and the statement that 1910.147 does not cover construction (already stated in the talk).",
+      "FIX: replaced osha_standards [\"1910.147\",\"1910.333\"] with 29 CFR 1926.417 (lockout and tagging of circuits, the construction provision) plus 1910.147 kept as the general-industry reference the talk names. 1910.333 was dropped (general-industry electrical work practices).",
+      "Non-blocking: 1926.417 covers circuits only; hydraulic/pneumatic/mechanical stored energy on construction sites is governed by the general duty clause and equipment-specific 1926 rules. The talk's last point already tells crews to follow the site energy control procedure.",
+      "Attribution: osha.gov, public domain, notice preserved. No UK wording."
+    ]
+  }
+}

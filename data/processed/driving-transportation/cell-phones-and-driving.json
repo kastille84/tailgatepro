@@ -1,0 +1,54 @@
+{
+  "id": "cell-phones-and-driving",
+  "title": "Cell Phones and Driving",
+  "primary_trade": "Driving & Transportation",
+  "trade_tags": [
+    "Driving & Transportation"
+  ],
+  "osha_standards": [
+    "OSH Act Section 5(a)(1) General Duty Clause"
+  ],
+  "estimated_minutes": 5,
+  "summary": "Distracted driving is any time your eyes leave the road, your hands leave the wheel, or your mind leaves driving. Hands-free phones are just as distracting as handheld ones.",
+  "talking_points": [
+    "Do not use your phone while driving. Pull over in a safe location to look up directions, text, or make or receive a call.",
+    "There are three kinds of distraction: visual (eyes off the road), manual (hands off the wheel), and cognitive (mind off driving).",
+    "Hands-free phones are just as distracting as handheld phones. Your brain has limited capacity for attention.",
+    "Drivers who use cell phones may look at but fail to see up to 50% of the information in their driving environment.",
+    "Make adjustments to your vehicle, such as controls and directions, before you drive.",
+    "Do not reach for items on the floor, open the glove box, or try to catch falling objects while driving.",
+    "Avoid emotional conversations with passengers, or pull over safely to continue them.",
+    "Focus on the vehicles, pedestrians, cyclists, and objects around you that may mean you need to act fast."
+  ],
+  "site_hazards_to_check": [
+    "Phones, tablets, or GPS units mounted or held where the driver must look away or reach",
+    "Loose items on the floor or seat that could slide or fall while driving",
+    "Directions or radio not set before the vehicle moves",
+    "Company vehicles without a clear no-phone-use policy communicated to drivers"
+  ],
+  "discussion_questions": [
+    "Which of the three distraction types (visual, manual, cognitive) do you face most when driving for work?",
+    "Why is a hands-free call still a risk?",
+    "Where can we safely pull over to make or take a call on our route today?"
+  ],
+  "attribution": {
+    "source": "NIOSH",
+    "publisher": "National Institute for Occupational Safety and Health (NIOSH)",
+    "copyright": "U.S. Government work — public domain.",
+    "license": "public-domain",
+    "source_url": "https://www.cdc.gov/niosh/motor-vehicle/distracted-driving/index.html",
+    "source_ref": "TBT-075",
+    "notice": "Adapted from NIOSH, Distracted Driving at Work (CDC/NIOSH web page). Reproduced with attribution for jobsite safety training; not an endorsement by CPWR or NIOSH."
+  },
+  "audit": {
+    "status": "approved",
+    "audited_at": "2026-09-25T18:11:08Z",
+    "osha_accuracy_verified": true,
+    "flags": [
+      "All points quote-accurate to the NIOSH page (three distraction types, hands-free equally distracting, 50% figure, worker advice list).",
+      "Source domain cdc.gov/niosh is allowed; NIOSH content is a U.S. Government work in the public domain, license correct.",
+      "Citation is the General Duty Clause (OSHA has no cell-phone standard); no 1926 equivalent. Talk does not state legal duties.",
+      "FIX: notice text now names the specific NIOSH page instead of \"published guidance\". No UK wording."
+    ]
+  }
+}

@@ -1,0 +1,61 @@
+{
+  "id": "ppe-selection-use-and-care",
+  "title": "PPE: Selection, Use and Care",
+  "primary_trade": "General Construction",
+  "trade_tags": [
+    "General Construction"
+  ],
+  "osha_standards": [
+    "29 CFR 1926.95",
+    "29 CFR 1926.96",
+    "29 CFR 1926.97",
+    "29 CFR 1926.100",
+    "29 CFR 1926.101",
+    "29 CFR 1926.102",
+    "29 CFR 1926.52"
+  ],
+  "estimated_minutes": 5,
+  "summary": "PPE protects you when a hazard cannot be removed or controlled another way. Pick it based on a hazard assessment, make sure it fits, check it before use, and know how to use it.",
+  "talking_points": [
+    "Control the hazard at its source first. Use PPE when engineering, work practice, or administrative controls are not feasible or do not give enough protection.",
+    "PPE choice starts with a hazard assessment. Walk the site and look for fall, impact, penetration, compression (roll-over), chemical, heat/cold, harmful dust, light (optical) radiation, and biologic hazards.",
+    "Match the PPE to the hazard. Face shields guard against splashes but not impact. Wear them with goggles or safety spectacles for added protection.",
+    "PPE must fit well and be comfortable. If you wear several types together, make sure they work together.",
+    "Inspect your hard hat every day for holes, cracks, tears, or other damage. Replace it after any impact, even if no damage shows.",
+    "Check gloves and footwear before each use. Look for torn or punctured gloves, and for cracks, holes, or broken laces on boots and shoes.",
+    "Get trained. Know when PPE is needed, what to wear, how to put it on, take it off, and adjust it, its limits, and how to care for and dispose of it.",
+    "Tell your supervisor when PPE is worn, damaged, or needs replacing. With a few exceptions, your employer must provide PPE at no cost to you."
+  ],
+  "site_hazards_to_check": [
+    "Hard hats with holes, cracks, or deformed shells, or with chalking or flaking from heat, chemicals, or UV",
+    "Torn, punctured, stiff, or discolored gloves",
+    "Cracked or worn footwear, broken laces, or metal embedded in soles",
+    "Eye and face hazards such as flying chips from grinding or sawing, chemical splashes, and welding light",
+    "Loud noise with no hearing protection (the source cites 85 dB averaged over eight hours as OSHA's general-industry action level)",
+    "Workers wearing ordinary prescription glasses instead of safety eyewear"
+  ],
+  "discussion_questions": [
+    "Which hazards on today's job need PPE, and what could we do first to remove or control them?",
+    "When did you last check your hard hat, gloves, and boots, and what would make you take one out of service?",
+    "Which PPE do you wear together, and does it all work together and fit right?"
+  ],
+  "attribution": {
+    "source": "OSHA",
+    "publisher": "Occupational Safety and Health Administration (OSHA)",
+    "copyright": "U.S. Government work — public domain.",
+    "license": "public-domain",
+    "source_url": "https://www.osha.gov/sites/default/files/publications/osha3151.pdf",
+    "source_ref": "TBT-001",
+    "notice": "Adapted from OSHA Publication 3151, Personal Protective Equipment (2023). Reproduced with attribution for jobsite safety training; not an endorsement by OSHA."
+  },
+  "audit": {
+    "status": "approved",
+    "audited_at": "2026-09-25T18:11:08Z",
+    "osha_accuracy_verified": true,
+    "flags": [
+      "All facts quote-accurate to OSHA 3151 (2023): hazard categories, face shield vs impact, daily hard hat inspection and replace after impact, glove and footwear checks, training elements, no-cost PPE with exceptions.",
+      "FIX: the 85 dB figure in site_hazards_to_check comes from the source's 1910.95 (general-industry) discussion; reworded so it is not presented as the construction limit, and added 29 CFR 1926.52 (occupational noise exposure, construction) to osha_standards.",
+      "Citations 1926.95, .96, .97, .100, .101, .102 all exist in Subpart E and match content (source lists them). Attribution: osha.gov, public domain, notice preserved. No UK wording. 8 substantive points."
+    ]
+  }
+}

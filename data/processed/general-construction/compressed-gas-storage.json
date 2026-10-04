@@ -1,0 +1,56 @@
+{
+  "id": "compressed-gas-storage",
+  "title": "Compressed Gas Storage",
+  "primary_trade": "General Construction",
+  "trade_tags": [
+    "General Construction",
+    "Welding",
+    "HVAC & Refrigeration"
+  ],
+  "osha_standards": [
+    "29 CFR 1926.350"
+  ],
+  "estimated_minutes": 5,
+  "summary": "Compressed gas cylinders must be stored, moved and placed with care to prevent tip-overs, leaks and fires. This talk covers OSHA's cylinder rules for welding and cutting work.",
+  "talking_points": [
+    "Keep valve protection caps in place and secured when moving or storing cylinders.",
+    "Secure cylinders upright at all times, except for short periods while they are being hoisted or carried. Use a cylinder truck, chain or other steadying device so they cannot be knocked over.",
+    "Move cylinders by tilting and rolling them on their bottom edges. Do not drop them or let them strike each other violently.",
+    "Store oxygen cylinders at least 20 feet from fuel-gas cylinders or combustible materials, or behind a noncombustible barrier at least 5 feet high with at least a one-half hour fire rating.",
+    "Inside buildings, store cylinders in a protected, well-ventilated, dry place at least 20 feet from highly combustible materials, and away from elevators, stairs and gangways. Never keep them in unventilated lockers or cupboards.",
+    "Keep cylinders far enough from welding or cutting that sparks, slag or flame cannot reach them. Do not strike an arc on a cylinder.",
+    "Do not take oxygen, acetylene or other fuel-gas cylinders into confined spaces.",
+    "Close the cylinder valve when work is done, when the cylinder is empty, and any time it is moved. Do not use a damaged or defective cylinder."
+  ],
+  "site_hazards_to_check": [
+    "Cylinders standing loose with no chain, cart or other support",
+    "Missing valve protection caps",
+    "Oxygen stored near fuel gas, oil, grease or other combustibles",
+    "Cylinders in the path of sparks, hot slag or heat",
+    "Cylinders stored in closed lockers, stairwells or walkways",
+    "Dented or otherwise damaged cylinders"
+  ],
+  "discussion_questions": [
+    "How far apart are our oxygen and fuel-gas cylinders stored, and is that enough?",
+    "What do we use to keep cylinders from tipping while they are in use?",
+    "What do we do with a cylinder that is damaged or leaking?"
+  ],
+  "attribution": {
+    "source": "OSHA",
+    "publisher": "Occupational Safety and Health Administration (OSHA)",
+    "copyright": "U.S. Government work — public domain.",
+    "license": "public-domain",
+    "source_url": "https://www.osha.gov/laws-regs/regulations/standardnumber/1926/1926.350",
+    "source_ref": "TBT-248",
+    "notice": "Adapted from 29 CFR 1926.350, Gas welding and cutting. Reproduced with attribution for jobsite safety training; not an endorsement by OSHA."
+  },
+  "audit": {
+    "status": "approved",
+    "audited_at": "2026-09-25T18:10:19Z",
+    "osha_accuracy_verified": true,
+    "flags": [
+      "Every point is verified against 29 CFR 1926.350(a)(1),(3),(7)-(11), (b)(1),(2),(4), (c)(3): valve caps, upright and secured, tilt-and-roll, 20 ft or 5 ft/half-hour noncombustible barrier for oxygen vs fuel gas, indoor storage 20 ft from highly combustible material, no unventilated lockers, sparks/arc, no O2/fuel gas in confined spaces, close valve. Numbers exact. 1926 citation correct.",
+      "Non-blocking: could add fuel-gas cylinders valve end up while in use (1926.350(b)(3)) and 1926.350(a)(6). Public domain, osha.gov. No UK wording."
+    ]
+  }
+}

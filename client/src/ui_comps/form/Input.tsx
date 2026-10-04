@@ -39,9 +39,26 @@ const StyledInput = styled.input<{ $hasError?: boolean }>`
     opacity: 0.65;
     background-color: ${({ theme }) => theme.colors.concrete[400]};
   }
+
+  /* Read-only: still focusable and copyable, so unlike :disabled it keeps
+     full-contrast text (no opacity fade) and signals "can't edit" with a gray
+     fill plus a dashed border, so it isn't conveyed by color alone. The
+     attribute selector is used because :read-only also matches disabled. */
+  &[readonly] {
+    border-style: dashed;
+    background-color: ${({ theme }) => theme.colors.concrete[600]};
+    color: ${({ theme }) => theme.colors.navy[500]};
+    cursor: not-allowed;
+  }
+
+  /* Neutral focus ring: the green one implies the field is editable. */
+  &[readonly]:focus {
+    border-color: ${({ theme }) => theme.colors.navy[400]};
+    box-shadow: 0 0 0 0.3rem ${({ theme }) => theme.colors.navy[100]};
+  }
 `;
 
-export const Input = ({ hasError = false, ref, ...props }: InputProps) => {
+export const Input =({ hasError = false, ref, ...props }: InputProps) => {
   return (
     <StyledInput
       ref={ref}
@@ -96,6 +113,58 @@ export const TextInput = styled(Input)`
   }
 `;
 
+interface TextareaProps extends React.ComponentPropsWithoutRef<"textarea"> {
+  hasError?: boolean;
+  ref?: React.Ref<HTMLTextAreaElement>;
+}
+
+const StyledTextarea = styled.textarea<{ $hasError?: boolean }>`
+  width: 100%;
+  min-height: 9.6rem;
+  padding: 1.2rem 1.4rem;
+  border: 0.1rem solid
+    ${({ theme, $hasError }) =>
+      $hasError ? theme.colors.red[500] : theme.colors.navy[200]};
+  border-radius: ${({ theme }) => theme.borderRadius.md};
+  background-color: ${({ theme }) => theme.colors.concrete[100]};
+  color: ${({ theme }) => theme.colors.navy[700]};
+  font-size: 1.6rem;
+  line-height: 1.5;
+  font-family: inherit;
+  resize: vertical;
+  transition:
+    border-color 0.2s ease,
+    box-shadow 0.2s ease;
+
+  &::placeholder {
+    color: ${({ theme }) => theme.colors.navy[400]};
+  }
+
+  &:focus {
+    outline: none;
+    border-color: ${({ theme, $hasError }) =>
+      $hasError ? theme.colors.red[500] : theme.colors.green[500]};
+    box-shadow: 0 0 0 0.3rem
+      ${({ $hasError }) =>
+        $hasError ? "rgba(211, 47, 47, 0.15)" : "rgba(85, 161, 102, 0.15)"};
+  }
+
+  &:disabled {
+    cursor: not-allowed;
+    opacity: 0.65;
+    background-color: ${({ theme }) => theme.colors.concrete[400]};
+  }
+`;
+
+export const Textarea = ({ hasError = false, ref, ...props }: TextareaProps) => (
+  <StyledTextarea
+    ref={ref}
+    $hasError={hasError}
+    aria-invalid={hasError}
+    {...props}
+  />
+);
+
 export const FieldError = styled.p<{ $onDark?: boolean }>`
   margin: 0;
   font-size: 1.3rem;
@@ -110,7 +179,7 @@ export const FieldHint = styled.p<{ $onDark?: boolean }>`
   font-weight: 500;
   line-height: 1.5;
   color: ${({ theme, $onDark }) =>
-    $onDark ? theme.colors.concrete[300] : theme.colors.navy[500]};
+    $onDark ? theme.colors.concrete[200] : theme.colors.navy[500]};
 `;
 
 interface FormFieldProps extends React.ComponentPropsWithoutRef<"div"> {
@@ -121,6 +190,17 @@ interface FormFieldProps extends React.ComponentPropsWithoutRef<"div"> {
   error?: string;
   onDark?: boolean;
   children: React.ReactNode;
+}
+
+// The subset of a child input's props FormField reads and overrides when
+// cloning it (id/hasError/aria-*). @types/react 19 defaults ReactElement's
+// props generic to `unknown`, so this is needed to type-check `.props`
+// access and the cloneElement props object below without `any`.
+interface ClonedChildProps {
+  id?: string;
+  hasError?: boolean;
+  "aria-invalid"?: boolean;
+  "aria-describedby"?: string;
 }
 
 export const FormField = ({
@@ -134,18 +214,15 @@ export const FormField = ({
   ...props
 }: FormFieldProps) => {
   const fieldErrorId = `${id}-error`;
-  const child = React.isValidElement(children)
-    ? React.cloneElement(children as React.ReactElement, {
-        id: (children as React.ReactElement).props.id ?? id,
-        hasError:
-          Boolean(error) ||
-          Boolean((children as React.ReactElement).props.hasError),
+  const child = React.isValidElement<ClonedChildProps>(children)
+    ? React.cloneElement(children, {
+        id: children.props.id ?? id,
+        hasError: Boolean(error) || Boolean(children.props.hasError),
         "aria-invalid":
-          Boolean(error) ||
-          Boolean((children as React.ReactElement).props["aria-invalid"]),
+          Boolean(error) || Boolean(children.props["aria-invalid"]),
         "aria-describedby":
           [
-            (children as React.ReactElement).props["aria-describedby"],
+            children.props["aria-describedby"],
             error ? fieldErrorId : undefined,
           ]
             .filter(Boolean)

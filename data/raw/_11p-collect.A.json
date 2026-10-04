@@ -1,0 +1,70 @@
+{
+  "framing-fall-protection-residential": {
+    "status": "matched",
+    "raw_file": "osha-fall-protection-in-residential-construction-guidance.md",
+    "source_url": "https://www.osha.gov/residential-fall-protection/guidance",
+    "agency": "OSHA",
+    "suggested_trade": "framing",
+    "note": "OSHA guidance document, stage-by-stage residential framing fall protection (trusses, rafters, sheathing, walls, joists)"
+  },
+  "roof-truss-installation-and-bracing": {
+    "status": "matched",
+    "raw_file": "osha-reducing-falls-installing-roof-trusses.md",
+    "source_url": "https://www.osha.gov/sites/default/files/publications/reducing-falls-installing-roof-trusses-factsheet.pdf",
+    "agency": "OSHA",
+    "suggested_trade": "framing",
+    "note": "OSHA Fact Sheet FS-3477; truss restraint/bracing, spreaders, ground assembly, anchors"
+  },
+  "wall-panel-raising-framing-hazards": {
+    "status": "matched",
+    "raw_file": "osha-hazards-of-manually-lifting-balloon-framed-walls.md",
+    "source_url": "https://www.osha.gov/sites/default/files/publications/shib111705.pdf",
+    "agency": "OSHA",
+    "suggested_trade": "framing",
+    "note": "OSHA SHIB 11-17-2005; wall raising collapse, limited access zone, wall jacks, cranes/forklifts. Advisory bulletin, aimed at employers but jobsite-practical"
+  },
+  "steel-erection-fall-protection-connectors": {
+    "status": "matched",
+    "raw_file": "osha-steel-erection-etool-fall-protection.md",
+    "source_url": "https://www.osha.gov/etools/steel-erection/fall-protection",
+    "agency": "OSHA",
+    "suggested_trade": "steel-erection",
+    "note": "OSHA eTool page; 15/30 ft rules, connectors, controlled decking zone, case reports"
+  },
+  "steel-erection-hoisting-and-rigging": {
+    "status": "matched",
+    "raw_file": "osha-steel-erection-etool-hoisting-and-rigging.md",
+    "source_url": "https://www.osha.gov/etools/steel-erection/cranes",
+    "agency": "OSHA",
+    "suggested_trade": "steel-erection",
+    "note": "OSHA eTool page; crane inspection, working under loads, multiple-lift rigging, case reports"
+  },
+  "steel-erection-bolting-and-decking-hazards": {
+    "status": "matched",
+    "raw_file": "osha-steel-erection-etool-structural-stability-decking-bolting.md",
+    "source_url": "https://www.osha.gov/etools/steel-erection/structural-stability",
+    "agency": "OSHA",
+    "suggested_trade": "steel-erection",
+    "note": "OSHA eTool page; structural stability, wrench-tight bolting, metal decking bundles/holes/installation, anchor rods, joists. Long page (about 31 KB); structurer may split"
+  },
+  "concrete-masonry-wall-bracing": {
+    "status": "matched",
+    "raw_file": "osha-subpart-q-concrete-and-masonry-overview.md",
+    "source_url": "https://obis.osha.gov/Publications/Const_Res_Man/1926sub-q-overview.html",
+    "agency": "OSHA",
+    "suggested_trade": "concrete-formwork",
+    "note": "OSHA Construction Resource Manual Q&A; masonry limited access zone and wall bracing (Q3/Q4). Same page also covers rebar impalement (Q2) and formwork drawings tip, so it is the only source used for that topic and is not reused for rebar"
+  },
+  "rebar-impalement-protection": {
+    "status": "no-source",
+    "note": "Only worker-facing agency page found is the Subpart Q overview (already used for concrete-masonry-wall-bracing; can be re-assigned to rebar instead if preferred). Other hits are OSHA interpretation letters or regulation text."
+  },
+  "formwork-and-shoring-safety": {
+    "status": "no-source",
+    "note": "Only 29 CFR 1926.703 regulation text and interpretation letters on osha.gov; CPWR formwork item is a research key-findings card (not worker-facing); NY FACE formwork collapse report on stacks.cdc.gov could not be retrieved (access denied to scripted fetch)."
+  },
+  "concrete-pump-placement-safety": {
+    "status": "no-source",
+    "note": "No agency toolbox talk or fact sheet found; only OSHA interpretation letters (2010, 2013) and a 1987 NIOSH FACE electrocution report (stacks.cdc.gov, not retrievable). Good talks exist only on ACPA/commercial sites, which are disallowed."
+  }
+}

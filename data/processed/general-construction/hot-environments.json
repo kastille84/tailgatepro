@@ -1,0 +1,53 @@
+{
+  "id": "hot-environments",
+  "title": "Preventing Heat Illness in Hot Environments",
+  "primary_trade": "General Construction",
+  "trade_tags": [
+    "General Construction",
+    "Masonry"
+  ],
+  "osha_standards": [
+    "OSH Act Section 5(a)(1) General Duty Clause"
+  ],
+  "estimated_minutes": 5,
+  "summary": "Extreme heat causes heat stroke, heat exhaustion, heat cramps, and heat rash, and raises injury risk from sweat, fogged glasses, and dizziness. This talk covers water, shade, rest, and recognizing symptoms.",
+  "talking_points": [
+    "Your employer should train you on heat hazards and the plan to prevent heat illness.",
+    "Take frequent breaks in the shade or in air conditioning.",
+    "Drink water often. For moderate work under 2 hours, drink 1 cup (8 ounces) every 15 to 20 minutes. For several hours of sweating, add sports drinks. Avoid alcohol, caffeine, and sugary drinks.",
+    "Know heat stroke signs: confusion, slurred speech, seizures, hot dry skin or heavy sweating, passing out, and high body temperature.",
+    "Know heat exhaustion signs: headache, nausea, dizziness, weakness, irritability, thirst, heavy sweating, and low urine output.",
+    "If a coworker shows signs, call 911, move them to shade, remove extra clothing, cool them with water and ice, and fan them. Encourage small sips of water."
+  ],
+  "site_hazards_to_check": [
+    "No shaded or cooled rest area near the work",
+    "No cool drinking water within easy reach of the crew",
+    "New or returning workers not eased into the heat over several days",
+    "Direct sun, high humidity, or heavy PPE with no work/rest schedule",
+    "Hot surfaces, steam, or equipment that can burn on contact"
+  ],
+  "discussion_questions": [
+    "How much water should you drink per hour in today's heat, and where is it?",
+    "What is the difference between heat exhaustion and heat stroke signs?",
+    "What do we do first if a coworker gets confused or stops sweating?"
+  ],
+  "attribution": {
+    "source": "CPWR",
+    "publisher": "CPWR — The Center for Construction Research and Training",
+    "copyright": "© 2017 CPWR — The Center for Construction Research and Training. All rights reserved.",
+    "license": "free-use-with-attribution",
+    "source_url": "https://www.cpwr.com/wp-content/uploads/TT-Hot_Weather.pdf",
+    "notice": "Adapted from a CPWR/NIOSH Toolbox Talk, produced under NIOSH cooperative agreement OH 009762. Reproduced with attribution for jobsite safety training; not an endorsement by CPWR or NIOSH."
+  },
+  "audit": {
+    "status": "approved",
+    "audited_at": "2026-09-10T23:15:30Z",
+    "osha_accuracy_verified": true,
+    "flags": [
+      "LICENSING RESOLVED (2026-09-10): CPWR Toolbox Talk content is used under free-use-with-attribution. Permitted here because (1) the talk is one bundled feature of a subscription product and is never sold as a standalone paid product, (2) CPWR/NIOSH copyright markings and the no-endorsement notice are retained - held in this file's `attribution` object and appended to the rendered Markdown `content` by scripts/lib/talkRow.js `composeMarkdown` - and (3) no CPWR or NIOSH endorsement is claimed or implied (attribution.notice ends 'not an endorsement by CPWR or NIOSH'). No written CPWR redistribution permission is required; the prior LICENSING BLOCKER is cleared.",
+      "Attribution object verified: source 'CPWR', copyright '(c) 2017 CPWR', license 'free-use-with-attribution', source_url and publisher present, notice carries the no-endorsement clause.",
+      "OSHA authority correctly stated as the General Duty Clause - no specific federal heat standard as of the audit date (a rulemaking is in progress). Hydration guidance (~1 cup / 8 oz every 15-20 min; add electrolyte drinks for multi-hour sweating; avoid alcohol/caffeine), heat stroke vs. heat exhaustion sign lists, acclimatization for new/returning workers, and the first-aid steps (call 911, move to shade, cool aggressively) are technically accurate. No technical defects.",
+      "Non-blocking: Display obligation: docs/content-attribution.md records that TalkDetail (Phase 2c) and the generated PDF (Phase 5) must surface attribution.copyright + attribution.notice. Today the credit is rendered into the Markdown content body by the loader; the UI/PDF display path is tracked in docs/tasks.md."
+    ]
+  }
+}

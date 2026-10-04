@@ -1,0 +1,58 @@
+{
+  "id": "permit-required-confined-space-entry",
+  "title": "Permit-Required Confined Space Entry",
+  "primary_trade": "General Construction",
+  "trade_tags": [
+    "General Construction",
+    "Plumbing"
+  ],
+  "osha_standards": [
+    "29 CFR 1926 Subpart AA"
+  ],
+  "estimated_minutes": 5,
+  "summary": "A permit-required confined space is hard to enter or exit and has a hazard such as bad air, engulfment, or entrapment. Entry needs a written program, a signed permit, an attendant outside, and a rescue plan.",
+  "talking_points": [
+    "A permit space is large enough to enter, not made for continuous occupancy, has limited entry or exit, and has a serious hazard such as a hazardous atmosphere, engulfment, or a trapping shape.",
+    "Never enter a permit space without a permit signed by the entry supervisor and a written program in place.",
+    "Test the air before entry and monitor it during entry, in this order: oxygen, combustible gases or vapors, then toxic gases or vapors.",
+    "If hazardous conditions are detected during entry, leave the space immediately.",
+    "At least one attendant must stay outside for the whole entry. The attendant keeps count of entrants, keeps contact, and does no other duties.",
+    "Entrants wear a chest or full body harness with a retrieval line attached, and use the required PPE.",
+    "The attendant summons rescue. Untrained people must not attempt a rescue, and rescuers must be trained in first aid and CPR.",
+    "Exit right away if ordered to, if you see warning signs or symptoms of exposure, if a prohibited condition exists, or if an alarm goes off."
+  ],
+  "site_hazards_to_check": [
+    "Missing danger signs at permit space entrances",
+    "No posted permit, or permit not signed or already expired",
+    "No atmosphere test results, or testing not done in order (oxygen, combustibles, toxics)",
+    "No attendant stationed outside the space",
+    "No harness and retrieval line, or no ventilation, lighting, and communication equipment",
+    "No rescue service arranged, or no way to summon it",
+    "Unauthorized people near the entrance"
+  ],
+  "discussion_questions": [
+    "What makes this space a permit space, and what are its hazards?",
+    "Who is the attendant, and what are they never allowed to do?",
+    "When must an entrant leave the space immediately?"
+  ],
+  "attribution": {
+    "source": "OSHA",
+    "publisher": "Occupational Safety and Health Administration (OSHA)",
+    "copyright": "U.S. Government work — public domain.",
+    "license": "public-domain",
+    "source_url": "https://www.osha.gov/sites/default/files/publications/OSHA3138.pdf",
+    "source_ref": "TBT-099",
+    "notice": "Adapted from OSHA published material. Reproduced with attribution for jobsite safety training; not an endorsement by OSHA."
+  },
+  "audit": {
+    "status": "approved",
+    "audited_at": "2026-09-25T18:10:01Z",
+    "osha_accuracy_verified": true,
+    "flags": [
+      "Verified every point against OSHA 3138 (permit-required confined spaces): permit space definition, signed permit by entry supervisor, testing order oxygen/combustibles/toxics, leave immediately on hazardous conditions, attendant outside with no other duties, harness and retrieval line, rescue summoned by attendant, rescuers trained in first aid and CPR, exit triggers.",
+      "FIX: removed 29 CFR 1910.146. OSHA 3138 explicitly describes the general-industry standard; the construction equivalent is 29 CFR 1926 Subpart AA (1926.1200-1213), which exists and covers the same elements (permit, attendant, atmospheric testing, retrieval, rescue). 1926 Subpart AA retained as the mapping.",
+      "Non-blocking: source describes 1910.146 requirements; Subpart AA adds construction-specific duties not in this talk (competent person, continuous atmospheric monitoring, early-warning for engulfment, host/controlling contractor coordination). Foremen should treat this as an awareness talk, not a compliance program, and consult the site's written entry program.",
+      "Non-blocking: 'Never enter without a permit' is stated as absolute; correct for permit-required spaces (alternate procedures exist only under the standard's specific conditions)."
+    ]
+  }
+}

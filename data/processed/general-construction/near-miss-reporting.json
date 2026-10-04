@@ -1,0 +1,55 @@
+{
+  "id": "near-miss-reporting",
+  "title": "Near-Miss Reporting",
+  "primary_trade": "General Construction",
+  "trade_tags": [
+    "General Construction"
+  ],
+  "osha_standards": [
+    "OSH Act Section 5(a)(1) General Duty Clause"
+  ],
+  "estimated_minutes": 5,
+  "summary": "A close call, or near miss, is an incident that could have caused serious injury or illness but did not, often by sheer luck. OSHA encourages investigating every close call to find and fix root causes.",
+  "talking_points": [
+    "A close call (near miss) could have caused serious injury or illness but did not, often by sheer luck.",
+    "Report every close call so it can be investigated. OSHA strongly encourages investigating all incidents, including close calls. Practically all harmful incidents and close calls are preventable.",
+    "Incidents do not just happen. Most can be prevented by fixing shortcomings in how safety is managed.",
+    "Investigations look for root causes, not someone to blame. Root causes are the underlying reasons unsafe conditions exist or a rule was not followed.",
+    "If a rule was not followed, ask why. Was there production pressure, an out-of-date procedure, or not enough training?",
+    "Scene first: finish emergency response and make the area safe before investigating. Then preserve the scene with cones, tape, or guards so evidence is not moved.",
+    "Witnesses should be interviewed as promptly as possible. The sooner someone is interviewed, the more accurate the account.",
+    "Fix the root cause, not just the immediate cause. Eliminating immediate causes is like cutting weeds; eliminating root causes is pulling out the roots."
+  ],
+  "site_hazards_to_check": [
+    "Damaged or missing guards that were never repaired",
+    "Rules being skipped because of production pressure",
+    "Out-of-date procedures or gaps in training",
+    "Close-call locations left as they were with no follow-up",
+    "No clear way for workers to report a close call and who follows up"
+  ],
+  "discussion_questions": [
+    "What close call have we seen recently, and what was the root cause?",
+    "Why might someone hesitate to report a close call, and how do we fix that?",
+    "If a safety rule was not followed, what questions should we ask besides who did it?"
+  ],
+  "attribution": {
+    "source": "OSHA",
+    "publisher": "Occupational Safety and Health Administration (OSHA)",
+    "copyright": "U.S. Government work — public domain.",
+    "license": "public-domain",
+    "source_url": "https://www.osha.gov/sites/default/files/IncInvGuide4Empl_Dec2015.pdf",
+    "source_ref": "TBT-087",
+    "notice": "Adapted from OSHA published material. Reproduced with attribution for jobsite safety training; not an endorsement by OSHA."
+  },
+  "audit": {
+    "status": "approved",
+    "audited_at": "2026-09-25T18:06:17Z",
+    "osha_accuracy_verified": true,
+    "flags": [
+      "Verified in OSHA Incident Investigations guide (Dec 2015): sheer luck definition, practically all preventable, 'do not just happen', root cause vs blame, production pressure/out-of-date procedure/training questions, scene safe first then preserve with cones/tape/guards, prompt interviews, cutting weeds/pulling roots analogy.",
+      "FIX: 'Report every close call' was slightly beyond the source (source says investigate all incidents incl. close calls); reworded to say so.",
+      "Citation: OSH Act 5(a)(1) General Duty Clause is stated in the source; it is a statute not a 1926 section, acceptable because no construction standard governs incident investigation.",
+      "Non-blocking: content is employer/investigator oriented; foremen should adapt to how workers report on their site."
+    ]
+  }
+}

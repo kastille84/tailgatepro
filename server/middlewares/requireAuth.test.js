@@ -1,0 +1,148 @@
+// Plain CommonJS, no ESM `import` — this project's server code is CJS, and a
+// nested require() inside another CJS file (requireAuth.js -> supabaseClient.js)
+// only reliably shares Node's module cache with this test's own requires when
+// this file is loaded the same way (require, not import) as everything it
+// pulls in. Mixing `import` here with requireAuth.js's internal `require()`
+// produces two separate module instances and silently defeats any mocking.
+// `describe`/`it`/`expect`/`vi`/etc. come from Vitest's `globals: true`
+// (vitest.config.js) since `require("vitest")` itself isn't supported.
+const { supabase } = require("../utility/supabaseClient");
+const { requireAuth } = require("./requireAuth");
+
+// Spy once, at module scope — the shared `supabase` object's `.auth.getUser`
+// is looked up fresh at call time inside requireAuth.js, so reconfiguring the
+// same spy's return value per test (rather than repeated spyOn/restore
+// cycles) is simplest and avoids any re-binding surprises.
+const getUserSpy = vi.spyOn(supabase.auth, "getUser");
+
+describe("requireAuth", () => {
+  let req;
+  let res;
+  let next;
+
+  beforeEach(() => {
+    getUserSpy.mockReset();
+    req = { headers: {} };
+    res = {};
+    next = vi.fn();
+  });
+
+  it("should call next with a 401 AppError when no Authorization header is present", async () => {
+    // Arrange
+    // req.headers.authorization left unset
+
+    // Act
+    await requireAuth(req, res, next);
+
+    // Assert
+    expect(getUserSpy).not.toHaveBeenCalled();
+    expect(next).toHaveBeenCalledTimes(1);
+    const error = next.mock.calls[0][0];
+    expect(error.statusCode).toBe(401);
+    expect(error.message).toBe("Authentication required");
+  });
+
+  it("should call next with a 401 AppError when the header isn't a Bearer token", async () => {
+    // Arrange
+    req.headers.authorization = "Basic sometoken";
+
+    // Act
+    await requireAuth(req, res, next);
+
+    // Assert
+    expect(getUserSpy).not.toHaveBeenCalled();
+    const error = next.mock.calls[0][0];
+    expect(error.statusCode).toBe(401);
+  });
+
+  it("should call next with a 401 AppError when Supabase rejects the token", async () => {
+    // Arrange
+    req.headers.authorization = "Bearer bad-token";
+    getUserSpy.mockResolvedValue({
+      data: { user: null },
+      error: new Error("invalid token"),
+    });
+
+    // Act
+    await requireAuth(req, res, next);
+
+    // Assert
+    expect(getUserSpy).toHaveBeenCalledWith("bad-token");
+    const error = next.mock.calls[0][0];
+    expect(error.statusCode).toBe(401);
+    expect(error.message).toBe("Invalid or expired session");
+  });
+
+  it("should call next with a 502 AppError carrying the original cause when Supabase throws", async () => {
+    // Arrange
+    req.headers.authorization = "Bearer good-token";
+    const networkError = new Error("network down");
+    getUserSpy.mockRejectedValue(networkError);
+
+    // Act
+    await requireAuth(req, res, next);
+
+    // Assert
+    expect(next).toHaveBeenCalledTimes(1);
+    const error = next.mock.calls[0][0];
+    expect(error.statusCode).toBe(502);
+    expect(error.cause).toBe(networkError);
+  });
+
+  it("should attach req.userId, req.userMetadata and req.userEmail and call next() with no error when the token is valid", async () => {
+    // Arrange
+    req.headers.authorization = "Bearer good-token";
+    const userMetadata = {
+      name: "Alex Builder",
+      companyName: "Rivera Electric",
+      companyType: "subcontractor",
+    };
+    getUserSpy.mockResolvedValue({
+      data: {
+        user: { id: "user-123", email: "alex@example.com", user_metadata: userMetadata },
+      },
+      error: null,
+    });
+
+    // Act
+    await requireAuth(req, res, next);
+
+    // Assert
+    expect(req.userId).toBe("user-123");
+    expect(req.userMetadata).toEqual(userMetadata);
+    expect(req.userEmail).toBe("alex@example.com");
+    expect(next).toHaveBeenCalledWith();
+  });
+
+  it("should default req.userMetadata to an empty object when the user has no user_metadata", async () => {
+    // Arrange
+    req.headers.authorization = "Bearer good-token";
+    getUserSpy.mockResolvedValue({
+      data: { user: { id: "user-123" } },
+      error: null,
+    });
+
+    // Act
+    await requireAuth(req, res, next);
+
+    // Assert
+    expect(req.userMetadata).toEqual({});
+    expect(next).toHaveBeenCalledWith();
+  });
+
+  it("should leave req.userEmail undefined when the auth user has no email on file", async () => {
+    // Arrange
+    req.headers.authorization = "Bearer good-token";
+    getUserSpy.mockResolvedValue({
+      data: { user: { id: "user-123" } },
+      error: null,
+    });
+
+    // Act
+    await requireAuth(req, res, next);
+
+    // Assert
+    expect(req.userEmail).toBeUndefined();
+    expect(next).toHaveBeenCalledWith();
+  });
+});

@@ -27,47 +27,47 @@ interface CompareRow {
 const COMPARE_ROWS: CompareRow[] = [
   {
     label: "Getting started",
-    us: "Open a URL or scan a QR code — nothing to install",
+    us: "Open a link — nothing to install",
     them: "Native App Store download on every phone",
   },
   {
     label: "Effort per talk",
     us: "One short routine, the same every shift",
-    them: "2–5 minutes across multi-tier forms",
+    them: "Often 2–5 minutes across multi-step forms",
   },
   {
     label: "Works offline",
-    us: "Offline-first PWA; auto-syncs on signal",
+    us: "Works with no signal; sends automatically when you're back online",
     them: "Most need native installs; web tools fail offline",
   },
   {
     label: "Topic library",
-    us: "500+ OSHA talks + AI topic generator",
-    them: "300–600 static topics or manual upload",
+    us: "OSHA talk library plus your own custom talks",
+    them: "Typically a fixed topic list or manual upload",
   },
   {
     label: "Compliance PDF",
-    us: "Tamper-evident, GPS-verified, branded seal",
+    us: "Signed, timestamped PDF locked once the talk is completed",
     them: "Basic PDF with a timestamp and signature",
   },
   {
-    label: "Audit export",
-    us: "1-click OSHA Defense Bundle (indexed ZIP)",
+    label: "OSHA inspection records",
+    us: "1-click OSHA Defense Bundle — every record in one download",
     them: "Manual cloud search, file by file",
   },
   {
     label: "Pricing",
     us: "Flat rate per site or portfolio",
-    them: "Per-user seat fees (~$10–$50/user/mo)",
+    them: "Often charge per user, commonly ~$10–$50/user/mo",
   },
   {
     label: "Rollout",
-    us: "30-second field start",
-    them: "1–4 weeks for enterprise rollout",
+    us: "Open a link and start — no rollout",
+    them: "Often 1–4 weeks for enterprise rollout",
   },
   {
     label: "Languages",
-    us: "Text + AI audio in 10+ languages",
+    us: "Translate custom talks; read aloud in your device's languages",
     them: "Static English/Spanish text",
   },
 ];
@@ -80,7 +80,7 @@ export const ComparisonTable = () => (
           Built for the field, not the office
         </StyledSectionTitle>
         <StyledSectionLede>
-          How the toolbox-talk PWA compares to the native safety apps crews
+          How TailgatePro compares to the downloadable safety apps crews
           already avoid.
         </StyledSectionLede>
       </StyledSectionHead>

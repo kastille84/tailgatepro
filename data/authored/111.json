@@ -1,0 +1,57 @@
+{
+  "n": "111",
+  "title": "Flammable Liquid Storage",
+  "primary_trade": "General Construction",
+  "trade_tags": [
+    "General Construction",
+    "Plumbing",
+    "Carpentry"
+  ],
+  "osha_standards": [
+    "29 CFR 1926.152",
+    "29 CFR 1926.150"
+  ],
+  "source_url": "https://www.osha.gov/laws-regs/regulations/standardnumber/1926/1926.152",
+  "source_agency": "OSHA",
+  "source_checked": [
+    "https://www.osha.gov/laws-regs/regulations/standardnumber/1926/1926.152",
+    "https://www.osha.gov/laws-regs/regulations/standardnumber/1926/1926.150"
+  ],
+  "basis": "29 CFR 1926.152 (Flammable liquids) and 29 CFR 1926.150(c)(1)(vi)",
+  "summary": "Gasoline, solvents and other flammable liquids ignite easily, so how much you keep, where, and in what container all matter. OSHA sets limits for containers, cabinets, outside storage, transfer and use.",
+  "talking_points": [
+    "Use only approved containers and portable tanks. Use approved safety cans or DOT-approved containers for quantities of 5 gallons or less (29 CFR 1926.152(a)).",
+    "Do not store more than 25 gallons of flammable liquids in a room outside an approved storage cabinet (1926.152(b)(1)).",
+    "A storage cabinet may hold no more than 60 gallons of Category 1, 2 or 3 liquids or 120 gallons of Category 4 liquids, and no more than three cabinets may be in one storage area (1926.152(b)(3)).",
+    "Label cabinets in conspicuous lettering: \"Flammable-Keep Away from Open Flames\" (1926.152(b)(2)(iii)).",
+    "Outside, do not pile more than 1,100 gallons of containers (60 gallons or less each) in any one pile or area. Keep piles at least 5 feet apart and at least 20 feet from a building (1926.152(c)(1)), and keep a 12-foot-wide access way for fire apparatus within 200 feet of each pile (1926.152(c)(2)).",
+    "When you transfer Category 1, 2 or 3 liquids from one container to another, the containers must be electrically interconnected (bonded) (1926.152(e)(2)).",
+    "Keep Category 1, 2 or 3 liquids in closed containers when not in use, clean up leaks and spills promptly and safely, and use them only where there are no open flames or other ignition sources within 50 feet, unless conditions call for more (1926.152(f)).",
+    "Have a fire extinguisher rated 20-B or higher outside, and within 10 feet of the door of, a room used to store more than 60 gallons (1926.152(d)(1)). Keep a 10B extinguisher within 50 feet of where more than 5 gallons of flammable or combustible liquid is used (1926.150(c)(1)(vi))."
+  ],
+  "site_hazards_to_check": [
+    "Flammable liquids kept in unapproved or unlabeled containers",
+    "More than 25 gallons stored outside a cabinet",
+    "Cabinet over its limit or not labeled",
+    "Storage piles closer than 20 feet to a building",
+    "Transfer between containers with no bonding",
+    "Open flame, welding or smoking within 50 feet of use",
+    "No extinguisher near the storage or use area"
+  ],
+  "discussion_questions": [
+    "How much flammable liquid do we have on site, and where is it stored?",
+    "How do we bond containers when we pour fuel or solvent?",
+    "Where is the nearest extinguisher to the storage area, and what is its rating?"
+  ],
+  "audit": {
+    "status": "approved",
+    "audited_at": "2026-09-25T20:37:49Z",
+    "osha_accuracy_verified": true,
+    "flags": [
+      "Verified 1926.152(a)(1),(b)(1),(b)(2)(iii),(b)(3),(c)(1),(c)(2),(d)(1),(e)(2),(f)(1)-(f)(3) and 1926.150(c)(1)(vi) verbatim on osha.gov.",
+      "Fixed (c): added the 60-gallon-per-container condition and the 200-foot scope of the 12-foot access way in (c)(2); numbers otherwise matched.",
+      "(f)(3) 50-foot clearance correctly qualified with 'unless conditions call for more'.",
+      "US English; no unsupported claims."
+    ]
+  }
+}

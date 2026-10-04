@@ -1,0 +1,57 @@
+{
+  "id": "chemical-safety",
+  "title": "Chemical Safety",
+  "primary_trade": "General Construction",
+  "trade_tags": [
+    "General Construction"
+  ],
+  "osha_standards": [
+    "29 CFR 1926.59",
+    "29 CFR 1910.1200"
+  ],
+  "estimated_minutes": 5,
+  "summary": "Every hazardous chemical must come with a Safety Data Sheet in a standard 16-section format. Workers can use it to learn the hazards, protective measures, and emergency steps for the chemicals they handle.",
+  "talking_points": [
+    "The Hazard Communication Standard requires manufacturers, distributors, or importers to provide a Safety Data Sheet (SDS) for each hazardous chemical.",
+    "Every SDS uses the same 16-section format, so you can find information quickly.",
+    "Sections 1 to 8 give the quick-use information: identification, hazards, ingredients, first aid, fire-fighting, spill response, handling and storage, and exposure controls and PPE.",
+    "Section 2 lists the hazard class, signal word, hazard statements, pictograms, and precautionary statements.",
+    "Section 4 gives first-aid steps by route of exposure: inhalation, skin and eye contact, and ingestion.",
+    "Section 6 covers spills and leaks, including protective equipment and cleanup. Section 7 covers safe handling and storage, including incompatible chemicals.",
+    "Section 8 lists exposure limits, engineering controls such as local exhaust ventilation, and the PPE to wear, such as the right glove material.",
+    "Read the SDS before you use a new chemical (good practice). Section 7 may include hygiene rules for the chemical, such as no eating, drinking, or smoking in work areas."
+  ],
+  "site_hazards_to_check": [
+    "Chemicals on site with no SDS available",
+    "SDSs kept where workers cannot get to them quickly",
+    "Containers with missing or unreadable labels",
+    "Incompatible chemicals stored together",
+    "Work areas without the ventilation or PPE the SDS calls for",
+    "Eating, drinking, or smoking in chemical work areas where the SDS or site rules prohibit it"
+  ],
+  "discussion_questions": [
+    "Where do we keep the SDSs for the chemicals on this job?",
+    "Which SDS section tells you what PPE to wear, and which tells you what to do in a spill?",
+    "What is the first-aid step if this chemical gets in your eyes?"
+  ],
+  "attribution": {
+    "source": "OSHA",
+    "publisher": "Occupational Safety and Health Administration (OSHA)",
+    "copyright": "U.S. Government work — public domain.",
+    "license": "public-domain",
+    "source_url": "https://www.osha.gov/sites/default/files/publications/OSHA3514.pdf",
+    "source_ref": "TBT-107",
+    "notice": "Adapted from OSHA published material. Reproduced with attribution for jobsite safety training; not an endorsement by OSHA."
+  },
+  "audit": {
+    "status": "approved",
+    "audited_at": "2026-09-25T18:10:37Z",
+    "osha_accuracy_verified": true,
+    "flags": [
+      "Verified against OSHA 3514 (Hazard Communication: Safety Data Sheets brief): 16-section format, description of Sections 1-8, Section 2 label elements, Section 4 route-of-exposure first aid, Section 6/7/8 contents (incompatibles, local exhaust ventilation, glove material) all in source.",
+      "FIX: original last point stated 'Eating, drinking, and smoking in work areas is prohibited where chemicals are handled' as a general rule and 'Read the SDS before you use a new chemical' as if sourced. The source only gives eating/drinking/smoking as an example of hygiene guidance an SDS may contain in Section 7. Reworded accordingly and labelled the read-before-use point as good practice; matching hazard item softened.",
+      "Citations: 29 CFR 1926.59 exists and is the construction Hazard Communication section (it adopts 1910.1200 for construction); 1910.1200 is the text the source cites and applies to construction through 1926.59. Both accurate. Not in the source: 1926.59 (structurer-added, verified correct).",
+      "Non-blocking: point 1 says the standard puts the duty on manufacturers/distributors/importers to provide the SDS; employer duty to keep SDSs accessible is in TBT-110."
+    ]
+  }
+}

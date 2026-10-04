@@ -1,0 +1,55 @@
+{
+  "id": "temporary-and-staffing-agency-workers",
+  "title": "Temporary and Staffing Agency Workers",
+  "primary_trade": "General Construction",
+  "trade_tags": [
+    "General Construction"
+  ],
+  "osha_standards": [
+    "29 CFR 1926.503",
+    "29 CFR 1904.35(b)"
+  ],
+  "estimated_minutes": 5,
+  "summary": "Temporary workers have the same OSHA protections as everyone else. The staffing agency and the host employer share the duty to train them, and training must be done before work starts and in a language the worker understands.",
+  "talking_points": [
+    "Temporary workers are entitled to the same OSHA protections as all other covered workers.",
+    "The staffing agency and the host employer share responsibility for training. Training must be done before the worker starts on a project and in a language and vocabulary the worker understands.",
+    "In most cases, the staffing agency gives generic safety and health training. The host employer gives site-specific training, because it knows the hazards of its tasks, equipment, and site.",
+    "The goal is that workers know how to do their work safely, can identify hazards, and understand control and protective measures.",
+    "One example: temporary laborers were put on a roof 13 feet above the ground with no fall protection or fall protection training. The host employer had to provide that training under 29 CFR 1926.503.",
+    "The staffing agency must have a reasonable basis to believe the host's training covers the hazards. If not, it should tell the host and help fix it, do the training, or pull its workers.",
+    "Temporary workers must be trained on how to report work-related injuries and illnesses. No employer should have policies that discourage reporting injuries, illnesses, or hazards.",
+    "Workers have the right to raise safety concerns and report injuries without retaliation. Call OSHA at 1-800-321-OSHA (6742) with questions."
+  ],
+  "site_hazards_to_check": [
+    "Temporary workers given tasks that were not covered in their training, such as roof work with no fall protection training",
+    "No record that site-specific training was done before work began",
+    "Workers who do not understand the training language",
+    "No clear way for temporary workers to report injuries, illnesses, or hazards",
+    "Host employer and staffing agency have not agreed who does each part of the training"
+  ],
+  "discussion_questions": [
+    "What site-specific hazards should every new or temporary worker hear about before starting?",
+    "Who trains temporary workers here, and how do we know it was completed?",
+    "How does a temporary worker report an injury or a hazard on this site?"
+  ],
+  "attribution": {
+    "source": "OSHA",
+    "publisher": "Occupational Safety and Health Administration (OSHA)",
+    "copyright": "U.S. Government work — public domain.",
+    "license": "public-domain",
+    "source_url": "https://www.osha.gov/sites/default/files/publications/OSHA3859.pdf",
+    "source_ref": "TBT-154",
+    "notice": "Adapted from an OSHA publication (U.S. Government work). Reproduced with attribution for jobsite safety training; not an endorsement by OSHA."
+  },
+  "audit": {
+    "status": "approved",
+    "audited_at": "2026-09-25T18:10:19Z",
+    "osha_accuracy_verified": true,
+    "flags": [
+      "Content is faithful to OSHA TWI Bulletin No. 4 (OSHA 3859): shared training duty, before work starts and in a language the worker understands, host = site-specific / agency = generic, 13 ft roof example, reporting injuries, no retaliation, 1-800-321-OSHA.",
+      "Citations verified: 29 CFR 1926.503 (construction fall protection training; matches the roof scenario) and 29 CFR 1904.35(b) (recordkeeping employee involvement; Part 1904 applies to construction) are both cited in the source and correct.",
+      "Fit for a field talk: audience is largely the foreman/host employer and temp workers, so the employer-responsibility points are actionable for a foreman running the talk. Non-blocking: the bulletin is advisory (creates no new legal obligations); wording such as staffing agency must have a reasonable basis reflects OSHA guidance, not a regulation. Public domain, osha.gov, notice preserved. No UK wording."
+    ]
+  }
+}

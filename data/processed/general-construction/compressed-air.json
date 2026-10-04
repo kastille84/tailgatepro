@@ -1,0 +1,57 @@
+{
+  "id": "compressed-air",
+  "title": "Compressed Air",
+  "primary_trade": "General Construction",
+  "trade_tags": [
+    "General Construction",
+    "Carpentry"
+  ],
+  "osha_standards": [
+    "29 CFR 1926.302"
+  ],
+  "estimated_minutes": 5,
+  "summary": "Air hoses can whip, tools can disconnect, and compressed air can throw debris. OSHA's rules for pneumatic tools cover securing tools, safety clips, muzzle devices and using air for cleaning.",
+  "talking_points": [
+    "Secure a pneumatic tool to the hose or whip by a positive means so it cannot accidentally disconnect (29 CFR 1926.302(b)(1)).",
+    "Install and maintain safety clips or retainers on pneumatic impact tools so attachments cannot be shot out (1926.302(b)(2)).",
+    "Pneumatically driven nailers, staplers and similar equipment with automatic fastener feed that operate at more than 100 psi at the tool need a safety device on the muzzle to keep the tool from ejecting fasteners unless the muzzle is in contact with the work surface (1926.302(b)(3)).",
+    "Do not use compressed air for cleaning unless it is reduced to less than 30 psi, and then only with effective chip guarding and PPE (1926.302(b)(4)).",
+    "Hoses exceeding 1/2-inch inside diameter need a safety device at the source of supply or branch line to reduce pressure in case of hose failure (1926.302(b)(7)).",
+    "Never use an electric cord or an air hose to hoist or lower a tool (1926.302(a)(2), (b)(6)).",
+    "Good practice: never point an air hose or air-powered tool at yourself or another person."
+  ],
+  "site_hazards_to_check": [
+    "Tool attached to the hose with no positive lock",
+    "Missing safety clips or retainers on impact tools",
+    "Nailer or stapler running above 100 psi with no muzzle safety device",
+    "Air used for cleaning at full line pressure",
+    "Hose over 1/2-inch inside diameter with no pressure-reducing device at the supply",
+    "Damaged, kinked or frayed hose"
+  ],
+  "discussion_questions": [
+    "How do we keep a pneumatic tool from disconnecting from its hose?",
+    "What do we use to clean dust off a surface instead of full-pressure air?",
+    "Who checks the hoses and fittings before we start work?"
+  ],
+  "attribution": {
+    "source": "TailgatePro",
+    "publisher": "TailgatePro",
+    "copyright": "Original TailgatePro content, written from 29 CFR 1926.302(b) (pneumatic power tools). Regulation and agency text is U.S. Government work in the public domain; the wording here is TailgatePro's own.",
+    "license": "original-work",
+    "source_url": "https://www.osha.gov/laws-regs/regulations/standardnumber/1926/1926.302",
+    "source_ref": "TBT-105",
+    "notice": "Written from 29 CFR 1926.302(b) (pneumatic power tools). General guidance only; follow your company safety program and site-specific requirements. Not an endorsement by OSHA."
+  },
+  "audit": {
+    "status": "approved",
+    "audited_at": "2026-09-25T20:37:49Z",
+    "osha_accuracy_verified": true,
+    "flags": [
+      "Verified 1926.302(a)(2),(b)(1)-(b)(7) verbatim on osha.gov.",
+      "Fixed (b)(3): was 'tools that operate at more than 100 psi'; rule applies to nailers, staplers and similar equipment with automatic fastener feed. Hazard list updated.",
+      "Fixed (b)(7): 'Hoses longer than 1/2-inch' -> hoses exceeding 1/2-inch inside diameter; added 'or branch line'.",
+      "Added (b)(6) to the hoist/lower point (hoses may not be used to lower or hoist tools).",
+      "Processed general-construction/compressed-air.json (TBT-105) is needs_revision, so this is not a duplicate of an approved talk; approved defective-equipment.json is a different topic."
+    ]
+  }
+}

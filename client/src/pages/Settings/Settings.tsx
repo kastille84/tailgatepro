@@ -1,0 +1,172 @@
+import { Link } from "react-router-dom";
+
+import { useAuth } from "../../context/auth";
+import { SUB_PLANS, GC_PLANS } from "../../data/plans";
+import { useBillingPortal } from "../../hooks/useBillingPortal";
+import { useBillingStatus } from "../../hooks/useBillingStatus";
+import { useCheckoutReturn } from "../../hooks/useCheckoutReturn";
+import { useCompanyLogo } from "../../hooks/useCompanyLogo";
+import { useCurrentUser } from "../../hooks/useCurrentUser";
+import { useJoinCode } from "../../hooks/useJoinCode";
+import { useUploadCompanyLogo } from "../../hooks/useUploadCompanyLogo";
+import { Footer } from "../../ui_comps/footer";
+import {
+  BillingSection,
+  InviteTeammateForm,
+  JoinCodeCard,
+  LogoUpload,
+  SmsOptInCard,
+} from "../../features/company-settings";
+import {
+  StyledSection as StyledLogoSection,
+  StyledSectionTitle,
+  StyledUpsell,
+  StyledUpsellBody,
+  StyledUpsellTitle,
+} from "../../features/company-settings/styles";
+import {
+  StyledContainer,
+  StyledEyebrow,
+  StyledHeadline,
+  StyledHero,
+  StyledHeroInner,
+  StyledLede,
+  StyledPage,
+  StyledSection,
+  StyledStatus,
+} from "./Settings.styles";
+
+/** The authenticated account/company Settings page, reached from the Navbar.
+ *  Renders for every signed-in user; only the logo-upload control within it
+ *  is tier-gated (Trade Pro+), so the page itself stays a general home for
+ *  future non-branding settings. Re-checks the session defensively even
+ *  though it sits behind `RequireAuth`, matching `Projects.tsx`. */
+export const Settings = () => {
+  const { user, loading } = useAuth();
+  const { role, hasBrandingAccess, isGc, isManagerRole, plan } =
+    useCurrentUser();
+  const canInvite = role === "admin" || role === "safety_manager";
+  const planName =
+    [...SUB_PLANS, ...GC_PLANS].find((candidate) => candidate.id === plan)
+      ?.name ?? null;
+  const {
+    billing,
+    isLoading: isBillingLoading,
+    isError: isBillingError,
+  } = useBillingStatus();
+  const { openPortal, isOpening } = useBillingPortal();
+  // Handles ?checkout=success|cancel after Stripe redirects back here.
+  const { isConfirming } = useCheckoutReturn();
+  const {
+    joinCode,
+    isLoading: isJoinCodeLoading,
+    isError: isJoinCodeError,
+  } = useJoinCode();
+  const { logoUrl } = useCompanyLogo();
+  const { uploadLogo, isUploading } = useUploadCompanyLogo();
+
+  if (loading) {
+    return (
+      <StyledPage>
+        <StyledStatus role="status" aria-live="polite">
+          Loading…
+        </StyledStatus>
+      </StyledPage>
+    );
+  }
+
+  if (!user) {
+    return (
+      <StyledPage>
+        <StyledStatus role="status">Access denied. Please log in.</StyledStatus>
+      </StyledPage>
+    );
+  }
+
+  return (
+    <StyledPage>
+      <StyledHero aria-labelledby="settings-hero-heading">
+        <StyledHeroInner>
+          <StyledEyebrow>Settings</StyledEyebrow>
+          <StyledHeadline id="settings-hero-heading">
+            Company settings
+          </StyledHeadline>
+          <StyledLede>Manage how your company shows up on the job.</StyledLede>
+        </StyledHeroInner>
+      </StyledHero>
+
+      <StyledSection>
+        <StyledContainer>
+          <StyledLogoSection>
+            <StyledSectionTitle>Company logo</StyledSectionTitle>
+            {hasBrandingAccess ? (
+              <LogoUpload
+                currentLogoUrl={logoUrl}
+                isUploading={isUploading}
+                onUpload={uploadLogo}
+              />
+            ) : (
+              <StyledUpsell>
+                <StyledUpsellTitle>
+                  {isGc
+                    ? "Custom branding is a GC Site Pro feature"
+                    : "Custom branding is a Trade Pro feature"}
+                </StyledUpsellTitle>
+                <StyledUpsellBody>
+                  Upload your company logo and remove the free-plan watermark
+                  from every generated PDF report —{" "}
+                  <Link to="/pricing">
+                    upgrade to {isGc ? "GC Site Pro" : "Trade Pro"}
+                  </Link>{" "}
+                  to unlock it.
+                </StyledUpsellBody>
+              </StyledUpsell>
+            )}
+          </StyledLogoSection>
+          {isManagerRole && (
+            <StyledLogoSection>
+              <hr />
+              <StyledSectionTitle>Billing</StyledSectionTitle>
+              <BillingSection
+                planName={planName}
+                billing={billing}
+                isLoading={isBillingLoading}
+                isError={isBillingError}
+                isConfirming={isConfirming}
+                isOpening={isOpening}
+                onManage={() => openPortal()}
+              />
+            </StyledLogoSection>
+          )}
+          {!isGc && (
+            <StyledLogoSection>
+              <hr />
+              <StyledSectionTitle>Text reminders</StyledSectionTitle>
+              <SmsOptInCard />
+            </StyledLogoSection>
+          )}
+          {isGc && (
+            <StyledLogoSection>
+              <hr />
+              <StyledSectionTitle>Subcontractor join code</StyledSectionTitle>
+              <JoinCodeCard
+                joinCode={joinCode}
+                isLoading={isJoinCodeLoading}
+                isError={isJoinCodeError}
+              />
+            </StyledLogoSection>
+          )}
+          {canInvite && (
+            <StyledLogoSection>
+              <hr />
+              <StyledSectionTitle>Invite a teammate</StyledSectionTitle>
+              <InviteTeammateForm />
+            </StyledLogoSection>
+          )}
+        </StyledContainer>
+      </StyledSection>
+
+      <Footer />
+    </StyledPage>
+  );
+};
