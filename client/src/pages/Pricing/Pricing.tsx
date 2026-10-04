@@ -135,7 +135,7 @@ export const Pricing = () => {
               onChange={setBilling}
               ariaLabel="Choose a billing period"
             />
-            <StyledSaveHint>Annual saves 20%</StyledSaveHint>
+            <StyledSaveHint>Annual = 2 months free</StyledSaveHint>
           </StyledControls>
 
           <StyledPlanGrid>

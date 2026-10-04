@@ -148,11 +148,11 @@ describe("Landing", () => {
     ).toBeTruthy();
   });
 
-  it("tags the unbuilt GC bullets Coming soon and leaves built ones (incl. SMS nudges) untagged", () => {
+  it("leaves every shipped GC bullet (incl. Defense Bundle and SMS nudges) untagged", () => {
     renderLanding();
 
     const defenseBundle = screen.getByText(/1-click OSHA Defense Bundle — an/i);
-    expect(within(defenseBundle).getByText("Coming soon")).toBeTruthy();
+    expect(within(defenseBundle).queryByText("Coming soon")).toBeNull();
 
     const sms = screen.getByText(/Auto-SMS nudges non-compliant foremen/i);
     expect(within(sms).queryByText("Coming soon")).toBeNull();

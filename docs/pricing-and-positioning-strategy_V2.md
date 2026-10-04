@@ -80,7 +80,7 @@ The platform operates on a **Dual-Audience Freemium Model** designed to drive bo
 
 Subcontractors need affordable plans focused on field speed, professional branding, and automated distribution to GCs.
 
-| Plan | Monthly Price | Annual Price (20% Off) | Core Target | Key Included Capabilities |
+| Plan | Monthly Price | Annual Price (2 Months Free) | Core Target | Key Included Capabilities |
 | :--- | :--- | :--- | :--- | :--- |
 | **Trade Free** | **$0** / mo | **$0** / yr | Solo Foremen / Small Crews | • 1 Active Foreman / Supervisor<br>• Full offline PWA capabilities<br>• 30 core OSHA talk templates<br>• Digital signatures & photo proof<br>• Auto-email PDF exports to GCs<br>• *Limits:* 30-day in-app history lockout; app watermark |
 | **Trade Pro** *(Recommended)* | **$29** / mo | **$290** / yr ($24/mo) | Growing Specialty Subs (2–8 Foremen) | • **Up to 8 Foremen** under 1 account<br>• **5-Year Legal Archive** (OSHA audit protection)<br>• **1-Click OSHA Defense Bundle:** download every log as one indexed ZIP<br>• **Custom Branding:** Upload logo, remove watermark<br>• **500+ OSHA Library + AI Talk Builder** (10 AI drafts/mo)<br>• **AI Multi-Language Audio Playback** (10+ languages) |
@@ -92,7 +92,7 @@ Subcontractors need affordable plans focused on field speed, professional brandi
 
 General Contractors pay for site-wide compliance tracking, automated enforcement, multi-site scale, and corporate safety policy distribution.
 
-| Plan | Monthly Price | Annual Price (20% Off) | Core Target | Key Included Capabilities |
+| Plan | Monthly Price | Annual Price (2 Months Free) | Core Target | Key Included Capabilities |
 | :--- | :--- | :--- | :--- | :--- |
 | **GC Free Portal** | **$0** / mo | **$0** / yr | GCs receiving sub safety PDFs | • **1 Active Jobsite**<br>• Dashboard inbox to view incoming sub PDFs<br>• Basic sub roster overview<br>• *Limits:* 1 sub unlocked; others blurred |
 | **GC Site Pro** | **$149** / site / mo | **$1,490** / site / yr | Single-Site GCs or testing the platform | • **SPONSOR UNLIMITED SUBCONTRACTORS FOR FREE** (on 1 site)<br>• **Automated SMS Nudges** (7:00 AM Monday alerts for 1 site)<br>• **Procore & Autodesk ACC Sync** (Single project folder)<br>• **1-Click OSHA Defense Bundle (ZIP)** for assigned site |

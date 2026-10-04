@@ -32,7 +32,7 @@ export const SUB_PLANS: Plan[] = [
     name: "Trade Pro",
     target: "Growing specialty subs (2–8 foremen)",
     price: { monthly: "$29", annual: "$290" },
-    annualSub: "$24/mo billed annually — save 20%",
+    annualSub: "$24/mo billed annually — 2 months free",
     featured: true,
     features: [
       "Up to 8 foremen on one account",
@@ -44,16 +44,13 @@ export const SUB_PLANS: Plan[] = [
       "Expanded OSHA talk library",
       "AI Talk Builder — 10 AI-drafted talks a month",
     ],
-    comingSoon: [
-      "Expanded OSHA talk library",
-    ],
   },
   {
     id: "trade-enterprise",
     name: "Trade Enterprise",
     target: "Large subcontractors (9+ foremen)",
     price: { monthly: "$79", annual: "$790" },
-    annualSub: "$65/mo billed annually — save 20%",
+    annualSub: "$65/mo billed annually — 2 months free",
     features: [
       "Unlimited foremen & crews",
       "Procore & JobTread document sync",
@@ -81,7 +78,7 @@ export const GC_PLANS: Plan[] = [
     target: "Single-site GCs or testing the platform",
     price: { monthly: "$149", annual: "$1,490" },
     unit: "/site",
-    annualSub: "$1,490 / site billed annually — save 20%",
+    annualSub: "$1,490 / site billed annually — 2 months free",
     features: [
       "Sponsor unlimited subcontractors on one site",
       "Automated SMS nudges — 7:00 AM every Monday (single site)",
@@ -94,7 +91,7 @@ export const GC_PLANS: Plan[] = [
     name: "GC Portfolio",
     target: "Regional & mid-market GCs running 4+ active projects",
     price: { monthly: "$499+", annual: "$4,990+" },
-    annualSub: "$4,990/yr up to 10 sites · $7,990/yr unlimited — save 20%",
+    annualSub: "$4,990/yr up to 10 sites · $7,990/yr unlimited — 2 months free",
     featured: true,
     features: [
       "$499/mo up to 10 sites · $799/mo unlimited",

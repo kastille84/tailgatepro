@@ -3092,6 +3092,7 @@ Stripe-hosted Checkout (redirect), not embedded. Design doc: `docs/billing-desig
   - [x] Test mode, `stripe listen`: company plan flips `companies.tier`; Site Pro on 2 jobsites then Portfolio cancels both with a credit; cancel Portfolio drops the sites to free (closes the open manual items in 12h and 12i)
   - [x] Run the migration block from `billing-design.md` -> "Live-DB migration" on the production Supabase DB
   - [x] Live Dashboard: 5 products / 10 prices, live Customer Portal; set the 10 `STRIPE_PRICE_*_PROD` vars on the host
+- [x] 12k. Pricing copy fixes: annual discount copy said "save 20%" but annual = 10x monthly (2 months free, 16.7%), so `plans.ts`, `Pricing.tsx`, `SiteProCheckoutModal.tsx` and the strategy doc now say "2 months free" (prices and Stripe untouched); "Coming soon" tag dropped from Trade Pro's "Expanded OSHA talk library" (`comingSoon` array removed from `plans.ts`; `pricing-promise-gaps.md` row updated; more talks are added periodically)
 - [ ] 12j. Launch day (blocked on the deployed API domain): **register the live webhook endpoint in the Stripe Dashboard** (`https://<api-domain>/webhook/stripe`, 5 events) and put its `whsec_` in `STRIPE_WEBHOOK_SECRET_PROD`; live secret key in `STRIPE_SECRET_KEY_PROD`; `NODE_ENV=production`; Dashboard test event (200 + `stripe_events` row); one real purchase (company plan and a Site Pro jobsite), then cancel and refund; drop the "not yet exercised against live Stripe" note in `docs/pricing-promise-gaps.md`
 
 ## Deferred
