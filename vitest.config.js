@@ -16,5 +16,7 @@ module.exports = defineConfig({
     globals: true,
     environment: "node",
     include: ["server/**/*.test.js", "scripts/**/*.test.js"],
+    // Placeholder env so import-time config (Supabase client) doesn't need a .env.
+    setupFiles: ["./server/test/setupEnv.js"],
   },
 });
