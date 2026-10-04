@@ -52,6 +52,12 @@ exports.keysBasedOnEnv = () => {
       googleTranslate: {
         apiKey: process.env.GOOGLE_TRANSLATE_API_KEY_PROD,
       },
+      // Anthropic API -- AI Talk Builder only (server/services/talkGeneration.js,
+      // docs/ai-talk-builder-design.md). Unset = feature unavailable, never a
+      // hard error (googleTranslate pattern).
+      anthropic: {
+        apiKey: process.env.ANTHROPIC_API_KEY_PROD,
+      },
       // Tamper-evidence content seal (Phase 9e, server/utility/contentSeal.js,
       // docs/tamper-evidence-design.md) -- HMAC-SHA256 key for meeting_logs'
       // content_seal. Never sent to the client. Unlike googleTranslate above,
@@ -124,6 +130,10 @@ exports.keysBasedOnEnv = () => {
       // Google Cloud Translation API -- see the prod branch's comment.
       googleTranslate: {
         apiKey: process.env.GOOGLE_TRANSLATE_API_KEY,
+      },
+      // Anthropic API -- see the prod branch's comment.
+      anthropic: {
+        apiKey: process.env.ANTHROPIC_API_KEY,
       },
       // Tamper-evidence content seal -- see the prod branch's comment.
       meetingLogSeal: {

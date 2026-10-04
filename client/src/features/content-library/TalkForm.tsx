@@ -21,6 +21,7 @@ import { Modal } from "../../ui_comps/modal";
 import { useCreateTalk } from "../../hooks/useCreateTalk";
 import { useCurrentUser } from "../../hooks/useCurrentUser";
 import { useDeleteTalk } from "../../hooks/useDeleteTalk";
+import { useGenerateTalk } from "../../hooks/useGenerateTalk";
 import { useOnlineStatus } from "../../context/online-status";
 import { useTalks } from "../../hooks/useTalks";
 import { useTranslationLanguages } from "../../hooks/useTranslationLanguages";
@@ -28,6 +29,9 @@ import { useUpdateTalk } from "../../hooks/useUpdateTalk";
 import type { Talk } from "../../interfaces/talk";
 import {
   StyledActions,
+  StyledAiBanner,
+  StyledAiPanel,
+  StyledAiRow,
   StyledDangerZone,
   StyledDangerZoneTitle,
   StyledListRow,
@@ -98,8 +102,20 @@ export const TalkForm = ({ isOpen, onClose, talk }: TalkFormProps) => {
   const { hasTranslationAccess } = useCurrentUser();
   const { isOnline } = useOnlineStatus();
   const { languages: translationLanguages } = useTranslationLanguages();
+  const {
+    generateDraft,
+    isGenerating,
+    usage: aiUsage,
+    hasAccess: hasAiAccess,
+    isOnline: isAiOnline,
+  } = useGenerateTalk();
 
   const [isConfirmingDelete, setIsConfirmingDelete] = useState(false);
+  const [aiTopic, setAiTopic] = useState("");
+  const [isAiDrafted, setIsAiDrafted] = useState(false);
+  // BulletListEditor only reads `value` on mount, so each applied AI draft
+  // bumps this to remount the list editors with the freshly reset values.
+  const [draftVersion, setDraftVersion] = useState(0);
 
   const structured = talk?.structured;
 
@@ -113,6 +129,8 @@ export const TalkForm = ({ isOpen, onClose, talk }: TalkFormProps) => {
     control,
     handleSubmit,
     setValue,
+    getValues,
+    reset,
     formState: { errors },
   } = useForm<TalkFormValues>({
     resolver: zodResolver(talkSchema),
@@ -176,6 +194,32 @@ export const TalkForm = ({ isOpen, onClose, talk }: TalkFormProps) => {
     }
   };
 
+  const handleAiDraft = async () => {
+    try {
+      const { draft } = await generateDraft({
+        topic: aiTopic.trim(),
+        tradeTag: getValues("tradeTag")?.trim() || undefined,
+      });
+      // Overwrite the content fields only; `targetLanguages` stays as set.
+      reset({
+        ...getValues(),
+        title: draft.title,
+        tradeTag: draft.tradeTag,
+        summary: draft.summary,
+        talkingPoints: draft.talkingPoints,
+        siteHazardsToCheck: draft.siteHazardsToCheck,
+        discussionQuestions: draft.discussionQuestions,
+        oshaStandards: draft.oshaStandards.map((value) => ({ value })),
+        estimatedMinutes: String(draft.estimatedMinutes),
+      });
+      setDraftVersion((version) => version + 1);
+      setIsAiDrafted(true);
+    } catch {
+      // useGenerateTalk already surfaces the failure as a toast (incl. the
+      // 429 once this month's allowance is used up).
+    }
+  };
+
   const handleDelete = async () => {
     if (!talk) return;
     try {
@@ -209,6 +253,59 @@ export const TalkForm = ({ isOpen, onClose, talk }: TalkFormProps) => {
         <HiOutlineInformationCircle /> Once this talk is used in a logged safety
         talk, it can no longer be edited or deleted.
       </StyledLockNotice>
+
+      {!isEdit && (
+        <StyledAiPanel>
+          <Label>Draft with AI (optional)</Label>
+          {!hasAiAccess ? (
+            <StyledTranslationsNote>
+              The AI Talk Builder is a Trade Pro feature —{" "}
+              <Link to="/pricing">upgrade</Link> to unlock it.
+            </StyledTranslationsNote>
+          ) : !isAiOnline ? (
+            <StyledTranslationsNote>
+              The AI Talk Builder is unavailable offline.
+            </StyledTranslationsNote>
+          ) : (
+            <>
+              <StyledAiRow>
+                <TextInput
+                  type="text"
+                  value={aiTopic}
+                  onChange={(event) => setAiTopic(event.target.value)}
+                  maxLength={300}
+                  placeholder="Trenching near a water main"
+                  aria-label="Topic for the AI draft"
+                />
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="md"
+                  loading={isGenerating}
+                  disabled={
+                    aiTopic.trim().length < 3 || aiUsage?.remaining === 0
+                  }
+                  onClick={handleAiDraft}
+                >
+                  Draft with AI
+                </Button>
+              </StyledAiRow>
+              {aiUsage && (
+                <StyledTranslationsNote>
+                  {aiUsage.remaining} of {aiUsage.limit} AI drafts left this
+                  month.
+                </StyledTranslationsNote>
+              )}
+            </>
+          )}
+          {isAiDrafted && (
+            <StyledAiBanner role="status">
+              AI-drafted — review and verify every point against OSHA
+              requirements and your site conditions before using this talk.
+            </StyledAiBanner>
+          )}
+        </StyledAiPanel>
+      )}
 
       <Form onSubmit={handleSubmit(onSubmit)} noValidate>
         <FormField id={titleId} label="Title" error={errors.title?.message}>
@@ -265,6 +362,7 @@ export const TalkForm = ({ isOpen, onClose, talk }: TalkFormProps) => {
               error={fieldState.error?.message}
             >
               <BulletListEditor
+                key={draftVersion}
                 id={talkingPointsId}
                 value={field.value}
                 onChange={field.onChange}
@@ -284,6 +382,7 @@ export const TalkForm = ({ isOpen, onClose, talk }: TalkFormProps) => {
               hint={listHint}
             >
               <BulletListEditor
+                key={draftVersion}
                 id={hazardsId}
                 value={field.value}
                 onChange={field.onChange}
@@ -302,6 +401,7 @@ export const TalkForm = ({ isOpen, onClose, talk }: TalkFormProps) => {
               hint={listHint}
             >
               <BulletListEditor
+                key={draftVersion}
                 id={questionsId}
                 value={field.value}
                 onChange={field.onChange}

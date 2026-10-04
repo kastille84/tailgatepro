@@ -53,7 +53,7 @@ export const SiteProCheckoutModal = ({
             startSiteCheckout({ jobsiteId: jobsite.id, interval: "annual" })
           }
         >
-          {`${SITE_PRO_PRICE.annual}/yr (save 20%)`}
+          {`${SITE_PRO_PRICE.annual}/yr (2 months free)`}
         </Button>
       </StyledSiteProActions>
     </Modal>

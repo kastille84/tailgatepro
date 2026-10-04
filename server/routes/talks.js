@@ -13,6 +13,8 @@ const {
   updateTalk,
   deleteTalk,
   listTranslationLanguages,
+  generateTalk,
+  getAiUsage,
 } = require("../controllers/talks");
 
 const router = express.Router();
@@ -31,6 +33,30 @@ router.get(
   requireAuth,
   loadUserContext,
   listTranslationLanguages,
+);
+
+// GET /api/talks/ai-usage — also before GET /:id (same reason as above).
+router.get("/ai-usage", requireAuth, loadUserContext, getAiUsage);
+
+// POST /api/talks/generate — AI Talk Builder draft (never saved server-side).
+// `topic` is user text that goes into a model prompt, so it's length-bounded.
+router.post(
+  "/generate",
+  requireAuth,
+  loadUserContext,
+  [
+    body("topic")
+      .trim()
+      .isLength({ min: 3, max: 300 })
+      .withMessage("Topic must be between 3 and 300 characters"),
+    body("tradeTag")
+      .optional({ checkFalsy: true })
+      .trim()
+      .isLength({ max: 60 })
+      .withMessage("Trade is too long"),
+  ],
+  validate,
+  generateTalk,
 );
 
 // GET /api/talks/:id — scoped the same way as the list: a talk belonging to

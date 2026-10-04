@@ -2757,7 +2757,17 @@ Costs one extra query per request for Free subs (`resolveEffectiveTier`) and per
     meeting and confirm "Verified" there too; hand-edit a sealed row's field in Supabase and confirm Verify
     now returns "Tampered" on both sides; confirm a pre-feature meeting (no seal) shows no badge on either
     side.
-- [ ] AI Talk Builder and cloud AI voice (see ~1736-1741).
+- [x] AI Talk Builder — v1 built (draft-from-topic, Claude, review-before-save; design:
+      `docs/ai-talk-builder-design.md`). `server/services/talkGeneration.js`, `POST /api/talks/generate` +
+      `GET /api/talks/ai-usage`, per-plan monthly caps in `PLAN_LIMITS.aiGenerationsPerMonth` (Pro 10,
+      Enterprise 100, GC Portfolio 100), `ai_talk_generations` table, `useGenerateTalk` + the `TalkForm` panel;
+      `plans.ts` copy updated for all three plans. 1343 server / 1824 client tests passing; client coverage
+      is 99.93% branches only because of pre-existing gaps in `MeetingWizard.tsx`/`PhotoCapture.tsx`.
+  - [ ] Verify: run the new `ai_talk_generations` DDL in Supabase, provision `ANTHROPIC_API_KEY[_PROD]`,
+        then smoke a Trade Pro draft end to end (draft → banner → edit → save), the cap (429 + disabled
+        button), and the Trade Free upgrade note. Consider dropping the unused `openai` root dependency.
+  - [ ] Deferred: library-grounded drafts, AI audit pass, adapt-existing-talk, GC "draft then push".
+- [ ] Cloud AI voice (see ~1736-1741).
 - [ ] Grow the library toward 500+ (see ~1749-1754; currently 134 after 11p).
 - [-] Multi-crew scheduling and equipment check-ins — **dropped** (2026-09-29). No tables or code existed.
       Workforce scheduling and equipment inspection logging are scope outside TailgatePro's core toolbox-talk
@@ -3082,6 +3092,7 @@ Stripe-hosted Checkout (redirect), not embedded. Design doc: `docs/billing-desig
   - [x] Test mode, `stripe listen`: company plan flips `companies.tier`; Site Pro on 2 jobsites then Portfolio cancels both with a credit; cancel Portfolio drops the sites to free (closes the open manual items in 12h and 12i)
   - [x] Run the migration block from `billing-design.md` -> "Live-DB migration" on the production Supabase DB
   - [x] Live Dashboard: 5 products / 10 prices, live Customer Portal; set the 10 `STRIPE_PRICE_*_PROD` vars on the host
+- [x] 12k. Pricing copy fixes: annual discount copy said "save 20%" but annual = 10x monthly (2 months free, 16.7%), so `plans.ts`, `Pricing.tsx`, `SiteProCheckoutModal.tsx` and the strategy doc now say "2 months free" (prices and Stripe untouched); "Coming soon" tag dropped from Trade Pro's "Expanded OSHA talk library" (`comingSoon` array removed from `plans.ts`; `pricing-promise-gaps.md` row updated; more talks are added periodically)
 - [ ] 12j. Launch day (blocked on the deployed API domain): **register the live webhook endpoint in the Stripe Dashboard** (`https://<api-domain>/webhook/stripe`, 5 events) and put its `whsec_` in `STRIPE_WEBHOOK_SECRET_PROD`; live secret key in `STRIPE_SECRET_KEY_PROD`; `NODE_ENV=production`; Dashboard test event (200 + `stripe_events` row); one real purchase (company plan and a Site Pro jobsite), then cancel and refund; drop the "not yet exercised against live Stripe" note in `docs/pricing-promise-gaps.md`
 
 ## Deferred

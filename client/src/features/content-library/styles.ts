@@ -316,6 +316,42 @@ export const StyledTranslationsNote = styled.p`
   }
 `;
 
+/** TalkForm's AI Talk Builder panel (docs/ai-talk-builder-design.md): a topic
+ *  input + "Draft with AI" button above the form, and the "verify before use"
+ *  banner shown once a draft has been applied. */
+export const StyledAiPanel = styled.div`
+  display: flex;
+  flex-direction: column;
+  gap: 1.2rem;
+  margin-bottom: 1.6rem;
+  padding: 1.4rem;
+  border: 0.1rem solid ${({ theme }) => theme.colors.navy[100]};
+  border-radius: ${({ theme }) => theme.borderRadius.md};
+  background-color: ${({ theme }) => theme.colors.concrete[100]};
+`;
+
+export const StyledAiRow = styled.div`
+  display: flex;
+  flex-direction: column;
+  gap: 1.2rem;
+
+  @media (min-width: ${({ theme }) => theme.breakpoints.sm}) {
+    flex-direction: row;
+    align-items: flex-end;
+  }
+`;
+
+export const StyledAiBanner = styled.p`
+  margin: 0;
+  padding: 1.2rem 1.4rem;
+  border-radius: ${({ theme }) => theme.borderRadius.sm};
+  background-color: ${({ theme }) => theme.colors.orange[100]};
+  font-size: 1.3rem;
+  font-weight: 600;
+  line-height: 1.5;
+  color: ${({ theme }) => theme.colors.navy[500]};
+`;
+
 export const StyledBadgeContainer = styled.div`
   display: flex;
   flex-direction: column;

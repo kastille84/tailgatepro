@@ -25,6 +25,8 @@ const hasBrandingAccess = (companyType, tier) => getLimits(companyType, tier).br
 // resolved from `companies.tier` + `companies.company_type`; GC Site Pro is the
 // exception -- it is per jobsite (`jobsites.plan`), not a company tier.
 // `null` = unlimited. This module only defines limits; enforcement is 9c/9d.
+// `aiGenerationsPerMonth`: AI Talk Builder drafts per company per UTC month
+// (0 = no access; docs/ai-talk-builder-design.md).
 // `libraryAccess`: "core" = only the talks flagged `is_core` (Trade Free), "full" = all.
 const FREE_PLAN_KEY = "subcontractor:basic";
 
@@ -38,6 +40,7 @@ const PLAN_LIMITS = {
     archiveYears: 0,
     libraryAccess: "core",
     brandingAccess: false,
+    aiGenerationsPerMonth: 0,
   },
   "subcontractor:premium": {
     planId: "trade-pro",
@@ -48,6 +51,7 @@ const PLAN_LIMITS = {
     archiveYears: 5,
     libraryAccess: "full",
     brandingAccess: true,
+    aiGenerationsPerMonth: 10,
   },
   "subcontractor:enterprise": {
     planId: "trade-enterprise",
@@ -58,6 +62,7 @@ const PLAN_LIMITS = {
     archiveYears: 5,
     libraryAccess: "full",
     brandingAccess: true,
+    aiGenerationsPerMonth: 100,
   },
   "gc:basic": {
     planId: "gc-free",
@@ -72,6 +77,7 @@ const PLAN_LIMITS = {
     // server/services/branding.js's resolveBrandingAccess, the real gate any
     // GC caller goes through.
     brandingAccess: false,
+    aiGenerationsPerMonth: 0,
   },
   // premium = Portfolio up to 10 sites, enterprise = Portfolio unlimited.
   "gc:premium": {
@@ -83,6 +89,7 @@ const PLAN_LIMITS = {
     archiveYears: null,
     libraryAccess: "full",
     brandingAccess: true,
+    aiGenerationsPerMonth: 100,
   },
   "gc:enterprise": {
     planId: "gc-portfolio",
@@ -93,6 +100,7 @@ const PLAN_LIMITS = {
     archiveYears: null,
     libraryAccess: "full",
     brandingAccess: true,
+    aiGenerationsPerMonth: 100,
   },
 };
 
@@ -114,6 +122,15 @@ const hasFullLibrary = (companyType, tier) =>
 // sub on its active jobsites (docs/company-talks-design.md).
 const canAuthorCompanyTalks = (companyType, tier) =>
   companyType !== "gc" || getLimits(companyType, tier).planId === "gc-portfolio";
+
+// AI Talk Builder (Trade Pro/Enterprise, GC Portfolio): access is simply a
+// non-zero monthly generation allowance. The cap itself is enforced in
+// server/services/talkGeneration.js.
+const getAiGenerationLimit = (companyType, tier) =>
+  getLimits(companyType, tier).aiGenerationsPerMonth;
+
+const hasAiTalkBuilderAccess = (companyType, tier) =>
+  getAiGenerationLimit(companyType, tier) > 0;
 
 const getPlanId = (companyType, tier) => getLimits(companyType, tier).planId;
 
@@ -150,6 +167,8 @@ module.exports = {
   hasTradeEnterpriseAccess,
   hasTranslationAccess,
   hasBrandingAccess,
+  hasAiTalkBuilderAccess,
+  getAiGenerationLimit,
   PLAN_LIMITS,
   SITE_PLANS,
   getLimits,

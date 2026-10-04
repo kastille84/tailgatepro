@@ -16,7 +16,6 @@ import {
   StyledGcAside,
   StyledGcList,
   StyledGcItem,
-  StyledSoonTag,
   StyledCallout,
   StyledCalloutTitle,
   StyledCalloutText,
@@ -24,7 +23,6 @@ import {
 
 interface GcPoint {
   text: string;
-  comingSoon?: boolean;
 }
 
 const GC_POINTS: GcPoint[] = [
@@ -36,10 +34,7 @@ const GC_POINTS: GcPoint[] = [
   {
     text: "Auto-SMS nudges non-compliant foremen every Monday at 7:00 AM.",
   },
-  {
-    text: "1-click OSHA Defense Bundle — an indexed ZIP of every site log.",
-    comingSoon: true,
-  },
+  { text: "1-click OSHA Defense Bundle — an indexed ZIP of every site log." },
 ];
 
 export const GcSection = () => (
@@ -72,13 +67,10 @@ export const GcSection = () => (
 
         <StyledGcAside>
           <StyledGcList>
-            {GC_POINTS.map(({ text, comingSoon }) => (
+            {GC_POINTS.map(({ text }) => (
               <StyledGcItem key={text}>
                 <HiCheck aria-hidden="true" />
-                <span>
-                  {text}
-                  {comingSoon && <StyledSoonTag>Coming soon</StyledSoonTag>}
-                </span>
+                <span>{text}</span>
               </StyledGcItem>
             ))}
           </StyledGcList>

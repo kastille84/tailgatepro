@@ -223,6 +223,31 @@ describe("useCurrentUser", () => {
     expect(result.current.isManagerRole).toBe(expected);
   });
 
+  it.each([
+    ["trade-free", false],
+    ["trade-pro", true],
+    ["trade-enterprise", true],
+    ["gc-free", false],
+    ["gc-site-pro", false],
+    ["gc-portfolio", true],
+  ])("reports hasAiTalkBuilderAccess for plan %s -> %s", async (plan, expected) => {
+    vi.mocked(apiUsers.getCurrentUser).mockResolvedValue({
+      id: "user-1",
+      companyId: "company-1",
+      role: "admin",
+      tier: "premium",
+      companyType: "subcontractor",
+      plan,
+      limits: LIMITS,
+      hasBrandingAccess: false,
+    });
+
+    const { result } = renderHook(() => useCurrentUser(), { wrapper });
+
+    await waitFor(() => expect(result.current.plan).toBe(plan));
+    expect(result.current.hasAiTalkBuilderAccess).toBe(expected);
+  });
+
   it("defaults tier to null and hasTranslationAccess/hasBrandingAccess to false before the query resolves / without a session", () => {
     mockUseAuth.mockReturnValue({ session: null });
 
@@ -232,6 +257,7 @@ describe("useCurrentUser", () => {
     expect(result.current.tier).toBeNull();
     expect(result.current.hasTranslationAccess).toBe(false);
     expect(result.current.hasBrandingAccess).toBe(false);
+    expect(result.current.hasAiTalkBuilderAccess).toBe(false);
     expect(result.current.role).toBeNull();
     expect(result.current.companyId).toBeNull();
     expect(result.current.companyType).toBeNull();

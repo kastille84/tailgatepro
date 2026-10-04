@@ -12,7 +12,24 @@ const {
   effectiveJobsiteLimit,
   hasSiteProAccess,
   hasTradeEnterpriseAccess,
+  hasAiTalkBuilderAccess,
+  getAiGenerationLimit,
 } = require("./entitlements");
+
+describe("entitlements: AI Talk Builder", () => {
+  it.each([
+    ["subcontractor", "basic", 0],
+    ["subcontractor", "premium", 10],
+    ["subcontractor", "enterprise", 100],
+    ["gc", "basic", 0],
+    ["gc", "premium", 100],
+    ["gc", "enterprise", 100],
+    [undefined, undefined, 0],
+  ])("%s + %s -> %s drafts/month", (companyType, tier, limit) => {
+    expect(getAiGenerationLimit(companyType, tier)).toBe(limit);
+    expect(hasAiTalkBuilderAccess(companyType, tier)).toBe(limit > 0);
+  });
+});
 
 describe("entitlements: hasTradeEnterpriseAccess", () => {
   it.each([
