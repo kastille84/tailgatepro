@@ -33,17 +33,17 @@ const COMPARE_ROWS: CompareRow[] = [
   {
     label: "Effort per talk",
     us: "One short routine, the same every shift",
-    them: "2–5 minutes across multi-tier forms",
+    them: "Often 2–5 minutes across multi-step forms",
   },
   {
     label: "Works offline",
-    us: "Offline-first PWA; auto-syncs on signal",
+    us: "Works with no signal; sends automatically when you're back online",
     them: "Most need native installs; web tools fail offline",
   },
   {
     label: "Topic library",
     us: "OSHA talk library plus your own custom talks",
-    them: "300–600 static topics or manual upload",
+    them: "Typically a fixed topic list or manual upload",
   },
   {
     label: "Compliance PDF",
@@ -51,19 +51,19 @@ const COMPARE_ROWS: CompareRow[] = [
     them: "Basic PDF with a timestamp and signature",
   },
   {
-    label: "Audit export",
-    us: "1-click OSHA Defense Bundle (indexed ZIP)",
+    label: "OSHA inspection records",
+    us: "1-click OSHA Defense Bundle — every record in one download",
     them: "Manual cloud search, file by file",
   },
   {
     label: "Pricing",
     us: "Flat rate per site or portfolio",
-    them: "Per-user seat fees (~$10–$50/user/mo)",
+    them: "Often charge per user, commonly ~$10–$50/user/mo",
   },
   {
     label: "Rollout",
     us: "Open a link and start — no rollout",
-    them: "1–4 weeks for enterprise rollout",
+    them: "Often 1–4 weeks for enterprise rollout",
   },
   {
     label: "Languages",
@@ -80,7 +80,7 @@ export const ComparisonTable = () => (
           Built for the field, not the office
         </StyledSectionTitle>
         <StyledSectionLede>
-          How the toolbox-talk PWA compares to the native safety apps crews
+          How TailgatePro compares to the downloadable safety apps crews
           already avoid.
         </StyledSectionLede>
       </StyledSectionHead>

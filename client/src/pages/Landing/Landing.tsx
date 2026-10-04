@@ -3,16 +3,15 @@ import {
   HiMagnifyingGlass,
   HiClock,
   HiSun,
-  HiQrCode,
   HiSignalSlash,
-  HiBolt,
-  HiChartBar,
   HiCheck,
+  HiLink,
+  HiDocumentCheck,
 } from "react-icons/hi2";
 import type { IconType } from "react-icons";
 import { Link } from "react-router-dom";
 
-import { Button } from "../../ui_comps/button";
+import { ButtonLink } from "../../ui_comps/button";
 import { PricingTeaser } from "./PricingTeaser";
 import { HowItWorks } from "./HowItWorks";
 import { ProductShowcase } from "./ProductShowcase";
@@ -27,9 +26,12 @@ import {
   StyledEyebrow,
   StyledHeadline,
   StyledLede,
+  StyledBenefitList,
+  StyledBenefitItem,
+  StyledTextLink,
   StyledFormWrap,
   StyledCtaRow,
-  StyledCtaLink,
+  StyledHeroSecondaryCta,
   StyledFootnote,
   StyledHeroFigure,
   StyledHeroImage,
@@ -80,27 +82,10 @@ const PROBLEM_CARDS: InfoCard[] = [
   },
 ];
 
-const SOLUTION_CARDS: InfoCard[] = [
-  {
-    icon: HiQrCode,
-    title: "Zero app-store friction",
-    body: "Open the talk from a browser link. Nothing to install, even five floors underground or on a remote site.",
-  },
-  {
-    icon: HiSignalSlash,
-    title: "Works offline, always",
-    body: "Run the whole talk with no signal. Attendance, signatures and photos sync automatically once the phone is back on data.",
-  },
-  {
-    icon: HiBolt,
-    title: "Fast to run, every shift",
-    body: "Pick a topic, the crew signs on-screen or you snap a photo, you submit. A server timestamp is recorded and the meeting locks once it's completed, so it can't be edited later.",
-  },
-  {
-    icon: HiChartBar,
-    title: "Instant compliance for the GC",
-    body: "Every completed talk lands on the general contractor's dashboard the moment the meeting ends — as a signed, timestamped PDF.",
-  },
+const HERO_BENEFITS: { icon: IconType; label: string }[] = [
+  { icon: HiLink, label: "No app to install" },
+  { icon: HiSignalSlash, label: "Works with no signal" },
+  { icon: HiDocumentCheck, label: "Signed PDF to your GC" },
 ];
 
 const REASSURANCES = [
@@ -124,29 +109,41 @@ export const Landing = () => {
           <StyledHeroCopy>
             <StyledEyebrow>Digital Toolbox Safety Talks</StyledEyebrow>
             <StyledHeadline id="landing-hero-heading">
-              The toolbox talk, done before the crew gears up.{" "}
-              <span>Proof that holds up in an audit.</span>
+              Run your toolbox talk on your phone.{" "}
+              <span>Give the GC proof in seconds.</span>
             </StyledHeadline>
             <StyledLede>
-              OSHA expects a toolbox talk before every shift. On paper that
-              means lost sign-in sheets, illegible signatures, and GCs chasing
-              proof across every trade. Run the talk on any phone — no app to
-              install, no signal required — and a signed, timestamped record reaches
-              the GC the moment you hit send.
+              OSHA expects a toolbox talk before every shift. Skip the lost
+              sign-in sheets: the crew signs on-screen and your general
+              contractor (GC) gets a signed, timestamped record the moment you
+              hit send.
             </StyledLede>
+            <StyledBenefitList>
+              {HERO_BENEFITS.map(({ icon: Icon, label }) => (
+                <StyledBenefitItem key={label}>
+                  <Icon aria-hidden="true" />
+                  <span>{label}</span>
+                </StyledBenefitItem>
+              ))}
+            </StyledBenefitList>
             <StyledFormWrap>
               <StyledCtaRow>
-                <StyledCtaLink as={Link} to="/signup">
-                  <Button size="lg">Get started free</Button>
-                </StyledCtaLink>
-                <StyledCtaLink as={Link} to="/pricing">
-                  <Button size="lg" variant="outline">
-                    See pricing
-                  </Button>
-                </StyledCtaLink>
+                <ButtonLink to="/signup" size="lg">
+                  I'm a foreman — start free
+                </ButtonLink>
+                <StyledHeroSecondaryCta
+                  href="#for-gcs"
+                  size="lg"
+                  variant="outline"
+                >
+                  I'm a GC — see the dashboard
+                </StyledHeroSecondaryCta>
               </StyledCtaRow>
               <StyledFootnote>
-                Free plans need no credit card. Upgrade when your crew grows.
+                Free plans need no credit card.{" "}
+                <StyledTextLink as={Link} to="/pricing">
+                  See pricing
+                </StyledTextLink>
               </StyledFootnote>
             </StyledFormWrap>
           </StyledHeroCopy>
@@ -181,31 +178,6 @@ export const Landing = () => {
 
       <ProductShowcase />
 
-      <StyledSection $tone="light" aria-labelledby="solution-heading">
-        <StyledContainer>
-          <StyledSectionHead>
-            <StyledSectionTitle id="solution-heading">
-              Why crews are going digital
-            </StyledSectionTitle>
-            <StyledSectionLede>
-              Same five-minute talk. A compliance record the GC can see
-              immediately.
-            </StyledSectionLede>
-          </StyledSectionHead>
-          <StyledCardGrid>
-            {SOLUTION_CARDS.map(({ icon: Icon, title, body }) => (
-              <StyledCard key={title}>
-                <StyledCardIcon>
-                  <Icon aria-hidden="true" />
-                </StyledCardIcon>
-                <StyledCardTitle>{title}</StyledCardTitle>
-                <StyledCardText>{body}</StyledCardText>
-              </StyledCard>
-            ))}
-          </StyledCardGrid>
-        </StyledContainer>
-      </StyledSection>
-
       <GcSection />
 
       <ComparisonTable />
@@ -235,9 +207,9 @@ export const Landing = () => {
             right plan for your crew or your jobsites.
           </StyledSectionLede>
           <StyledCtaRow>
-            <StyledCtaLink as={Link} to="/signup">
-              <Button size="lg">Get started free</Button>
-            </StyledCtaLink>
+            <ButtonLink to="/signup" size="lg">
+              Get started free
+            </ButtonLink>
           </StyledCtaRow>
           <StyledReassureList>
             {REASSURANCES.map((item) => (

@@ -28,7 +28,7 @@ export const StyledCompareTable = styled.table`
 export const StyledCompareHeadCell = styled.th<{ $highlight?: boolean }>`
   padding: 1.2rem 1.6rem;
   text-align: left;
-  font-size: 1.3rem;
+  font-size: 1.4rem;
   font-weight: 800;
   text-transform: uppercase;
   letter-spacing: 0.04em;

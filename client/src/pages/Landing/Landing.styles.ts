@@ -1,5 +1,6 @@
 import styled, { css } from "styled-components";
 import { PageShell } from "../../ui_comps/page-shell";
+import { ButtonLink } from "../../ui_comps/button";
 
 /* ---------- page + section layout ----------
    Shared section scaffold (StyledSection + $tone, StyledContainer,
@@ -99,7 +100,7 @@ export const StyledEyebrow = styled.p`
   margin: 0;
   text-transform: uppercase;
   letter-spacing: 0.12em;
-  font-size: 1.3rem;
+  font-size: 1.4rem;
   font-weight: 700;
   color: ${({ theme }) => theme.colors.orange[400]};
 `;
@@ -125,6 +126,47 @@ export const StyledLede = styled.p`
   color: ${({ theme }) => theme.colors.navy[200]};
 `;
 
+export const StyledBenefitList = styled.ul`
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+
+  @media (min-width: ${({ theme }) => theme.breakpoints.sm}) {
+    flex-direction: row;
+    flex-wrap: wrap;
+    gap: 1rem 2.4rem;
+  }
+`;
+
+export const StyledBenefitItem = styled.li`
+  display: flex;
+  align-items: center;
+  gap: 0.8rem;
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: ${({ theme }) => theme.colors.concrete[100]};
+
+  svg {
+    flex-shrink: 0;
+    font-size: 2.2rem;
+    color: ${({ theme }) => theme.colors.orange[400]};
+  }
+`;
+
+export const StyledTextLink = styled.a`
+  color: ${({ theme }) => theme.colors.concrete[100]};
+  font-weight: 700;
+  text-decoration: underline;
+  text-underline-offset: 0.3rem;
+
+  &:hover {
+    color: ${({ theme }) => theme.colors.orange[400]};
+  }
+`;
+
 export const StyledFormWrap = styled.div`
   display: flex;
   flex-direction: column;
@@ -142,14 +184,20 @@ export const StyledCtaRow = styled.div`
   }
 `;
 
-export const StyledCtaLink = styled.a`
-  color: inherit;
-  text-decoration: none;
+/* The outline Button's orange text is too faint on the navy hero. */
+export const StyledHeroSecondaryCta = styled(ButtonLink)`
+  color: ${({ theme }) => theme.colors.concrete[100]};
+  border-color: ${({ theme }) => theme.colors.concrete[100]};
+
+  &:hover:not(:disabled) {
+    background-color: ${({ theme }) => theme.colors.concrete[100]};
+    color: ${({ theme }) => theme.colors.navy[700]};
+  }
 `;
 
 export const StyledFootnote = styled.p`
   margin: 0;
-  font-size: 1.3rem;
+  font-size: 1.4rem;
   font-weight: 500;
   color: ${({ theme }) => theme.colors.navy[200]};
 `;
@@ -300,7 +348,7 @@ export const StyledFooterMark = styled.p`
 
 export const StyledFooterText = styled.p`
   margin: 0;
-  font-size: 1.3rem;
+  font-size: 1.4rem;
   font-weight: 500;
 `;
 

@@ -21,9 +21,9 @@ interface GcDashboardMockupProps {
 }
 
 const STATS = [
-  { value: "6 / 7", label: "talks today" },
-  { value: "7", label: "subs on site" },
-  { value: "92%", label: "compliant" },
+  { value: "3 / 4", label: "talks today" },
+  { value: "4", label: "subs on site" },
+  { value: "75%", label: "compliant" },
 ];
 
 const SUBS = [

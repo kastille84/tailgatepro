@@ -7,6 +7,13 @@ import { useCurrentUser } from "../../hooks/useCurrentUser";
 import { SegmentedToggle } from "../../ui_comps/segmented-toggle";
 import { Footer } from "../../ui_comps/footer";
 import { SUB_PLANS, GC_PLANS } from "../../data/plans";
+import {
+  NO_INSTALL_ANSWER,
+  NO_PER_USER_FEES_BODY,
+  NO_PER_USER_FEES_TITLE,
+  SPONSORED_ACCESS_ANSWER,
+  SPONSORED_ACCESS_QUESTION,
+} from "../../data/sharedCopy";
 import { planCadence } from "../../utils/pricing";
 import { getPlanCtas } from "../../utils/pricingCtas";
 import type { Audience, Billing } from "../../interfaces/plan";
@@ -28,9 +35,11 @@ import {
   StyledPlanTarget,
   StyledPriceRow,
   StyledPrice,
+  StyledPricePrefix,
   StyledPriceCadence,
   StyledPriceSub,
   StyledFeatureList,
+  StyledInherits,
   StyledFeatureItem,
   StyledSoonTag,
   StyledPlanCtaGroup,
@@ -60,15 +69,15 @@ const BILLING_OPTIONS: { value: Billing; label: string }[] = [
 const FAQ: { q: string; a: string }[] = [
   {
     q: "Do my sub-foremen need to download an app from the App Store?",
-    a: "No. TailgatePro is an offline-first Progressive Web App. Foremen tap a link to open it straight away in their mobile browser — nothing to install.",
+    a: NO_INSTALL_ANSWER,
   },
   {
     q: "What happens to my safety logs on the Trade Free plan after 30 days?",
     a: "Every completed talk is emailed to your GC as a PDF link that stays valid for 30 days; after that, your GC can sign in to open a fresh link. The Free plan's in-app history shows the last 30 days; Trade Pro adds the 5-year legal cloud archive.",
   },
   {
-    q: "How does a general contractor sponsor subcontractors for free?",
-    a: "A GC invites subcontractors to a jobsite by email or shares a company join code, and their talks show up on the GC's dashboard. On a GC Site Pro site or any GC Portfolio site, every subcontractor on the job gets full Trade Pro access at no cost to them.",
+    q: SPONSORED_ACCESS_QUESTION,
+    a: SPONSORED_ACCESS_ANSWER,
   },
   {
     q: "What's the difference between GC Site Pro and GC Portfolio?",
@@ -148,6 +157,9 @@ export const Pricing = () => {
                   <StyledPlanTarget>{plan.target}</StyledPlanTarget>
 
                   <StyledPriceRow>
+                    {plan.pricePrefix && (
+                      <StyledPricePrefix>{plan.pricePrefix}</StyledPricePrefix>
+                    )}
                     <StyledPrice>{plan.price[billing]}</StyledPrice>
                     {cadence && (
                       <StyledPriceCadence>{cadence}</StyledPriceCadence>
@@ -159,6 +171,11 @@ export const Pricing = () => {
                       : " "}
                   </StyledPriceSub>
 
+                  {plan.inheritsFrom && (
+                    <StyledInherits>
+                      Everything in {plan.inheritsFrom}, plus:
+                    </StyledInherits>
+                  )}
                   <StyledFeatureList>
                     {plan.features.map((feature) => (
                       <StyledFeatureItem key={feature}>
@@ -212,16 +229,11 @@ export const Pricing = () => {
           </StyledPlanGrid>
 
           <StyledCallout>
-            <StyledCalloutTitle>Zero subcontractor seat tax</StyledCalloutTitle>
+            <StyledCalloutTitle>{NO_PER_USER_FEES_TITLE}</StyledCalloutTitle>
             <StyledCalloutText>
-              Legacy platforms charge per user seat, penalizing you for adding
-              trade subcontractors to your project. With{" "}
-              <strong>GC Site Pro</strong> or <strong>GC Portfolio</strong> you
-              pay a flat rate per site or portfolio, and{" "}
-              <strong>
-                subcontractors on your job never pay a seat fee
-              </strong>{" "}
-              — no app-store downloads and no user-billing disputes.
+              {NO_PER_USER_FEES_BODY.map(({ text, strong }) =>
+                strong ? <strong key={text}>{text}</strong> : text,
+              )}
             </StyledCalloutText>
           </StyledCallout>
         </StyledContainer>

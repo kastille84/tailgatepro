@@ -22,7 +22,7 @@ describe("LandingFaq", () => {
       "Do my sub-foremen need to download an app?",
       "Does it work with no signal?",
       "What does it cost the subcontractor?",
-      "How does a GC sponsor subcontractors for free?",
+      "How does a general contractor cover subcontractors for free?",
       "When can I sign up?",
     ];
 
