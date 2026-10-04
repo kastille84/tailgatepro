@@ -86,6 +86,12 @@ export const StyledList = styled.ul`
   gap: 1.2rem;
 `;
 
+export const StyledLoadMore = styled.div`
+  display: flex;
+  justify-content: center;
+  margin-top: 1.6rem;
+`;
+
 export const StyledRow = styled.li`
   display: flex;
   flex-direction: column;

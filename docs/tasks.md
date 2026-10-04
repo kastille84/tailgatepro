@@ -1613,7 +1613,8 @@ Plan: `~/.claude/plans/let-s-wok-on-6e-jolly-goblet.md`.
     verified without live Supabase
   - A merged same-name/same-sub jobsite entry reports only the sub's **earliest** project id as `projectId`
     (what a drill-in would open) — one more concrete argument for the GC-owned canonical jobsite model later
-- [ ] Not in this pass, tracked not dropped: pagination for `GET /meetings` past 200 rows; a DST-transition day
+- [ ] Not in this pass, tracked not dropped: ~~pagination for `GET /meetings` past 200 rows~~ (done: `GET /api/gc/meetings`
+      is offset-paginated, `useGcMeetings`; the trade-side `GET /api/meetings` is keyset-paginated, see 9c); a DST-transition day
       is treated as a flat 24h window by `dayWindow.js` (fixed in 11h) (same simplification `held_at`'s formatting already has
       per 6b2's known limitations)
 - [ ] Verify (user, needs live Supabase with the 6b/6b2/6c SQL and data applied, one `gc` account linked to at
@@ -2274,9 +2275,13 @@ toast for it) with a `/pricing` link.
       **Month-grouped archive:** the page shows one card per month ("September 2026 · 23 talks"); a card
       (`?month=YYYY-MM`) loads only that month via `GET /api/meetings?from&to` (held-at range). Cards come from
       `GET /api/meetings/months?tzOffset` (`meetingLogs.listMonthSummaries`, bucketed in the viewer's timezone) which
-      also carries the banner's `hiddenCount`/`historyDays`. The summary pages through rows in 1,000-row chunks because
-      PostgREST caps a single response at 1,000 rows. Note the unfiltered `listForCompany` is still uncapped-by-design
-      but subject to that same 1,000-row limit; the UI no longer uses it without a month range.
+      also carries the banner's `hiddenCount`/`historyDays`. PostgREST caps a single response at 1,000 rows and truncates
+      silently, so reads that need every row page through `server/utility/fetchAllPages.js` (used by
+      `listMonthSummaries` and `gcDashboard.listCompletedLogsInWindow`, which feeds the GC overview, scorecards and SMS
+      nudges). `GET /api/meetings` is keyset-paginated (`limit` 1-200, default 50, + opaque `cursor` from
+      `meta.nextCursor`; `server/utility/cursor.js` validates the cursor strictly because it is interpolated into a
+      PostgREST filter); the month view loads more via a "Load more" button (`useMeetingLogs` is an `useInfiniteQuery`).
+      Still open: the scorecard path pulls every log in its 30-day window into Node; an SQL aggregate would avoid that.
 - [x] Free vs paid library split — Trade Free sees only the 30 core talks (`toolbox_talks.is_core`, set by the seed from
       `CORE_TALK_SLUGS` in `scripts/lib/talkRow.js`) plus its own custom talks; every other global talk is hidden (404 on
       `getById`, absent from the list). Paid trades and all GCs see everything (`hasFullLibrary` in `entitlements.js`,

@@ -1,6 +1,8 @@
 const { supabase } = require("../utility/supabaseClient");
 const { AppError } = require("../utility/AppError");
 const { buildPdfFilename } = require("../utility/pdfFilename");
+const { fetchAllPages } = require("../utility/fetchAllPages");
+const { encodeCursor, decodeCursor } = require("../utility/cursor");
 const { resolveHeldAt, resolveHeldTzOffset } = require("../utility/heldAt");
 const entitlementsService = require("../utility/entitlements");
 const contentSeal = require("../utility/contentSeal");
@@ -116,10 +118,23 @@ const historyCutoff = (historyDays) =>
 // `from`/`to` (ISO timestamps, [from, to)) narrow the list to completed
 // meetings held in that range — the month view. A row whose `held_at` was never
 // populated falls back to `completed_at`, matching `toMeetingLog`.
+//
+// Keyset-paginated (docs/tasks.md "pagination for GET /meetings"): newest
+// first on (sort column, id), where the sort column is `held_at` for the month
+// view (completed rows always carry it, 6b2) and `created_at` otherwise. `cursor`
+// resumes strictly after the previous page's last row, so a meeting logged
+// while someone scrolls can't shift rows between pages the way an offset would.
+// One extra row is fetched past the page to derive `nextCursor` without a count.
+const MEETINGS_PAGE_SIZE = 50;
+const MEETINGS_MAX_PAGE_SIZE = 200;
+
 const listForCompany = async (
   companyId,
-  { projectId, historyDays = null, from, to } = {},
+  { projectId, historyDays = null, from, to, limit, cursor } = {},
 ) => {
+  const pageSize = Math.min(limit || MEETINGS_PAGE_SIZE, MEETINGS_MAX_PAGE_SIZE);
+  const sortColumn = from && to ? "held_at" : "created_at";
+
   let query = supabase
     .from("meeting_logs")
     .select(MEETING_LOG_COLUMNS)
@@ -139,18 +154,35 @@ const listForCompany = async (
       );
   }
 
-  const { data, error } = await query.order(from && to ? "held_at" : "created_at", {
-    ascending: false,
-  });
+  if (cursor) {
+    // Safe to interpolate: decodeCursor only returns a validated timestamp + UUID.
+    const { value, id } = decodeCursor(cursor);
+    query = query.or(
+      `${sortColumn}.lt.${value},and(${sortColumn}.eq.${value},id.lt.${id})`,
+    );
+  }
+
+  const { data, error } = await query
+    .order(sortColumn, { ascending: false })
+    // Tiebreaker so the order (and so the cursor) is total across equal timestamps.
+    .order("id", { ascending: false })
+    .limit(pageSize + 1);
 
   if (error) {
     throw new AppError("Could not load meetings", 502, { cause: error });
   }
 
-  return data.map(toMeetingLog);
-};
+  const hasMore = data.length > pageSize;
+  const pageRows = hasMore ? data.slice(0, pageSize) : data;
+  const lastRow = pageRows[pageRows.length - 1];
 
-const MONTH_PAGE_SIZE = 1000;
+  return {
+    meetings: pageRows.map(toMeetingLog),
+    nextCursor: hasMore
+      ? encodeCursor({ value: lastRow[sortColumn], id: lastRow.id })
+      : null,
+  };
+};
 
 // One `{ month: "YYYY-MM", count }` per month that has a completed meeting,
 // newest first, for the archive's month cards. A month is when the meeting was
@@ -162,35 +194,32 @@ const MONTH_PAGE_SIZE = 1000;
 const listMonthSummaries = async (companyId, { historyDays = null, tzOffset = 0 } = {}) => {
   const counts = new Map();
 
-  for (let offset = 0; ; offset += MONTH_PAGE_SIZE) {
-    let query = supabase
-      .from("meeting_logs")
-      .select("held_at, completed_at")
-      .eq("company_id", companyId)
-      .not("completed_at", "is", null);
+  const rows = await fetchAllPages(
+    (from, to) => {
+      let query = supabase
+        .from("meeting_logs")
+        .select("held_at, completed_at")
+        .eq("company_id", companyId)
+        .not("completed_at", "is", null);
 
-    if (historyDays !== null) {
-      query = query.gte("created_at", historyCutoff(historyDays));
-    }
+      if (historyDays !== null) {
+        query = query.gte("created_at", historyCutoff(historyDays));
+      }
 
-    const { data, error } = await query
-      .order("created_at", { ascending: false })
-      .order("id", { ascending: false })
-      .range(offset, offset + MONTH_PAGE_SIZE - 1);
+      return query
+        .order("created_at", { ascending: false })
+        .order("id", { ascending: false })
+        .range(from, to);
+    },
+    { errorMessage: "Could not load meetings" },
+  );
 
-    if (error) {
-      throw new AppError("Could not load meetings", 502, { cause: error });
-    }
-
-    for (const row of data) {
-      const local = new Date(
-        new Date(row.held_at ?? row.completed_at).getTime() - tzOffset * 60 * 1000,
-      );
-      const month = `${local.getUTCFullYear()}-${String(local.getUTCMonth() + 1).padStart(2, "0")}`;
-      counts.set(month, (counts.get(month) ?? 0) + 1);
-    }
-
-    if (data.length < MONTH_PAGE_SIZE) break;
+  for (const row of rows) {
+    const local = new Date(
+      new Date(row.held_at ?? row.completed_at).getTime() - tzOffset * 60 * 1000,
+    );
+    const month = `${local.getUTCFullYear()}-${String(local.getUTCMonth() + 1).padStart(2, "0")}`;
+    counts.set(month, (counts.get(month) ?? 0) + 1);
   }
 
   return [...counts.entries()]

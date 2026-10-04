@@ -16,12 +16,14 @@ const {
   verifySeal,
   getDefenseBundle,
 } = require("../controllers/meetingLogs");
+const { decodeCursor } = require("../utility/cursor");
 const signaturesRoutes = require("./signatures");
 
 const router = express.Router();
 
-// GET /api/meetings — every meeting log the caller's company owns, optionally
-// scoped to one project.
+// GET /api/meetings — the caller's company's meeting logs, optionally scoped to
+// one project or a held-at month, keyset-paginated via `limit` + `cursor`
+// (the response's `meta.nextCursor`).
 router.get(
   "/",
   requireAuth,
@@ -39,6 +41,17 @@ router.get(
       .optional({ checkFalsy: true })
       .isISO8601()
       .withMessage("to must be an ISO 8601 timestamp"),
+    query("limit")
+      .optional({ checkFalsy: true })
+      .isInt({ min: 1, max: 200 })
+      .withMessage("limit must be between 1 and 200"),
+    query("cursor")
+      .optional({ checkFalsy: true })
+      .custom((value) => {
+        decodeCursor(value);
+        return true;
+      })
+      .withMessage("cursor is invalid"),
   ],
   validate,
   listMeetings,

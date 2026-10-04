@@ -1,6 +1,6 @@
 import React from "react";
 import { describe, it, expect, vi, beforeEach } from "vitest";
-import { renderHook, waitFor } from "@testing-library/react";
+import { act, renderHook, waitFor } from "@testing-library/react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 
 import { useMeetingLogs } from "../../src/hooks/useMeetingLogs";
@@ -44,7 +44,10 @@ describe("useMeetingLogs", () => {
   );
 
   it("fetches the meetings for the given month range", async () => {
-    vi.mocked(apiMeetingLogs.getMeetingLogs).mockResolvedValue([meeting]);
+    vi.mocked(apiMeetingLogs.getMeetingLogs).mockResolvedValue({
+      meetings: [meeting],
+      nextCursor: null,
+    });
     const range = {
       from: "2026-09-01T00:00:00.000Z",
       to: "2026-10-01T00:00:00.000Z",
@@ -56,9 +59,36 @@ describe("useMeetingLogs", () => {
     expect(apiMeetingLogs.getMeetingLogs).toHaveBeenCalledWith(
       "token-123",
       range,
+      { limit: 50, cursor: undefined },
     );
     expect(result.current.meetings).toEqual([meeting]);
     expect(result.current.isError).toBe(false);
+    expect(result.current.hasNextPage).toBe(false);
+  });
+
+  it("loads the next page with the previous page's cursor and appends it", async () => {
+    const second: MeetingLog = { ...meeting, id: "meeting-2" };
+    vi.mocked(apiMeetingLogs.getMeetingLogs)
+      .mockResolvedValueOnce({ meetings: [meeting], nextCursor: "cursor-1" })
+      .mockResolvedValueOnce({ meetings: [second], nextCursor: null });
+
+    const { result } = renderHook(() => useMeetingLogs(), { wrapper });
+
+    await waitFor(() => expect(result.current.hasNextPage).toBe(true));
+    expect(result.current.meetings).toEqual([meeting]);
+
+    await act(async () => {
+      await result.current.fetchNextPage();
+    });
+
+    await waitFor(() => expect(result.current.meetings).toEqual([meeting, second]));
+    expect(apiMeetingLogs.getMeetingLogs).toHaveBeenLastCalledWith(
+      "token-123",
+      {},
+      { limit: 50, cursor: "cursor-1" },
+    );
+    expect(result.current.hasNextPage).toBe(false);
+    expect(result.current.isFetchingNextPage).toBe(false);
   });
 
   it("defaults to no meetings and reports the error on failure", async () => {

@@ -62,6 +62,8 @@ const mappedMeetingLog = {
   sealedAt: null,
 };
 
+const { encodeCursor, decodeCursor } = require("../utility/cursor");
+
 const fromSpy = vi.spyOn(supabase, "from");
 
 describe("meetingLogs service: create", () => {
@@ -198,15 +200,16 @@ describe("meetingLogs service: create", () => {
 });
 
 describe("meetingLogs service: listForCompany", () => {
-  let order;
+  let limit;
   let builder;
   let select;
 
   beforeEach(() => {
-    order = vi.fn().mockResolvedValue({ data: [dbRow], error: null });
-    builder = { order };
+    limit = vi.fn().mockResolvedValue({ data: [dbRow], error: null });
+    builder = { limit };
     builder.eq = vi.fn(() => builder);
     builder.gte = vi.fn(() => builder);
+    builder.order = vi.fn(() => builder);
     select = vi.fn(() => builder);
 
     fromSpy.mockReset();
@@ -240,7 +243,7 @@ describe("meetingLogs service: listForCompany", () => {
     expect(cutoffMs).toBeLessThanOrEqual(Date.now() - thirtyDays);
   });
 
-  it("should query every meeting log owned by the caller's company, newest first, mapped to camelCase", async () => {
+  it("should query every meeting log owned by the caller's company, newest first with an id tiebreaker, mapped to camelCase", async () => {
     // Act
     const result = await listForCompany("company-1");
 
@@ -251,8 +254,9 @@ describe("meetingLogs service: listForCompany", () => {
       "project_id",
       expect.anything(),
     );
-    expect(order).toHaveBeenCalledWith("created_at", { ascending: false });
-    expect(result).toEqual([mappedMeetingLog]);
+    expect(builder.order).toHaveBeenNthCalledWith(1, "created_at", { ascending: false });
+    expect(builder.order).toHaveBeenNthCalledWith(2, "id", { ascending: false });
+    expect(result).toEqual({ meetings: [mappedMeetingLog], nextCursor: null });
   });
 
   it("should additionally scope by projectId when given", async () => {
@@ -279,17 +283,128 @@ describe("meetingLogs service: listForCompany", () => {
     expect(builder.or).toHaveBeenCalledWith(
       "and(held_at.gte.2026-09-01T00:00:00.000Z,held_at.lt.2026-10-01T00:00:00.000Z),and(held_at.is.null,completed_at.gte.2026-09-01T00:00:00.000Z,completed_at.lt.2026-10-01T00:00:00.000Z)",
     );
-    expect(order).toHaveBeenCalledWith("held_at", { ascending: false });
+    expect(builder.order).toHaveBeenNthCalledWith(1, "held_at", { ascending: false });
+    expect(builder.order).toHaveBeenNthCalledWith(2, "id", { ascending: false });
   });
 
   it("should throw a 502 AppError when the query fails", async () => {
     // Arrange
-    order.mockResolvedValue({ data: null, error: new Error("db down") });
+    limit.mockResolvedValue({ data: null, error: new Error("db down") });
 
     // Act & Assert
     await expect(listForCompany("company-1")).rejects.toMatchObject({
       statusCode: 502,
       message: "Could not load meetings",
+    });
+  });
+
+  describe("pagination", () => {
+    const uuid = (n) => `00000000-0000-4000-8000-${String(n).padStart(12, "0")}`;
+    const rows = (count) =>
+      Array.from({ length: count }, (_, i) => ({
+        ...dbRow,
+        id: uuid(i),
+        created_at: `2026-09-14T00:00:${String(59 - i).padStart(2, "0")}.000Z`,
+      }));
+
+    it("should default to a page of 50 and peek one extra row", async () => {
+      // Act
+      await listForCompany("company-1");
+
+      // Assert
+      expect(limit).toHaveBeenCalledWith(51);
+    });
+
+    it("should honour a smaller limit and clamp one above the ceiling", async () => {
+      // Act
+      await listForCompany("company-1", { limit: 5 });
+      await listForCompany("company-1", { limit: 5000 });
+
+      // Assert
+      expect(limit).toHaveBeenNthCalledWith(1, 6);
+      expect(limit).toHaveBeenNthCalledWith(2, 201);
+    });
+
+    it("should return a nextCursor from the last row of the page when more rows exist", async () => {
+      // Arrange — 3 rows come back for a page size of 2: the third is only the peek.
+      limit.mockResolvedValue({ data: rows(3), error: null });
+
+      // Act
+      const result = await listForCompany("company-1", { limit: 2 });
+
+      // Assert
+      expect(result.meetings.map((m) => m.id)).toEqual([uuid(0), uuid(1)]);
+      expect(decodeCursor(result.nextCursor)).toEqual({
+        value: rows(3)[1].created_at,
+        id: uuid(1),
+      });
+    });
+
+    it("should return a null nextCursor on the last (exactly full) page", async () => {
+      // Arrange
+      limit.mockResolvedValue({ data: rows(2), error: null });
+
+      // Act
+      const result = await listForCompany("company-1", { limit: 2 });
+
+      // Assert
+      expect(result.meetings).toHaveLength(2);
+      expect(result.nextCursor).toBeNull();
+    });
+
+    it("should resume strictly after the cursor on (created_at, id)", async () => {
+      // Arrange
+      builder.or = vi.fn(() => builder);
+      const cursor = encodeCursor({ value: "2026-09-14T00:00:30.000Z", id: uuid(7) });
+
+      // Act
+      await listForCompany("company-1", { cursor });
+
+      // Assert
+      expect(builder.or).toHaveBeenCalledWith(
+        `created_at.lt.2026-09-14T00:00:30.000Z,and(created_at.eq.2026-09-14T00:00:30.000Z,id.lt.${uuid(7)})`,
+      );
+    });
+
+    it("should key the cursor on held_at in the month view and keep the month filter", async () => {
+      // Arrange
+      builder.not = vi.fn(() => builder);
+      builder.or = vi.fn(() => builder);
+      const cursor = encodeCursor({ value: "2026-09-14T00:00:30.000Z", id: uuid(7) });
+
+      // Act
+      await listForCompany("company-1", {
+        from: "2026-09-01T00:00:00.000Z",
+        to: "2026-10-01T00:00:00.000Z",
+        cursor,
+      });
+
+      // Assert — two separate .or() calls: PostgREST ANDs repeated `or` params.
+      expect(builder.or).toHaveBeenCalledTimes(2);
+      expect(builder.or).toHaveBeenLastCalledWith(
+        `held_at.lt.2026-09-14T00:00:30.000Z,and(held_at.eq.2026-09-14T00:00:30.000Z,id.lt.${uuid(7)})`,
+      );
+    });
+
+    it("should keep the history-window cutoff alongside a cursor", async () => {
+      // Arrange
+      builder.or = vi.fn(() => builder);
+      const cursor = encodeCursor({ value: "2026-09-14T00:00:30.000Z", id: uuid(7) });
+
+      // Act
+      await listForCompany("company-1", { historyDays: 30, cursor });
+
+      // Assert
+      expect(builder.gte).toHaveBeenCalledWith("created_at", expect.any(String));
+      expect(builder.or).toHaveBeenCalledTimes(1);
+    });
+
+    it("should reject a malformed cursor with a 400 before querying", async () => {
+      // Act & Assert
+      await expect(
+        listForCompany("company-1", { cursor: "garbage" }),
+      ).rejects.toMatchObject({ statusCode: 400, message: "Invalid cursor" });
+      expect(limit).not.toHaveBeenCalled();
     });
   });
 });
@@ -834,7 +949,7 @@ describe("meetingLogs service: complete", () => {
       heldTzOffset: 420,
     });
 
-    // Assert � same seal as without an offset: it's display-only
+    // Assert � same seal as without an offset: it's display-only
     expect(updateFn).toHaveBeenCalledWith({
       completed_at: receiptTime,
       held_at: heldAt,

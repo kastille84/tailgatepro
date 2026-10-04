@@ -16,6 +16,7 @@ const {
   getMeetingPdfUrl,
   verifySeal,
   getDefenseBundleEntries,
+  listCompletedLogsInWindow,
 } = require("./gcDashboard");
 
 const PROJECT_COLUMNS =
@@ -150,7 +151,7 @@ describe("gcDashboard service: getOverview", () => {
   // the mocks don't depend on the order of .eq/.is/.order/.in calls.
   const chain = (getResult, onEq) => {
     const builder = {};
-    ["select", "is", "in", "not", "gte", "lt", "order"].forEach((method) => {
+    ["select", "is", "in", "not", "gte", "lt", "order", "range"].forEach((method) => {
       builder[method] = vi.fn(() => builder);
     });
     builder.eq = vi.fn((...eqArgs) => {
@@ -1356,6 +1357,81 @@ describe("gcDashboard service: getDefenseBundleEntries", () => {
 
     // Act & Assert
     await expect(getDefenseBundleEntries("jobsite-1", "gc-1")).rejects.toMatchObject({
+      statusCode: 502,
+      message: "Could not load meeting logs",
+    });
+  });
+});
+
+describe("gcDashboard service: listCompletedLogsInWindow", () => {
+  const window = { start: "2026-09-01T00:00:00.000Z", end: "2026-10-01T00:00:00.000Z" };
+  let range;
+  let builder;
+
+  const logs = (count) =>
+    Array.from({ length: count }, (_, i) => ({ project_id: "project-1", held_at: `row-${i}` }));
+
+  beforeEach(() => {
+    range = vi.fn().mockResolvedValue({ data: [], error: null });
+    builder = {};
+    for (const method of ["select", "in", "not", "gte", "lt", "order"]) {
+      builder[method] = vi.fn(() => builder);
+    }
+    builder.range = range;
+    fromSpy.mockReset();
+    fromSpy.mockImplementation((table) => {
+      if (table === "meeting_logs") return builder;
+      throw new Error(`Unexpected table: ${table}`);
+    });
+  });
+
+  it("should skip the query entirely when there are no projects", async () => {
+    // Act
+    const result = await listCompletedLogsInWindow([], window);
+
+    // Assert
+    expect(result).toEqual([]);
+    expect(fromSpy).not.toHaveBeenCalled();
+  });
+
+  it("should page past PostgREST's 1,000-row cap instead of silently truncating", async () => {
+    // Arrange
+    range
+      .mockResolvedValueOnce({ data: logs(1000), error: null })
+      .mockResolvedValueOnce({ data: logs(1000), error: null })
+      .mockResolvedValueOnce({ data: logs(37), error: null });
+
+    // Act
+    const result = await listCompletedLogsInWindow(["project-1"], window);
+
+    // Assert
+    expect(result).toHaveLength(2037);
+    expect(range.mock.calls).toEqual([
+      [0, 999],
+      [1000, 1999],
+      [2000, 2999],
+    ]);
+  });
+
+  it("should filter to completed logs in the window with a stable, tiebroken order", async () => {
+    // Act
+    await listCompletedLogsInWindow(["project-1"], window);
+
+    // Assert
+    expect(builder.in).toHaveBeenCalledWith("project_id", ["project-1"]);
+    expect(builder.not).toHaveBeenCalledWith("completed_at", "is", null);
+    expect(builder.gte).toHaveBeenCalledWith("held_at", window.start);
+    expect(builder.lt).toHaveBeenCalledWith("held_at", window.end);
+    expect(builder.order).toHaveBeenNthCalledWith(1, "held_at", { ascending: false });
+    expect(builder.order).toHaveBeenNthCalledWith(2, "id", { ascending: false });
+  });
+
+  it("should throw a 502 when a page fails", async () => {
+    // Arrange
+    range.mockResolvedValue({ data: null, error: { code: "XX000" } });
+
+    // Act & Assert
+    await expect(listCompletedLogsInWindow(["project-1"], window)).rejects.toMatchObject({
       statusCode: 502,
       message: "Could not load meeting logs",
     });

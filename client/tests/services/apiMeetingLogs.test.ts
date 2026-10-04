@@ -335,7 +335,10 @@ describe("apiMeetingLogs", () => {
       });
       vi.stubGlobal("fetch", fetchMock);
 
-      await expect(getMeetingLogs("token-123")).resolves.toEqual([meetingLog]);
+      await expect(getMeetingLogs("token-123")).resolves.toEqual({
+        meetings: [meetingLog],
+        nextCursor: null,
+      });
       expect(fetchMock).toHaveBeenCalledWith(
         "/api/meetings",
         expect.objectContaining({
@@ -367,6 +370,26 @@ describe("apiMeetingLogs", () => {
       expect(url.searchParams.get("projectId")).toBe("project-1");
       expect(url.searchParams.get("from")).toBe("2026-09-01T00:00:00.000Z");
       expect(url.searchParams.get("to")).toBe("2026-10-01T00:00:00.000Z");
+    });
+
+    it("sends limit and cursor as query params and returns the next cursor", async () => {
+      const fetchMock = vi.fn().mockResolvedValue({
+        ok: true,
+        status: 200,
+        json: async () => ({
+          success: true,
+          data: [meetingLog],
+          meta: { hiddenCount: 0, historyDays: null, nextCursor: "next-abc" },
+        }),
+      });
+      vi.stubGlobal("fetch", fetchMock);
+
+      const page = await getMeetingLogs("token-123", {}, { limit: 25, cursor: "abc" });
+
+      const url = new URL(fetchMock.mock.calls[0][0], "http://localhost");
+      expect(url.searchParams.get("limit")).toBe("25");
+      expect(url.searchParams.get("cursor")).toBe("abc");
+      expect(page).toEqual({ meetings: [meetingLog], nextCursor: "next-abc" });
     });
 
     it("rejects with the backend error message on an error response", async () => {
