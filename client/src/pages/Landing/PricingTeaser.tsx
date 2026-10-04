@@ -20,8 +20,10 @@ import {
   StyledName,
   StyledPriceRow,
   StyledPrice,
+  StyledPricePrefix,
   StyledCadence,
   StyledTarget,
+  StyledInherits,
   StyledFeatures,
   StyledFeatureItem,
   StyledSoonTag,
@@ -69,10 +71,18 @@ export const PricingTeaser = () => {
                 {plan.featured && <StyledBadge>Recommended</StyledBadge>}
                 <StyledName>{plan.name}</StyledName>
                 <StyledPriceRow>
+                  {plan.pricePrefix && (
+                    <StyledPricePrefix>{plan.pricePrefix}</StyledPricePrefix>
+                  )}
                   <StyledPrice>{plan.price.monthly}</StyledPrice>
                   {cadence && <StyledCadence>{cadence}</StyledCadence>}
                 </StyledPriceRow>
                 <StyledTarget>{plan.target}</StyledTarget>
+                {plan.inheritsFrom && (
+                  <StyledInherits>
+                    Everything in {plan.inheritsFrom}, plus:
+                  </StyledInherits>
+                )}
                 <StyledFeatures>
                   {plan.features.slice(0, 3).map((feature) => (
                     <StyledFeatureItem key={feature}>

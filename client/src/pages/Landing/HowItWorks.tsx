@@ -88,7 +88,7 @@ export const HowItWorks = () => (
 
       <StyledStepsFootnote>
         The same short routine on every site, every shift — and it all works with
-        zero signal, syncing once the phone is back on data.
+        zero signal, sending once the phone is back on data.
       </StyledStepsFootnote>
     </StyledContainer>
   </StyledSection>

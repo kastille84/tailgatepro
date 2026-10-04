@@ -40,7 +40,7 @@ describe("ComparisonTable", () => {
     ).toBeTruthy();
 
     expect(
-      screen.getByText("1-click OSHA Defense Bundle (indexed ZIP)"),
+      screen.getByText("1-click OSHA Defense Bundle — every record in one download"),
     ).toBeTruthy();
 
     // 9 feature rows + 1 header row

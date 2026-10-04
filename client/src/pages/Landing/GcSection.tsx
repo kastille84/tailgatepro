@@ -9,6 +9,10 @@ import {
   StyledEyebrow,
   StyledMediaImg,
 } from "./Landing.styles";
+import {
+  NO_PER_USER_FEES_BODY,
+  NO_PER_USER_FEES_TITLE,
+} from "../../data/sharedCopy";
 import { GcDashboardMockup } from "./GcDashboardMockup";
 import {
   StyledGcLayout,
@@ -38,7 +42,7 @@ const GC_POINTS: GcPoint[] = [
 ];
 
 export const GcSection = () => (
-  <StyledSection $tone="muted" aria-labelledby="gc-heading">
+  <StyledSection $tone="muted" id="for-gcs" aria-labelledby="gc-heading">
     <StyledContainer>
       <StyledSectionHead>
         <StyledEyebrow>For general contractors</StyledEyebrow>
@@ -76,14 +80,11 @@ export const GcSection = () => (
           </StyledGcList>
 
           <StyledCallout>
-            <StyledCalloutTitle>Zero subcontractor seat tax</StyledCalloutTitle>
+            <StyledCalloutTitle>{NO_PER_USER_FEES_TITLE}</StyledCalloutTitle>
             <StyledCalloutText>
-              Legacy platforms charge per user seat, penalizing you for adding
-              trade subcontractors to your project. With <strong>GC Site Pro</strong>{" "}
-              or <strong>GC Portfolio</strong> you pay a flat rate per site or
-              portfolio, and{" "}
-              <strong>subcontractors on your job never pay a seat fee</strong>{" "}
-              — no app-store downloads and no user-billing disputes.
+              {NO_PER_USER_FEES_BODY.map(({ text, strong }) =>
+                strong ? <strong key={text}>{text}</strong> : text,
+              )}
             </StyledCalloutText>
           </StyledCallout>
         </StyledGcAside>

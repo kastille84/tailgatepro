@@ -41,7 +41,7 @@ describe("Landing", () => {
 
     expect(
       screen.getByRole("heading", {
-        name: /the toolbox talk, done before the crew gears up/i,
+        name: /run your toolbox talk on your phone\. give the gc proof in seconds\./i,
       }),
     ).toBeTruthy();
 
@@ -50,6 +50,18 @@ describe("Landing", () => {
         /OSHA expects a toolbox talk before every shift\./i,
       ),
     ).toBeTruthy();
+  });
+
+  it("lists the three hero benefits", () => {
+    renderLanding();
+
+    [
+      "No app to install",
+      "Works with no signal",
+      "Signed PDF to your GC",
+    ].forEach((label) => {
+      expect(screen.getByText(label)).toBeTruthy();
+    });
   });
 
   it("renders the problem section and all problem cards", () => {
@@ -104,31 +116,6 @@ describe("Landing", () => {
     ).toBe(3);
   });
 
-  it("renders the solution section and all solution cards", () => {
-    renderLanding();
-
-    expect(
-      screen.getByRole("heading", {
-        name: /why crews are going digital/i,
-      }),
-    ).toBeTruthy();
-
-    [
-      "Zero app-store friction",
-      "Works offline, always",
-      "Fast to run, every shift",
-      "Instant compliance for the GC",
-    ].forEach((title) => {
-      expect(screen.getByText(title)).toBeTruthy();
-    });
-
-    expect(
-      screen.getByText(
-        /Same five-minute talk\. A compliance record the GC can see immediately\./i,
-      ),
-    ).toBeTruthy();
-  });
-
   it("renders the general-contractor section and seat-tax callout", () => {
     renderLanding();
 
@@ -139,7 +126,7 @@ describe("Landing", () => {
     ).toBeTruthy();
 
     expect(
-      screen.getByRole("heading", { name: /zero subcontractor seat tax/i }),
+      screen.getByRole("heading", { name: /no per-user fees/i }),
     ).toBeTruthy();
     expect(
       screen.getByText(
@@ -237,13 +224,18 @@ describe("Landing", () => {
     expect(heroImage.getAttribute("loading")).toBe("eager");
   });
 
-  it("links the hero and closing CTAs to signup and pricing", () => {
+  it("links the hero and closing CTAs to signup, the GC section and pricing", () => {
     renderLanding();
 
     const signupLinks = screen
-      .getAllByRole("link", { name: /get started free/i })
+      .getAllByRole("link", { name: /start free|get started free/i })
       .map((a) => a.getAttribute("href"));
     expect(signupLinks).toEqual(["/signup", "/signup"]);
+    expect(
+      screen
+        .getByRole("link", { name: /i'm a gc — see the dashboard/i })
+        .getAttribute("href"),
+    ).toBe("#for-gcs");
     expect(
       screen.getByRole("link", { name: /see pricing/i }).getAttribute("href"),
     ).toBe("/pricing");

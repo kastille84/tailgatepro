@@ -1,4 +1,9 @@
 import {
+  NO_INSTALL_ANSWER,
+  SPONSORED_ACCESS_ANSWER,
+  SPONSORED_ACCESS_QUESTION,
+} from "../../data/sharedCopy";
+import {
   StyledSection,
   StyledContainer,
   StyledSectionHead,
@@ -19,23 +24,23 @@ interface FaqEntry {
 const FAQ: FaqEntry[] = [
   {
     q: "Do my sub-foremen need to download an app?",
-    a: "No. Foremen tap a link to open it straight away in their mobile browser — nothing to install.",
+    a: NO_INSTALL_ANSWER,
   },
   {
     q: "Does it work with no signal?",
-    a: "Yes. The entire talk runs offline. Signatures, photos and attendance sync automatically once the phone is back on data.",
+    a: "Yes. The entire talk runs offline. Signatures, photos and attendance send automatically once the phone is back on data.",
   },
   {
     q: "What does it cost the subcontractor?",
     a: "Crews start free — the core OSHA talk library, offline talks, digital signatures and auto-emailed PDF exports. Paid plans add custom branding and multi-language talks, and the 5-year legal archive.",
   },
   {
-    q: "How does a GC sponsor subcontractors for free?",
-    a: "A GC invites subcontractors to a jobsite by email or shares a company join code, and their talks land on the GC's dashboard with no seat fee for the subs. Full sponsored access on paid GC plans is coming soon.",
+    q: SPONSORED_ACCESS_QUESTION,
+    a: SPONSORED_ACCESS_ANSWER,
   },
   {
     q: "When can I sign up?",
-    a: "Right now. Create a free account in a minute — no credit card — and upgrade from Settings or the pricing page when you need more foremen, branding or a longer archive.",
+    a: "Right now. Create a free account in a minute — no credit card — and upgrade from the pricing page when you need more foremen, branding or a longer archive.",
   },
 ];
 

@@ -49,9 +49,9 @@ export const StyledBadge = styled.span`
   transform: translate(-50%, -50%);
   padding: 0.4rem 1.2rem;
   border-radius: 999rem;
-  background-color: ${({ theme }) => theme.colors.orange[500]};
+  background-color: ${({ theme }) => theme.colors.orange[700]};
   color: ${({ theme }) => theme.colors.concrete[100]};
-  font-size: 1.05rem;
+  font-size: 1.2rem;
   font-weight: 800;
   text-transform: uppercase;
   letter-spacing: 0.08em;
@@ -79,18 +79,32 @@ export const StyledPrice = styled.span`
   color: ${({ theme }) => theme.colors.navy[700]};
 `;
 
+export const StyledPricePrefix = styled.span`
+  font-size: 1.4rem;
+  font-weight: 700;
+  color: ${({ theme }) => theme.colors.navy[600]};
+`;
+
 export const StyledCadence = styled.span`
   font-size: 1.4rem;
   font-weight: 600;
-  color: ${({ theme }) => theme.colors.navy[400]};
+  color: ${({ theme }) => theme.colors.navy[500]};
 `;
 
 export const StyledTarget = styled.p`
   margin: 0;
-  font-size: 1.35rem;
+  font-size: 1.4rem;
   font-weight: 500;
   line-height: 1.5;
-  color: ${({ theme }) => theme.colors.navy[400]};
+  color: ${({ theme }) => theme.colors.navy[500]};
+`;
+
+export const StyledInherits = styled.p`
+  margin: 0.4rem 0 0;
+  font-size: 1.4rem;
+  font-weight: 800;
+  line-height: 1.4;
+  color: ${({ theme }) => theme.colors.navy[700]};
 `;
 
 export const StyledFeatures = styled.ul`
@@ -126,7 +140,7 @@ export const StyledSoonTag = styled.span`
   border: 1px solid ${({ theme }) => theme.colors.navy[400]};
   border-radius: 999rem;
   color: ${({ theme }) => theme.colors.navy[600]};
-  font-size: 1rem;
+  font-size: 1.2rem;
   font-weight: 800;
   line-height: 1.4;
   text-transform: uppercase;

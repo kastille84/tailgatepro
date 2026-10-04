@@ -58,7 +58,7 @@ export const StyledEyebrow = styled.p`
   margin: 0;
   text-transform: uppercase;
   letter-spacing: 0.12em;
-  font-size: 1.3rem;
+  font-size: 1.4rem;
   font-weight: 700;
   color: ${({ theme }) => theme.colors.orange[400]};
 `;
@@ -105,7 +105,7 @@ export const StyledSaveHint = styled.span`
   border-radius: 999rem;
   background-color: ${({ theme }) => theme.colors.green[50]};
   color: ${({ theme }) => theme.colors.green[800]};
-  font-size: 1.2rem;
+  font-size: 1.4rem;
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.04em;
@@ -154,9 +154,9 @@ export const StyledBadge = styled.span`
   transform: translate(-50%, -50%);
   padding: 0.5rem 1.4rem;
   border-radius: 999rem;
-  background-color: ${({ theme }) => theme.colors.orange[500]};
+  background-color: ${({ theme }) => theme.colors.orange[700]};
   color: ${({ theme }) => theme.colors.concrete[100]};
-  font-size: 1.1rem;
+  font-size: 1.2rem;
   font-weight: 800;
   text-transform: uppercase;
   letter-spacing: 0.08em;
@@ -175,7 +175,7 @@ export const StyledPlanTarget = styled.p`
   font-size: 1.4rem;
   font-weight: 500;
   line-height: 1.5;
-  color: ${({ theme }) => theme.colors.navy[400]};
+  color: ${({ theme }) => theme.colors.navy[500]};
 `;
 
 export const StyledPriceRow = styled.div`
@@ -193,18 +193,32 @@ export const StyledPrice = styled.span`
   color: ${({ theme }) => theme.colors.navy[700]};
 `;
 
+export const StyledPricePrefix = styled.span`
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: ${({ theme }) => theme.colors.navy[600]};
+`;
+
 export const StyledPriceCadence = styled.span`
   font-size: 1.5rem;
   font-weight: 600;
-  color: ${({ theme }) => theme.colors.navy[400]};
+  color: ${({ theme }) => theme.colors.navy[500]};
 `;
 
 export const StyledPriceSub = styled.p`
   margin: 0;
-  font-size: 1.3rem;
+  font-size: 1.4rem;
   font-weight: 600;
   color: ${({ theme }) => theme.colors.green[700]};
   min-height: 1.6rem;
+`;
+
+export const StyledInherits = styled.p`
+  margin: 0.4rem 0 0;
+  font-size: 1.5rem;
+  font-weight: 800;
+  line-height: 1.4;
+  color: ${({ theme }) => theme.colors.navy[700]};
 `;
 
 export const StyledFeatureList = styled.ul`
@@ -240,7 +254,7 @@ export const StyledSoonTag = styled.span`
   border: 1px solid ${({ theme }) => theme.colors.navy[400]};
   border-radius: 999rem;
   color: ${({ theme }) => theme.colors.navy[600]};
-  font-size: 1.05rem;
+  font-size: 1.2rem;
   font-weight: 800;
   line-height: 1.4;
   text-transform: uppercase;
@@ -268,9 +282,9 @@ export const StyledPlanCta = styled.a<{
   border-radius: ${({ theme }) => theme.borderRadius.md};
   border: 0.2rem solid
     ${({ theme, $featured }) =>
-      $featured ? theme.colors.orange[500] : theme.colors.navy[200]};
+      $featured ? theme.colors.orange[700] : theme.colors.navy[200]};
   background-color: ${({ theme, $featured }) =>
-    $featured ? theme.colors.orange[500] : "transparent"};
+    $featured ? theme.colors.orange[700] : "transparent"};
   color: ${({ theme, $featured }) =>
     $featured ? theme.colors.concrete[100] : theme.colors.navy[700]};
   font-size: 1.5rem;
@@ -284,9 +298,9 @@ export const StyledPlanCta = styled.a<{
 
   &:hover {
     background-color: ${({ theme, $featured }) =>
-      $featured ? theme.colors.orange[600] : theme.colors.concrete[200]};
+      $featured ? theme.colors.orange[800] : theme.colors.concrete[200]};
     border-color: ${({ theme, $featured }) =>
-      $featured ? theme.colors.orange[600] : theme.colors.navy[400]};
+      $featured ? theme.colors.orange[800] : theme.colors.navy[400]};
   }
 
   &:focus-visible {
