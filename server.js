@@ -42,7 +42,7 @@ const app = express();
 if ((process.env.NODE_ENV || "").toLowerCase() === "production") {
   const corsOptions = {
     // Explicitly list both versions of your domain
-    origin: ["https://getTailgatePro.com", "https://www.getTailgatePro.com"],
+    origin: ["https://gettailgatepro.com", "https://www.gettailgatepro.com"],
     methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
     allowedHeaders: ["Content-Type", "Authorization"],
     credentials: true, // Set to true if you are using cookies or sessions

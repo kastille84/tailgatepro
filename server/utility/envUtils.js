@@ -3,7 +3,7 @@ exports.keysBasedOnEnv = () => {
     console.log("production");
     // PRODUCTION
     return {
-      clientUrl: "https://getTailgatePro.com",
+      clientUrl: process.env.CLIENT_URL,
       // Mailgun
       mailgun: {
         apiKey: process.env.MAILGUN_API_KEY,
@@ -87,7 +87,7 @@ exports.keysBasedOnEnv = () => {
     console.log("not production");
     // Non-Prod
     return {
-      clientUrl: "https://localhost:5173",
+      clientUrl: process.env.CLIENT_URL,
       // Mailgun
       mailgun: {
         apiKey: process.env.MAILGUN_API_KEY,
