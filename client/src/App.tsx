@@ -33,6 +33,7 @@ import {
 
 import { Landing } from "./pages/Landing";
 import { Pricing } from "./pages/Pricing";
+import { Terms, Privacy } from "./pages/Legal";
 import { Login } from "./pages/Login";
 import { Signup } from "./pages/Signup";
 import { ForgotPassword } from "./pages/ForgotPassword";
@@ -84,6 +85,8 @@ function App() {
                     <Route path="/" element={<Landing />}></Route>
                     <Route path="/landing" element={<Landing />}></Route>
                     <Route path="/pricing" element={<Pricing />}></Route>
+                    <Route path="/terms" element={<Terms />}></Route>
+                    <Route path="/privacy" element={<Privacy />}></Route>
                     <Route path="/login" element={<Login />}></Route>
                     <Route path="/signup" element={<Signup />}></Route>
                     <Route

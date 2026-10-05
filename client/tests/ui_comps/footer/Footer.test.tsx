@@ -23,6 +23,17 @@ describe("Footer", () => {
     ).toBeDefined();
   });
 
+  it("links to the terms and privacy pages", () => {
+    renderWithTheme(<Footer />);
+
+    expect(
+      screen.getByRole("link", { name: /terms & conditions/i }).getAttribute("href"),
+    ).toBe("/terms");
+    expect(
+      screen.getByRole("link", { name: /privacy policy/i }).getAttribute("href"),
+    ).toBe("/privacy");
+  });
+
   it("accepts custom year and text overrides", () => {
     renderWithTheme(
       <Footer year={2024} text="Safety from the field to the GC" />,
