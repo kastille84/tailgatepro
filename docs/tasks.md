@@ -3100,6 +3100,37 @@ Stripe-hosted Checkout (redirect), not embedded. Design doc: `docs/billing-desig
 - [x] 12k. Pricing copy fixes: annual discount copy said "save 20%" but annual = 10x monthly (2 months free, 16.7%), so `plans.ts`, `Pricing.tsx`, `SiteProCheckoutModal.tsx` and the strategy doc now say "2 months free" (prices and Stripe untouched); "Coming soon" tag dropped from Trade Pro's "Expanded OSHA talk library" (`comingSoon` array removed from `plans.ts`; `pricing-promise-gaps.md` row updated; more talks are added periodically)
 - [ ] 12j. Launch day (blocked on the deployed API domain): **register the live webhook endpoint in the Stripe Dashboard** (`https://<api-domain>/webhook/stripe`, 5 events) and put its `whsec_` in `STRIPE_WEBHOOK_SECRET_PROD`; live secret key in `STRIPE_SECRET_KEY_PROD`; `NODE_ENV=production`; Dashboard test event (200 + `stripe_events` row); one real purchase (company plan and a Site Pro jobsite), then cancel and refund; drop the "not yet exercised against live Stripe" note in `docs/pricing-promise-gaps.md`
 
+## Phase 13 — In-house subcontractors · status: design decided, no code yet
+
+Scope: a GC can add its own self-performing crews (e.g. "Hyperion - Framing") as real
+`subcontractor` companies linked by `companies.parent_gc_company_id`, auto-attached to the GC's
+jobsites, inheriting the GC's plan, and tracked on the GC dashboard with an "In-house" badge.
+Design doc (decided, open questions resolved): `docs/in-house-subs-design.md`. Server tests are
+plain CommonJS Vitest; client work needs 100% jsdom coverage; domain hooks wrap TanStack Query.
+
+- [ ] 13a. Schema + docs: `companies.parent_gc_company_id` (FK, `ON DELETE RESTRICT`), `companies.archived_at`, `check_parent_gc_sub_only`, per-parent name unique index `(parent_gc_company_id, lower(name))`, `companies_parent_gc_idx` in `Supabase_SQL.sql` (**run on the live DB**); `Supabase_Schema.md` rows; note the new single-column authorization check in `docs/data-access.md` if it lists them
+- [ ] 13b. Server core:
+  - [ ] `server/services/inHouseCrews.js`: `listForGc`, `create`, `rename`, `archive`/`restore`, `assertOwnedCrew` (404 on another GC's crew); parent always from `req.user.companyId`, never the body
+  - [ ] `jobsites.attachInHouseCrew` (both ownership checks, accepted roster row with null token/email, then `projectsService.create`; roster first, best-effort rollback; `23505` = already attached = success)
+  - [ ] Auto-attach: `create` attaches the new crew to every active GC jobsite; `jobsites.create` attaches every active crew (best-effort, logged)
+  - [ ] Routes + controllers: `GET/POST /api/companies/in-house`, `PATCH /api/companies/in-house/:id`, `POST /api/jobsites/:id/in-house/:crewId`; delete blocked (409) once a crew has meeting logs, archive instead
+  - [ ] Tests for each of the above, incl. the 404 and superintendent `allowedJobsiteIds` cases
+- [ ] 13c. Plans and limits:
+  - [ ] `subLocking.computeUnlockedSubIds`: in-house crews always unlocked and never use a slot (`inHouse` on the roster entry, like `sponsored`); pass `inHouse` from the callers (`subAccess`, `gcDashboard`, `jobsites`)
+  - [ ] Extend `resolveEffectiveTier` (`server/services/sponsorship.js`) with the parent rule (GC `basic` → `basic`; GC `premium`/`enterprise` → `premium`, never Trade Enterprise); select `parent_gc_company_id` + parent `tier` in `companies.getById` and `users.getUserContext`; existing sponsorship rule still applies to a crew that resolves to `basic`
+  - [ ] Stripe: 403 on checkout/portal for a company with a parent ("billing is managed by your general contractor")
+  - [ ] Seats: unchanged (Trade Free = one seat total, accepted); ensure the invite UI surfaces the existing `PLAN_LIMIT` error with an upgrade prompt
+- [ ] 13d. Invites into a child: a manager of the parent GC may create `company_invites` for a child (`child.parent_gc_company_id = req.user.companyId` check before `companyInvites.createInvite`); invitee signs up through the existing 8c link; tests
+- [ ] 13e. Client:
+  - [ ] `apiInHouseCrews` + `useInHouseCrews` domain hook (no inline `useMutation`)
+  - [ ] Onboarding card "Does your company have in-house subcontractors?" (Yes / Not now): shown once to new **and** existing GCs with no crews; dismissal in `localStorage` (try/catch, renders fine without it)
+  - [ ] Crew form: name input + "Add another", trade chips (Framing, Roofing, Concrete, Electrical, Plumbing, Drywall) that fill "`{GC name} - {Trade}`"; React Hook Form + Zod `onTouched`; 16px inputs, ≥ 48×48px targets
+  - [ ] Settings → In-house crews (GC only): list, rename, archive/restore, "Invite a foreman" per crew; hide the Billing section for a crew company
+  - [ ] GC dashboard/roster: **In-house** badge on crew rows; "Add in-house crew" action on a jobsite; styled-components + `props.theme` only
+  - [ ] Tests (100% coverage)
+- [ ] 13f. Docs + copy: `docs/pricing-promise-gaps.md`, optional GC pricing-card line ("Track your own crews at no extra cost"), update `CLAUDE.md` if the company model summary needs it
+- [ ] 13g. Manual smoke: create a crew on a GC with two sites (attached to both); invite a foreman into the crew and log a talk; confirm it appears on the GC dashboard with the badge, unlocked on GC Free; downgrade the GC and confirm the crew drops to Trade Free; archive a crew with logs (allowed) and try to delete it (409)
+
 ## Deferred
 
 - [-] QuickBooks sync — dropped 2026-10-01 (Procore + ACC GC push and Procore + JobTread sub push shipped, see Phase 9f)
