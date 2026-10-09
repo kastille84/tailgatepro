@@ -41,6 +41,7 @@ import { ResetPassword } from "./pages/ResetPassword";
 import { AcceptInvite } from "./pages/AcceptInvite";
 import { AcceptJobsiteInvite } from "./pages/AcceptJobsiteInvite";
 import { JoinJobsite } from "./pages/JoinJobsite";
+import { JoinCrew } from "./pages/JoinCrew";
 import { Dashboard } from "./pages/Dashboard";
 import { Projects } from "./pages/Projects";
 import { ContentLibrary } from "./pages/ContentLibrary";
@@ -108,6 +109,10 @@ function App() {
                     <Route
                       path="/jobsite-join/:token"
                       element={<JoinJobsite />}
+                    ></Route>
+                    <Route
+                      path="/crew-join/:token"
+                      element={<JoinCrew />}
                     ></Route>
                     <Route element={<RequireAuth />}>
                       <Route path="/dashboard" element={<Dashboard />}></Route>

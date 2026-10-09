@@ -9,6 +9,11 @@ const { resolveEffectiveTier } = require("./sponsorship");
 const COMPANY_COLUMNS =
   "id, name, company_type, tier, logo_path, required_talk_id, required_talk_pushed_at, required_talk_pushed_by";
 
+// getById also needs the parent GC's tier to derive an in-house crew's plan
+// (Phase 13c). Kept out of COMPANY_COLUMNS so the write paths that share it
+// don't select a self-embed.
+const COMPANY_WITH_PARENT_COLUMNS = `${COMPANY_COLUMNS}, parent_gc_company_id, parent:parent_gc_company_id(tier)`;
+
 const toCompany = (row) => ({
   id: row.id,
   name: row.name,
@@ -31,7 +36,7 @@ const toCompany = (row) => ({
 const getById = async (id) => {
   const { data, error } = await supabase
     .from("companies")
-    .select(COMPANY_COLUMNS)
+    .select(COMPANY_WITH_PARENT_COLUMNS)
     .eq("id", id)
     .single();
 
@@ -49,6 +54,7 @@ const getById = async (id) => {
       companyId: company.id,
       companyType: company.companyType,
       tier: company.tier,
+      parentTier: data.parent?.tier ?? null,
     }),
   };
 };
@@ -201,8 +207,45 @@ const clearRequiredTopic = async (companyId) => {
   return toCompany(data);
 };
 
+// The columns an in-house crew (Phase 13, docs/in-house-subs-design.md) exposes.
+// Deliberately narrower than COMPANY_COLUMNS: a crew's tier and billing
+// columns are never shown, since its plan is derived from its GC's.
+const CREW_COLUMNS = "id, name, archived_at, created_at";
+
+const toCrew = (row) => ({
+  id: row.id,
+  name: row.name,
+  archivedAt: row.archived_at,
+  createdAt: row.created_at,
+});
+
+// An in-house crew the caller's GC owns. Ownership is the single-column
+// `parent_gc_company_id` check in the query itself, so another GC's crew (or
+// an ordinary company) is indistinguishable from a missing row: 404.
+// `gcCompanyId` is always the caller's verified company, never request input.
+const getOwnedCrew = async (crewId, gcCompanyId) => {
+  const { data, error } = await supabase
+    .from("companies")
+    .select(CREW_COLUMNS)
+    .eq("id", crewId)
+    .eq("parent_gc_company_id", gcCompanyId)
+    .single();
+
+  if (error) {
+    if (error.code === "PGRST116") {
+      throw new AppError("Crew not found", 404, { cause: error });
+    }
+    throw new AppError("Could not load the crew", 502, { cause: error });
+  }
+
+  return toCrew(data);
+};
+
 module.exports = {
+  CREW_COLUMNS,
+  toCrew,
   getById,
+  getOwnedCrew,
   updateLogo,
   getOrCreateJoinCode,
   getByJoinCode,

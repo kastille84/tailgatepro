@@ -1,3 +1,4 @@
+import { InHouseBadge } from "../in-house-crews";
 import type { GcSubCompliance } from "../../interfaces/gcDashboard";
 import {
   StyledLockedRow,
@@ -42,6 +43,7 @@ export const SubComplianceRow = ({
     <li>
       <StyledSubRow type="button" onClick={() => onSelect(sub)}>
         <StyledSubName>{sub.companyName ?? "Unknown company"}</StyledSubName>
+        {sub.inHouse && <InHouseBadge />}
         <StyledSubMeta>
           {sub.lastLoggedAt
             ? `Last logged ${new Date(sub.lastLoggedAt).toLocaleString()}`

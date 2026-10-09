@@ -29,12 +29,23 @@ const isSponsored = async (companyId) => {
   );
 };
 
-// The tier a company's limits should be resolved from: the stored tier, except
-// a Free subcontractor on a sponsored site resolves as Pro ("premium"). Only
-// that one combination costs an extra query.
-const resolveEffectiveTier = async ({ companyId, companyType, tier }) => {
-  if (companyType !== "subcontractor" || tier !== "basic") return tier;
-  return (await isSponsored(companyId)) ? "premium" : tier;
+// The tier a company's limits should be resolved from. Two derived lifts, never
+// stored:
+//  - an in-house crew (Phase 13c, has a parent GC) takes its parent's plan
+//    mapped onto the sub ladder: GC Free -> Trade Free, GC Portfolio -> Trade
+//    Pro (never Trade Enterprise). It has no plan of its own.
+//  - a Free subcontractor on a sponsored site resolves as Pro ("premium"); this
+//    still applies to a crew that resolved to Free.
+// Only a Free subcontractor costs an extra query.
+const resolveEffectiveTier = async ({
+  companyId,
+  companyType,
+  tier,
+  parentTier = null,
+}) => {
+  const baseTier = parentTier ? (parentTier === "basic" ? "basic" : "premium") : tier;
+  if (companyType !== "subcontractor" || baseTier !== "basic") return baseTier;
+  return (await isSponsored(companyId)) ? "premium" : baseTier;
 };
 
 module.exports = { isSponsored, resolveEffectiveTier };

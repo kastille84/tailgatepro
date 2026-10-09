@@ -157,6 +157,44 @@ describe("useCurrentUser", () => {
     expect(result.current.isSubcontractor).toBe(false);
   });
 
+  it("flags an in-house crew by its parent GC, and not an ordinary company", async () => {
+    vi.mocked(apiUsers.getCurrentUser).mockResolvedValue({
+      id: "user-3",
+      companyId: "crew-1",
+      role: "admin",
+      tier: "basic",
+      companyType: "subcontractor",
+      parentGcCompanyId: "gc-1",
+      plan: "trade-free",
+      limits: LIMITS,
+      hasBrandingAccess: false,
+    });
+
+    const { result } = renderHook(() => useCurrentUser(), { wrapper });
+
+    await waitFor(() => expect(result.current.companyType).toBe("subcontractor"));
+    expect(result.current.isInHouseCrew).toBe(true);
+  });
+
+  it("does not flag an ordinary company as an in-house crew", async () => {
+    vi.mocked(apiUsers.getCurrentUser).mockResolvedValue({
+      id: "user-4",
+      companyId: "company-4",
+      role: "admin",
+      tier: "basic",
+      companyType: "subcontractor",
+      parentGcCompanyId: null,
+      plan: "trade-free",
+      limits: LIMITS,
+      hasBrandingAccess: false,
+    });
+
+    const { result } = renderHook(() => useCurrentUser(), { wrapper });
+
+    await waitFor(() => expect(result.current.companyType).toBe("subcontractor"));
+    expect(result.current.isInHouseCrew).toBe(false);
+  });
+
   it("lets a subcontractor and a GC Portfolio company author company talks, but not a GC Free company", async () => {
     const profile = {
       id: "user-3",
@@ -265,6 +303,7 @@ describe("useCurrentUser", () => {
     expect(result.current.limits).toBeNull();
     expect(result.current.isGc).toBe(false);
     expect(result.current.isSubcontractor).toBe(false);
+    expect(result.current.isInHouseCrew).toBe(false);
     // Permissive while the profile is unknown -- the server is the authority.
     expect(result.current.canAuthorCompanyTalks).toBe(true);
     expect(result.current.isManagerRole).toBe(false);

@@ -17,11 +17,13 @@ const {
   hasActiveSitePro,
   listMemberships,
   setMyCadence,
+  attachCrew,
+  attachInHouseCrew,
 } = require("./jobsites");
 
 const JOBSITE_COLUMNS =
   "id, gc_company_id, name, status, archived_at, origin, plan, meeting_cadence, sms_nudges_enabled, timezone, created_at";
-const LIST_SELECT = `${JOBSITE_COLUMNS}, companies(tier), jobsite_subcontractors(id, sub_company_id, invited_email, accepted_at, companies(name))`;
+const LIST_SELECT = `${JOBSITE_COLUMNS}, companies(tier), jobsite_subcontractors(id, sub_company_id, invited_email, accepted_at, companies(name, parent_gc_company_id))`;
 const ROSTER_COLUMNS =
   "id, jobsite_id, sub_company_id, invited_email, token, expires_at, accepted_at";
 
@@ -73,14 +75,27 @@ const countQuery = (counts, error = null) => {
   return query;
 };
 
+// A chainable, awaitable query that resolves to `{ data, error }` -- for the
+// plain list reads (live in-house crews) that end on a filter, not `.single()`.
+const listQuery = (data, error = null) => {
+  const query = {};
+  ["select", "eq", "is", "in"].forEach((method) => {
+    query[method] = vi.fn(() => query);
+  });
+  query.then = (resolve, reject) => Promise.resolve({ data, error }).then(resolve, reject);
+  return query;
+};
+
 describe("jobsites service: create", () => {
   let single;
   let select;
   let insert;
   let capQuery;
 
+  // The post-insert crew fan-out reads `companies`; no crews by default.
   const routeJobsites = () =>
     fromSpy.mockImplementation((table) => {
+      if (table === "companies") return listQuery([]);
       if (table !== "jobsites") throw new Error(`Unexpected table: ${table}`);
       // Cap counts start with select(..., { head: true }); the insert chain is separate.
       return { insert, select: capQuery.select };
@@ -308,14 +323,14 @@ describe("jobsites service: listForGc", () => {
 
     // Assert
     expect(jobsite.subcontractors).toEqual([
-      { id: "sub-1", email: "a@acme.com", status: "pending", companyName: null, locked: false },
-      { id: "sub-2", email: "b@roof.com", status: "accepted", companyName: "Roof Co", locked: false },
+      { id: "sub-1", email: "a@acme.com", status: "pending", companyName: null, companyId: null, inHouse: false, locked: false },
+      { id: "sub-2", email: "b@roof.com", status: "accepted", companyName: "Roof Co", companyId: null, inHouse: false, locked: false },
     ]);
   });
 
-  it("should hide a locked sub's email and company name but never lock a pending invite", async () => {
+  it("should hide a locked sub's email and company name, never lock a pending invite, and flag an in-house crew", async () => {
     // Arrange
-    unlockedSpy.mockResolvedValue(new Set(["sub-co-1"]));
+    unlockedSpy.mockResolvedValue(new Set(["sub-co-1", "crew-1"]));
     order.mockResolvedValue({
       data: [
         {
@@ -324,6 +339,7 @@ describe("jobsites service: listForGc", () => {
             { id: "r-1", sub_company_id: "sub-co-1", invited_email: "a@acme.com", accepted_at: "2026-02-01T00:00:00.000Z", companies: { name: "Acme" } },
             { id: "r-2", sub_company_id: "sub-co-2", invited_email: "b@roof.com", accepted_at: "2026-03-01T00:00:00.000Z", companies: { name: "Roof Co" } },
             { id: "r-3", sub_company_id: null, invited_email: "c@new.com", accepted_at: null, companies: null },
+            { id: "r-4", sub_company_id: "crew-1", invited_email: null, accepted_at: "2026-04-01T00:00:00.000Z", companies: { name: "Hyperion - Framing", parent_gc_company_id: dbRow.gc_company_id } },
           ],
         },
       ],
@@ -335,9 +351,10 @@ describe("jobsites service: listForGc", () => {
 
     // Assert
     expect(jobsite.subcontractors).toEqual([
-      { id: "r-1", email: "a@acme.com", status: "accepted", companyName: "Acme", locked: false },
-      { id: "r-2", email: null, status: "accepted", companyName: null, locked: true },
-      { id: "r-3", email: "c@new.com", status: "pending", companyName: null, locked: false },
+      { id: "r-1", email: "a@acme.com", status: "accepted", companyName: "Acme", companyId: null, inHouse: false, locked: false },
+      { id: "r-2", email: null, status: "accepted", companyName: null, companyId: null, inHouse: false, locked: true },
+      { id: "r-3", email: "c@new.com", status: "pending", companyName: null, companyId: null, inHouse: false, locked: false },
+      { id: "r-4", email: null, status: "accepted", companyName: "Hyperion - Framing", companyId: "crew-1", inHouse: true, locked: false },
     ]);
   });
 
@@ -1625,5 +1642,363 @@ describe("jobsites service: setMyCadence", () => {
       statusCode: 502,
       message: "Could not update your meeting cadence",
     });
+  });
+});
+
+describe("jobsites service: attachCrew (Phase 13)", () => {
+  const args = { jobsiteId: "jobsite-1", jobsiteName: "Riverside Tower", crewId: "crew-1" };
+  const noProjectYet = () => ["projects", chain({ count: 0, error: null })];
+
+  let createSpy;
+  let errorSpy;
+
+  beforeEach(() => {
+    createSpy = vi.spyOn(projectsService, "create").mockResolvedValue({ id: "project-1" });
+    errorSpy = vi.spyOn(console, "error").mockImplementation(() => {});
+  });
+
+  afterEach(() => {
+    createSpy.mockRestore();
+    errorSpy.mockRestore();
+  });
+
+  it("should insert an already-accepted roster row with no email or token, then create the crew's project", async () => {
+    // Arrange
+    const insert = chain({ data: { id: "roster-1" }, error: null });
+    queueFrom(["jobsite_subcontractors", insert], noProjectYet());
+
+    // Act
+    const result = await attachCrew(args);
+
+    // Assert
+    const payload = insert.insert.mock.calls[0][0];
+    expect(payload.id).toMatch(UUID_RE);
+    expect(payload.jobsite_id).toBe("jobsite-1");
+    expect(payload.sub_company_id).toBe("crew-1");
+    expect(payload.invited_email).toBeNull();
+    expect(payload.accepted_at).toEqual(expect.any(String));
+    expect(payload).not.toHaveProperty("token");
+    expect(createSpy).toHaveBeenCalledWith({
+      id: expect.stringMatching(UUID_RE),
+      ownerCompanyId: "crew-1",
+      name: "Riverside Tower",
+      jobsiteId: "jobsite-1",
+    });
+    expect(result).toEqual({ alreadyAttached: false });
+  });
+
+  it("should keep an existing roster row (23505) and skip the project when the crew already has one", async () => {
+    // Arrange
+    queueFrom(
+      ["jobsite_subcontractors", chain({ data: null, error: { code: "23505" } })],
+      ["projects", chain({ count: 1, error: null })],
+    );
+
+    // Act
+    const result = await attachCrew(args);
+
+    // Assert
+    expect(result).toEqual({ alreadyAttached: true });
+    expect(createSpy).not.toHaveBeenCalled();
+  });
+
+  it("should heal a roster row that has no project yet by creating the project", async () => {
+    // Arrange
+    queueFrom(
+      ["jobsite_subcontractors", chain({ data: null, error: { code: "23505" } })],
+      noProjectYet(),
+    );
+
+    // Act
+    const result = await attachCrew(args);
+
+    // Assert
+    expect(result).toEqual({ alreadyAttached: true });
+    expect(createSpy).toHaveBeenCalledTimes(1);
+  });
+
+  it("should throw a 502 when the roster insert fails for any other reason", async () => {
+    // Arrange
+    queueFrom(["jobsite_subcontractors", chain({ data: null, error: { code: "OTHER" } })]);
+
+    // Act & Assert
+    await expect(attachCrew(args)).rejects.toMatchObject({
+      statusCode: 502,
+      message: "Could not add the crew to the job site",
+    });
+    expect(createSpy).not.toHaveBeenCalled();
+  });
+
+  it("should delete the roster row it inserted and rethrow when the project insert fails", async () => {
+    // Arrange
+    const projectError = new Error("insert failed");
+    createSpy.mockRejectedValue(projectError);
+    const rollback = chain({ data: null, error: null });
+    queueFrom(
+      ["jobsite_subcontractors", chain({ data: { id: "roster-1" }, error: null })],
+      noProjectYet(),
+      ["jobsite_subcontractors", rollback],
+    );
+
+    // Act & Assert
+    await expect(attachCrew(args)).rejects.toBe(projectError);
+    expect(rollback.delete).toHaveBeenCalled();
+    expect(rollback.eq).toHaveBeenCalledWith("id", "roster-1");
+  });
+
+  it("should log a failed rollback but still rethrow the original project error", async () => {
+    // Arrange
+    const projectError = new Error("insert failed");
+    createSpy.mockRejectedValue(projectError);
+    queueFrom(
+      ["jobsite_subcontractors", chain({ data: { id: "roster-1" }, error: null })],
+      noProjectYet(),
+      ["jobsite_subcontractors", chain({ data: null, error: { code: "OTHER" } })],
+    );
+
+    // Act & Assert
+    await expect(attachCrew(args)).rejects.toBe(projectError);
+    expect(errorSpy).toHaveBeenCalledWith(
+      "jobsites: failed to roll back an in-house crew attach",
+      expect.anything(),
+    );
+  });
+
+  it("should never delete a roster row it did not insert when the project step fails", async () => {
+    // Arrange
+    queueFrom(
+      ["jobsite_subcontractors", chain({ data: null, error: { code: "23505" } })],
+      ["projects", chain({ count: null, error: new Error("count failed") })],
+    );
+
+    // Act & Assert
+    await expect(attachCrew(args)).rejects.toMatchObject({ statusCode: 502 });
+    expect(fromSpy).toHaveBeenCalledTimes(2);
+  });
+});
+
+describe("jobsites service: attachInHouseCrew (Phase 13)", () => {
+  const args = { jobsiteId: "jobsite-1", crewId: "crew-1", gcCompanyId: "gc-1" };
+  const crewRow = {
+    id: "crew-1",
+    name: "Hyperion - Framing",
+    archived_at: null,
+    created_at: "2026-01-01T00:00:00.000Z",
+  };
+  const ownedSite = (overrides = {}) => [
+    "jobsites",
+    chain({ data: { ...ownedJobsiteRow, ...overrides }, error: null }),
+  ];
+  const ownedCrew = (overrides = {}) => [
+    "companies",
+    chain({ data: { ...crewRow, ...overrides }, error: null }),
+  ];
+
+  let createSpy;
+
+  beforeEach(() => {
+    createSpy = vi.spyOn(projectsService, "create").mockResolvedValue({ id: "project-1" });
+  });
+
+  afterEach(() => {
+    createSpy.mockRestore();
+  });
+
+  it("should check ownership of both the jobsite and the crew, then attach", async () => {
+    // Arrange
+    const site = chain({ data: ownedJobsiteRow, error: null });
+    const crew = chain({ data: crewRow, error: null });
+    queueFrom(
+      ["jobsites", site],
+      ["companies", crew],
+      ["jobsite_subcontractors", chain({ data: { id: "roster-1" }, error: null })],
+      ["projects", chain({ count: 0, error: null })],
+    );
+
+    // Act
+    const result = await attachInHouseCrew(args);
+
+    // Assert
+    expect(site.eq).toHaveBeenCalledWith("gc_company_id", "gc-1");
+    expect(crew.eq).toHaveBeenCalledWith("parent_gc_company_id", "gc-1");
+    expect(createSpy).toHaveBeenCalledWith(
+      expect.objectContaining({
+        ownerCompanyId: "crew-1",
+        name: "Riverside Tower",
+        jobsiteId: "jobsite-1",
+      }),
+    );
+    expect(result).toEqual({ alreadyAttached: false });
+  });
+
+  it("should treat another GC's jobsite as a 404 without touching the roster", async () => {
+    // Arrange
+    queueFrom(["jobsites", chain({ data: null, error: { code: "PGRST116" } })]);
+
+    // Act & Assert
+    await expect(attachInHouseCrew(args)).rejects.toMatchObject({ statusCode: 404 });
+    expect(createSpy).not.toHaveBeenCalled();
+  });
+
+  it("should treat another GC's crew as a 404", async () => {
+    // Arrange
+    queueFrom(ownedSite(), ["companies", chain({ data: null, error: { code: "PGRST116" } })]);
+
+    // Act & Assert
+    await expect(attachInHouseCrew(args)).rejects.toMatchObject({
+      statusCode: 404,
+      message: "Crew not found",
+    });
+  });
+
+  it("should treat a jobsite outside a site-scoped user's assigned sites as a 404", async () => {
+    // Act & Assert
+    await expect(
+      attachInHouseCrew({ ...args, allowedJobsiteIds: ["some-other-site"] }),
+    ).rejects.toMatchObject({ statusCode: 404, message: "Jobsite not found" });
+  });
+
+  it("should refuse an archived jobsite with a 409", async () => {
+    // Arrange
+    queueFrom(ownedSite({ archived_at: "2026-02-01T00:00:00.000Z" }), ownedCrew());
+
+    // Act & Assert
+    await expect(attachInHouseCrew(args)).rejects.toMatchObject({ statusCode: 409 });
+    expect(createSpy).not.toHaveBeenCalled();
+  });
+
+  it("should refuse a completed jobsite with a 409", async () => {
+    // Arrange
+    queueFrom(ownedSite({ status: "completed" }), ownedCrew());
+
+    // Act & Assert
+    await expect(attachInHouseCrew(args)).rejects.toMatchObject({ statusCode: 409 });
+  });
+
+  it("should refuse an archived crew with a 409", async () => {
+    // Arrange
+    queueFrom(ownedSite(), ownedCrew({ archived_at: "2026-02-01T00:00:00.000Z" }));
+
+    // Act & Assert
+    await expect(attachInHouseCrew(args)).rejects.toMatchObject({
+      statusCode: 409,
+      message: "That crew is archived. Restore it first.",
+    });
+    expect(createSpy).not.toHaveBeenCalled();
+  });
+});
+
+describe("jobsites service: create (in-house crew fan-out, Phase 13)", () => {
+  let createSpy;
+  let errorSpy;
+  let capQuery;
+  let jobsiteInsert;
+  let rosterInsert;
+  let crewsQuery;
+
+  // Routes by table: the jobsite insert + cap counts, the live-crew read, and
+  // the per-crew roster insert / project count.
+  const route = (crews, crewError = null) => {
+    crewsQuery = listQuery(crews, crewError);
+    fromSpy.mockImplementation((table) => {
+      if (table === "jobsites") return { insert: jobsiteInsert, select: capQuery.select };
+      if (table === "companies") return crewsQuery;
+      if (table === "jobsite_subcontractors") return rosterInsert;
+      if (table === "projects") return chain({ count: 0, error: null });
+      throw new Error(`Unexpected table: ${table}`);
+    });
+  };
+
+  beforeEach(() => {
+    const single = vi.fn().mockResolvedValue({ data: dbRow, error: null });
+    jobsiteInsert = vi.fn(() => ({ select: vi.fn(() => ({ single })) }));
+    capQuery = countQuery([0, 0]);
+    rosterInsert = chain({ data: { id: "roster-1" }, error: null });
+    createSpy = vi.spyOn(projectsService, "create").mockResolvedValue({ id: "project-1" });
+    errorSpy = vi.spyOn(console, "error").mockImplementation(() => {});
+    fromSpy.mockReset();
+  });
+
+  afterEach(() => {
+    createSpy.mockRestore();
+    errorSpy.mockRestore();
+  });
+
+  it("should attach no crew automatically when none are chosen", async () => {
+    // Arrange
+    route([{ id: "crew-1" }]);
+
+    // Act
+    const result = await create({ gcCompanyId: "gc-1", name: "Riverside Tower" });
+
+    // Assert
+    expect(result).toEqual(mappedJobsite);
+    expect(crewsQuery.select).not.toHaveBeenCalled();
+    expect(createSpy).not.toHaveBeenCalled();
+  });
+
+  it("should attach the chosen in-house crews to the new jobsite", async () => {
+    // Arrange
+    route([{ id: "crew-1" }, { id: "crew-2" }]);
+
+    // Act
+    const result = await create({
+      gcCompanyId: "gc-1",
+      name: "Riverside Tower",
+      crewIds: ["crew-1", "crew-2"],
+    });
+
+    // Assert
+    expect(result).toEqual(mappedJobsite);
+    expect(rosterInsert.insert.mock.calls.map(([row]) => row.sub_company_id).sort()).toEqual([
+      "crew-1",
+      "crew-2",
+    ]);
+    expect(createSpy).toHaveBeenCalledTimes(2);
+  });
+
+  it("should only read the chosen crews that are the GC's own and non-archived", async () => {
+    // Arrange
+    route([]);
+
+    // Act
+    await create({ gcCompanyId: "gc-1", name: "Riverside Tower", crewIds: ["crew-1"] });
+
+    // Assert
+    expect(crewsQuery.in).toHaveBeenCalledWith("id", ["crew-1"]);
+    expect(crewsQuery.eq).toHaveBeenCalledWith("parent_gc_company_id", "gc-1");
+    expect(crewsQuery.is).toHaveBeenCalledWith("archived_at", null);
+  });
+
+  it("should still return the new jobsite and log when one crew fails to attach", async () => {
+    // Arrange
+    createSpy.mockRejectedValue(new Error("project insert failed"));
+    route([{ id: "crew-1" }]);
+
+    // Act
+    const result = await create({ gcCompanyId: "gc-1", name: "Riverside Tower", crewIds: ["crew-1"] });
+
+    // Assert
+    expect(result).toEqual(mappedJobsite);
+    expect(errorSpy).toHaveBeenCalledWith(
+      "jobsites: could not attach an in-house crew",
+      expect.any(Error),
+    );
+  });
+
+  it("should still return the new jobsite and log when the crew lookup fails", async () => {
+    // Arrange
+    route(null, { code: "OTHER" });
+
+    // Act
+    const result = await create({ gcCompanyId: "gc-1", name: "Riverside Tower", crewIds: ["crew-1"] });
+
+    // Assert
+    expect(result).toEqual(mappedJobsite);
+    expect(errorSpy).toHaveBeenCalledWith(
+      "jobsites: could not load in-house crews to attach",
+      expect.anything(),
+    );
+    expect(createSpy).not.toHaveBeenCalled();
   });
 });

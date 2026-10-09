@@ -95,6 +95,10 @@ vi.mock("../../../src/features/company-settings", () => ({
   ),
 }));
 
+vi.mock("../../../src/features/in-house-crews", () => ({
+  InHouseCrewsSection: () => <div data-testid="in-house-crews-section" />,
+}));
+
 const renderPage = () =>
   render(
     <MemoryRouter>
@@ -349,5 +353,43 @@ describe("Settings page", () => {
     expect(screen.getByTestId("logo-upload").textContent).toContain(
       "https://signed.example/logo.png",
     );
+  });
+
+  describe("in-house crews", () => {
+    it("shows the In-house crews section to a GC manager", () => {
+      mockUseCurrentUser.mockReturnValue({ isGc: true, isManagerRole: true });
+      renderPage();
+
+      expect(screen.getByRole("heading", { name: "In-house crews" })).toBeDefined();
+      expect(screen.getByTestId("in-house-crews-section")).toBeDefined();
+    });
+
+    it("hides it from a GC role that cannot manage crews", () => {
+      mockUseCurrentUser.mockReturnValue({ isGc: true, isManagerRole: false });
+      renderPage();
+
+      expect(screen.queryByTestId("in-house-crews-section")).toBeNull();
+    });
+
+    it("hides it from a subcontractor", () => {
+      mockUseCurrentUser.mockReturnValue({ isGc: false, isManagerRole: true });
+      renderPage();
+
+      expect(screen.queryByTestId("in-house-crews-section")).toBeNull();
+    });
+
+    it("hides Billing for a crew company, whose billing the parent GC manages", () => {
+      mockUseCurrentUser.mockReturnValue({ isManagerRole: true, isInHouseCrew: true });
+      renderPage();
+
+      expect(screen.queryByTestId("billing-section")).toBeNull();
+    });
+
+    it("still shows Billing to an ordinary company manager", () => {
+      mockUseCurrentUser.mockReturnValue({ isManagerRole: true, isInHouseCrew: false });
+      renderPage();
+
+      expect(screen.getByTestId("billing-section")).toBeDefined();
+    });
   });
 });

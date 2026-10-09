@@ -28,6 +28,7 @@ const {
   listMemberships,
   setMyCadence,
 } = require("../controllers/jobsites");
+const { attachCrew } = require("../controllers/inHouseCrews");
 
 const router = express.Router();
 
@@ -56,6 +57,9 @@ router.post(
       .withMessage("Jobsite name is required")
       .isLength({ max: 120 })
       .withMessage("Jobsite name is too long"),
+    // In-house crews to put on the new site (Phase 13); none are automatic.
+    body("crewIds").optional().isArray({ max: 100 }).withMessage("Invalid crews"),
+    body("crewIds.*").isUUID().withMessage("Invalid crew id"),
   ],
   validate,
   createJobsite,
@@ -239,6 +243,23 @@ router.delete(
   ],
   validate,
   removeSubcontractor,
+);
+
+// POST /api/jobsites/:id/in-house/:crewId — re-adds one of the GC's in-house
+// crews to this jobsite (Phase 13). New crews and jobsites auto-attach; this is
+// for a crew the GC removed from a site. Same role set as the invite route.
+router.post(
+  "/:id/in-house/:crewId",
+  requireAuth,
+  loadUserContext,
+  requireGcCompany,
+  requireRole(...SITE_MANAGER_ROLES),
+  [
+    param("id").isUUID().withMessage("A valid jobsite id is required"),
+    param("crewId").isUUID().withMessage("A valid crew id is required"),
+  ],
+  validate,
+  attachCrew,
 );
 
 // GET /api/jobsites/:id/members — the company's superintendents, each flagged

@@ -65,11 +65,17 @@ const toJobsiteWithRoster = (row, unlocked) => ({
   subcontractors: (row.jobsite_subcontractors ?? []).map((sub) => {
     // A pending invite has no sub company yet, so there is nothing to lock.
     const locked = Boolean(sub.sub_company_id) && isSubLocked(unlocked, sub.sub_company_id);
+    const inHouse =
+      Boolean(sub.sub_company_id) && sub.companies?.parent_gc_company_id === row.gc_company_id;
     return {
       id: sub.id,
       email: locked ? null : sub.invited_email,
       status: sub.accepted_at ? "accepted" : "pending",
       companyName: locked ? null : (sub.companies?.name ?? null),
+      // Phase 13: an in-house crew is a child company of this GC. The id is only
+      // exposed for a crew (the client matches it to offer "Add in-house crew").
+      companyId: !locked && inHouse ? sub.sub_company_id : null,
+      inHouse,
       locked,
     };
   }),
@@ -123,11 +129,124 @@ const assertJobsiteAvailable = async (gcCompanyId) => {
   }
 };
 
+// Puts an in-house crew (Phase 13, docs/in-house-subs-design.md) on a jobsite
+// with no invite or token: an already-accepted roster row, then the crew's own
+// `projects` row through the same validated path acceptJoinLink uses. Roster
+// first, project second, so the admission check is already true when the
+// project insert runs. Idempotent: a roster row that already exists (23505) is
+// kept, and the project is only created if the crew has none on this jobsite
+// (heals the "roster without project" drift). The caller has already verified
+// that the GC owns both the jobsite and the crew -- ids here are trusted.
+const attachCrew = async ({ jobsiteId, jobsiteName, crewId }) => {
+  const { data: inserted, error: insertError } = await supabase
+    .from("jobsite_subcontractors")
+    .insert({
+      id: uuidv4(),
+      jobsite_id: jobsiteId,
+      sub_company_id: crewId,
+      invited_email: null,
+      accepted_at: new Date().toISOString(),
+    })
+    .select("id")
+    .single();
+
+  if (insertError && insertError.code !== "23505") {
+    throw new AppError("Could not add the crew to the job site", 502, { cause: insertError });
+  }
+  const insertedId = insertError ? null : inserted.id;
+
+  try {
+    const existingProjects = await countRows(
+      supabase
+        .from("projects")
+        .select("id", { count: "exact", head: true })
+        .eq("jobsite_id", jobsiteId)
+        .eq("owner_company_id", crewId),
+      "Could not check the crew's project",
+    );
+    if (existingProjects === 0) {
+      await projectsService.create({
+        id: uuidv4(),
+        ownerCompanyId: crewId,
+        name: jobsiteName,
+        jobsiteId,
+      });
+    }
+  } catch (projectError) {
+    // Only undo a roster row this call inserted -- never one that was already there.
+    if (insertedId) {
+      const { error: rollbackError } = await supabase
+        .from("jobsite_subcontractors")
+        .delete()
+        .eq("id", insertedId);
+      if (rollbackError) {
+        console.error("jobsites: failed to roll back an in-house crew attach", rollbackError);
+      }
+    }
+    throw projectError;
+  }
+
+  return { alreadyAttached: insertedId === null };
+};
+
+// Attaches one in-house crew to a jobsite the caller's GC owns -- used to
+// re-add a crew the GC removed from a site. Another GC's jobsite or crew is a
+// 404, a site outside a site-scoped user's assigned sites too. An archived or
+// non-active jobsite, or an archived crew, is a 409: nothing should newly join them.
+const attachInHouseCrew = async ({ jobsiteId, crewId, gcCompanyId, allowedJobsiteIds = null }) => {
+  const jobsite = await getOwnedJobsite(jobsiteId, gcCompanyId, allowedJobsiteIds);
+  const crew = await companiesService.getOwnedCrew(crewId, gcCompanyId);
+
+  if (jobsite.archivedAt || jobsite.status !== "active") {
+    throw new AppError("That job site is not active", 409);
+  }
+  if (crew.archivedAt) {
+    throw new AppError("That crew is archived. Restore it first.", 409);
+  }
+
+  return attachCrew({ jobsiteId, jobsiteName: jobsite.name, crewId });
+};
+
+// Best-effort attach used by `create`: the live (non-archived) in-house crews the
+// GC picked join the new jobsite. The ownership filter is in the query itself,
+// so an id that is another GC's, archived or unknown is silently skipped. A
+// failure is logged, never thrown -- a working jobsite with a crew missing is
+// recoverable via attachInHouseCrew, a failed jobsite create is not what the
+// GC asked for.
+const attachChosenCrews = async ({ gcCompanyId, jobsite, crewIds }) => {
+  if (crewIds.length === 0) return;
+
+  const { data: crews, error } = await supabase
+    .from("companies")
+    .select("id")
+    .in("id", crewIds)
+    .eq("parent_gc_company_id", gcCompanyId)
+    .is("archived_at", null);
+
+  if (error) {
+    console.error("jobsites: could not load in-house crews to attach", error);
+    return;
+  }
+
+  const results = await Promise.allSettled(
+    crews.map((crew) =>
+      attachCrew({ jobsiteId: jobsite.id, jobsiteName: jobsite.name, crewId: crew.id }),
+    ),
+  );
+  results.forEach((result) => {
+    if (result.status === "rejected") {
+      console.error("jobsites: could not attach an in-house crew", result.reason);
+    }
+  });
+};
+
 // jobsites.id has no DB default (docs/jobsite-design.md's offline-sync-rule
 // exception, same as company_invites.id) — creating a jobsite is an
 // online-only action, so the server mints the id here rather than the client
 // generating one before an offline write, the way projects.create does.
-const create = async ({ gcCompanyId, name }) => {
+// `crewIds` are the in-house crews the GC ticked in the job site form; none are
+// attached automatically.
+const create = async ({ gcCompanyId, name, crewIds = [] }) => {
   await assertJobsiteAvailable(gcCompanyId);
 
   const { data, error } = await supabase
@@ -140,7 +259,9 @@ const create = async ({ gcCompanyId, name }) => {
     throw new AppError("Could not create the jobsite", 502, { cause: error });
   }
 
-  return toJobsite(data);
+  const jobsite = toJobsite(data);
+  await attachChosenCrews({ gcCompanyId, jobsite, crewIds });
+  return jobsite;
 };
 
 // Every jobsite the caller's GC company owns, newest first — same ordering
@@ -154,7 +275,7 @@ const listForGc = async (gcCompanyId, allowedJobsiteIds = null) => {
   let query = supabase
     .from("jobsites")
     .select(
-      `${JOBSITE_COLUMNS}, companies(tier), jobsite_subcontractors(id, sub_company_id, invited_email, accepted_at, companies(name))`,
+      `${JOBSITE_COLUMNS}, companies(tier), jobsite_subcontractors(id, sub_company_id, invited_email, accepted_at, companies(name, parent_gc_company_id))`,
     )
     .eq("gc_company_id", gcCompanyId);
   if (allowedJobsiteIds !== null) query = query.in("id", allowedJobsiteIds);
@@ -720,6 +841,8 @@ module.exports = {
   previewJoinLink,
   acceptJoinLink,
   removeSubcontractor,
+  attachCrew,
+  attachInHouseCrew,
   getOwnedJobsite,
   hasActiveSitePro,
 };

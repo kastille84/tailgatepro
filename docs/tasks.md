@@ -3103,32 +3103,45 @@ Stripe-hosted Checkout (redirect), not embedded. Design doc: `docs/billing-desig
 ## Phase 13 — In-house subcontractors · status: design decided, no code yet
 
 Scope: a GC can add its own self-performing crews (e.g. "Hyperion - Framing") as real
-`subcontractor` companies linked by `companies.parent_gc_company_id`, auto-attached to the GC's
+`subcontractor` companies linked by `companies.parent_gc_company_id`, attached to the GC's
 jobsites, inheriting the GC's plan, and tracked on the GC dashboard with an "In-house" badge.
 Design doc (decided, open questions resolved): `docs/in-house-subs-design.md`. Server tests are
 plain CommonJS Vitest; client work needs 100% jsdom coverage; domain hooks wrap TanStack Query.
 
-- [ ] 13a. Schema + docs: `companies.parent_gc_company_id` (FK, `ON DELETE RESTRICT`), `companies.archived_at`, `check_parent_gc_sub_only`, per-parent name unique index `(parent_gc_company_id, lower(name))`, `companies_parent_gc_idx` in `Supabase_SQL.sql` (**run on the live DB**); `Supabase_Schema.md` rows; note the new single-column authorization check in `docs/data-access.md` if it lists them
-- [ ] 13b. Server core:
-  - [ ] `server/services/inHouseCrews.js`: `listForGc`, `create`, `rename`, `archive`/`restore`, `assertOwnedCrew` (404 on another GC's crew); parent always from `req.user.companyId`, never the body
-  - [ ] `jobsites.attachInHouseCrew` (both ownership checks, accepted roster row with null token/email, then `projectsService.create`; roster first, best-effort rollback; `23505` = already attached = success)
-  - [ ] Auto-attach: `create` attaches the new crew to every active GC jobsite; `jobsites.create` attaches every active crew (best-effort, logged)
-  - [ ] Routes + controllers: `GET/POST /api/companies/in-house`, `PATCH /api/companies/in-house/:id`, `POST /api/jobsites/:id/in-house/:crewId`; delete blocked (409) once a crew has meeting logs, archive instead
-  - [ ] Tests for each of the above, incl. the 404 and superintendent `allowedJobsiteIds` cases
-- [ ] 13c. Plans and limits:
-  - [ ] `subLocking.computeUnlockedSubIds`: in-house crews always unlocked and never use a slot (`inHouse` on the roster entry, like `sponsored`); pass `inHouse` from the callers (`subAccess`, `gcDashboard`, `jobsites`)
-  - [ ] Extend `resolveEffectiveTier` (`server/services/sponsorship.js`) with the parent rule (GC `basic` → `basic`; GC `premium`/`enterprise` → `premium`, never Trade Enterprise); select `parent_gc_company_id` + parent `tier` in `companies.getById` and `users.getUserContext`; existing sponsorship rule still applies to a crew that resolves to `basic`
-  - [ ] Stripe: 403 on checkout/portal for a company with a parent ("billing is managed by your general contractor")
-  - [ ] Seats: unchanged (Trade Free = one seat total, accepted); ensure the invite UI surfaces the existing `PLAN_LIMIT` error with an upgrade prompt
-- [ ] 13d. Invites into a child: a manager of the parent GC may create `company_invites` for a child (`child.parent_gc_company_id = req.user.companyId` check before `companyInvites.createInvite`); invitee signs up through the existing 8c link; tests
-- [ ] 13e. Client:
-  - [ ] `apiInHouseCrews` + `useInHouseCrews` domain hook (no inline `useMutation`)
-  - [ ] Onboarding card "Does your company have in-house subcontractors?" (Yes / Not now): shown once to new **and** existing GCs with no crews; dismissal in `localStorage` (try/catch, renders fine without it)
-  - [ ] Crew form: name input + "Add another", trade chips (Framing, Roofing, Concrete, Electrical, Plumbing, Drywall) that fill "`{GC name} - {Trade}`"; React Hook Form + Zod `onTouched`; 16px inputs, ≥ 48×48px targets
-  - [ ] Settings → In-house crews (GC only): list, rename, archive/restore, "Invite a foreman" per crew; hide the Billing section for a crew company
-  - [ ] GC dashboard/roster: **In-house** badge on crew rows; "Add in-house crew" action on a jobsite; styled-components + `props.theme` only
-  - [ ] Tests (100% coverage)
-- [ ] 13f. Docs + copy: `docs/pricing-promise-gaps.md`, optional GC pricing-card line ("Track your own crews at no extra cost"), update `CLAUDE.md` if the company model summary needs it
+- [x] 13a. Schema + docs: `companies.parent_gc_company_id` (FK, `ON DELETE RESTRICT`), `companies.archived_at`, `check_parent_gc_sub_only`, `check_parent_gc_not_self`, per-parent name unique index `(parent_gc_company_id, lower(name))`, `companies_parent_gc_idx` in `Supabase_SQL.sql`; `Supabase_Schema.md` rows; `docs/data-access.md` needs no change (it doesn't list per-column authorization checks)
+  - [ ] **Run the commented Phase 13 `ALTER TABLE` / `CREATE INDEX` block from `Supabase_SQL.sql` on the non-prod and prod Supabase DBs** (manual; nothing in 13b+ works until it is applied)
+- [x] 13b. Server core (code complete, full server suite green; **needs the 13a SQL applied before any manual smoke**; do not release to prod before 13c, or a crew takes a GC Free `unlockedSubs` slot):
+  - [x] `server/services/inHouseCrews.js`: `listForGc`, `create`, `update` (rename, archive/restore), `remove`; ownership via `companies.getOwnedCrew` (404 on another GC's crew); parent always from `req.user.companyId`, never the body
+  - [x] `jobsites.attachCrew` (idempotent: accepted roster row with null token/email, then `projectsService.create` only if the crew has no project on the site; roster first, rollback only of a row this call inserted; `23505` = already attached) and `jobsites.attachInHouseCrew` (jobsite + crew ownership, 409 for an archived/non-active jobsite or an archived crew, site-scope 404)
+  - [x] Attach on create: crew `create` attaches to the `jobsiteIds` sent; `jobsites.create` attaches the `crewIds` sent (best-effort, logged, never fails the create). Built as auto-attach-to-everything, changed in 13e to a GC choice, see below
+  - [x] Routes + controllers: `GET/POST /api/companies/in-house`, `PATCH/DELETE /api/companies/in-house/:id`, `POST /api/jobsites/:id/in-house/:crewId`; delete is 409 once a crew has meeting logs or users (archive instead)
+  - [x] Tests: `inHouseCrews` service + controller, `jobsites` (`attachCrew`, `attachInHouseCrew`, create fan-out; existing `create` mocks extended), `companies.getOwnedCrew`
+  - Decided while building: archiving a crew does not detach it from sites or stop its foremen logging; restoring does not re-attach it. Hiding archived crews on the GC dashboard/roster is left to 13e.
+- [x] 13c. Plans and limits (server complete, full server suite green; the seats prompt is client work, carried into 13e):
+  - [x] `subLocking.computeUnlockedSubIds`: in-house crews always unlocked and never use a slot (`inHouse` on the roster entry, like `sponsored`); pass `inHouse` from the callers (`subAccess`, `gcDashboard`, `jobsites`)
+  - [x] Extend `resolveEffectiveTier` (`server/services/sponsorship.js`) with the parent rule (GC `basic` → `basic`; GC `premium`/`enterprise` → `premium`, never Trade Enterprise); select `parent_gc_company_id` + parent `tier` in `companies.getById` and `users.getUserContext`; existing sponsorship rule still applies to a crew that resolves to `basic`
+  - [x] Stripe: 403 on checkout/portal for a company with a parent ("billing is managed by your general contractor")
+  - [x] Seats: unchanged (Trade Free = one seat total, accepted) -- no server change
+  - [x] (13e) Invite UI surfaces the existing `PLAN_LIMIT` error with an upgrade prompt; Settings Billing hidden when `/api/users/me` shows a parent GC
+- [x] 13d. Invites into a child: `POST /api/companies/in-house/:id/invite` (GC managers only; roles admin/safety_manager/foreman, no superintendent). `inHouseCrews.inviteCrewMember` checks ownership via `companies.getOwnedCrew` (404 for another GC's crew), 409 for an archived crew, then the unchanged `companyInvites.createInvite(crewId, ...)` + invite email named after the crew; the token is never returned. Invitee signs up through the existing 8c link; email-only (no open link/QR join); controller tests added
+- [x] 13e. Client (code complete; server suite and client suite green; needs the 13a SQL applied before any manual smoke):
+  - [x] Server touch-up: `inHouse` on `GET /api/gc/overview` subs and on `GET /api/jobsites` roster rows, plus `companyId` on a roster row (only for an in-house crew); `parentGcCompanyId` was already on `/api/users/me`
+  - [x] `apiInHouseCrews` + `useInHouseCrews` / `useInHouseCrewActions` domain hooks (no inline `useMutation`); `isInHouseCrew` on `useCurrentUser`
+  - [x] Onboarding card "Does your company have its own crews?" (Yes, add my crews / Not now), shown on the GC dashboard to a manager whose GC has no crews (new and existing); dismissal in `localStorage` per company (try/catch, renders fine without it)
+  - [x] Crew form: trade chips (Framing, Roofing, Concrete, Electrical, Plumbing, Drywall) prefill "`{GC name} - {Trade}`"; an **Other** chip prefills "`{GC name} - `" and focuses the name input so any other trade can be typed, and the name is always editable; a bare trailing dash is rejected; "Add another" keeps the modal open; PlanLimit shows the upgrade prompt; "Add crew" then offers "Invite a foreman" / "Later" for the new crew (a crew with no users is a dead end), reusing the crew invite modal
+  - [x] Settings -> In-house crews (GC managers): list, add, rename, archive/restore, delete (409 -> archive instead), "Invite someone" per crew (admin/safety_manager/foreman); Billing section hidden for a crew company; crew invites reuse the 13c `PLAN_LIMIT` upgrade prompt
+  - [x] GC dashboard compliance rows and the jobsite roster show an **In-house** badge; "Add in-house crew" on the roster lists active crews not yet on the site (archived crews are never offered)
+  - [x] Site choice instead of auto-attach: the crew form lists the GC's live job sites pre-ticked and sends `jobsiteIds`; the job site form (create mode) lists active crews pre-ticked and sends `crewIds`; server attaches only what is sent (ownership enforced in the query); copy no longer says crews are added to every site
+  - [x] Tests for all of the above
+- [x] 13f-join. Open join link / QR per crew so a foreman can join without the GC knowing their email (invites are email-only; the invitee sets a name + password with that email, any provider). It loosens the email-match check, so it carries its own limits. See "Crew join link" in `docs/in-house-subs-design.md`
+  - [x] Schema: `crew_join_links` (one row per crew, `UNIQUE (company_id)`, token, `expires_at`, `max_uses`, `uses`), RLS on; **run the SQL in Supabase before deploying** (`Supabase_SQL.sql` 10b)
+  - [x] Server: `services/crewJoinLinks.js` (create/replace, get, turn off, preview, race-safe `claimSlot`/`releaseSlot`), `services/crewMembers.js` (list, remove), routes under `/api/companies/in-house/:id/{join-link,members}` and public `GET /api/companies/crew-join/:token`
+  - [x] Signup: `crewJoinToken` in `requireProfileMetadata` (mutually exclusive with the other three token kinds) and `users.createProfileFromCrewJoin` (role forced to foreman, seat cap re-checked, spot handed back on failure)
+  - [x] Limits: 7 days, 10 people, new link replaces the old one, Turn off deletes it; joins immediately, no approval
+  - [x] Remove a person from a crew: deletes the `users` row and the Supabase Auth account (so they cannot rejoin through the deferred `createProfile`); sealed logs stay
+  - [x] Client: `pages/JoinCrew` at `/crew-join/:token`, `CrewAccessModal` (People + Join link with QR/Copy/Download/New link/Turn off) from a **People & link** button per crew
+  - [x] Tests for all of the above
+- [x] 13f. Docs + copy: `docs/pricing-promise-gaps.md`, optional GC pricing-card line ("Track your own crews at no extra cost"), update `CLAUDE.md` if the company model summary needs it
 - [ ] 13g. Manual smoke: create a crew on a GC with two sites (attached to both); invite a foreman into the crew and log a talk; confirm it appears on the GC dashboard with the badge, unlocked on GC Free; downgrade the GC and confirm the crew drops to Trade Free; archive a crew with logs (allowed) and try to delete it (409)
 
 ## Deferred

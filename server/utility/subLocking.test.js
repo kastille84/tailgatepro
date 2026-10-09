@@ -1,7 +1,12 @@
 // Plain CommonJS — see requireAuth.test.js for why (nested require() sharing).
 const { computeUnlockedSubIds, isSubLocked } = require("./subLocking");
 
-const entry = (subId, acceptedAt, sponsored = false) => ({ subId, acceptedAt, sponsored });
+const entry = (subId, acceptedAt, sponsored = false, inHouse = false) => ({
+  subId,
+  acceptedAt,
+  sponsored,
+  inHouse,
+});
 
 describe("computeUnlockedSubIds", () => {
   it("returns null (nothing locked) when the plan has no cap", () => {
@@ -56,6 +61,32 @@ describe("computeUnlockedSubIds", () => {
   it("treats a sub as sponsored if any of its rows is on a Site Pro jobsite", () => {
     const unlocked = computeUnlockedSubIds({
       entries: [entry("x", "2026-01-01"), entry("y", "2026-02-01"), entry("y", "2026-03-01", true)],
+      unlockedSubs: 1,
+    });
+
+    expect([...unlocked].sort()).toEqual(["x", "y"]);
+  });
+
+  it("always unlocks an in-house crew without using up the free slot", () => {
+    const unlocked = computeUnlockedSubIds({
+      entries: [
+        entry("free-1", "2026-02-01"),
+        entry("crew", "2026-03-01", false, true),
+        entry("free-2", "2026-04-01"),
+      ],
+      unlockedSubs: 1,
+    });
+
+    expect([...unlocked].sort()).toEqual(["crew", "free-1"]);
+  });
+
+  it("treats a sub as in-house if any of its rows says so, and tolerates a missing flag", () => {
+    const unlocked = computeUnlockedSubIds({
+      entries: [
+        { subId: "x", acceptedAt: "2026-01-01", sponsored: false },
+        { subId: "y", acceptedAt: "2026-02-01", sponsored: false },
+        entry("y", "2026-03-01", false, true),
+      ],
       unlockedSubs: 1,
     });
 

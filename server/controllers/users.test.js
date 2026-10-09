@@ -260,3 +260,41 @@ describe("users controller: getCurrentUser", () => {
     expect(res.status).not.toHaveBeenCalled();
   });
 });
+
+describe("users controller: createProfile (crew join-link, Phase 13f-join)", () => {
+  it("should pass a crew-join signup's crewJoinToken through to the service", async () => {
+    // Arrange
+    createProfileSpy.mockReset().mockResolvedValue({
+      id: "auth-user-4",
+      name: "Jamie Foreman",
+      role: "foreman",
+      companyId: "crew-1",
+    });
+    const req = {
+      userId: "auth-user-4",
+      userEmail: "jamie@example.com",
+      profile: { name: "Jamie Foreman", crewJoinToken: "f".repeat(64) },
+      body: {},
+    };
+    const res = { status: vi.fn().mockReturnThis(), json: vi.fn().mockReturnThis() };
+    const next = vi.fn();
+
+    // Act
+    await createProfile(req, res, next);
+
+    // Assert
+    expect(createProfileSpy).toHaveBeenCalledWith({
+      id: "auth-user-4",
+      email: "jamie@example.com",
+      name: "Jamie Foreman",
+      companyName: undefined,
+      companyType: undefined,
+      inviteToken: undefined,
+      jobsiteInviteToken: undefined,
+      jobsiteJoinToken: undefined,
+      crewJoinToken: "f".repeat(64),
+    });
+    expect(res.status).toHaveBeenCalledWith(201);
+    expect(next).not.toHaveBeenCalled();
+  });
+});

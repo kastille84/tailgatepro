@@ -84,6 +84,32 @@ describe("sponsorship service", () => {
       ).resolves.toBe("basic");
     });
 
+    it("gives an in-house crew its parent's plan mapped onto the sub ladder", async () => {
+      setup([]);
+      const crew = { companyId: "crew-1", companyType: "subcontractor", tier: "basic" };
+
+      await expect(resolveEffectiveTier({ ...crew, parentTier: "premium" })).resolves.toBe("premium");
+      await expect(resolveEffectiveTier({ ...crew, parentTier: "enterprise" })).resolves.toBe(
+        "premium",
+      );
+      expect(fromSpy).not.toHaveBeenCalled();
+    });
+
+    it("keeps a Free GC's crew on basic unless it is on a sponsored site", async () => {
+      const crew = {
+        companyId: "crew-1",
+        companyType: "subcontractor",
+        tier: "basic",
+        parentTier: "basic",
+      };
+
+      setup([]);
+      await expect(resolveEffectiveTier(crew)).resolves.toBe("basic");
+
+      setup([row("site_pro")]);
+      await expect(resolveEffectiveTier(crew)).resolves.toBe("premium");
+    });
+
     it("skips the lookup for paid subcontractors and for GCs", async () => {
       setup([row("site_pro")]);
 

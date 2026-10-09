@@ -33,16 +33,29 @@ const requireProfileMetadata = (req, res, next) => {
   const jobsiteJoinToken =
     typeof metadata.jobsiteJoinToken === "string" ? metadata.jobsiteJoinToken.trim() : "";
 
-  // The three token kinds are mutually exclusive: a team invite joins an
-  // existing company, a jobsite invite or a jobsite join link each found a
-  // brand-new one.
-  const tokenCount = [inviteToken, jobsiteInviteToken, jobsiteJoinToken].filter(Boolean).length;
+  // Phase 13f-join: a foreman signing up from an in-house crew's open join link.
+  // Like inviteToken it joins an existing company (the crew), so no company
+  // fields are read; the role is set server-side, never from metadata.
+  const crewJoinToken =
+    typeof metadata.crewJoinToken === "string" ? metadata.crewJoinToken.trim() : "";
+
+  // The four token kinds are mutually exclusive: a team invite or a crew join
+  // link joins an existing company, a jobsite invite or a jobsite join link each
+  // found a brand-new one.
+  const tokenCount = [inviteToken, jobsiteInviteToken, jobsiteJoinToken, crewJoinToken].filter(
+    Boolean,
+  ).length;
   if (tokenCount > 1) {
     return next(new AppError("Profile details are incomplete", 422));
   }
 
   if (inviteToken) {
     req.profile = { name, inviteToken };
+    return next();
+  }
+
+  if (crewJoinToken) {
+    req.profile = { name, crewJoinToken };
     return next();
   }
 

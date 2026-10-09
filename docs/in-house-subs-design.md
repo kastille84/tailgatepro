@@ -45,9 +45,18 @@ ALTER TABLE companies
   ADD CONSTRAINT check_parent_gc_sub_only
   CHECK (parent_gc_company_id IS NULL OR company_type = 'subcontractor');
 
+ALTER TABLE companies
+  ADD CONSTRAINT check_parent_gc_not_self
+  CHECK (parent_gc_company_id IS NULL OR parent_gc_company_id <> id);
+
 CREATE INDEX IF NOT EXISTS companies_parent_gc_idx
   ON companies (parent_gc_company_id) WHERE parent_gc_company_id IS NOT NULL;
+CREATE UNIQUE INDEX IF NOT EXISTS companies_parent_gc_name_unique
+  ON companies (parent_gc_company_id, lower(name)) WHERE parent_gc_company_id IS NOT NULL;
 ```
+
+The runnable version (with the `CREATE TABLE` changes and commented `ALTER`s for an existing
+database) is in `Supabase_SQL.sql`.
 
 - `ON DELETE RESTRICT` (not CASCADE): deleting a GC must not silently wipe crews that own meeting
   logs. A GC with children has to remove or archive them first.
@@ -84,9 +93,9 @@ attaching a crew to a site follows the same `allowedJobsiteIds` rule `createInvi
 
 - **Inviting people into a child.** Reuse `company_invites` unchanged: a row with
   `company_id = <child>`. The only change is *who may create it*: a manager of the parent GC is
-  treated as a manager of its children. `POST /api/companies/:id/invites` (or the existing invite
-  route taking an optional `companyId`) checks `child.parent_gc_company_id = req.user.companyId`
-  before calling `companyInvites.createInvite(childId, email, role)`. The invitee signs up through
+  treated as a manager of its children. `POST /api/companies/in-house/:id/invite` checks
+  `child.parent_gc_company_id = req.user.companyId` (via `companies.getOwnedCrew`) before calling
+  `companyInvites.createInvite(childId, email, role)`. The invitee signs up through
   the existing 8c invite link and lands in the child company; no change to
   `createProfileFromInvite`.
 - **Roles inside a child.** Same enum (`admin`, `safety_manager`, `foreman`). The GC's own people
@@ -103,12 +112,12 @@ attaching a crew to a site follows the same `allowedJobsiteIds` rule `createInvi
   `rename`, `archive` / `restore`, `assertOwnedCrew(crewId, gcCompanyId)` (the 404 check above).
   Services never touch `req`/`res`; routes + controllers stay thin per `docs/folder-structure.md`.
 - `create` inserts the `companies` row (`company_type: 'subcontractor'`, `parent_gc_company_id`,
-  tier per Plans below), then **attaches the crew to every currently active jobsite of the GC**
-  (decision 3), best-effort per site, logging failures — the same posture `acceptInvite` /
+  tier per Plans below), then **attaches the crew to the active jobsites the GC picked**
+  (`jobsiteIds`; decision 3, revised: nothing is automatic), best-effort per site, logging failures — the same posture `acceptInvite` /
   `createProfileWithJobsiteInvite` take (a failed attach leaves a working crew that can be
   attached from the jobsite later).
-- `jobsites.create` gains one step: after the jobsite row is written, attach every non-archived
-  crew of the GC. A GC manager can remove a crew from a single site with the existing
+- `jobsites.create` gains one step: after the jobsite row is written, attach the non-archived
+  crews the GC picked (`crewIds`). A GC manager can remove a crew from a single site with the existing
   `DELETE /api/jobsites/:id/subcontractors/:subId`.
 - `jobsites.attachInHouseCrew({ jobsiteId, crewId, gcCompanyId })` (new, shared by both callers):
   assert both ownership checks, insert the accepted roster row (`accepted_at = now()`, `token`
@@ -124,6 +133,11 @@ attaching a crew to a site follows the same `allowedJobsiteIds` rule `createInvi
 | `PATCH /api/companies/in-house/:id` | same | `name`, `archived` |
 | `POST /api/jobsites/:id/in-house/:crewId` | `requireGcCompany`, `requireRole(...SITE_MANAGER_ROLES)` | Re-attach a crew removed from a site |
 
+- Archive semantics (as built in 13b): archiving a crew excludes it from auto-attach and from
+  `POST /api/jobsites/:id/in-house/:crewId` (409), but does **not** detach it from sites or stop its
+  foremen logging talks, and restoring does **not** re-attach it (the GC may have removed it from a
+  site on purpose). Delete (`DELETE /api/companies/in-house/:id`) is 409 once the crew has any meeting
+  log or user. Hiding archived crews on the dashboard/roster is a client concern (13e).
 - Name uniqueness: a partial unique index is not possible on a name alone (`companies.name` is
   not unique today — two unrelated subs may both be "Acme Roofing"). Uniqueness is enforced
   per-parent in the service (`parent_gc_company_id` + case-insensitive name) with a matching
@@ -189,13 +203,18 @@ places currently see a crew as just another sub and each needs a rule.
   to the dashboard when no crews exist and the prompt hasn't been dismissed), a card: "Does your
   company have in-house subcontractors?" → *Yes, add them* / *Not now*. Dismissal is a per-viewer
   convenience, kept in `localStorage` (wrapped in try/catch per project convention); it is not
-  business state and nothing breaks if it is lost. Yes opens the crew form.
+  business state and nothing breaks if it is lost. Yes opens the crew form. As built, the card
+  title is "Does your company have its own crews?" with a longer explanation (every crew is
+  added to all job sites, shows on the dashboard with an In-house badge, doesn't use a free
+  subcontractor slot, foremen are invited by email) and a pointer to Settings → In-house crews.
 - **Crew form.** One text input (name) with an "Add another" affordance, `font-size: 16px`,
   ≥ 48×48px targets, React Hook Form + Zod `onTouched`. A suggested-name row of one-tap chips
   (Framing, Roofing, Concrete, Electrical, Plumbing, Drywall) minimises typing with gloves on;
-  tapping fills "`{GC name} - {Trade}`". Mutation wrapped in a domain hook
-  (`useInHouseCrews`), not an inline `useMutation`.
-- **Settings → In-house crews** (GC only): list, rename, archive/restore, "Invite a foreman"
+  tapping fills "`{GC name} - {Trade}`". An **Other** chip fills "`{GC name} - `" and focuses
+  the input so a trade that isn't listed can be typed; the name is always editable, and a bare
+  trailing dash is rejected. Mutations are wrapped in domain hooks (`useInHouseCrews`,
+  `useInHouseCrewActions`), not inline `useMutation`.
+- **Settings → In-house crews** (GC only): list, rename, archive/restore, "Invite someone"
   per crew (reusing the existing invite form with `companyId`). Hidden for subcontractors.
 - **GC dashboard.** Roster rows and compliance rows for a crew show an **In-house** badge
   (`$`-prefixed transient prop, theme tokens only). Nothing else changes — they are subs.
@@ -203,6 +222,41 @@ places currently see a crew as just another sub and each needs a rule.
   existing control. A "Add in-house crew" action lists crews not yet on the site.
 - Styling follows `docs/ui-styling.md` (styled-components, `props.theme`, no inline styles);
   new components get tests meeting the repo's 100% jsdom coverage threshold.
+
+## Crew join link (13f-join)
+
+Email invites need the GC to know each foreman's email. The join link removes that: each crew can
+have **one open link and QR** that a foreman opens, then signs up with their own email, name and
+password. They land in that crew as a **foreman**. Built as an extension of the existing signup
+path, not a new flow.
+
+- **Joins immediately, no GC approval.** Same trade-off the job site QR makes
+  (`docs/jobsite-qr-join-design.md`). The controls are the limits below and a **Remove** button per
+  person.
+- **Limits.** 7 days (the invite TTL) and 10 people, fixed in `server/services/crewJoinLinks.js`.
+  A new link replaces the old one (new token, count back to 0, so the old URL stops working);
+  **Turn off** deletes it. One row per crew: `crew_join_links` with `UNIQUE (company_id)`.
+- **Role is always `foreman`**, set in `users.createProfileFromCrewJoin`, never read from the
+  client. Admin and Safety Director still come through email invites. The Trade Free one-seat cap
+  still applies (`seats.assertSeatAvailable`, PLAN_LIMIT message).
+- **Head count is race-safe without a stored procedure.** `claimSlot` is a compare-and-set on the
+  `uses` value it just read; a lost race is a 409 "try again". The spot is taken before the `users`
+  row is written and handed back if that write fails.
+- **Sign-up only.** One person belongs to one company, so a signed-in visitor is asked to sign out.
+  The join page is `/crew-join/:token`; the signup carries `crewJoinToken` as `user_metadata`
+  (`requireProfileMetadata` adds it as a fourth mutually-exclusive token kind).
+- **Invalid, expired, full, archived crew and "no longer a crew" are one 404**, like every
+  lookup-by-secret here. The token is shown only to a manager of the crew's GC, inside the URL.
+- **Remove a person** (`DELETE /api/companies/in-house/:id/members/:userId`). Deletes their `users`
+  row and their Supabase Auth account. Without the auth delete they could use the sign-up data
+  left on their account to rejoin through the deferred `createProfile` while the link is live.
+  Sealed logs and PDFs stay; `meeting_logs.foreman_id` is `ON DELETE SET NULL`, so those logs
+  lose the name link. Their favorites go (cascade). The confirm dialog says so.
+- **UI.** Settings, In-house crews, **People & link** on each crew: the people with Remove, and
+  the link with a client-rendered QR (`qrcode`), Copy, Download, Make a new link, Turn off.
+
+Not built: revoking a pending email invite from the UI, admin or safety director through the link,
+configurable limits, an approval queue.
 
 ## Edge cases
 
@@ -223,6 +277,7 @@ places currently see a crew as just another sub and each needs a rule.
 - Moving an existing, independently registered company under a GC (merge/adopt). Needs a consent
   flow from the company's admin; track separately if GCs ask.
 - Per-crew billing or seat add-ons.
+- Configurable join link expiry or head count; a GC approval queue for join link signups.
 - Procore / integration push for crews (they use the GC's integrations, if any, through the normal
   jobsite push; no crew-specific configuration).
 
@@ -247,8 +302,12 @@ Each step ships with tests; server tests are plain CommonJS Vitest per `CLAUDE.m
 1. **Crew seats on GC Free** — accept Trade Free's one-seat cap (Plans §3).
 2. **Derived vs mirrored tier** — derived; the entitlement-reader audit is done and recorded in
    Plans §2 (one function, two call sites).
-3. **Auto-attach to all active sites** — yes. A new crew attaches to every active site and a new
-   site attaches every active crew; a GC with a crew on only some sites removes it per site.
+3. **Which sites a crew joins** — the GC chooses. Revised after build: auto-attaching every crew
+   to every site put a crew on sites that never needed its trade, where it showed as "missing" and
+   counted against compliance. The crew form lists the GC's live sites pre-ticked (one tap in the
+   common case, untick the rest) and the job site form lists the active crews pre-ticked the same
+   way. The API attaches nothing unless ids are sent. Remove per site, or add later from the
+   roster, as before.
 4. **Existing GCs** — see the prompt once **and** find the feature in Settings. Dismissal is
    remembered per viewer in `localStorage`, so a different device or a cleared browser may show
    it again; that is acceptable for a one-time nudge, and the Settings section is always there.

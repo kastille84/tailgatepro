@@ -232,3 +232,57 @@ describe("requireProfileMetadata: jobsite QR/join-link signup (Phase 9e)", () =>
     expect(next.mock.calls[0][0].statusCode).toBe(422);
   });
 });
+
+describe("requireProfileMetadata: crew join-link signup (Phase 13f-join)", () => {
+  let req;
+  let next;
+
+  beforeEach(() => {
+    req = {
+      userMetadata: {
+        name: "  Jamie Foreman  ",
+        crewJoinToken: "  " + "f".repeat(64) + "  ",
+      },
+    };
+    next = vi.fn();
+  });
+
+  it("should set req.profile with just the name and the trimmed token", () => {
+    requireProfileMetadata(req, {}, next);
+
+    expect(req.profile).toEqual({ name: "Jamie Foreman", crewJoinToken: "f".repeat(64) });
+    expect(next).toHaveBeenCalledWith();
+  });
+
+  it("should ignore any company fields or role in the metadata", () => {
+    req.userMetadata.companyName = "Evil Co";
+    req.userMetadata.companyType = "gc";
+    req.userMetadata.role = "admin";
+
+    requireProfileMetadata(req, {}, next);
+
+    expect(req.profile).toEqual({ name: "Jamie Foreman", crewJoinToken: "f".repeat(64) });
+  });
+
+  it("should call next with a 422 AppError when name is missing", () => {
+    delete req.userMetadata.name;
+
+    requireProfileMetadata(req, {}, next);
+
+    expect(req.profile).toBeUndefined();
+    expect(next.mock.calls[0][0].statusCode).toBe(422);
+  });
+
+  it.each(["inviteToken", "jobsiteInviteToken", "jobsiteJoinToken"])(
+    "should call next with a 422 AppError when a crewJoinToken and a %s are both present",
+    (key) => {
+      req.userMetadata[key] = "9".repeat(64);
+      req.userMetadata.companyName = "Some Co";
+
+      requireProfileMetadata(req, {}, next);
+
+      expect(req.profile).toBeUndefined();
+      expect(next.mock.calls[0][0].statusCode).toBe(422);
+    },
+  );
+});

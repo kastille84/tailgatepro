@@ -20,6 +20,7 @@ exports.createCheckoutSession = async (req, res, next) => {
     const data = await stripeService.createCheckoutSession({
       companyId: req.user.companyId,
       companyType: req.user.companyType,
+      parentGcCompanyId: req.user.parentGcCompanyId,
       email: req.userEmail,
       planKey: req.body.planId,
       interval: req.body.interval,
@@ -51,6 +52,7 @@ exports.createPortalSession = async (req, res, next) => {
   try {
     const data = await stripeService.createPortalSession({
       companyId: req.user.companyId,
+      parentGcCompanyId: req.user.parentGcCompanyId,
     });
     return res.status(200).json({ success: true, data });
   } catch (error) {
