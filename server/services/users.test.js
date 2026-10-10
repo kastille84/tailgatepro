@@ -5,6 +5,7 @@
 // same id links both inserts, rather than pinning an exact fake value.
 const { supabase } = require("../utility/supabaseClient");
 const companyInvitesService = require("./companyInvites");
+const crewJoinLinksService = require("./crewJoinLinks");
 const jobsitesService = require("./jobsites");
 const seatsService = require("./seats");
 const { createProfile, getUserContext, getAdminEmail } = require("./users");
@@ -330,7 +331,7 @@ describe("users service: getUserContext", () => {
 
     // Assert
     expect(usersSelect).toHaveBeenCalledWith(
-      "id, name, role, company_id, companies!users_company_id_fkey(tier, company_type)",
+      "id, name, role, company_id, companies!users_company_id_fkey(tier, company_type, parent_gc_company_id, parent:parent_gc_company_id(tier))",
     );
     expect(usersEq).toHaveBeenCalledWith("id", "auth-user-1");
     expect(result).toEqual({
@@ -340,7 +341,34 @@ describe("users service: getUserContext", () => {
       companyId: "company-1",
       tier: "premium",
       companyType: "subcontractor",
+      parentGcCompanyId: null,
     });
+  });
+
+  it("should resolve an in-house crew's tier from its parent GC and expose the parent id", async () => {
+    // Arrange
+    usersSingle.mockResolvedValue({
+      data: {
+        id: "auth-user-1",
+        name: "Alex Builder",
+        role: "foreman",
+        company_id: "crew-1",
+        companies: {
+          tier: "basic",
+          company_type: "subcontractor",
+          parent_gc_company_id: "gc-1",
+          parent: { tier: "premium" },
+        },
+      },
+      error: null,
+    });
+
+    // Act
+    const result = await getUserContext("auth-user-1");
+
+    // Assert
+    expect(result.tier).toBe("premium");
+    expect(result.parentGcCompanyId).toBe("gc-1");
   });
 
   it("should resolve a sponsored Free subcontractor's tier as premium", async () => {
@@ -736,5 +764,136 @@ describe("users service: createProfile (jobsite QR/join-link branch, Phase 9e)",
     expect(errorSpy).toHaveBeenCalledWith("users: failed to accept a jobsite join link", acceptError);
     expect(result.id).toBe("auth-user-3");
     expect(companiesDelete).not.toHaveBeenCalled();
+  });
+});
+
+describe("users service: createProfile (crew join-link branch, Phase 13f-join)", () => {
+  let usersSingle;
+  let usersInsert;
+  const getActiveSpy = vi.spyOn(crewJoinLinksService, "getActiveByToken");
+  const claimSpy = vi.spyOn(crewJoinLinksService, "claimSlot");
+  const releaseSpy = vi.spyOn(crewJoinLinksService, "releaseSlot");
+  const link = { id: "link-1", companyId: "crew-1", uses: 2, crewName: "Crew", gcName: "GC" };
+
+  const payload = {
+    id: "auth-user-1",
+    email: "jamie@example.com",
+    name: "Jamie Foreman",
+    crewJoinToken: "a".repeat(64),
+    // A client cannot pick a role or company: these must be ignored.
+    role: "admin",
+    companyName: "Evil Co",
+    companyType: "gc",
+  };
+
+  beforeEach(() => {
+    usersSingle = vi.fn().mockResolvedValue({
+      data: { id: "auth-user-1", name: "Jamie Foreman", role: "foreman", company_id: "crew-1" },
+      error: null,
+    });
+    usersInsert = vi.fn(() => ({ select: vi.fn(() => ({ single: usersSingle })) }));
+
+    fromSpy.mockReset();
+    fromSpy.mockImplementation((table) => {
+      if (table === "users") return { insert: usersInsert };
+      throw new Error(`Unexpected table: ${table}`);
+    });
+    getActiveSpy.mockReset().mockResolvedValue(link);
+    claimSpy.mockReset().mockResolvedValue(undefined);
+    releaseSpy.mockReset().mockResolvedValue(undefined);
+    assertSeatSpy.mockReset().mockResolvedValue(undefined);
+  });
+
+  it("should join the crew as a foreman, whatever role or company the client claims", async () => {
+    // Act
+    const result = await createProfile(payload);
+
+    // Assert
+    expect(getActiveSpy).toHaveBeenCalledWith("a".repeat(64));
+    expect(usersInsert).toHaveBeenCalledWith({
+      id: "auth-user-1",
+      company_id: "crew-1",
+      role: "foreman",
+      name: "Jamie Foreman",
+    });
+    expect(result).toEqual({
+      id: "auth-user-1",
+      name: "Jamie Foreman",
+      role: "foreman",
+      companyId: "crew-1",
+    });
+  });
+
+  it("should check the crew's seats without pending invites, before taking a spot", async () => {
+    // Act
+    await createProfile(payload);
+
+    // Assert
+    expect(assertSeatSpy).toHaveBeenCalledWith({
+      companyId: "crew-1",
+      role: "foreman",
+      email: "jamie@example.com",
+      includePending: false,
+    });
+    expect(assertSeatSpy.mock.invocationCallOrder[0]).toBeLessThan(
+      claimSpy.mock.invocationCallOrder[0],
+    );
+    expect(claimSpy).toHaveBeenCalledWith(link);
+  });
+
+  it("should propagate a PLAN_LIMIT 403 without taking a spot or inserting a user row", async () => {
+    // Arrange
+    const { AppError } = require("../utility/AppError");
+    assertSeatSpy.mockRejectedValue(new AppError("limit", 403, { data: { code: "PLAN_LIMIT" } }));
+
+    // Act & Assert
+    await expect(createProfile(payload)).rejects.toMatchObject({ statusCode: 403 });
+    expect(claimSpy).not.toHaveBeenCalled();
+    expect(usersInsert).not.toHaveBeenCalled();
+  });
+
+  it("should propagate an invalid-link 404 without touching users", async () => {
+    // Arrange
+    const { AppError } = require("../utility/AppError");
+    getActiveSpy.mockRejectedValue(new AppError("This join link is invalid or has expired", 404));
+
+    // Act & Assert
+    await expect(createProfile(payload)).rejects.toMatchObject({ statusCode: 404 });
+    expect(assertSeatSpy).not.toHaveBeenCalled();
+    expect(usersInsert).not.toHaveBeenCalled();
+  });
+
+  it("should propagate a lost-race 409 from claiming a spot without inserting a user row", async () => {
+    // Arrange
+    const { AppError } = require("../utility/AppError");
+    claimSpy.mockRejectedValue(new AppError("Someone else just joined", 409));
+
+    // Act & Assert
+    await expect(createProfile(payload)).rejects.toMatchObject({ statusCode: 409 });
+    expect(usersInsert).not.toHaveBeenCalled();
+  });
+
+  it("should hand the spot back and throw a 409 when the profile already exists", async () => {
+    // Arrange
+    usersSingle.mockResolvedValue({ data: null, error: { code: "23505", message: "duplicate" } });
+
+    // Act & Assert
+    await expect(createProfile(payload)).rejects.toMatchObject({
+      statusCode: 409,
+      message: "Profile already exists for this account",
+    });
+    expect(releaseSpy).toHaveBeenCalledWith(link);
+  });
+
+  it("should hand the spot back and throw a 502 on any other insert failure", async () => {
+    // Arrange
+    usersSingle.mockResolvedValue({ data: null, error: { code: "OTHER", message: "boom" } });
+
+    // Act & Assert
+    await expect(createProfile(payload)).rejects.toMatchObject({
+      statusCode: 502,
+      message: "Could not finish setting up your account",
+    });
+    expect(releaseSpy).toHaveBeenCalledWith(link);
   });
 });

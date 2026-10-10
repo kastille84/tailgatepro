@@ -9,6 +9,8 @@ import theme from "../../../src/styles/theme";
 const mockUseAuth = vi.fn();
 const mockUseOnlineStatus = vi.fn();
 const mockUseGcOverview = vi.fn();
+const mockUseCurrentUser = vi.fn();
+const mockUseInHouseCrews = vi.fn();
 
 vi.mock("../../../src/context/auth", () => ({
   useAuth: () => mockUseAuth(),
@@ -18,6 +20,35 @@ vi.mock("../../../src/context/online-status", () => ({
 }));
 vi.mock("../../../src/hooks/useGcOverview", () => ({
   useGcOverview: (...args: unknown[]) => mockUseGcOverview(...args),
+}));
+
+vi.mock("../../../src/hooks/useCurrentUser", () => ({
+  useCurrentUser: () => mockUseCurrentUser(),
+}));
+vi.mock("../../../src/hooks/useInHouseCrews", () => ({
+  useInHouseCrews: (...args: unknown[]) => mockUseInHouseCrews(...args),
+}));
+vi.mock("../../../src/features/in-house-crews", () => ({
+  InHouseOnboardingCard: ({
+    companyId,
+    onAddCrews,
+  }: {
+    companyId: string;
+    onAddCrews: () => void;
+  }) => (
+    <button type="button" onClick={onAddCrews}>
+      stub-onboarding-card {companyId}
+    </button>
+  ),
+  CrewForm: ({ isOpen, onClose }: { isOpen: boolean; onClose: () => void }) =>
+    isOpen ? (
+      <div role="dialog">
+        stub-crew-form
+        <button type="button" onClick={onClose}>
+          stub-crew-form-close
+        </button>
+      </div>
+    ) : null,
 }));
 
 // The feature components have their own tests; stub them so the page test
@@ -83,6 +114,8 @@ describe("GcDashboard page", () => {
       isLoading: false,
       isError: false,
     });
+    mockUseCurrentUser.mockReturnValue({ companyId: "gc-1", isManagerRole: true });
+    mockUseInHouseCrews.mockReturnValue({ crews: [], isLoaded: true });
   });
 
   it("shows a loading status while auth resolves", () => {
@@ -145,5 +178,47 @@ describe("GcDashboard page", () => {
 
     fireEvent.click(screen.getByRole("button", { name: /stub-modal-close/i }));
     expect(screen.queryByRole("dialog")).toBeNull();
+  });
+
+  describe("in-house crews onboarding", () => {
+    it("offers the onboarding card to a manager with no crews, and opens the crew form from it", () => {
+      renderPage();
+
+      expect(mockUseInHouseCrews).toHaveBeenCalledWith({ enabled: true });
+      fireEvent.click(screen.getByRole("button", { name: /stub-onboarding-card gc-1/i }));
+      expect(screen.getByText("stub-crew-form")).toBeDefined();
+
+      fireEvent.click(screen.getByRole("button", { name: "stub-crew-form-close" }));
+      expect(screen.queryByText("stub-crew-form")).toBeNull();
+    });
+
+    it("hides the card once the GC has a crew", () => {
+      mockUseInHouseCrews.mockReturnValue({ crews: [{ id: "c1" }], isLoaded: true });
+      renderPage();
+
+      expect(screen.queryByText(/stub-onboarding-card/i)).toBeNull();
+    });
+
+    it("hides the card until the crews have loaded", () => {
+      mockUseInHouseCrews.mockReturnValue({ crews: [], isLoaded: false });
+      renderPage();
+
+      expect(screen.queryByText(/stub-onboarding-card/i)).toBeNull();
+    });
+
+    it("hides the card from a role that cannot manage crews, without fetching them", () => {
+      mockUseCurrentUser.mockReturnValue({ companyId: "gc-1", isManagerRole: false });
+      renderPage();
+
+      expect(mockUseInHouseCrews).toHaveBeenCalledWith({ enabled: false });
+      expect(screen.queryByText(/stub-onboarding-card/i)).toBeNull();
+    });
+
+    it("hides the card when the company id is unknown", () => {
+      mockUseCurrentUser.mockReturnValue({ companyId: null, isManagerRole: true });
+      renderPage();
+
+      expect(screen.queryByText(/stub-onboarding-card/i)).toBeNull();
+    });
   });
 });

@@ -49,6 +49,9 @@ export const useCurrentUser = () => {
     // these with `requireGcCompany` / `requireSubcontractorCompany`.
     isGc: companyType === "gc",
     isSubcontractor: companyType === "subcontractor",
+    // A GC's in-house crew (Phase 13): billing is the parent GC's, so the
+    // Settings Billing section is hidden. False until the profile loads.
+    isInHouseCrew: !!query.data?.parentGcCompanyId,
     tier,
     // Server-resolved plan + limits (single source of truth, not mirrored).
     plan: query.data?.plan ?? null,

@@ -17,7 +17,7 @@ export const useCreateJobsite = () => {
   const { session } = useAuth();
   const queryClient = useQueryClient();
 
-  const mutation = useMutation<JobsiteSummary, Error, { name: string }>({
+  const mutation = useMutation<JobsiteSummary, Error, { name: string; crewIds?: string[] }>({
     networkMode: "always",
     mutationFn: (input) => createJobsite(session!.access_token, input),
     onSuccess: (jobsite) => {

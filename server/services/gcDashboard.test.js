@@ -237,6 +237,7 @@ describe("gcDashboard service: getOverview", () => {
               status: "logged",
               lastLoggedAt: "2026-09-21T14:00:00.000Z",
               count: 1,
+              inHouse: false,
               locked: false,
             },
           ],
@@ -244,6 +245,43 @@ describe("gcDashboard service: getOverview", () => {
       ],
       totals: { subs: 1, logged: 1, missing: 0 },
     });
+  });
+
+  it("should flag a sub whose company is a child of the GC as inHouse", async () => {
+    // Arrange
+    jobsitesResult.data = [
+      jobsite({
+        jobsite_subcontractors: [
+          {
+            sub_company_id: "sub-1",
+            accepted_at: "2026-09-01T00:00:00.000Z",
+            companies: { parent_gc_company_id: "gc-1" },
+          },
+          {
+            sub_company_id: "sub-2",
+            accepted_at: "2026-09-01T00:00:00.000Z",
+            companies: { parent_gc_company_id: "other-gc" },
+          },
+        ],
+      }),
+    ];
+    projectsResult.data = [
+      project({ id: "project-1", owner_company_id: "sub-1" }),
+      project({ id: "project-2", owner_company_id: "sub-2" }),
+    ];
+    companiesResult.data = [
+      { id: "sub-1", name: "Hyperion - Framing" },
+      { id: "sub-2", name: "Acme Roofing" },
+    ];
+
+    // Act
+    const result = await getOverview("gc-1", overviewArgs);
+
+    // Assert
+    expect(result.jobsites[0].subs.map(({ companyId, inHouse }) => ({ companyId, inHouse }))).toEqual([
+      { companyId: "sub-1", inHouse: true },
+      { companyId: "sub-2", inHouse: false },
+    ]);
   });
 
   it("should score a weekly sub against the whole week and a daily sub against today, and keep roster order", async () => {
@@ -415,6 +453,7 @@ describe("gcDashboard service: getOverview", () => {
         status: "logged",
         lastLoggedAt: "2026-09-21T14:00:00.000Z",
         count: 1,
+        inHouse: false,
         locked: false,
       },
     ]);
@@ -502,6 +541,7 @@ describe("gcDashboard service: getOverview", () => {
         status: null,
         lastLoggedAt: null,
         count: null,
+        inHouse: false,
         locked: true,
       },
     ]);

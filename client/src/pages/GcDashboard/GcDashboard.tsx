@@ -2,7 +2,9 @@ import { useState } from "react";
 
 import { useAuth } from "../../context/auth";
 import { useOnlineStatus } from "../../context/online-status";
+import { useCurrentUser } from "../../hooks/useCurrentUser";
 import { useGcOverview } from "../../hooks/useGcOverview";
+import { useInHouseCrews } from "../../hooks/useInHouseCrews";
 import { Footer } from "../../ui_comps/footer";
 import { Spinner } from "../../ui_comps/spinner";
 import {
@@ -10,6 +12,7 @@ import {
   StatTiles,
   SubMeetingsModal,
 } from "../../features/gc-dashboard";
+import { CrewForm, InHouseOnboardingCard } from "../../features/in-house-crews";
 import type { GcSubCompliance } from "../../interfaces/gcDashboard";
 import {
   StyledContainer,
@@ -50,6 +53,10 @@ export const GcDashboard = () => {
 
   const { date, tzOffset, timeZone } = getLocalDateAndTzOffset();
   const { overview, isLoading, isError } = useGcOverview(date, tzOffset, timeZone);
+
+  const { companyId, isManagerRole } = useCurrentUser();
+  const { crews, isLoaded: areCrewsLoaded } = useInHouseCrews({ enabled: isManagerRole });
+  const [isAddingCrews, setIsAddingCrews] = useState(false);
 
   const [selectedSub, setSelectedSub] = useState<GcSubCompliance | undefined>(
     undefined,
@@ -103,6 +110,12 @@ export const GcDashboard = () => {
           )}
           {!isLoading && !isError && overview && (
             <>
+              {isManagerRole && areCrewsLoaded && crews.length === 0 && companyId && (
+                <InHouseOnboardingCard
+                  companyId={companyId}
+                  onAddCrews={() => setIsAddingCrews(true)}
+                />
+              )}
               <StatTiles totals={overview.totals} />
               <JobsiteList
                 jobsites={overview.jobsites}
@@ -114,6 +127,8 @@ export const GcDashboard = () => {
       </StyledSection>
 
       <Footer />
+
+      <CrewForm isOpen={isAddingCrews} onClose={() => setIsAddingCrews(false)} />
 
       <SubMeetingsModal
         sub={selectedSub}

@@ -39,6 +39,21 @@ vi.mock("../../../src/features/jobsites/JobsiteJoinQrCard", () => ({
   ),
 }));
 
+vi.mock("../../../src/features/in-house-crews", () => ({
+  AddInHouseCrew: ({
+    jobsiteId,
+    attachedCrewIds,
+  }: {
+    jobsiteId: string;
+    attachedCrewIds: string[];
+  }) => (
+    <div data-testid="add-in-house-crew">
+      {jobsiteId}:{attachedCrewIds.join(",")}
+    </div>
+  ),
+  InHouseBadge: () => <span data-testid="in-house-badge">In-house</span>,
+}));
+
 vi.mock("../../../src/features/jobsites/SmsRecipientsPanel", () => ({
   SmsRecipientsPanel: ({ jobsite }: { jobsite: { id: string } }) => (
     <div data-testid="sms-recipients-panel">{jobsite.id}</div>
@@ -59,9 +74,11 @@ const jobsite: Jobsite = {
       email: "jane@acme.com",
       status: "accepted",
       companyName: "Acme Roofing",
+      companyId: null,
+      inHouse: false,
       locked: false,
     },
-    { id: "s2", email: "bob@new.com", status: "pending", companyName: null, locked: false },
+    { id: "s2", email: "bob@new.com", status: "pending", companyName: null, companyId: null, inHouse: false, locked: false },
   ],
 };
 
@@ -106,7 +123,7 @@ describe("JobsiteRosterModal", () => {
       jobsite: {
         ...jobsite,
         subcontractors: [
-          { id: "s9", email: null, status: "accepted", companyName: null, locked: true },
+          { id: "s9", email: null, status: "accepted", companyName: null, companyId: null, inHouse: false, locked: true },
         ],
       },
     });
@@ -177,7 +194,7 @@ describe("JobsiteRosterModal", () => {
       jobsite: {
         ...jobsite,
         subcontractors: [
-          { id: "s3", email: "solo@x.com", status: "accepted", companyName: null, locked: false },
+          { id: "s3", email: "solo@x.com", status: "accepted", companyName: null, companyId: null, inHouse: false, locked: false },
         ],
       },
     });
@@ -240,5 +257,34 @@ describe("JobsiteRosterModal", () => {
       (screen.getByRole("button", { name: "Remove jane@acme.com" }) as HTMLButtonElement)
         .disabled,
     ).toBe(true);
+  });
+
+  it("badges an in-house crew and tells the add-crew control which crews are already on the site", () => {
+    renderModal({
+      jobsite: {
+        ...jobsite,
+        subcontractors: [
+          ...jobsite.subcontractors,
+          {
+            id: "s5",
+            email: null,
+            status: "accepted",
+            companyName: "Hyperion - Framing",
+            companyId: "crew-1",
+            inHouse: true,
+            locked: false,
+          },
+        ],
+      },
+    });
+
+    expect(screen.getAllByTestId("in-house-badge")).toHaveLength(1);
+    expect(screen.getByTestId("add-in-house-crew").textContent).toBe("j1:crew-1");
+  });
+
+  it("hides the add-crew control from a role that cannot manage the roster", () => {
+    renderModal({ canManage: false });
+
+    expect(screen.queryByTestId("add-in-house-crew")).toBeNull();
   });
 });

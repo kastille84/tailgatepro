@@ -26,6 +26,9 @@ export interface CurrentUser {
    *  (join code in Settings vs. linking a project to a GC). `null` in the
    *  same no-company-row case as `tier`. */
   companyType: CompanyType | null;
+  /** Set when this company is one of a GC's in-house crews (Phase 13): the
+   *  parent GC's company id. Billing is managed by that GC. */
+  parentGcCompanyId: string | null;
   /** Pricing-plan id resolved server-side from tier + companyType
    *  (e.g. "trade-pro"); GC Site Pro is per jobsite, not reported here. */
   plan: string;

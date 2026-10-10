@@ -33,11 +33,36 @@ CREATE TABLE companies (
   subscription_status TEXT,
   billing_interval TEXT CHECK (billing_interval IN ('monthly', 'annual')),
   current_period_end TIMESTAMPTZ,
+  -- Phase 13 (docs/in-house-subs-design.md): set only on a GC's in-house crew
+  -- (e.g. "Hyperion - Framing"), a real subcontractor company owned by that GC.
+  -- NULL for every ordinary company. RESTRICT, not CASCADE: deleting a GC must
+  -- not silently wipe crews that own meeting logs. "The parent is a GC" spans
+  -- two rows so it can't be a CHECK; it is enforced in the service layer, where
+  -- the parent is always the caller's verified company, never request input.
+  parent_gc_company_id UUID REFERENCES companies(id) ON DELETE RESTRICT,
+  -- Phase 13: archived = hidden from rosters/pickers, restorable. Only crews use
+  -- it for now.
+  archived_at TIMESTAMPTZ,
   created_at TIMESTAMPTZ DEFAULT NOW(),
   CONSTRAINT check_join_code_gc_only CHECK (
     join_code IS NULL OR company_type = 'gc'
+  ),
+  CONSTRAINT check_parent_gc_sub_only CHECK (
+    parent_gc_company_id IS NULL OR company_type = 'subcontractor'
+  ),
+  -- A crew can't be its own parent (one level deep; deeper nesting is blocked
+  -- in the service layer, since the parent's own parent spans two rows).
+  CONSTRAINT check_parent_gc_not_self CHECK (
+    parent_gc_company_id IS NULL OR parent_gc_company_id <> id
   )
 );
+
+-- Phase 13: speeds up "this GC's crews", and makes a crew name unique per GC
+-- (companies.name itself is not unique -- two unrelated subs may share a name).
+CREATE INDEX IF NOT EXISTS companies_parent_gc_idx
+  ON companies (parent_gc_company_id) WHERE parent_gc_company_id IS NOT NULL;
+CREATE UNIQUE INDEX IF NOT EXISTS companies_parent_gc_name_unique
+  ON companies (parent_gc_company_id, lower(name)) WHERE parent_gc_company_id IS NOT NULL;
 
 -- Server-only table: enable RLS with NO policies so the public anon key is
 -- denied all access. The server's service-role key bypasses RLS and still works.
@@ -54,6 +79,13 @@ ALTER TABLE companies ENABLE ROW LEVEL SECURITY;
 -- ALTER TABLE companies ADD COLUMN IF NOT EXISTS subscription_status TEXT;
 -- ALTER TABLE companies ADD COLUMN IF NOT EXISTS billing_interval TEXT CHECK (billing_interval IN ('monthly', 'annual'));
 -- ALTER TABLE companies ADD COLUMN IF NOT EXISTS current_period_end TIMESTAMPTZ;
+-- Existing database (Phase 13, in-house subcontractors): add the crew columns, constraints + indexes:
+-- ALTER TABLE companies ADD COLUMN IF NOT EXISTS parent_gc_company_id UUID REFERENCES companies(id) ON DELETE RESTRICT;
+-- ALTER TABLE companies ADD COLUMN IF NOT EXISTS archived_at TIMESTAMPTZ;
+-- ALTER TABLE companies ADD CONSTRAINT check_parent_gc_sub_only CHECK (parent_gc_company_id IS NULL OR company_type = 'subcontractor');
+-- ALTER TABLE companies ADD CONSTRAINT check_parent_gc_not_self CHECK (parent_gc_company_id IS NULL OR parent_gc_company_id <> id);
+-- CREATE INDEX IF NOT EXISTS companies_parent_gc_idx ON companies (parent_gc_company_id) WHERE parent_gc_company_id IS NOT NULL;
+-- CREATE UNIQUE INDEX IF NOT EXISTS companies_parent_gc_name_unique ON companies (parent_gc_company_id, lower(name)) WHERE parent_gc_company_id IS NOT NULL;
 
 -- 1b. Stripe webhook events (Phase 12): idempotency ledger. `id` is Stripe's
 -- own event id (evt_...), NOT a client-generated UUID -- the one deliberate
@@ -338,6 +370,25 @@ ALTER TABLE company_invites ENABLE ROW LEVEL SECURITY;
 -- If the table already exists from an earlier run, add the constraint/RLS instead:
 -- ALTER TABLE company_invites ADD CONSTRAINT company_invites_company_email_unique UNIQUE (company_id, email);
 -- ALTER TABLE company_invites ENABLE ROW LEVEL SECURITY;
+
+-- 10b. Crew Join Links (Phase 13f-join, docs/in-house-subs-design.md) -- one open
+-- join link per in-house crew, so a foreman can sign up into the crew without the
+-- GC knowing their email. UNIQUE (company_id) is what makes "one active link"
+-- true: making a new link upserts this row (new token, uses reset to 0) and turning
+-- it off deletes the row. 7-day expiry and a 10-person cap are set by the server
+-- (server/services/crewJoinLinks.js). `id` is server-generated, like company_invites.
+CREATE TABLE IF NOT EXISTS crew_join_links (
+  id UUID PRIMARY KEY,
+  company_id UUID NOT NULL UNIQUE REFERENCES companies(id) ON DELETE CASCADE,
+  token TEXT UNIQUE NOT NULL,
+  expires_at TIMESTAMPTZ NOT NULL,
+  max_uses INT NOT NULL,
+  uses INT NOT NULL DEFAULT 0,
+  created_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+-- Server-only table: RLS with NO policies (deny-all to the anon key).
+ALTER TABLE crew_join_links ENABLE ROW LEVEL SECURITY;
 
 -- 11. Jobsites (Phase 8d) — the GC-owned canonical job site a subcontractor's
 -- project can attach to, via an accepted email invite (see table 12 below) or

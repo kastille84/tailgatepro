@@ -3,6 +3,7 @@ const { supabase } = require("../utility/supabaseClient");
 const { JOIN_CODE_ALPHABET, JOIN_CODE_LENGTH } = require("../utility/joinCode");
 const {
   getById,
+  getOwnedCrew,
   updateLogo,
   getOrCreateJoinCode,
   getByJoinCode,
@@ -16,6 +17,8 @@ const JOIN_CODE_PATTERN = new RegExp(
 
 const COMPANY_COLUMNS =
   "id, name, company_type, tier, logo_path, required_talk_id, required_talk_pushed_at, required_talk_pushed_by";
+
+const COMPANY_WITH_PARENT_COLUMNS = `${COMPANY_COLUMNS}, parent_gc_company_id, parent:parent_gc_company_id(tier)`;
 
 const dbRow = {
   id: "company-1",
@@ -63,7 +66,7 @@ describe("companies service: getById", () => {
     const result = await getById("company-1");
 
     // Assert
-    expect(select).toHaveBeenCalledWith(COMPANY_COLUMNS);
+    expect(select).toHaveBeenCalledWith(COMPANY_WITH_PARENT_COLUMNS);
     expect(eqId).toHaveBeenCalledWith("id", "company-1");
     expect(result).toEqual(mappedCompany);
   });
@@ -89,6 +92,38 @@ describe("companies service: getById", () => {
 
     // Assert
     expect(result.tier).toBe("premium");
+  });
+
+  it("should derive an in-house crew's tier from its parent GC (Portfolio -> premium, Free -> basic)", async () => {
+    // Arrange: a crew never holds a plan of its own; no sponsorship lookup is needed
+    // for the premium case, and the Free case falls through to it (no sponsored site)
+    single.mockResolvedValue({
+      data: { ...dbRow, tier: "basic", parent_gc_company_id: "gc-1", parent: { tier: "enterprise" } },
+      error: null,
+    });
+
+    // Act & Assert
+    await expect(getById("company-1")).resolves.toMatchObject({ tier: "premium" });
+
+    // Arrange: Free GC, crew not on a sponsored site
+    const emptyQuery = {
+      then: (resolve) => Promise.resolve({ data: [], error: null }).then(resolve),
+    };
+    ["select", "eq", "not", "is"].forEach((method) => {
+      emptyQuery[method] = vi.fn(() => emptyQuery);
+    });
+    fromSpy.mockImplementation((table) => {
+      if (table === "companies") return { select };
+      if (table === "jobsite_subcontractors") return emptyQuery;
+      throw new Error(`Unexpected table: ${table}`);
+    });
+    single.mockResolvedValue({
+      data: { ...dbRow, tier: "basic", parent_gc_company_id: "gc-1", parent: { tier: "basic" } },
+      error: null,
+    });
+
+    // Act & Assert
+    await expect(getById("company-1")).resolves.toMatchObject({ tier: "basic" });
   });
 
   it("should map a null logo_path to a null logoPath", async () => {
@@ -504,6 +539,69 @@ describe("companies service: getByJoinCode", () => {
     await expect(getByJoinCode("ABCD2345")).rejects.toMatchObject({
       statusCode: 502,
       message: "Could not look up the join code",
+    });
+  });
+});
+
+describe("companies service: getOwnedCrew (Phase 13)", () => {
+  const crewRow = {
+    id: "crew-1",
+    name: "Hyperion - Framing",
+    archived_at: null,
+    created_at: "2026-01-01T00:00:00.000Z",
+  };
+
+  let single;
+  let eq;
+  let select;
+
+  beforeEach(() => {
+    single = vi.fn().mockResolvedValue({ data: crewRow, error: null });
+    eq = vi.fn(() => ({ eq, single }));
+    select = vi.fn(() => ({ eq }));
+
+    fromSpy.mockReset();
+    fromSpy.mockImplementation((table) => {
+      if (table === "companies") return { select };
+      throw new Error(`Unexpected table: ${table}`);
+    });
+  });
+
+  it("should fetch the crew scoped to the GC that owns it, mapped to camelCase and without tier or billing columns", async () => {
+    // Act
+    const result = await getOwnedCrew("crew-1", "gc-1");
+
+    // Assert
+    expect(select).toHaveBeenCalledWith("id, name, archived_at, created_at");
+    expect(eq).toHaveBeenCalledWith("id", "crew-1");
+    expect(eq).toHaveBeenCalledWith("parent_gc_company_id", "gc-1");
+    expect(result).toEqual({
+      id: "crew-1",
+      name: "Hyperion - Framing",
+      archivedAt: null,
+      createdAt: "2026-01-01T00:00:00.000Z",
+    });
+  });
+
+  it("should throw a 404 AppError when the crew is missing or owned by another GC", async () => {
+    // Arrange
+    single.mockResolvedValue({ data: null, error: { code: "PGRST116" } });
+
+    // Act & Assert
+    await expect(getOwnedCrew("crew-1", "other-gc")).rejects.toMatchObject({
+      statusCode: 404,
+      message: "Crew not found",
+    });
+  });
+
+  it("should throw a 502 AppError on any other query failure", async () => {
+    // Arrange
+    single.mockResolvedValue({ data: null, error: { code: "OTHER" } });
+
+    // Act & Assert
+    await expect(getOwnedCrew("crew-1", "gc-1")).rejects.toMatchObject({
+      statusCode: 502,
+      message: "Could not load the crew",
     });
   });
 });

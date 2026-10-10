@@ -16,9 +16,10 @@ const rosterQuery = (result) => {
   return query;
 };
 
-const row = (subId, acceptedAt, plan = "free") => ({
+const row = (subId, acceptedAt, plan = "free", parentGcId = null) => ({
   sub_company_id: subId,
   accepted_at: acceptedAt,
+  companies: { parent_gc_company_id: parentGcId },
   jobsites: { gc_company_id: "gc-1", plan },
 });
 
@@ -64,6 +65,34 @@ describe("subAccess service: getUnlockedSubIds", () => {
     const unlocked = await getUnlockedSubIds("gc-1");
 
     expect([...unlocked].sort()).toEqual(["free", "paid"]);
+  });
+
+  it("always unlocks the GC's own in-house crews without using the free slot", async () => {
+    setup({
+      result: {
+        data: [
+          row("free", "2026-01-01T00:00:00Z"),
+          row("crew", "2026-02-01T00:00:00Z", "free", "gc-1"),
+          row("other-gcs-crew", "2026-03-01T00:00:00Z", "free", "gc-2"),
+        ],
+        error: null,
+      },
+    });
+
+    const unlocked = await getUnlockedSubIds("gc-1");
+
+    expect([...unlocked].sort()).toEqual(["crew", "free"]);
+  });
+
+  it("tolerates a roster row with no company embed", async () => {
+    setup({
+      result: {
+        data: [{ sub_company_id: "a", accepted_at: "2026-01-01T00:00:00Z", jobsites: { plan: "free" } }],
+        error: null,
+      },
+    });
+
+    await expect(getUnlockedSubIds("gc-1")).resolves.toEqual(new Set(["a"]));
   });
 
   it("throws a 502 when the roster lookup fails", async () => {
