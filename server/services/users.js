@@ -6,6 +6,7 @@ const { v4: uuidv4 } = require("uuid");
 const { supabase } = require("../utility/supabaseClient");
 const { AppError } = require("../utility/AppError");
 const companyInvitesService = require("./companyInvites");
+const crewJoinLinksService = require("./crewJoinLinks");
 const jobsitesService = require("./jobsites");
 const seatsService = require("./seats");
 const { resolveEffectiveTier } = require("./sponsorship");
@@ -25,9 +26,13 @@ const createProfile = async ({
   inviteToken,
   jobsiteInviteToken,
   jobsiteJoinToken,
+  crewJoinToken,
 }) => {
   if (inviteToken) {
     return createProfileFromInvite({ id, email, name, inviteToken });
+  }
+  if (crewJoinToken) {
+    return createProfileFromCrewJoin({ id, email, name, crewJoinToken });
   }
 
   const companyId = uuidv4();
@@ -167,6 +172,51 @@ const createProfileFromInvite = async ({ id, email, name, inviteToken }) => {
   };
 };
 
+// Phase 13f-join: a foreman signing up from an in-house crew's open join link
+// (docs/in-house-subs-design.md). Joins the crew's existing company like an
+// invited user, but as a foreman only (the role is never read from the client)
+// and with no email to match, so the link's own limits are the control: expiry,
+// a head count, and the seat cap re-checked here. The spot is taken before the
+// users row is written and handed back if that write fails.
+const createProfileFromCrewJoin = async ({ id, email, name, crewJoinToken }) => {
+  const link = await crewJoinLinksService.getActiveByToken(crewJoinToken);
+
+  await seatsService.assertSeatAvailable({
+    companyId: link.companyId,
+    role: "foreman",
+    email,
+    includePending: false,
+  });
+
+  await crewJoinLinksService.claimSlot(link);
+
+  const { data, error } = await supabase
+    .from("users")
+    .insert({ id, company_id: link.companyId, role: "foreman", name })
+    .select("id, name, role, company_id")
+    .single();
+
+  if (error) {
+    await crewJoinLinksService.releaseSlot(link);
+    // 23505 = unique_violation on users.id (pkey) -- profile already exists.
+    if (error.code === "23505") {
+      throw new AppError("Profile already exists for this account", 409, {
+        cause: error,
+      });
+    }
+    throw new AppError("Could not finish setting up your account", 502, {
+      cause: error,
+    });
+  }
+
+  return {
+    id: data.id,
+    name: data.name,
+    role: data.role,
+    companyId: data.company_id,
+  };
+};
+
 // Resolves an authenticated user's row in `users` into the identity fields that
 // downstream authorization needs. `requireAuth` only proves *who* the caller is
 // (the auth UID); anything that authorizes by company or role calls this — via
@@ -180,7 +230,7 @@ const getUserContext = async (id) => {
     // `required_talk_pushed_by -> users(id)`, so a bare `companies(...)` is
     // ambiguous to PostgREST (PGRST201) and would surface as a 404 here.
     .select(
-      "id, name, role, company_id, companies!users_company_id_fkey(tier, company_type)",
+      "id, name, role, company_id, companies!users_company_id_fkey(tier, company_type, parent_gc_company_id, parent:parent_gc_company_id(tier))",
     )
     .eq("id", id)
     .single();
@@ -212,8 +262,11 @@ const getUserContext = async (id) => {
       companyId: data.company_id,
       companyType: data.companies?.company_type ?? null,
       tier: data.companies?.tier ?? null,
+      parentTier: data.companies?.parent?.tier ?? null,
     }),
     companyType: data.companies?.company_type ?? null,
+    // Set for an in-house crew; its billing is managed by that GC (Phase 13c).
+    parentGcCompanyId: data.companies?.parent_gc_company_id ?? null,
   };
 };
 

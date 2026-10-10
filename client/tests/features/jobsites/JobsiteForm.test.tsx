@@ -11,6 +11,7 @@ import { PlanLimitError } from "../../../src/utils/PlanLimitError";
 
 const mockCreate = vi.fn();
 const mockUpdate = vi.fn();
+const mockUseInHouseCrews = vi.fn();
 let createLimitError: Error | null = null;
 let updateLimitError: Error | null = null;
 
@@ -20,6 +21,9 @@ vi.mock("../../../src/hooks/useCreateJobsite", () => ({
     isCreating: false,
     planLimitError: createLimitError,
   }),
+}));
+vi.mock("../../../src/hooks/useInHouseCrews", () => ({
+  useInHouseCrews: (...args: unknown[]) => mockUseInHouseCrews(...args),
 }));
 vi.mock("../../../src/hooks/useUpdateJobsite", () => ({
   useUpdateJobsite: () => ({
@@ -60,6 +64,7 @@ describe("JobsiteForm", () => {
     updateLimitError = null;
     mockCreate.mockResolvedValue(undefined);
     mockUpdate.mockResolvedValue(undefined);
+    mockUseInHouseCrews.mockReturnValue({ crews: [] });
   });
 
   it("renders nothing when closed", () => {
@@ -79,9 +84,54 @@ describe("JobsiteForm", () => {
     fireEvent.click(screen.getByRole("button", { name: /create job site/i }));
 
     await waitFor(() =>
-      expect(mockCreate).toHaveBeenCalledWith({ name: "Riverside" }),
+      expect(mockCreate).toHaveBeenCalledWith({ name: "Riverside", crewIds: [] }),
     );
     await waitFor(() => expect(onClose).toHaveBeenCalled());
+  });
+
+  describe("in-house crews", () => {
+    const framing = { id: "c1", name: "Hyperion - Framing", archivedAt: null, createdAt: "x" };
+    const roofing = { id: "c2", name: "Hyperion - Roofing", archivedAt: null, createdAt: "x" };
+    const retired = { id: "c3", name: "Hyperion - Old", archivedAt: "2026-01-01", createdAt: "x" };
+
+    it("offers the active crews pre-ticked and sends the ones left ticked", async () => {
+      mockUseInHouseCrews.mockReturnValue({ crews: [framing, roofing, retired] });
+      renderForm();
+
+      expect((screen.getByLabelText("Hyperion - Framing") as HTMLInputElement).checked).toBe(true);
+      expect((screen.getByLabelText("Hyperion - Roofing") as HTMLInputElement).checked).toBe(true);
+      expect(screen.queryByLabelText("Hyperion - Old")).toBeNull();
+
+      fireEvent.click(screen.getByLabelText("Hyperion - Roofing"));
+      fireEvent.change(screen.getByLabelText(/job site name/i), { target: { value: "Riverside" } });
+      fireEvent.click(screen.getByRole("button", { name: /create job site/i }));
+
+      await waitFor(() =>
+        expect(mockCreate).toHaveBeenCalledWith({ name: "Riverside", crewIds: ["c1"] }),
+      );
+    });
+
+    it("lets an unticked crew be ticked again", async () => {
+      mockUseInHouseCrews.mockReturnValue({ crews: [framing] });
+      renderForm();
+
+      fireEvent.click(screen.getByLabelText("Hyperion - Framing"));
+      fireEvent.click(screen.getByLabelText("Hyperion - Framing"));
+      fireEvent.change(screen.getByLabelText(/job site name/i), { target: { value: "Riverside" } });
+      fireEvent.click(screen.getByRole("button", { name: /create job site/i }));
+
+      await waitFor(() =>
+        expect(mockCreate).toHaveBeenCalledWith({ name: "Riverside", crewIds: ["c1"] }),
+      );
+    });
+
+    it("shows no crew choice when editing a job site, and skips loading crews", () => {
+      mockUseInHouseCrews.mockReturnValue({ crews: [framing] });
+      renderForm({ jobsite });
+
+      expect(screen.queryByLabelText("Hyperion - Framing")).toBeNull();
+      expect(mockUseInHouseCrews).toHaveBeenCalledWith({ enabled: false });
+    });
   });
 
   it("requires a name and does not submit without one", async () => {

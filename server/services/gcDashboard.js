@@ -150,12 +150,18 @@ const listCompletedLogsInWindow = async (projectIds, window) => {
   );
 };
 
-const rosterFields = (row) => {
+const rosterFields = (row, gcCompanyId) => {
   const accepted = (row.jobsite_subcontractors ?? []).filter(
     (sub) => sub.sub_company_id && sub.accepted_at,
   );
   return {
     subIds: accepted.map((sub) => sub.sub_company_id),
+    // Phase 13: a sub whose company is a child of this GC is an in-house crew.
+    inHouseSubIds: new Set(
+      accepted
+        .filter((sub) => sub.companies?.parent_gc_company_id === gcCompanyId)
+        .map((sub) => sub.sub_company_id),
+    ),
     cadenceBySub: new Map(
       accepted.map((sub) => [
         sub.sub_company_id,
@@ -176,7 +182,7 @@ const listActiveJobsites = async (gcCompanyId, allowedJobsiteIds = null) => {
   let query = supabase
     .from("jobsites")
     .select(
-      "id, name, origin, meeting_cadence, jobsite_subcontractors(sub_company_id, accepted_at, meeting_cadence)",
+      "id, name, origin, meeting_cadence, jobsite_subcontractors(sub_company_id, accepted_at, meeting_cadence, companies(parent_gc_company_id))",
     )
     .eq("gc_company_id", gcCompanyId)
     .eq("status", "active")
@@ -193,7 +199,7 @@ const listActiveJobsites = async (gcCompanyId, allowedJobsiteIds = null) => {
     id: row.id,
     name: row.name,
     createdBySub: row.origin === "subcontractor",
-    ...rosterFields(row),
+    ...rosterFields(row, gcCompanyId),
   }));
 };
 
@@ -286,6 +292,7 @@ const getOverview = async (gcCompanyId, { date, tzOffset, timeZone, allowedJobsi
           status: entry.status,
           lastLoggedAt: entry.lastLoggedAt,
           count: entry.count,
+          inHouse: jobsite.inHouseSubIds.has(entry.subId),
         })),
       };
     })
@@ -314,6 +321,7 @@ const getOverview = async (gcCompanyId, { date, tzOffset, timeZone, allowedJobsi
             status: null,
             lastLoggedAt: null,
             count: null,
+            inHouse: false,
             locked: true,
           }
         : { ...sub, locked: false },

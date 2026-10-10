@@ -107,10 +107,19 @@ const ensureCustomerId = async ({ companyId, email, billing }, stripe) => {
   return customer.id;
 };
 
+// An in-house crew (Phase 13c) never has its own subscription: its plan is
+// derived from its parent GC's, so checkout and the portal are closed to it.
+const assertNotInHouseCrew = (parentGcCompanyId) => {
+  if (parentGcCompanyId) {
+    throw new AppError("Billing is managed by your general contractor", 403);
+  }
+};
+
 const createCheckoutSession = async (
-  { companyId, companyType, email, planKey, interval },
+  { companyId, companyType, parentGcCompanyId = null, email, planKey, interval },
   stripe = getStripe(),
 ) => {
+  assertNotInHouseCrew(parentGcCompanyId);
   const plan = STRIPE_PLANS[planKey];
   if (!plan) {
     throw new AppError("Unknown plan", 400);
@@ -223,7 +232,11 @@ const createSiteCheckoutSession = async (
   return { url: session.url };
 };
 
-const createPortalSession = async ({ companyId }, stripe = getStripe()) => {
+const createPortalSession = async (
+  { companyId, parentGcCompanyId = null },
+  stripe = getStripe(),
+) => {
+  assertNotInHouseCrew(parentGcCompanyId);
   const { customerId } = await getBillingState(companyId);
   if (!customerId) {
     throw new AppError("No billing account yet", 404);

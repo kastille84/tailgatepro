@@ -124,6 +124,18 @@ describe("stripe service", () => {
   });
 
   describe("createCheckoutSession", () => {
+    it("throws 403 for an in-house crew, before creating a customer", async () => {
+      const stripe = makeStripe();
+
+      await expect(
+        createCheckoutSession({ ...args, parentGcCompanyId: "gc-1" }, stripe),
+      ).rejects.toMatchObject({
+        statusCode: 403,
+        message: "Billing is managed by your general contractor",
+      });
+      expect(stripe.customers.create).not.toHaveBeenCalled();
+    });
+
     it("creates a customer, saves it, and returns the Checkout url", async () => {
       const { update, updateEq } = mockDb();
       const stripe = makeStripe();
@@ -258,6 +270,17 @@ describe("stripe service", () => {
         customer: "cus_1",
         return_url: expect.stringContaining("/settings"),
       });
+    });
+
+    it("throws 403 for an in-house crew, before touching billing", async () => {
+      const stripe = makeStripe();
+      await expect(
+        createPortalSession({ companyId: "crew-1", parentGcCompanyId: "gc-1" }, stripe),
+      ).rejects.toMatchObject({
+        statusCode: 403,
+        message: "Billing is managed by your general contractor",
+      });
+      expect(stripe.billingPortal.sessions.create).not.toHaveBeenCalled();
     });
 
     it("throws 404 when the company has no billing account", async () => {

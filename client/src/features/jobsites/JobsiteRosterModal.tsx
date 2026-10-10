@@ -6,6 +6,7 @@ import { Modal } from "../../ui_comps/modal";
 import { useOnlineStatus } from "../../context/online-status";
 import { useRemoveSubcontractor } from "../../hooks/useRemoveSubcontractor";
 import type { Jobsite, JobsiteSubcontractor } from "../../interfaces/jobsite";
+import { AddInHouseCrew, InHouseBadge } from "../in-house-crews";
 import { InviteSubcontractorForm } from "./InviteSubcontractorForm";
 import { JobsiteJoinQrCard } from "./JobsiteJoinQrCard";
 import { SmsRecipientsPanel } from "./SmsRecipientsPanel";
@@ -81,6 +82,13 @@ export const JobsiteRosterModal = ({
               subcontractor below.
             </StyledNote>
             <JobsiteJoinQrCard jobsiteId={jobsite.id} jobsiteName={jobsite.name} />
+
+            <AddInHouseCrew
+              jobsiteId={jobsite.id}
+              attachedCrewIds={jobsite.subcontractors.flatMap((sub) =>
+                sub.companyId ? [sub.companyId] : [],
+              )}
+            />
           </>
         )}
 
@@ -96,6 +104,7 @@ export const JobsiteRosterModal = ({
                 <StyledRosterRow key={sub.id}>
                   <StyledRosterMain>
                     <StyledName>{subLabel(sub)}</StyledName>
+                    {sub.inHouse && <InHouseBadge />}
                     {sub.companyName && <StyledMeta>{sub.email}</StyledMeta>}
                     {sub.locked && (
                       <StyledMeta>

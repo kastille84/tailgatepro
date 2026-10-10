@@ -15,7 +15,9 @@ const getUnlockedSubIds = async (gcCompanyId) => {
 
   const { data, error } = await supabase
     .from("jobsite_subcontractors")
-    .select("sub_company_id, accepted_at, jobsites!inner(gc_company_id, plan)")
+    .select(
+      "sub_company_id, accepted_at, companies(parent_gc_company_id), jobsites!inner(gc_company_id, plan)",
+    )
     .eq("jobsites.gc_company_id", gcCompanyId)
     .not("accepted_at", "is", null)
     .not("sub_company_id", "is", null);
@@ -30,6 +32,7 @@ const getUnlockedSubIds = async (gcCompanyId) => {
       subId: row.sub_company_id,
       acceptedAt: row.accepted_at,
       sponsored: row.jobsites.plan === "site_pro",
+      inHouse: row.companies?.parent_gc_company_id === gcCompanyId,
     })),
   });
 };

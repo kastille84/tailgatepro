@@ -15,6 +15,11 @@ export interface JobsiteSubcontractor {
   /** Null until the invitee has accepted and named/joined a company, and
    *  always null when `locked`. */
   companyName: string | null;
+  /** The crew's company id; only sent for an in-house crew (Phase 13), so the
+   *  roster can tell which crews are already on the site. Null otherwise. */
+  companyId: string | null;
+  /** True for one of the GC's own in-house crews (Phase 13). */
+  inHouse: boolean;
   /** True when the GC's plan (GC Free: 1 unlocked sub) hides this sub. */
   locked: boolean;
 }

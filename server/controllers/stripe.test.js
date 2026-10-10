@@ -59,6 +59,7 @@ describe("stripe controller", () => {
       expect(createCheckoutSpy).toHaveBeenCalledWith({
         companyId: "company-1",
         companyType: "subcontractor",
+        parentGcCompanyId: undefined,
         email: "boss@acme.com",
         planKey: "trade-pro",
         interval: "annual",
@@ -88,7 +89,10 @@ describe("stripe controller", () => {
 
       await createPortalSession(req, res, next);
 
-      expect(createPortalSpy).toHaveBeenCalledWith({ companyId: "company-1" });
+      expect(createPortalSpy).toHaveBeenCalledWith({
+        companyId: "company-1",
+        parentGcCompanyId: undefined,
+      });
       expect(res.status).toHaveBeenCalledWith(200);
       expect(res.json).toHaveBeenCalledWith({
         success: true,

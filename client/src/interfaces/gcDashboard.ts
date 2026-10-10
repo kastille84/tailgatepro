@@ -18,6 +18,8 @@ export interface GcSubCompliance {
   lastLoggedAt: string | null;
   /** Null when `locked`. */
   count: number | null;
+  /** True for one of the GC's own in-house crews (Phase 13). */
+  inHouse: boolean;
   /** True when the GC's plan (GC Free: 1 unlocked sub) hides this sub — the
    *  server sends no identity or status for it, only this placeholder. */
   locked: boolean;

@@ -123,10 +123,30 @@ describe("jobsites controller", () => {
       await createJobsite(req, res, next);
 
       // Assert
-      expect(createSpy).toHaveBeenCalledWith({ gcCompanyId: "gc-1", name: "Riverside Tower" });
+      expect(createSpy).toHaveBeenCalledWith({
+        gcCompanyId: "gc-1",
+        name: "Riverside Tower",
+        crewIds: undefined,
+      });
       expect(res.status).toHaveBeenCalledWith(201);
       expect(res.json).toHaveBeenCalledWith({ success: true, data: jobsite });
       expect(next).not.toHaveBeenCalled();
+    });
+
+    it("passes the chosen in-house crew ids through", async () => {
+      // Arrange
+      req.body = { name: "Riverside Tower", crewIds: ["crew-1"] };
+      createSpy.mockResolvedValue(jobsite);
+
+      // Act
+      await createJobsite(req, res, next);
+
+      // Assert
+      expect(createSpy).toHaveBeenCalledWith({
+        gcCompanyId: "gc-1",
+        name: "Riverside Tower",
+        crewIds: ["crew-1"],
+      });
     });
 
     it("forwards a jobsitesService.create failure to next", async () => {

@@ -20,6 +20,8 @@
 | `required_talk_id` | UUID | FK → `toolbox_talks.id`, `ON DELETE SET NULL`, Nullable | GC-only (Phase 9e, GC Portfolio, `docs/policy-push-design.md`): the GC's current top-down policy push — one global toolbox talk pushed as required reading across every active jobsite. `NULL` = no push currently active. Cleared/replaced by the GC only; never auto-expires |
 | `required_talk_pushed_at` | Timestamptz | Nullable | When the current `required_talk_id` was pushed |
 | `required_talk_pushed_by` | UUID | FK → `users.id`, `ON DELETE SET NULL`, Nullable | Which user pushed the current `required_talk_id` |
+| `parent_gc_company_id` | UUID | FK → `companies.id`, `ON DELETE RESTRICT`, Nullable | Phase 13 (`docs/in-house-subs-design.md`): set only on a GC's in-house crew (e.g. "Hyperion - Framing"), a real `subcontractor` company owned by that GC; `NULL` for every ordinary company. **CHECK** `check_parent_gc_sub_only` (`parent_gc_company_id IS NULL OR company_type = 'subcontractor'`) and `check_parent_gc_not_self`. "The parent is a GC" and "one level deep" span two rows, so they are enforced in the service layer, with the parent always the caller's verified company. `RESTRICT` so deleting a GC can't wipe crews that own meeting logs. A partial unique index `companies_parent_gc_name_unique` on `(parent_gc_company_id, lower(name))` makes a crew name unique per GC (`companies.name` itself is not unique) |
+| `archived_at` | Timestamptz | Nullable | Phase 13: `NULL` = live; a timestamp = archived (hidden from rosters and pickers, restorable). Only in-house crews use it for now |
 
 | Table: `users` | Type | Constraints | Description |
 | :--- | :--- | :--- | :--- |
@@ -154,6 +156,18 @@ caller's company owns the parent meeting's project (see `docs/data-access.md`).
 | **UNIQUE** `company_invites_company_email_unique` | | `(company_id, email)` | Re-inviting the same email upserts this row (new token/role/expiry) instead of creating a duplicate |
 
 > RLS: enabled with no policies (server-brokered, deny-all) — see `docs/data-access.md`.
+
+| Table: `crew_join_links` | Type | Constraints | Description |
+| :--- | :--- | :--- | :--- |
+| `id` | UUID | Primary Key | Server-generated UUID (not an offline record) |
+| `company_id` | UUID | Not Null, Unique, FK -> `companies.id` (ON DELETE CASCADE) | The in-house crew a foreman joins. Unique = at most one active link per crew; making a new link upserts this row |
+| `token` | Text | Unique, Not Null | 64-hex secret (`server/utility/inviteToken.js`), placed in the `/crew-join/:token` URL. Shown only to a manager of the crew's GC |
+| `expires_at` | Timestamptz | Not Null | 7 days from creation |
+| `max_uses` | Integer | Not Null | Head count the link allows (10, set by `server/services/crewJoinLinks.js`) |
+| `uses` | Integer | Not Null, Default `0` | People who have joined with this link; the link stops working at `max_uses`. Taken with a compare-and-set, handed back if the signup fails |
+| `created_at` | Timestamptz | Default `now()` | |
+
+> Phase 13f-join (`docs/in-house-subs-design.md`): an open link for an in-house crew (a `subcontractor` company with `parent_gc_company_id`). A signup through it becomes a `foreman` of that crew with no email match. Deleting the row is the off switch. RLS: enabled with no policies.
 
 ### 7. Jobsites (Phase 8d)
 

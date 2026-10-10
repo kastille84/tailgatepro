@@ -72,6 +72,7 @@ export const GC_PLANS: Plan[] = [
       "Dashboard with subcontractor PDFs & compliance status",
       "Basic sub roster overview",
       "1 subcontractor unlocked — others blurred",
+      "Track your own in-house crews at no extra cost",
     ],
   },
   {

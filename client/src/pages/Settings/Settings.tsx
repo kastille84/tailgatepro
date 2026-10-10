@@ -17,6 +17,7 @@ import {
   LogoUpload,
   SmsOptInCard,
 } from "../../features/company-settings";
+import { InHouseCrewsSection } from "../../features/in-house-crews";
 import {
   StyledSection as StyledLogoSection,
   StyledSectionTitle,
@@ -43,7 +44,7 @@ import {
  *  though it sits behind `RequireAuth`, matching `Projects.tsx`. */
 export const Settings = () => {
   const { user, loading } = useAuth();
-  const { role, hasBrandingAccess, isGc, isManagerRole, plan } =
+  const { role, hasBrandingAccess, isGc, isManagerRole, isInHouseCrew, plan } =
     useCurrentUser();
   const canInvite = role === "admin" || role === "safety_manager";
   const planName =
@@ -123,7 +124,7 @@ export const Settings = () => {
               </StyledUpsell>
             )}
           </StyledLogoSection>
-          {isManagerRole && (
+          {isManagerRole && !isInHouseCrew && (
             <StyledLogoSection>
               <hr />
               <StyledSectionTitle>Billing</StyledSectionTitle>
@@ -154,6 +155,13 @@ export const Settings = () => {
                 isLoading={isJoinCodeLoading}
                 isError={isJoinCodeError}
               />
+            </StyledLogoSection>
+          )}
+          {isGc && isManagerRole && (
+            <StyledLogoSection>
+              <hr />
+              <StyledSectionTitle>In-house crews</StyledSectionTitle>
+              <InHouseCrewsSection />
             </StyledLogoSection>
           )}
           {canInvite && (

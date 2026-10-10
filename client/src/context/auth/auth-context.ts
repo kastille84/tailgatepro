@@ -47,6 +47,14 @@ export interface JobsiteJoinProfile {
   jobsiteJoinToken: string;
 }
 
+/** Carried as `user_metadata` at signup for a foreman joining an in-house crew
+ *  from its open join link (Phase 13f-join). The crew and the foreman role come
+ *  from the link row itself, resolved server-side by `crewJoinToken`. */
+export interface CrewJoinProfile {
+  name: string;
+  crewJoinToken: string;
+}
+
 export interface AuthContextType extends AuthState {
   loginWithGoogle: () => Promise<void>;
   /** Returns the session directly (like `signUpWithEmail`) so a first-login
@@ -67,7 +75,8 @@ export interface AuthContextType extends AuthState {
       | SignupProfile
       | InviteAcceptProfile
       | JobsiteInviteAcceptProfile
-      | JobsiteJoinProfile,
+      | JobsiteJoinProfile
+      | CrewJoinProfile,
   ) => Promise<{ session: Session | null }>;
   sendPasswordReset: (email: string) => Promise<void>;
   updatePassword: (newPassword: string) => Promise<void>;

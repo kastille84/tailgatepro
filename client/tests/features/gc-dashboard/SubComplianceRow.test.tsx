@@ -16,6 +16,7 @@ const sub: GcSubCompliance = {
   status: "logged",
   lastLoggedAt: "2026-09-21T13:00:00.000Z",
   count: 1,
+  inHouse: false,
   locked: false,
 };
 
@@ -97,5 +98,15 @@ describe("SubComplianceRow", () => {
 
     fireEvent.click(screen.getByRole("button"));
     expect(onSelect).toHaveBeenCalledWith(sub);
+  });
+
+  it("badges an in-house crew and leaves other subs unbadged", () => {
+    renderRow({ inHouse: true });
+    expect(screen.getByText("In-house")).toBeDefined();
+  });
+
+  it("does not badge an ordinary subcontractor", () => {
+    renderRow();
+    expect(screen.queryByText("In-house")).toBeNull();
   });
 });

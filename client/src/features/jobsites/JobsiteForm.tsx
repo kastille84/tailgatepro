@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -8,8 +9,10 @@ import { Form, FormField, TextInput } from "../../ui_comps/form";
 import { Modal } from "../../ui_comps/modal";
 import { Select } from "../../ui_comps/select";
 import { useCreateJobsite } from "../../hooks/useCreateJobsite";
+import { useInHouseCrews } from "../../hooks/useInHouseCrews";
 import { useUpdateJobsite } from "../../hooks/useUpdateJobsite";
 import type { Jobsite } from "../../interfaces/jobsite";
+import { ChecklistField } from "../in-house-crews";
 import { PlanLimitError } from "../../utils/PlanLimitError";
 import { detectTimeZone, timeZoneOptions } from "../../utils/timeZones";
 import {
@@ -54,6 +57,16 @@ export const JobsiteForm = ({ isOpen, onClose, jobsite, onPlanLimit }: JobsiteFo
   const { updateJobsite, isUpdating, planLimitError: updateLimitError } = useUpdateJobsite();
   const planLimitError = createLimitError ?? updateLimitError;
 
+  // Create mode only: the in-house crews that work this site, pre-ticked; the
+  // GC unticks the ones that do not (docs/in-house-subs-design.md).
+  const { crews } = useInHouseCrews({ enabled: !isEdit });
+  const activeCrews = crews.filter((crew) => !crew.archivedAt);
+  const [uncheckedCrewIds, setUncheckedCrewIds] = useState<string[]>([]);
+  const toggleCrew = (id: string) =>
+    setUncheckedCrewIds((current) =>
+      current.includes(id) ? current.filter((other) => other !== id) : [...current, id],
+    );
+
   // The saved zone, else the browser's: a GC setting up a site is almost
   // always standing in that site's timezone.
   const defaultTimeZone = jobsite?.timezone ?? detectTimeZone();
@@ -92,7 +105,12 @@ export const JobsiteForm = ({ isOpen, onClose, jobsite, onPlanLimit }: JobsiteFo
           },
         });
       } else {
-        await createJobsite({ name: values.name });
+        await createJobsite({
+          name: values.name,
+          crewIds: activeCrews
+            .filter((crew) => !uncheckedCrewIds.includes(crew.id))
+            .map((crew) => crew.id),
+        });
       }
       onClose();
     } catch (error) {
@@ -143,6 +161,15 @@ export const JobsiteForm = ({ isOpen, onClose, jobsite, onPlanLimit }: JobsiteFo
             {...register("name")}
           />
         </FormField>
+
+        {!isEdit && activeCrews.length > 0 && (
+          <ChecklistField
+            legend="In-house crews on this job site"
+            options={activeCrews.map((crew) => ({ id: crew.id, label: crew.name }))}
+            uncheckedIds={uncheckedCrewIds}
+            onToggle={toggleCrew}
+          />
+        )}
 
         {/* No error display on Status: it's a bounded Select seeded with a
             valid value, so the Zod enum check can never fail from this UI. */}
