@@ -83,6 +83,24 @@ describe("Navbar", () => {
     expect(signUpLink?.getAttribute("href")).toBe("/signup");
   });
 
+  it("shows the How It Helps link only when logged out", () => {
+    const { unmount } = renderNavbar();
+
+    expect(
+      screen.getByRole("link", { name: /how it helps/i }).getAttribute("href"),
+    ).toBe("/how-it-helps");
+    unmount();
+
+    mockUseAuth.mockReturnValue({
+      user: { id: "user-1" },
+      loading: false,
+      logout: vi.fn(),
+    });
+    renderNavbar();
+
+    expect(screen.queryByRole("link", { name: /how it helps/i })).toBeNull();
+  });
+
   it("shows a Dashboard link and Logout button when logged in, and Logout calls logout()", async () => {
     const logout = vi.fn().mockResolvedValue(undefined);
     mockUseAuth.mockReturnValue({

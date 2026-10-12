@@ -52,6 +52,7 @@ export const Navbar: React.FC = () => {
           <>
             <NavAnchor to="/landing">Home</NavAnchor>
             {/* <NavAnchor to="/faq">FAQ</NavAnchor> */}
+            <NavAnchor to="/how-it-helps">How It Helps</NavAnchor>
             <NavAnchor to="/pricing">Pricing</NavAnchor>
             {/* <NavAnchor to="/contact">Contact</NavAnchor> */}
           </>
