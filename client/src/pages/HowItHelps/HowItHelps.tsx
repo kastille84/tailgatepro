@@ -36,7 +36,10 @@ import {
   AUDIENCE_CONTENT,
   AUDIENCE_OPTIONS,
   LIMITS,
+  HELP_CELL_HEADING,
+  METER_LEVELS,
   STRENGTH_LABEL,
+  STRENGTH_LEVEL,
   TIMELINE_STEPS,
 } from "./HowItHelpsContent";
 import type { HelpAudience } from "./HowItHelpsContent";
@@ -66,7 +69,11 @@ import {
   StyledStepTime,
   StyledStepWhat,
   StyledStepMatters,
+  StyledHelpHeading,
+  StyledStrengthRow,
   StyledStrengthTag,
+  StyledStrengthMeter,
+  StyledMeterDot,
   StyledLimits,
   StyledLimitItem,
   StyledDisclaimer,
@@ -186,11 +193,11 @@ export const HowItHelps = () => {
           <StyledSectionHead>
             <StyledEyebrow as="p">After an accident</StyledEyebrow>
             <StyledSectionTitle id="timeline-heading">
-              What happens next, and where the record matters
+              What happens next, and how TailgatePro helps
             </StyledSectionTitle>
             <StyledSectionLede>
-              The same sequence plays out for every serious incident. The record
-              you keep today is the evidence at every step.
+              The same sequence plays out for every serious incident. Each step
+              shows how much TailgatePro helps.
             </StyledSectionLede>
           </StyledSectionHead>
 
@@ -206,9 +213,20 @@ export const HowItHelps = () => {
                   <StyledPitchText>{step.happens}</StyledPitchText>
                 </StyledStepWhat>
                 <StyledStepMatters $strength={step.strength}>
-                  <StyledStrengthTag>
-                    {STRENGTH_LABEL[step.strength]}
-                  </StyledStrengthTag>
+                  <StyledHelpHeading>{HELP_CELL_HEADING}</StyledHelpHeading>
+                  <StyledStrengthRow>
+                    <StyledStrengthTag>
+                      {STRENGTH_LABEL[step.strength]}
+                    </StyledStrengthTag>
+                    <StyledStrengthMeter aria-hidden="true">
+                      {METER_LEVELS.map((level) => (
+                        <StyledMeterDot
+                          key={level}
+                          $filled={level <= STRENGTH_LEVEL[step.strength]}
+                        />
+                      ))}
+                    </StyledStrengthMeter>
+                  </StyledStrengthRow>
                   <StyledPitchText>{step.matters}</StyledPitchText>
                 </StyledStepMatters>
               </StyledStep>

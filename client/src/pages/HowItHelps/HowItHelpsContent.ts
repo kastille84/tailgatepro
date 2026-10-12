@@ -124,6 +124,16 @@ export const STRENGTH_LABEL: Record<RecordStrength, string> = {
   strongest: "Strongest",
 };
 
+export const STRENGTH_LEVEL: Record<RecordStrength, 1 | 2 | 3> = {
+  supporting: 1,
+  strong: 2,
+  strongest: 3,
+};
+
+export const METER_LEVELS = [1, 2, 3] as const;
+
+export const HELP_CELL_HEADING = "How TailgatePro helps";
+
 export const TIMELINE_STEPS: TimelineStep[] = [
   {
     when: "Minute zero",

@@ -278,12 +278,40 @@ export const StyledStepMatters = styled.div<{ $strength: RecordStrength }>`
   ${({ $strength }) => strengthTone[$strength]}
 `;
 
-export const StyledStrengthTag = styled.span`
+export const StyledHelpHeading = styled.p`
+  margin: 0;
   font-size: 1.3rem;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: ${({ theme }) => theme.colors.navy[400]};
+`;
+
+export const StyledStrengthRow = styled.div`
+  display: flex;
+  align-items: center;
+  gap: 1.2rem;
+`;
+
+export const StyledStrengthTag = styled.span`
+  font-size: 1.8rem;
   font-weight: 800;
-  letter-spacing: 0.1em;
+  letter-spacing: 0.04em;
   text-transform: uppercase;
   color: ${({ theme }) => theme.colors.navy[700]};
+`;
+
+export const StyledStrengthMeter = styled.span`
+  display: inline-flex;
+  gap: 0.4rem;
+`;
+
+export const StyledMeterDot = styled.span<{ $filled: boolean }>`
+  width: 1.6rem;
+  height: 0.8rem;
+  border-radius: ${({ theme }) => theme.borderRadius.tiny};
+  background-color: ${({ theme, $filled }) =>
+    $filled ? theme.colors.green[600] : theme.colors.concrete[600]};
 `;
 
 /* ---------- limits ---------- */

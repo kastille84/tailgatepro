@@ -1,6 +1,6 @@
 import React from "react";
 import { describe, it, expect, vi } from "vitest";
-import { fireEvent, render, screen } from "@testing-library/react";
+import { fireEvent, render, screen, within } from "@testing-library/react";
 import { ThemeProvider } from "styled-components";
 import { MemoryRouter } from "react-router-dom";
 
@@ -87,6 +87,22 @@ describe("HowItHelps", () => {
     TIMELINE_STEPS.forEach(({ title }) => {
       expect(screen.getByRole("heading", { name: title })).toBeTruthy();
     });
+  });
+
+  it("labels each timeline rating as how much TailgatePro helps", () => {
+    renderPage();
+
+    const timeline = within(
+      screen.getByRole("region", { name: /what happens next/i }),
+    );
+
+    expect(timeline.getAllByText("How TailgatePro helps")).toHaveLength(
+      TIMELINE_STEPS.length,
+    );
+    ["Helps", "Strong", "Strongest"].forEach((label) => {
+      expect(timeline.getAllByText(label).length).toBeGreaterThan(0);
+    });
+
   });
 
   it("lists what TailgatePro does not do", () => {
