@@ -13,6 +13,7 @@ import { useJobsiteInvitePreview } from "../../hooks/useJobsiteInvitePreview";
 import { useAcceptJobsiteInvite } from "../../hooks/useAcceptJobsiteInvite";
 import { Button } from "../../ui_comps/button";
 import { Footer } from "../../ui_comps/footer";
+import { TermsNotice } from "../../ui_comps/terms-notice";
 import { Form, FormField, TextInput } from "../../ui_comps/form";
 import { PasswordInput } from "../../ui_comps/password-input";
 import type { JobsiteInvitePreview } from "../../interfaces/jobsite";
@@ -367,6 +368,7 @@ export const AcceptJobsiteInvite = () => {
                 Create account
               </Button>
             </Form>
+            <TermsNotice />
             </>
           ) : (
             <Button

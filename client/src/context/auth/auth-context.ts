@@ -19,6 +19,8 @@ export interface SignupProfile {
   name: string;
   companyName: string;
   companyType: CompanyType;
+  /** When the user ticked the Terms checkbox (ISO timestamp). */
+  acceptedTermsAt: string;
 }
 
 /** Carried as `user_metadata` at signup for an invited user joining an

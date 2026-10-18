@@ -186,6 +186,20 @@ const renderMeetingLogPdf = ({
       .fontSize(9)
       .text(`Generated ${formatDate(new Date().toISOString())}`);
 
+    // Liability disclaimer (client/src/pages/Legal/Terms.tsx §3 has the full
+    // wording). Printed on every report, regardless of plan.
+    doc
+      .moveDown(0.5)
+      .font("Helvetica")
+      .fontSize(8)
+      .fillColor("#555555")
+      .text(
+        "This record is for informational and record-keeping purposes only. " +
+          "TailgatePro does not provide legal advice and does not guarantee " +
+          "OSHA compliance or protection from citations, injury claims, or lawsuits.",
+      );
+    doc.fillColor("black");
+
     // Tamper-evidence seal (Phase 9e, docs/tamper-evidence-design.md): a
     // short, human-eyeballable fragment of the full HMAC-SHA256 seal stored
     // on meeting_logs.content_seal. This fragment is not itself checked

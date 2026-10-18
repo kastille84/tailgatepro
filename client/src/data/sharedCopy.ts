@@ -26,3 +26,7 @@ export const NO_PER_USER_FEES_BODY: { text: string; strong?: boolean }[] = [
   { text: "subcontractors on your job never pay a fee", strong: true },
   { text: " — no app-store downloads and no user-billing disputes." },
 ];
+
+/** Shown wherever a talk is presented. The full wording is in Terms §3. */
+export const COMPLIANCE_DISCLAIMER =
+  "For informational and record-keeping use only. TailgatePro does not provide legal advice and does not guarantee OSHA compliance or protection from citations, injury claims, or lawsuits.";

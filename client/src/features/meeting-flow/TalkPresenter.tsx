@@ -4,6 +4,7 @@ import { HiArrowRight } from "react-icons/hi2";
 import { Button } from "../../ui_comps/button";
 import { FormField } from "../../ui_comps/form";
 import { Select } from "../../ui_comps/select";
+import { COMPLIANCE_DISCLAIMER } from "../../data/sharedCopy";
 import { useCurrentUser } from "../../hooks/useCurrentUser";
 import { useTalkAudio } from "../../hooks/useTalkAudio";
 import {
@@ -203,6 +204,10 @@ export const TalkPresenter = ({ talk, onContinue }: TalkPresenterProps) => {
           the crew directly.
         </StyledAudioNote>
       )}
+
+      <StyledPresenterAttribution>
+        {COMPLIANCE_DISCLAIMER}
+      </StyledPresenterAttribution>
 
       <StyledPresenterActions>
         <Button

@@ -338,6 +338,19 @@ describe("pdfGeneration: renderMeetingLogPdf", () => {
     expect(text).not.toContain("Content seal:");
   });
 
+  it("prints the liability disclaimer on every report", async () => {
+    const buffer = await renderMeetingLogPdf({
+      meetingLog,
+      project,
+      talk: talkWithAttributionAndQuiz,
+      signatures,
+    });
+    const text = decodeRenderedText(buffer);
+
+    expect(text).toContain("does not guarantee");
+    expect(text).toContain("injury claims, or lawsuits");
+  });
+
   it("prints the free-tier watermark footer for a basic-tier company", async () => {
     const buffer = await renderMeetingLogPdf({
       meetingLog,

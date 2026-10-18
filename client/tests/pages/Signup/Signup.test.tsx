@@ -58,6 +58,7 @@ const fillRequiredFields = () => {
   fireEvent.change(screen.getByLabelText(/^password$/i), {
     target: { value: "supersecret" },
   });
+  fireEvent.click(screen.getByRole("checkbox", { name: /i agree to the/i }));
 };
 
 describe("Signup page", () => {
@@ -121,6 +122,20 @@ describe("Signup page", () => {
     expect(signUpWithEmail).not.toHaveBeenCalled();
   });
 
+  it("blocks signup until the Terms checkbox is ticked", async () => {
+    renderSignup();
+    fillRequiredFields();
+    fireEvent.click(screen.getByRole("checkbox", { name: /i agree to the/i }));
+    fireEvent.click(
+      screen.getByRole("button", { name: /create account/i }),
+    );
+
+    expect(
+      await screen.findByText(/agree to the terms to create your account/i),
+    ).toBeDefined();
+    expect(signUpWithEmail).not.toHaveBeenCalled();
+  });
+
   it("creates the profile and navigates to /dashboard when signup returns a session", async () => {
     signUpWithEmail.mockResolvedValue({
       session: { access_token: "token-123" },
@@ -141,6 +156,7 @@ describe("Signup page", () => {
           name: "Alex Builder",
           companyName: "Rivera Electric",
           companyType: "subcontractor",
+          acceptedTermsAt: expect.any(String),
         },
       );
       expect(mockCreateProfile).toHaveBeenCalledWith({
