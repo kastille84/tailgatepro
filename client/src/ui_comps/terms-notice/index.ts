@@ -1,0 +1,1 @@
+export { TermsNotice } from "./TermsNotice";

@@ -13,6 +13,7 @@ import { useJoinLinkPreview } from "../../hooks/useJoinLinkPreview";
 import { useAcceptJoinLink } from "../../hooks/useAcceptJoinLink";
 import { Button } from "../../ui_comps/button";
 import { Footer } from "../../ui_comps/footer";
+import { TermsNotice } from "../../ui_comps/terms-notice";
 import { Form, FormField, TextInput } from "../../ui_comps/form";
 import { PasswordInput } from "../../ui_comps/password-input";
 import type { JobsiteJoinPreview } from "../../interfaces/jobsite";
@@ -292,6 +293,7 @@ export const JoinJobsite = () => {
           </Button>
 
           {showSignup ? (
+            <>
             <Form onSubmit={handleSubmit(onSignup)} noValidate $onDark>
               <FormField
                 id={emailId}
@@ -366,6 +368,8 @@ export const JoinJobsite = () => {
                 Create account
               </Button>
             </Form>
+            <TermsNotice />
+            </>
           ) : (
             <Button
               type="button"

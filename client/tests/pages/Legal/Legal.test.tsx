@@ -32,6 +32,16 @@ describe("Terms", () => {
   });
 });
 
+describe("Terms liability language", () => {
+  it("disclaims compliance guarantees, injury claims and lawsuits, and has an indemnity clause", () => {
+    renderWithTheme(<Terms />);
+
+    expect(screen.getByText(/does not guarantee that using the service/i)).toBeDefined();
+    expect(screen.getByText(/any injury, illness, death/i)).toBeDefined();
+    expect(screen.getByRole("heading", { name: /indemnification/i })).toBeDefined();
+  });
+});
+
 describe("Privacy", () => {
   it("renders the title and the no-sharing SMS statement", () => {
     renderWithTheme(<Privacy />);

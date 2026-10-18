@@ -11,6 +11,7 @@ import { useCreateProfile } from "../../hooks/useCreateProfile";
 import { useInvitePreview } from "../../hooks/useInvitePreview";
 import { Button } from "../../ui_comps/button";
 import { Footer } from "../../ui_comps/footer";
+import { TermsNotice } from "../../ui_comps/terms-notice";
 import { Form, FormField, TextInput } from "../../ui_comps/form";
 import { PasswordInput } from "../../ui_comps/password-input";
 import type { InviteRole } from "../../interfaces/companyInvite";
@@ -237,6 +238,7 @@ export const AcceptInvite = () => {
               Create account
             </Button>
           </Form>
+          <TermsNotice />
 
           <StyledLinkRow>
             <StyledLink to="/login">

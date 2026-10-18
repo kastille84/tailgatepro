@@ -14,7 +14,7 @@ import {
 
 export const SUPPORT_EMAIL = "support@gettailgatepro.com";
 export const LEGAL_ENTITY = "Edwin Edgardo Martinez, doing business as TailgatePro";
-export const LEGAL_LAST_UPDATED = "October 5, 2026";
+export const LEGAL_LAST_UPDATED = "October 18, 2026";
 
 interface LegalPageProps {
   title: string;

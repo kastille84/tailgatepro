@@ -32,6 +32,8 @@ import {
   StyledLinkRow,
   StyledLink,
   StyledSuccess,
+  StyledTermsCheckbox,
+  StyledTermsError,
 } from "./Signup.styles";
 
 const COMPANY_TYPE_OPTIONS: { value: CompanyType; label: string }[] = [
@@ -56,6 +58,9 @@ const signupSchema = z.object({
     .min(1, "Email is required")
     .email("Enter a valid email address"),
   password: z.string().min(8, "Password must be at least 8 characters"),
+  acceptTerms: z.boolean().refine((value) => value, {
+    message: "Agree to the Terms to create your account",
+  }),
 });
 
 type SignupValues = z.infer<typeof signupSchema>;
@@ -80,7 +85,7 @@ export const Signup = () => {
   } = useForm<SignupValues>({
     resolver: zodResolver(signupSchema),
     mode: "onTouched",
-    defaultValues: { companyType: "subcontractor" },
+    defaultValues: { companyType: "subcontractor", acceptTerms: false },
   });
 
   const onSubmit = async (values: SignupValues) => {
@@ -90,6 +95,7 @@ export const Signup = () => {
         name: values.name,
         companyName: values.companyName,
         companyType: values.companyType,
+        acceptedTermsAt: new Date().toISOString(),
       });
 
       // Remember the choice before anything else can interrupt: on the
@@ -254,6 +260,29 @@ export const Signup = () => {
                 {...register("password")}
               />
             </FormField>
+
+            <StyledTermsCheckbox
+              label={
+                <>
+                  I agree to the{" "}
+                  <a href="/terms" target="_blank" rel="noreferrer">
+                    Terms &amp; Conditions
+                  </a>{" "}
+                  and{" "}
+                  <a href="/privacy" target="_blank" rel="noreferrer">
+                    Privacy Policy
+                  </a>
+                  .
+                </>
+              }
+              hasError={!!errors.acceptTerms}
+              {...register("acceptTerms")}
+            />
+            {errors.acceptTerms && (
+              <StyledTermsError role="alert">
+                {errors.acceptTerms.message}
+              </StyledTermsError>
+            )}
 
             <Button
               type="submit"
