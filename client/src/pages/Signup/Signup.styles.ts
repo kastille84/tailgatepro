@@ -2,6 +2,7 @@ import styled from "styled-components";
 import { Link } from "react-router-dom";
 import { pageContentGrow } from "../../styles/layout";
 import { PageShell } from "../../ui_comps/page-shell";
+import { Checkbox } from "../../ui_comps/checkbox";
 
 export const StyledPage = PageShell;
 
@@ -130,4 +131,27 @@ export const StyledSuccess = styled.div`
     font-size: 2.2rem;
     color: ${({ theme }) => theme.colors.green[500]};
   }
+`;
+
+/** The Checkbox label defaults to dark text; the Signup hero is dark. */
+export const StyledTermsCheckbox = styled(Checkbox)`
+  align-items: flex-start;
+
+  span {
+    font-size: 1.4rem;
+    font-weight: 500;
+    color: ${({ theme }) => theme.colors.navy[100]};
+  }
+
+  a {
+    color: ${({ theme }) => theme.colors.orange[400]};
+    font-weight: 700;
+  }
+`;
+
+export const StyledTermsError = styled.p`
+  margin: 0;
+  font-size: 1.4rem;
+  font-weight: 600;
+  color: ${({ theme }) => theme.colors.red[200]};
 `;

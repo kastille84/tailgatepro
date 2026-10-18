@@ -89,6 +89,14 @@ describe("TalkPresenter", () => {
     expect(screen.getByText(/not an endorsement/i)).toBeDefined();
   });
 
+  it("shows the compliance disclaimer", () => {
+    renderPresenter();
+
+    expect(
+      screen.getByText(/does not guarantee osha compliance/i),
+    ).toBeDefined();
+  });
+
   it("renders without any structured sections, attribution, or OSHA line when the talk has none", () => {
     const speak = vi.fn();
     mockUseTalkAudio.mockReturnValue({ ...audioDefaults, speak });
@@ -98,7 +106,7 @@ describe("TalkPresenter", () => {
 
     expect(screen.queryByText(/talking points/i)).toBeNull();
     expect(screen.queryByText(/hazards to check/i)).toBeNull();
-    expect(screen.queryByText(/osha/i)).toBeNull();
+    expect(screen.queryByText(/^osha:/i)).toBeNull();
     expect(screen.queryByText(/public domain/i)).toBeNull();
 
     fireEvent.click(screen.getByRole("button", { name: /read aloud/i }));

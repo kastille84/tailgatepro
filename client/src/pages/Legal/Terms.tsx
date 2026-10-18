@@ -40,6 +40,15 @@ export const Terms = () => (
         or applicable law. You are responsible for meeting your OSHA and other
         legal obligations and for the accuracy of the records you enter.
       </p>
+      <p>
+        TailgatePro does not guarantee that using the Service will make your
+        worksite safe, prevent injuries or incidents, satisfy any OSHA or other
+        legal requirement, or protect you from citations, fines, inspections,
+        claims, or lawsuits. Meeting records may not be accepted as evidence of
+        compliance by any agency, insurer, or court. TailgatePro is not a law
+        firm and does not provide legal, safety-engineering, or insurance
+        advice.
+      </p>
     </LegalSection>
 
     <LegalSection heading="4. Acceptable use">
@@ -139,13 +148,26 @@ export const Terms = () => (
         The Service is provided &quot;as is&quot; and &quot;as available&quot;
         without warranties of any kind. To the fullest extent allowed by law,
         TailgatePro is not liable for indirect, incidental, or consequential
-        damages, or for OSHA citations, fines, or workplace incidents, and our
-        total liability for any claim is limited to the amount you paid us in
-        the 12 months before the claim.
+        damages, or for OSHA citations, fines, or workplace incidents,
+        including any injury, illness, death, or property damage, and any claim
+        or lawsuit arising from them. Our total liability for any claim is
+        limited to the amount you paid us in the 12 months before the claim.
+        Some jurisdictions do not allow certain limits, so parts of this
+        section may not apply to you.
       </p>
     </LegalSection>
 
-    <LegalSection heading="11. Changes to these Terms">
+    <LegalSection heading="11. Indemnification">
+      <p>
+        You agree to defend and indemnify TailgatePro and its owner against
+        claims, damages, fines, and costs (including reasonable attorneys&apos;
+        fees) arising from your use of the Service, your safety practices or
+        worksite conditions, the records and content you submit, or your
+        violation of these Terms or of any law.
+      </p>
+    </LegalSection>
+
+    <LegalSection heading="12. Changes to these Terms">
       <p>
         We may update these Terms. We will post the new version here and update
         the &quot;Last updated&quot; date. Continued use after a change means
@@ -153,7 +175,7 @@ export const Terms = () => (
       </p>
     </LegalSection>
 
-    <LegalSection heading="12. Contact us">
+    <LegalSection heading="13. Contact us">
       <p>
         Questions? Email{" "}
         <a href={`mailto:${SUPPORT_EMAIL}`}>{SUPPORT_EMAIL}</a>.

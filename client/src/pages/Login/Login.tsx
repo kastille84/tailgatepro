@@ -10,6 +10,7 @@ import { useAuth } from "../../context/auth";
 import { useCreateProfile } from "../../hooks/useCreateProfile";
 import { Button } from "../../ui_comps/button";
 import { Footer } from "../../ui_comps/footer";
+import { TermsNotice } from "../../ui_comps/terms-notice";
 import { Form, FormField, TextInput } from "../../ui_comps/form";
 import { PasswordInput } from "../../ui_comps/password-input";
 import { checkoutPath, readPendingCheckout } from "../../utils/pendingCheckout";
@@ -152,6 +153,7 @@ export const Login = () => {
           >
             Continue with Google
           </Button>
+          <TermsNotice />
 
           <StyledDivider>or</StyledDivider>
 
