@@ -233,3 +233,53 @@ export const StyledCadenceLabel = styled.span`
   font-weight: 700;
   color: ${({ theme }) => theme.colors.navy[700]};
 `;
+
+/** "Today" / "Tomorrow" quick-pick buttons above the date field on the
+ *  "Mark day off" sheet. */
+export const StyledDayOffQuick = styled.div`
+  display: flex;
+  gap: 1.2rem;
+`;
+
+/** Weekend / duplicate / out-of-range explainer under the date field. */
+export const StyledDayOffHint = styled.p`
+  margin: 0;
+  font-size: 1.3rem;
+  font-weight: 600;
+  line-height: 1.5;
+  color: ${({ theme }) => theme.colors.red[600]};
+`;
+
+/** The marks already made, listed under the form with a Remove action. */
+export const StyledDayOffList = styled.ul`
+  display: flex;
+  flex-direction: column;
+  gap: 0.8rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+`;
+
+export const StyledDayOffItem = styled.li`
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1.2rem;
+  padding: 0.8rem 1.2rem;
+  border: 0.1rem solid ${({ theme }) => theme.colors.navy[100]};
+  border-radius: ${({ theme }) => theme.borderRadius.md};
+  background-color: ${({ theme }) => theme.colors.concrete[100]};
+`;
+
+export const StyledDayOffItemText = styled.span`
+  font-size: 1.4rem;
+  font-weight: 600;
+  color: ${({ theme }) => theme.colors.navy[700]};
+`;
+
+export const StyledDayOffHeading = styled.h3`
+  margin: 0;
+  font-size: 1.4rem;
+  font-weight: 700;
+  color: ${({ theme }) => theme.colors.navy[600]};
+`;

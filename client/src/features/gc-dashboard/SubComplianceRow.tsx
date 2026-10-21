@@ -1,3 +1,4 @@
+import { dayOffReasonLabel } from "../../data/noWorkDayReasons";
 import { InHouseBadge } from "../in-house-crews";
 import type { GcSubCompliance } from "../../interfaces/gcDashboard";
 import {
@@ -9,6 +10,8 @@ import {
   StyledStatusPill,
   StyledUnlockButton,
 } from "./styles";
+
+const STATUS_LABELS = { logged: "Logged", missing: "Missing", off: "Day off" } as const;
 
 interface SubComplianceRowProps {
   sub: GcSubCompliance;
@@ -39,19 +42,21 @@ export const SubComplianceRow = ({
     );
   }
 
+  const status = sub.status === "logged" || sub.status === "off" ? sub.status : "missing";
+
   return (
     <li>
       <StyledSubRow type="button" onClick={() => onSelect(sub)}>
         <StyledSubName>{sub.companyName ?? "Unknown company"}</StyledSubName>
         {sub.inHouse && <InHouseBadge />}
         <StyledSubMeta>
-          {sub.lastLoggedAt
-            ? `Last logged ${new Date(sub.lastLoggedAt).toLocaleString()}`
-            : `No talk logged ${sub.cadence === "weekly" ? "this week" : "today"}`}
+          {status === "off"
+            ? `${dayOffReasonLabel(sub.reason) ?? "Day off"} · no talk required today`
+            : sub.lastLoggedAt
+              ? `Last logged ${new Date(sub.lastLoggedAt).toLocaleString()}`
+              : `No talk logged ${sub.cadence === "weekly" ? "this week" : "today"}`}
         </StyledSubMeta>
-        <StyledStatusPill $status={sub.status === "logged" ? "logged" : "missing"}>
-          {sub.status === "logged" ? "Logged" : "Missing"}
-        </StyledStatusPill>
+        <StyledStatusPill $status={status}>{STATUS_LABELS[status]}</StyledStatusPill>
       </StyledSubRow>
     </li>
   );

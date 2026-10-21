@@ -21,6 +21,8 @@ import "./services/talkReplayHandler";
 import "./services/meetingLogReplayHandler";
 // Same, for a "signature" outbox row.
 import "./services/signatureReplayHandler";
+// Same, for a "no_work_day" ("Mark day off") outbox row.
+import "./services/noWorkDayReplayHandler";
 
 import { Navbar } from "./ui_comps/navbar/Navbar";
 import { ScrollToTop } from "./ui_comps/scroll-to-top";

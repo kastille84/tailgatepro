@@ -94,7 +94,7 @@ vi.mock("../../../src/features/gc-dashboard", () => ({
 
 const overview = {
   jobsites: [{ id: "jobsite-1", name: "Downtown Tower", subs: [] }],
-  totals: { subs: 2, logged: 1, missing: 1 },
+  totals: { subs: 2, logged: 1, missing: 1, off: 0 },
 };
 
 const renderPage = () =>

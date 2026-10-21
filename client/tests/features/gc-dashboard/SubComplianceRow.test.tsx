@@ -14,6 +14,7 @@ const sub: GcSubCompliance = {
   projectId: "project-1",
   cadence: "daily",
   status: "logged",
+  reason: null,
   lastLoggedAt: "2026-09-21T13:00:00.000Z",
   count: 1,
   inHouse: false,
@@ -53,6 +54,26 @@ describe("SubComplianceRow", () => {
 
     expect(screen.getByText("Missing")).toBeDefined();
     expect(screen.getByText("No talk logged today")).toBeDefined();
+  });
+
+  it("renders a neutral Day off pill, not Missing, for a sub who isn't required today", () => {
+    renderRow({ status: "off", reason: "weekend", lastLoggedAt: null, count: 0 });
+
+    expect(screen.getByText("Day off")).toBeDefined();
+    expect(screen.getByText("Weekend · no talk required today")).toBeDefined();
+    expect(screen.queryByText("Missing")).toBeNull();
+  });
+
+  it("names the foreman's reason on a marked day off", () => {
+    renderRow({ status: "off", reason: "no_crew", lastLoggedAt: null, count: 0 });
+
+    expect(screen.getByText("No crew scheduled · no talk required today")).toBeDefined();
+  });
+
+  it("falls back to a plain Day off message for an unknown reason", () => {
+    renderRow({ status: "off", reason: null, lastLoggedAt: null, count: 0 });
+
+    expect(screen.getByText("Day off · no talk required today")).toBeDefined();
   });
 
   it("says 'this week' in the no-talk message for a weekly sub", () => {
