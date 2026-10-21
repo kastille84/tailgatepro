@@ -13,6 +13,9 @@ interface ProjectListProps {
   /** Present ⇒ live projects get an "Integrations" action (Procore / JobTread
    *  document push). Passed only for subcontractor managers. */
   onManageIntegrations?: (project: Project) => void;
+  /** Present ⇒ a live project linked to a GC job site gets a "Mark day off"
+   *  action (docs/no-work-days-design.md). Passed only for subcontractors. */
+  onMarkDayOff?: (project: Project) => void;
   /** The sub's memberships keyed by jobsite id. A live project linked to one
    *  of these gets its own talk-cadence control. */
   cadenceByJobsiteId?: Map<string, JobsiteMembership>;
@@ -28,6 +31,7 @@ export const ProjectList = ({
   onEdit,
   onLinkGc,
   onManageIntegrations,
+  onMarkDayOff,
   cadenceByJobsiteId,
   unsyncedProjectIds,
 }: ProjectListProps) => {
@@ -49,6 +53,7 @@ export const ProjectList = ({
           onEdit={onEdit}
           onLinkGc={onLinkGc}
           onManageIntegrations={onManageIntegrations}
+          onMarkDayOff={onMarkDayOff}
           isUnsynced={unsyncedProjectIds?.has(project.id) ?? false}
           membership={
             project.jobsiteId && !project.archivedAt

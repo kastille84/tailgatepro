@@ -12,6 +12,7 @@ import { Spinner } from "../../ui_comps/spinner";
 import { JobsiteManager } from "../../features/jobsites";
 import {
   GcLinkModal,
+  MarkDayOffModal,
   ProjectForm,
   ProjectIntegrationsModal,
   ProjectList,
@@ -80,6 +81,9 @@ export const Projects = () => {
   const [integrationsProject, setIntegrationsProject] = useState<
     Project | undefined
   >(undefined);
+  const [dayOffProject, setDayOffProject] = useState<Project | undefined>(
+    undefined,
+  );
 
   if (loading) {
     return (
@@ -148,6 +152,7 @@ export const Projects = () => {
                 onManageIntegrations={
                   canManageIntegrations ? setIntegrationsProject : undefined
                 }
+                onMarkDayOff={isSubcontractor ? setDayOffProject : undefined}
                 unsyncedProjectIds={unsyncedProjectIds}
                 cadenceByJobsiteId={cadenceByJobsiteId}
               />
@@ -177,6 +182,13 @@ export const Projects = () => {
         <ProjectIntegrationsModal
           project={integrationsProject}
           onClose={() => setIntegrationsProject(undefined)}
+        />
+      )}
+
+      {dayOffProject && (
+        <MarkDayOffModal
+          project={dayOffProject}
+          onClose={() => setDayOffProject(undefined)}
         />
       )}
     </StyledPage>

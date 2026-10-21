@@ -2,6 +2,7 @@
 const { supabase } = require("../utility/supabaseClient");
 const siteScopeService = require("./siteScope");
 const gcDashboardService = require("./gcDashboard");
+const noWorkDaysService = require("./noWorkDays");
 const { listSubcontractorScorecards, getSubcontractorScorecard } = require("./scorecards");
 
 const fromSpy = vi.spyOn(supabase, "from");
@@ -9,6 +10,7 @@ const assertScorecardsSpy = vi.spyOn(siteScopeService, "assertScorecardsAvailabl
 const listLinkedProjectsSpy = vi.spyOn(gcDashboardService, "listLinkedProjects");
 const listCompletedLogsInWindowSpy = vi.spyOn(gcDashboardService, "listCompletedLogsInWindow");
 const getCompanyNamesByIdsSpy = vi.spyOn(gcDashboardService, "getCompanyNamesByIds");
+const listNoWorkDaysSpy = vi.spyOn(noWorkDaysService, "listForJobsites");
 
 // A self-returning query chain that resolves to `result` when awaited, so the
 // mock doesn't depend on the exact order of .eq/.is/.not/.in calls (mirrors
@@ -49,6 +51,7 @@ describe("scorecards service", () => {
     listLinkedProjectsSpy.mockReset().mockResolvedValue([project()]);
     listCompletedLogsInWindowSpy.mockReset().mockResolvedValue([]);
     getCompanyNamesByIdsSpy.mockReset().mockResolvedValue(new Map([["sub-1", "Acme Roofing"]]));
+    listNoWorkDaysSpy.mockReset().mockResolvedValue([]);
 
     fromSpy.mockReset();
     fromSpy.mockImplementation((table) => {
@@ -176,9 +179,48 @@ describe("scorecards service", () => {
             cadence: "daily",
             expectedPeriods: expect.any(Number),
             loggedPeriods: expect.any(Number),
+            excusedPeriods: 0,
             score: expect.any(Number),
           },
         ],
+      });
+    });
+
+    it("should skip the weekdays a sub's foreman marked off and report how many", async () => {
+      // Arrange — joined long ago, never logged; Mon 2026-09-21 and Fri 09-18 marked off,
+      // plus a mark for another jobsite that must not count.
+      fromSpy.mockImplementation((table) => {
+        if (table === "jobsite_subcontractors") {
+          return chain({ data: [rosterRow({ accepted_at: "2020-01-01T00:00:00.000Z" })], error: null });
+        }
+        throw new Error(`Unexpected table: ${table}`);
+      });
+      const mark = (overrides) => ({
+        jobsiteId: "jobsite-1",
+        companyId: "sub-1",
+        offDate: "2026-09-21",
+        reason: "holiday",
+        ...overrides,
+      });
+      listNoWorkDaysSpy.mockResolvedValue([
+        mark(),
+        mark({ offDate: "2026-09-18" }),
+        mark({ jobsiteId: "jobsite-2", offDate: "2026-09-23" }),
+      ]);
+
+      // Act
+      const result = await getSubcontractorScorecard("sub-1", "gc-1", args);
+
+      // Assert — 21 weekdays in the 30 days, minus the 2 marked off.
+      expect(result.jobsites[0]).toMatchObject({
+        expectedPeriods: 19,
+        loggedPeriods: 0,
+        excusedPeriods: 2,
+      });
+      expect(listNoWorkDaysSpy).toHaveBeenCalledWith({
+        jobsiteIds: ["jobsite-1"],
+        from: "2026-08-23",
+        to: "2026-09-21",
       });
     });
 
@@ -218,10 +260,10 @@ describe("scorecards service", () => {
 
       // Assert — "today" 2026-09-21 (a Monday): the open current week is
       // forgiven, so the weekly jobsite expects the 5 closed weeks (1 logged);
-      // the daily-override jobsite expects all 30 days (0 logged).
+      // the daily-override jobsite expects the 21 weekdays in the 30 days (0 logged).
       const [weekly, daily] = result.jobsites;
       expect(weekly).toMatchObject({ cadence: "weekly", expectedPeriods: 5, loggedPeriods: 1 });
-      expect(daily).toMatchObject({ cadence: "daily", expectedPeriods: 30, loggedPeriods: 0 });
+      expect(daily).toMatchObject({ cadence: "daily", expectedPeriods: 21, loggedPeriods: 0 });
       expect(listCompletedLogsInWindowSpy.mock.calls[0][1].start).toBe("2026-08-17T00:00:00.000Z");
     });
 

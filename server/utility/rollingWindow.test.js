@@ -11,7 +11,18 @@ describe("rollingDayWindows", () => {
 
     // Assert
     expect(windows).toHaveLength(30);
-    expect(windows[windows.length - 1]).toEqual(dayWindow({ date: "2026-09-21", tzOffset: 0 }));
+    expect(windows[windows.length - 1]).toEqual({
+      ...dayWindow({ date: "2026-09-21", tzOffset: 0 }),
+      date: "2026-09-21",
+    });
+  });
+
+  it("should carry each window's local calendar date, oldest first", () => {
+    // Act
+    const windows = rollingDayWindows({ date: "2026-09-01", tzOffset: 0, days: 3 });
+
+    // Assert
+    expect(windows.map((w) => w.date)).toEqual(["2026-08-30", "2026-08-31", "2026-09-01"]);
   });
 
   it("should return contiguous windows with no gaps or overlaps", () => {
@@ -29,7 +40,7 @@ describe("rollingDayWindows", () => {
     const windows = rollingDayWindows({ date: "2026-09-21", tzOffset: 240, days: 1 });
 
     // Assert
-    expect(windows).toEqual([dayWindow({ date: "2026-09-21", tzOffset: 240 })]);
+    expect(windows).toEqual([{ ...dayWindow({ date: "2026-09-21", tzOffset: 240 }), date: "2026-09-21" }]);
   });
 
   it("should apply the tzOffset shift to every window, not just the anchor day", () => {
@@ -38,8 +49,8 @@ describe("rollingDayWindows", () => {
 
     // Assert
     expect(windows).toEqual([
-      { start: "2026-09-20T04:00:00.000Z", end: "2026-09-21T04:00:00.000Z" },
-      { start: "2026-09-21T04:00:00.000Z", end: "2026-09-22T04:00:00.000Z" },
+      { start: "2026-09-20T04:00:00.000Z", end: "2026-09-21T04:00:00.000Z", date: "2026-09-20" },
+      { start: "2026-09-21T04:00:00.000Z", end: "2026-09-22T04:00:00.000Z", date: "2026-09-21" },
     ]);
   });
 

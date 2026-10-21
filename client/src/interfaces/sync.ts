@@ -13,7 +13,8 @@ export type SyncEntity =
   | "meeting_log"
   | "signature"
   | "crew_photo"
-  | "meeting_completion";
+  | "meeting_completion"
+  | "no_work_day";
 
 /** The HTTP-shaped operation a queued row replays as. `archive` maps to
  *  `PATCH /api/projects/:id` with `{ archived: true | false }` — the payload's

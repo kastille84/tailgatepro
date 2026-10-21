@@ -13,6 +13,7 @@ const { supabase } = require("../utility/supabaseClient");
 const { AppError } = require("../utility/AppError");
 const { effectiveCadence, windowFor } = require("../utility/cadence");
 const { computeCompliance } = require("../utility/compliance");
+const { isWeekend } = require("../utility/workweek");
 const { buildPdfFilename } = require("../utility/pdfFilename");
 const { isSubLocked } = require("../utility/subLocking");
 const { fetchAllPages } = require("../utility/fetchAllPages");
@@ -21,6 +22,7 @@ const companiesService = require("./companies");
 const subAccessService = require("./subAccess");
 const { isJobsiteAllowed } = require("./siteScope");
 const jobsitesService = require("./jobsites");
+const noWorkDaysService = require("./noWorkDays");
 const storageService = require("./storage");
 const auditLogService = require("./auditLog");
 const { PDF_BUCKET, PDF_URL_TTL_SECONDS } = require("./meetingLogs");
@@ -212,6 +214,8 @@ const getOverview = async (gcCompanyId, { date, tzOffset, timeZone, allowedJobsi
     daily: windowFor("daily", { date, tzOffset, timeZone }),
     weekly: windowFor("weekly", { date, tzOffset, timeZone }),
   };
+  // `date` is validated by windowFor above.
+  const todayIsWeekend = isWeekend(date);
 
   const [jobsiteRows, allProjects, unlocked] = await Promise.all([
     listActiveJobsites(gcCompanyId, allowedJobsiteIds),
@@ -234,10 +238,23 @@ const getOverview = async (gcCompanyId, { date, tzOffset, timeZone, allowedJobsi
   const logRange = anyWeekly
     ? { start: windows.weekly.start, end: windows.weekly.end }
     : windows.daily;
-  const [logs, companyNamesById] = await Promise.all([
+  // A weekend already excuses every daily sub, so only a weekday needs the
+  // foremen's "Mark day off" rows for today.
+  const [logs, companyNamesById, markedOff] = await Promise.all([
     listCompletedLogsInWindow(projectIds, logRange),
     getCompanyNamesByIds(subIds),
+    todayIsWeekend
+      ? []
+      : noWorkDaysService.listForJobsites({
+          jobsiteIds: jobsiteRows.map((jobsite) => jobsite.id),
+          from: date,
+          to: date,
+        }),
   ]);
+  // "jobsiteId:subId" -> reason for today.
+  const offReasonByJobsiteSub = new Map(
+    markedOff.map((mark) => [`${mark.jobsiteId}:${mark.companyId}`, mark.reason]),
+  );
 
   const projectById = new Map(projects.map((project) => [project.id, project]));
   const logsByJobsite = new Map();
@@ -270,10 +287,24 @@ const getOverview = async (gcCompanyId, { date, tzOffset, timeZone, allowedJobsi
         const roster = jobsite.subIds
           .filter((subId) => jobsite.cadenceBySub.get(subId) === cadence)
           .map((subId) => ({ subId }));
+        // A daily sub isn't required on a weekend or on a day its foreman marked
+        // off (docs/no-work-days-design.md); weekly is never excused. A log
+        // still wins over `off`.
+        let excused;
+        if (cadence === "daily") {
+          excused = new Map();
+          for (const { subId } of roster) {
+            const reason = todayIsWeekend
+              ? "weekend"
+              : offReasonByJobsiteSub.get(`${jobsite.id}:${subId}`);
+            if (reason) excused.set(subId, reason);
+          }
+        }
         for (const entry of computeCompliance({
           roster,
           logs: jobsiteLogs,
           window: windows[cadence],
+          excused,
         })) {
           complianceBySub.set(entry.subId, entry);
         }
@@ -290,6 +321,8 @@ const getOverview = async (gcCompanyId, { date, tzOffset, timeZone, allowedJobsi
           projectId: projectIdBySub.get(entry.subId) ?? null,
           cadence: jobsite.cadenceBySub.get(entry.subId),
           status: entry.status,
+          // Why a sub is `off` today ("weekend"); null otherwise.
+          reason: entry.reason ?? null,
           lastLoggedAt: entry.lastLoggedAt,
           count: entry.count,
           inHouse: jobsite.inHouseSubIds.has(entry.subId),
@@ -305,6 +338,7 @@ const getOverview = async (gcCompanyId, { date, tzOffset, timeZone, allowedJobsi
     subs: allSubs.length,
     logged: allSubs.filter((sub) => sub.status === "logged").length,
     missing: allSubs.filter((sub) => sub.status === "missing").length,
+    off: allSubs.filter((sub) => sub.status === "off").length,
   };
 
   // Phase 9d: a locked sub keeps only a placeholder row -- no identity, status
@@ -319,6 +353,7 @@ const getOverview = async (gcCompanyId, { date, tzOffset, timeZone, allowedJobsi
             projectId: null,
             cadence: null,
             status: null,
+            reason: null,
             lastLoggedAt: null,
             count: null,
             inHouse: false,

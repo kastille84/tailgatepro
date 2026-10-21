@@ -6,13 +6,19 @@
 // windows (one of them 23h or 25h). Without `timeZone` it is the flat-offset
 // fallback, where every day is 24h.
 const { dayWindow, weekWindow } = require("./dayWindow");
+const { shiftDate } = require("./workweek");
 
 // `days` consecutive half-open day windows, oldest first, the last one being
-// today's own dayWindow({ date, tzOffset }).
+// today's own dayWindow({ date, tzOffset }). Each also carries its local
+// calendar `date` (YYYY-MM-DD) so a daily scorecard can tell a weekday from a
+// weekend day (docs/no-work-days-design.md).
 const rollingDayWindows = ({ date, tzOffset, timeZone, days }) => {
   const windows = [];
   for (let i = days - 1; i >= 0; i -= 1) {
-    windows.push(dayWindow({ date, tzOffset, timeZone }, -i));
+    windows.push({
+      ...dayWindow({ date, tzOffset, timeZone }, -i),
+      date: shiftDate(date, -i),
+    });
   }
   return windows;
 };

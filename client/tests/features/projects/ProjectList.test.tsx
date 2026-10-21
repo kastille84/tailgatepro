@@ -290,6 +290,46 @@ expandAll();
     });
   });
 
+  describe("Mark day off action", () => {
+    const linked: Project = { ...projects[0], jobsiteId: "j1", gcCompanyId: "gc-1" };
+
+    it("shows no action when the page does not pass onMarkDayOff", () => {
+      renderList({ projects: [linked] });
+      expandAll();
+
+      expect(screen.queryByRole("button", { name: /mark day off for/i })).toBeNull();
+    });
+
+    it("reports the project when its Mark day off button is clicked", () => {
+      const onMarkDayOff = vi.fn();
+      renderList({ projects: [linked], onMarkDayOff });
+      expandAll();
+
+      fireEvent.click(
+        screen.getByRole("button", { name: /mark day off for downtown highrise/i }),
+      );
+
+      expect(onMarkDayOff).toHaveBeenCalledWith(linked);
+    });
+
+    it("hides it for a project that isn't on a GC job site", () => {
+      renderList({ projects: [projects[0]], onMarkDayOff: vi.fn() });
+      expandAll();
+
+      expect(screen.queryByRole("button", { name: /mark day off for/i })).toBeNull();
+    });
+
+    it("hides it for an archived project", () => {
+      renderList({
+        projects: [{ ...linked, archivedAt: "2026-09-09T00:00:00.000Z" }],
+        onMarkDayOff: vi.fn(),
+      });
+      expandAll();
+
+      expect(screen.queryByRole("button", { name: /mark day off for/i })).toBeNull();
+    });
+  });
+
   it("never falls back to showing the raw GC company id", () => {
     renderList({
       projects: [
