@@ -14,6 +14,7 @@ const { effectiveCadence } = require("../utility/cadence");
 // order.
 const siteScopeService = require("./siteScope");
 const gcDashboardService = require("./gcDashboard");
+const noWorkDaysService = require("./noWorkDays");
 
 const ROLLING_WINDOW_DAYS = 30;
 
@@ -91,10 +92,25 @@ const buildAllScorecards = async (gcCompanyId, { date, tzOffset, timeZone, allow
   const projectIds = projects.map((project) => project.id);
   const projectById = new Map(projects.map((project) => [project.id, project]));
 
-  const [logs, companyNamesById] = await Promise.all([
+  const [logs, companyNamesById, markedOff] = await Promise.all([
     gcDashboardService.listCompletedLogsInWindow(projectIds, rangeWindow),
     gcDashboardService.getCompanyNamesByIds(roster.map((entry) => entry.subId)),
+    // Foremen's "Mark day off" rows over the daily range (weekly is never excused).
+    noWorkDaysService.listForJobsites({
+      jobsiteIds: [...new Set(roster.map((entry) => entry.jobsiteId))],
+      from: daily[0].date,
+      to: daily[daily.length - 1].date,
+    }),
   ]);
+
+  // "jobsiteId:subId" -> the dates that sub's crew marked off on that jobsite.
+  const noWorkDatesByJobsiteSub = new Map();
+  for (const mark of markedOff) {
+    const key = `${mark.jobsiteId}:${mark.companyId}`;
+    const dates = noWorkDatesByJobsiteSub.get(key) ?? new Set();
+    dates.add(mark.offDate);
+    noWorkDatesByJobsiteSub.set(key, dates);
+  }
 
   const logsByJobsite = new Map();
   for (const log of logs) {
@@ -116,9 +132,16 @@ const buildAllScorecards = async (gcCompanyId, { date, tzOffset, timeZone, allow
   for (const [subId, entries] of rosterBySub) {
     const perJobsite = entries.map((entry) => {
       const [result] = computeRollingCompliance({
-        roster: [{ subId, since: entry.since }],
+        roster: [
+          {
+            subId,
+            since: entry.since,
+            noWorkDates: noWorkDatesByJobsiteSub.get(`${entry.jobsiteId}:${subId}`),
+          },
+        ],
         logs: logsByJobsite.get(entry.jobsiteId) ?? [],
         windows: windowsByCadence[entry.cadence],
+        cadence: entry.cadence,
         // Only a weekly period can still be open; daily has always counted today.
         asOf: entry.cadence === "weekly" ? asOf : undefined,
       });
@@ -128,6 +151,9 @@ const buildAllScorecards = async (gcCompanyId, { date, tzOffset, timeZone, allow
         cadence: entry.cadence,
         expectedPeriods: result.expectedPeriods,
         loggedPeriods: result.loggedPeriods,
+        // Marked-off weekdays that were skipped; shown beside the score so a
+        // high count stays visible (docs/no-work-days-design.md).
+        excusedPeriods: result.excusedPeriods,
       };
     });
 

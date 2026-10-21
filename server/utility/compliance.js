@@ -9,7 +9,12 @@
 // log from a sub not on the roster is ignored (the roster, not the logs,
 // drives which subs appear). A roster sub with zero matching logs is
 // `missing`, the case the dashboard exists to catch.
-const computeCompliance = ({ roster, logs, window }) => {
+//
+// `excused` (optional `Map<subId, reason>`) are subs not required to log in
+// this window (a weekend, a day off the foreman marked -- docs/no-work-days-
+// design.md). Precedence is logged > off > missing: an excused sub with no
+// log is `off` (carrying its `reason`), but one that logged anyway is `logged`.
+const computeCompliance = ({ roster, logs, window, excused = new Map() }) => {
   const startMs = new Date(window.start).getTime();
   const endMs = new Date(window.end).getTime();
 
@@ -28,6 +33,9 @@ const computeCompliance = ({ roster, logs, window }) => {
 
   return roster.map(({ subId }) => {
     const entry = bySub.get(subId);
+    if (!entry && excused.has(subId)) {
+      return { subId, status: "off", lastLoggedAt: null, count: 0, reason: excused.get(subId) };
+    }
     return {
       subId,
       status: entry ? "logged" : "missing",

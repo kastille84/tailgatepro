@@ -35,6 +35,7 @@ vi.mock("../../../src/features/projects", () => ({
     onEdit,
     onLinkGc,
     onManageIntegrations,
+    onMarkDayOff,
     cadenceByJobsiteId,
     unsyncedProjectIds,
   }: {
@@ -42,6 +43,7 @@ vi.mock("../../../src/features/projects", () => ({
     onEdit: (p: { id: string }) => void;
     onLinkGc?: (p: { id: string }) => void;
     onManageIntegrations?: (p: { id: string }) => void;
+    onMarkDayOff?: (p: { id: string }) => void;
     cadenceByJobsiteId?: Map<string, unknown>;
     unsyncedProjectIds?: Set<string>;
   }) => (
@@ -62,6 +64,25 @@ vi.mock("../../../src/features/projects", () => ({
           stub-integrations
         </button>
       )}
+      {onMarkDayOff && (
+        <button type="button" onClick={() => onMarkDayOff({ id: "p1" })}>
+          stub-day-off
+        </button>
+      )}
+    </div>
+  ),
+  MarkDayOffModal: ({
+    project,
+    onClose,
+  }: {
+    project: { id: string };
+    onClose: () => void;
+  }) => (
+    <div role="dialog">
+      day off {project.id}
+      <button type="button" onClick={onClose}>
+        stub-day-off-close
+      </button>
     </div>
   ),
   ProjectIntegrationsModal: ({
@@ -143,6 +164,21 @@ describe("Projects page", () => {
 
     expect(mockUseJobsiteMemberships).toHaveBeenCalledWith({ enabled: true });
     expect(screen.getByTestId("cadence-count").textContent).toBe("2");
+  });
+
+  it("opens and closes the Mark day off sheet for a subcontractor", () => {
+    mockUseProjects.mockReturnValue({
+      projects: [{ id: "p1" }],
+      isLoading: false,
+      isError: false,
+    });
+    renderPage();
+
+    fireEvent.click(screen.getByRole("button", { name: "stub-day-off" }));
+    expect(screen.getByRole("dialog").textContent).toContain("day off p1");
+
+    fireEvent.click(screen.getByRole("button", { name: "stub-day-off-close" }));
+    expect(screen.queryByRole("dialog")).toBeNull();
   });
 
   it("passes the ids of still-queued (unsynced) projects to the project list", () => {

@@ -6,7 +6,7 @@ import { ThemeProvider } from "styled-components";
 import { StatTiles } from "../../../src/features/gc-dashboard";
 import theme from "../../../src/styles/theme";
 
-const renderTiles = (totals = { subs: 4, logged: 3, missing: 1 }) =>
+const renderTiles = (totals = { subs: 4, logged: 3, missing: 1, off: 0 }) =>
   render(
     <ThemeProvider theme={theme}>
       <StatTiles totals={totals} />
@@ -23,5 +23,12 @@ describe("StatTiles", () => {
     expect(screen.getByText("logged")).toBeDefined();
     expect(screen.getByText("1")).toBeDefined();
     expect(screen.getByText("missing")).toBeDefined();
+    expect(screen.queryByText("day off")).toBeNull();
+  });
+
+  it("adds a day-off tile only when someone has the day off", () => {
+    renderTiles({ subs: 4, logged: 2, missing: 1, off: 1 });
+
+    expect(screen.getByText("day off")).toBeDefined();
   });
 });

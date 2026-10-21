@@ -5,11 +5,11 @@ interface StatTilesProps {
   totals: GcOverviewTotals;
 }
 
-/** The three headline numbers for the GC's overview: subs on site, how many
+/** The headline numbers for the GC's overview: subs on site, how many
  *  have logged for their current period (today, or this week for a weekly
- *  cadence), how many are missing. Purely presentational. */
+ *  cadence), how many are missing, and (only when any) how many have the day off. Purely presentational. */
 export const StatTiles = ({ totals }: StatTilesProps) => (
-  <StyledStatRow>
+  <StyledStatRow $columns={totals.off > 0 ? 4 : 3}>
     <StyledStatTile>
       <strong>{totals.subs}</strong>
       <span>subs on site</span>
@@ -22,5 +22,11 @@ export const StatTiles = ({ totals }: StatTilesProps) => (
       <strong>{totals.missing}</strong>
       <span>missing</span>
     </StyledStatTile>
+    {totals.off > 0 && (
+      <StyledStatTile>
+        <strong>{totals.off}</strong>
+        <span>day off</span>
+      </StyledStatTile>
+    )}
   </StyledStatRow>
 );

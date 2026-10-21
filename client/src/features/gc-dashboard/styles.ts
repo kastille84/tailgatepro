@@ -1,14 +1,14 @@
 import styled from "styled-components";
 import { Link } from "react-router-dom";
 
-export const StyledStatRow = styled.div`
+export const StyledStatRow = styled.div<{ $columns: 3 | 4 }>`
   display: grid;
   grid-template-columns: 1fr;
   gap: 1.2rem;
   margin-bottom: 2.4rem;
 
   @media (min-width: ${({ theme }) => theme.breakpoints.xs}) {
-    grid-template-columns: repeat(3, 1fr);
+    grid-template-columns: repeat(${({ $columns }) => $columns}, 1fr);
   }
 `;
 
@@ -135,7 +135,7 @@ export const StyledSubMeta = styled.span`
   color: ${({ theme }) => theme.colors.navy[400]};
 `;
 
-export const StyledStatusPill = styled.span<{ $status: "logged" | "missing" }>`
+export const StyledStatusPill = styled.span<{ $status: "logged" | "missing" | "off" }>`
   display: inline-flex;
   align-items: center;
   gap: 0.4rem;
@@ -145,9 +145,17 @@ export const StyledStatusPill = styled.span<{ $status: "logged" | "missing" }>`
   font-size: 1.2rem;
   font-weight: 700;
   color: ${({ theme, $status }) =>
-    $status === "logged" ? theme.colors.green[700] : theme.colors.red[600]};
+    ({
+      logged: theme.colors.green[700],
+      missing: theme.colors.red[600],
+      off: theme.colors.concrete[700],
+    })[$status]};
   background-color: ${({ theme, $status }) =>
-    $status === "logged" ? theme.colors.green[100] : theme.colors.red[100]};
+    ({
+      logged: theme.colors.green[100],
+      missing: theme.colors.red[100],
+      off: theme.colors.concrete[100],
+    })[$status]};
 `;
 
 export const StyledMeetingList = styled.ul`

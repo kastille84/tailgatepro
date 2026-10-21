@@ -2287,7 +2287,7 @@ toast for it) with a `/pricing` link.
       `getById`, absent from the list). Paid trades and all GCs see everything (`hasFullLibrary` in `entitlements.js`,
       `libraryAccess` in `PLAN_LIMITS`). Also enforced on meeting-log create and favorites add. `ContentLibrary` shows an
       upgrade banner linking to `/pricing`. **To ship:** run `ALTER TABLE toolbox_talks ADD COLUMN IF NOT EXISTS is_core BOOLEAN
-  NOT NULL DEFAULT false;` in Supabase, then re-run `scripts/seed-talks.js`. Known gap: the offline talks cache merges and
+NOT NULL DEFAULT false;` in Supabase, then re-run `scripts/seed-talks.js`. Known gap: the offline talks cache merges and
       never clears, so a downgraded company can still read previously cached non-core talks offline.
 - [x] 5-year legal archive for Pro: the `/meetings` page is the archive view and shows "kept for 5 years" when
       `limits.archiveYears > 0`; the "coming soon" tag is removed from Trade Pro. **Retention policy (decided):**
@@ -2376,6 +2376,7 @@ Costs one extra query per request for Free subs (`resolveEffectiveTier`) and per
         `/webhook/twilio/sms`) and point the Twilio number's inbound webhook at it; submit Toll-Free Verification
         describing both opt-in paths; send a real nudge to a test phone (force `runNudgeTick(now)`), then verify STOP
         and YES replies end to end
+
 - [x] 1-click OSHA Defense Bundle ZIP · status: shipped, manually verified
 
   Design doc: `docs/osha-defense-bundle-design.md`. Scope decided: one jobsite, every completed log, no date
@@ -2383,7 +2384,6 @@ Costs one extra query per request for Free subs (`resolveEffectiveTier`) and per
   version ("Portfolio-Wide Search," a multi-site export) is a separate, bigger, unscoped feature left untouched.
   Gated on `jobsites.plan === "site_pro"` alone, not blended with the caller's company tier — no new
   entitlements.js helper, same inline-field-check style `jobsites.js`/`subAccess.js`/`sponsorship.js` already use.
-
   - Server: `jobsites.js`'s `JOBSITE_COLUMNS`/`toJobsite` now expose `plan` (needed for both the gate and the
     client button — no schema change, the column already existed from 9b/9d). New `server/utility/buildBundleIndex.js`
     (pure `buildBundleIndexCsv`, a skipped-count note line); `pdfFilename.js` now also exports `slugify` for the
@@ -2442,6 +2442,7 @@ Costs one extra query per request for Free subs (`resolveEffectiveTier`) and per
     manual pass done: flipped a jobsite to Site Pro, completed a meeting log with a generated PDF, clicked
     "Defense Bundle" on `/projects`, confirmed the `.zip` downloaded with `index.csv` + one PDF per completed
     log; confirmed a `free`-plan jobsite shows the upgrade link instead; confirmed a locked sub's logs are absent.
+
 - [x] Subcontractor's own OSHA Defense Bundle (download every one of my own logs as one ZIP) · status: shipped,
       manually verified
 
@@ -2452,7 +2453,6 @@ Costs one extra query per request for Free subs (`resolveEffectiveTier`) and per
   records" in one shot). Gated on `archiveYears > 0` (Trade Pro/Enterprise) — the same line Trade Pro's "5-year
   legal archive for OSHA audits" pitch already draws — via `entitlements.getLimits(companyType, tier)`, read
   straight off `req.user` rather than a second `companiesService.getById` call.
-
   - Server: `services/zipBundle.js`'s `streamJobsiteBundle` renamed to `streamBundle` (it never actually depended
     on "jobsite") and gained an optional `header` passthrough; `utility/buildBundleIndex.js`'s `buildBundleIndexCsv`
     gained a matching optional `header` param (default unchanged). New `services/meetingLogs.js`
@@ -2491,15 +2491,15 @@ Costs one extra query per request for Free subs (`resolveEffectiveTier`) and per
     that has a generated PDF: clicked "Download Defense Bundle" on `/meetings`, confirmed the `.zip` downloaded
     with `index.csv` (header reading "GC / Client") plus every completed log's PDF; confirmed a Trade Free
     account sees the disabled button.
+
 - [x] Cross-project subcontractor safety scorecards · status: code complete, manual verify pending
 
   Design doc: `docs/sub-scorecard-design.md`. Gated on GC Portfolio (`getPlanId(...) ===
-  "gc-portfolio"`), same as the pricing doc's explicit Portfolio-only promise. A rolling 30-day
+"gc-portfolio"`), same as the pricing doc's explicit Portfolio-only promise. A rolling 30-day
   daily-compliance-rate score per sub, averaged across every jobsite that sub has with the GC
   (equal weight per jobsite, not log-volume-weighted); a list page plus a per-sub detail page
   with a per-jobsite breakdown. Replaces the "today: single-day compliance view only" gap
   `docs/pricing-promise-gaps.md` flagged against `/api/gc/overview`/`utility/compliance.js`.
-
   - Server: new `server/utility/rollingWindow.js` (`rollingDayWindows`, built on `dayWindow`)
     and `server/utility/subScorecard.js` (`computeRollingDailyCompliance`, `buildScorecard` —
     built on the existing, unmodified `computeCompliance`, one call per calendar day rather than
@@ -2509,11 +2509,11 @@ Costs one extra query per request for Free subs (`resolveEffectiveTier`) and per
     `PLAN_LIMIT` off Portfolio). New `server/services/scorecards.js`
     (`listSubcontractorScorecards`, `getSubcontractorScorecard`, a new `jobsite_subcontractors`
     roster query). New `GET /api/gc/subcontractors` (list) + `GET
-    /api/gc/subcontractors/:companyId/scorecard` (detail), `controllers/gc.js` + `routes/gc.js`.
+/api/gc/subcontractors/:companyId/scorecard` (detail), `controllers/gc.js` + `routes/gc.js`.
   - Server tests: `rollingWindow.test.js`, `subScorecard.test.js` (new, pure, incl. the
     mid-window-join proration and the "average raw, round once" rounding-order proof),
     `scorecards.test.js` (new), `siteScope.test.js` +8, `gc.test.js` +5. Full `npm run
-    test:server`: 58 suites / 881 tests passing.
+test:server`: 58 suites / 881 tests passing.
   - Client: new `interfaces/gcSubcontractors.ts`; `apiGc.ts` gained
     `getGcSubcontractorScorecards`/`getGcSubcontractorScorecard`; new
     `hooks/useGcSubcontractorScorecards.ts` + `useGcSubcontractorScorecard.ts` (mirror
@@ -2537,16 +2537,16 @@ Costs one extra query per request for Free subs (`resolveEffectiveTier`) and per
     billing yet, same caveat as every other paid-tier GC feature), set up a sub accepted on 2+
     jobsites with a mix of logged/missing days, confirm the list/detail pages and the 403/404
     behaviors described in the design doc's "Endpoint contract".
+
 - [x] Top-down corporate policy push across all sites · status: code complete, manual verify pending
 
   Design doc: `docs/policy-push-design.md`. Gated on GC Portfolio (`getPlanId(...) ===
-  "gc-portfolio"`), same as the pricing doc's explicit Portfolio-only promise. One current
+"gc-portfolio"`), same as the pricing doc's explicit Portfolio-only promise. One current
   required topic per GC, applied live across every active jobsite (including ones added after
   the push); a soft nudge in the meeting wizard, never a block; manual clear/replace only, no
   auto-expiry; the picker offers global talks only (a GC's own custom talk would be invisible
   to the very subs it's pushed to). Replaces the "Missing" row
   `docs/pricing-promise-gaps.md` flagged for this promise.
-
   - Server: three new nullable columns on `companies` (`required_talk_id`,
     `required_talk_pushed_at`, `required_talk_pushed_by`). `companies.js` gained
     `setRequiredTopic`/`clearRequiredTopic`; `siteScope.js` gained
@@ -2558,8 +2558,8 @@ Costs one extra query per request for Free subs (`resolveEffectiveTier`) and per
     `subScorecard.js`'s per-day rolling approach, `getRequiredTopicForProject` — the sub-facing
     read, no plan gate by design). `gcDashboard.js` now also exports `listActiveJobsites` for
     reuse. New `GET /api/gc/policy-push` (+ compliance rollup), `GET
-    /api/gc/policy-push/talks`, `POST /api/gc/policy-push` (manager-only), `DELETE
-    /api/gc/policy-push` (manager-only), `GET /api/projects/:id/required-topic` —
+/api/gc/policy-push/talks`, `POST /api/gc/policy-push` (manager-only), `DELETE
+/api/gc/policy-push` (manager-only), `GET /api/projects/:id/required-topic` —
     `controllers/gc.js` + `routes/gc.js`, `controllers/projects.js` + `routes/projects.js`.
   - Server tests: `policyPush.test.js` (new, 30 tests incl. the wrong-talk-still-missing and
     log-before-pushedAt-excluded compliance cases); `companies.test.js` +12,
@@ -2597,6 +2597,7 @@ Costs one extra query per request for Free subs (`resolveEffectiveTier`) and per
     two active jobsites each with an accepted sub, confirm the compliance rollup and the
     foreman-side nudge/badge in the meeting wizard, and the 403/404/role-gating behaviors
     described in the design doc's "Endpoint contract".
+
 - [~] Company safety form and manual builder (GC Portfolio; the strategy doc also lists it for Trade Pro) ·
   status: v1 (GC-authored company talks) code complete, manual verify pending. Form and manual builders
   **deferred** (2026-09-28): Procore/SafetyCulture overlap and the 9f Procore decision; pricing copy reworded
@@ -2605,47 +2606,47 @@ Costs one extra query per request for Free subs (`resolveEffectiveTier`) and per
   Design doc: `docs/company-talks-design.md`. A GC Portfolio company authors ordinary toolbox
   talks that every sub on its active (non-archived) jobsites sees, can log, and that policy push
   can push. No schema change — a company talk is `is_global = false`, `company_id = <GC>`.
-
   - [x] Server: `subAccess.listAcceptedGcIds`; `talks.js` `visibilityFilter` gained a
-    `company_id.in.(…)` branch (uuid-guarded, not narrowed by `is_core`); new
-    `services/talkVisibility.js` (`resolveTalkVisibility`) used by the talks and meetingLogs
-    controllers; `entitlements.canAuthorCompanyTalks` gates create/update (403 for non-Portfolio
-    GC). `listGlobal` removed — the policy-push picker is now `listForCompany(gcId)` and
-    `pushRequiredTopic` validates with `getById(talkId, gcId)`.
+        `company_id.in.(…)` branch (uuid-guarded, not narrowed by `is_core`); new
+        `services/talkVisibility.js` (`resolveTalkVisibility`) used by the talks and meetingLogs
+        controllers; `entitlements.canAuthorCompanyTalks` gates create/update (403 for non-Portfolio
+        GC). `listGlobal` removed — the policy-push picker is now `listForCompany(gcId)` and
+        `pushRequiredTopic` validates with `getById(talkId, gcId)`.
   - [x] Client: `/gc/talks` (`RequireGc`) reuses `ContentLibrary` (GC copy, upgrade banner, no Add
-    button for a non-Portfolio GC); Navbar "Company Talks"; `talkOwnership.ts` — "From your GC"
-    badge and no Edit on a GC-shared talk; `MeetingWizard` passes `ownCompanyId` to `TalkList`;
-    `useCurrentUser().canAuthorCompanyTalks`.
+        button for a non-Portfolio GC); Navbar "Company Talks"; `talkOwnership.ts` — "From your GC"
+        badge and no Edit on a GC-shared talk; `MeetingWizard` passes `ownCompanyId` to `TalkList`;
+        `useCurrentUser().canAuthorCompanyTalks`.
   - [x] Tests: server 60 files / 956 pass; client 175 files / 1410 pass.
   - [ ] Manual verify: flip a GC's `tier` to `premium` in Supabase, author a talk at `/gc/talks`,
-    accept a Trade Free sub on an active jobsite — confirm the sub sees it ("From your GC"), can log
-    it, has no Edit; push it via policy push and confirm the wizard banner resolves; archive the
-    jobsite and confirm it disappears; confirm an unrelated sub never sees it.
+        accept a Trade Free sub on an active jobsite — confirm the sub sees it ("From your GC"), can log
+        it, has no Edit; push it via policy push and confirm the wizard banner resolves; archive the
+        jobsite and confirm it disappears; confirm an unrelated sub never sees it.
   - [x] Decide the pricing copy (done 2026-09-28): reworded the GC Portfolio bullet to "Custom company
-    safety talks shared with every sub" and removed its `comingSoon` entry in `plans.ts`; updated
-    `docs/pricing-promise-gaps.md` and the strategy doc notes.
+        safety talks shared with every sub" and removed its `comingSoon` entry in `plans.ts`; updated
+        `docs/pricing-promise-gaps.md` and the strategy doc notes.
   - [x] Follow-up (done): GC create/edit requires `admin`/`safety_manager` (403 for
-    superintendent/foreman; subs unchanged) and talks carry `isLocked` so `TalkDetail` shows a
-    read-only note instead of Edit once a meeting log uses the talk (server 409 stays the authority).
-    Server 60 files / 966 pass; client 175 files / 1418 pass. See `docs/company-talks-design.md`.
+        superintendent/foreman; subs unchanged) and talks carry `isLocked` so `TalkDetail` shows a
+        read-only note instead of Edit once a meeting log uses the talk (server 409 stays the authority).
+        Server 60 files / 966 pass; client 175 files / 1418 pass. See `docs/company-talks-design.md`.
   - [-] Deferred: free-form form builder (checklists, incident/near-miss, pre-task plans). Overlaps Procore
     Forms/Inspections/Incidents; revisit after 9f or on customer demand. Design parked in
     `docs/company-talks-design.md`; cheaper alternative there: 2-3 fixed-shape templates.
   - [-] Deferred: structured manual builder (same overlap with Procore/existing document tools that got the
     standalone manual upload below dropped).
   - [ ] Follow-up: per-jobsite/per-sub audience targeting; versioning instead of the
-    "logged = immutable" lock.
+        "logged = immutable" lock.
   - [x] Follow-up (done): `meetingLogs.createMeeting`'s talk-visibility check now runs for every plan
-    (it only checked Trade Free, so a paid sub could log any existing talk id). Controller + test only;
-    server 60 files / 967 pass. Edge: an offline-created log for a GC talk now 404s on flush if the sub's
-    access ended in between (jobsite archived / sub removed), as Trade Free already did. Manual verify:
-    as a Trade Pro sub, `POST /api/meetings` with another company's private talk id -> 404; with a global
-    or accepted-GC talk -> 201.
+        (it only checked Trade Free, so a paid sub could log any existing talk id). Controller + test only;
+        server 60 files / 967 pass. Edge: an offline-created log for a GC talk now 404s on flush if the sub's
+        access ended in between (jobsite archived / sub removed), as Trade Free already did. Manual verify:
+        as a Trade Pro sub, `POST /api/meetings` with another company's private talk id -> 404; with a global
+        or accepted-GC talk -> 201.
+
 - [-] Custom safety manual upload (Trade Enterprise) — **dropped** (2026-09-28). A standalone document upload is
-      commodity file storage that overlaps Procore Documents/SharePoint/Drive and doesn't serve the core loop (run a
-      talk, capture signatures, audit PDF, GC visibility); its job ("use our own safety content") is already covered
-      by Trade Pro custom talks and GC company talks. Removed from Trade Enterprise's pricing copy. Revisit only if a
-      customer asks for policy acknowledgment tied to a talk.
+  commodity file storage that overlaps Procore Documents/SharePoint/Drive and doesn't serve the core loop (run a
+  talk, capture signatures, audit PDF, GC visibility); its job ("use our own safety content") is already covered
+  by Trade Pro custom talks and GC company talks. Removed from Trade Enterprise's pricing copy. Revisit only if a
+  customer asks for policy acknowledgment tied to a talk.
 - [x] QR-code jobsite join · status: code complete, manual verify pending
 
   Design doc: `docs/jobsite-qr-join-design.md`. Self-service (no GC approval — the GC sees new
@@ -2654,7 +2655,6 @@ Costs one extra query per request for Free subs (`resolveEffectiveTier`) and per
   email-invite token) admits a sub directly onto that jobsite via a QR/link — sidesteps the company
   join code's fuzzy-name-matching duplicate-jobsite issue (see "Reconcile duplicate jobsites,"
   above) since it targets a real jobsite id, never a name match.
-
   - Server: new `jobsites.join_token TEXT UNIQUE` column;
     `jobsite_subcontractors.invited_email` dropped its `NOT NULL` (a QR-joined row has none — no
     constraint change needed, standard SQL treats every `NULL` as distinct under the existing
@@ -2663,7 +2663,7 @@ Costs one extra query per request for Free subs (`resolveEffectiveTier`) and per
     an insert, not `acceptInvite`'s update, with no email check; a repeat scan (23505 on the
     company-membership unique index) is an idempotent `{ alreadyMember: true }`, not an error,
     since re-scanning a poster is ordinary. New `GET /api/jobsites/:id/join-link`, `GET
-    /api/jobsites/join/:token`, `POST /api/jobsites/join/:token/accept`
+/api/jobsites/join/:token`, `POST /api/jobsites/join/:token/accept`
     (`routes/jobsites.js` + `controllers/jobsites.js`). `requireProfileMetadata.js` gained a third
     token key, `jobsiteJoinToken` (validated identically to `jobsiteInviteToken`, the three keys
     mutually exclusive); `services/users.js`'s `createProfile` gained a matching branch that calls
@@ -2706,6 +2706,7 @@ Costs one extra query per request for Free subs (`resolveEffectiveTier`) and per
     this job site" instead of erroring; confirm a foreman/GC account sees the right blocked state;
     confirm a brand-new sub can sign up straight from the link and lands already joined; confirm
     Remove still works on a QR-joined sub.
+
 - [x] Tamper-evidence: a content hash/seal on the PDF + audit log · status: code complete, manual verify pending
 
   Design doc: `docs/tamper-evidence-design.md`. Scope decided: an HMAC-SHA256 content seal (server-only
@@ -2715,7 +2716,6 @@ Costs one extra query per request for Free subs (`resolveEffectiveTier`) and per
   deliberately isn't gated (baseline record integrity, not a premium capability). GPS capture dropped by
   decision, not built: no live copy claims it anymore (9a already reworded `CompliancePdfCard.tsx`/
   `ComparisonTable.tsx`), and the aspirational strategy-doc line was reworded instead of building capture.
-
   - Server: new `meeting_logs.content_seal`/`sealed_at` columns; new `meeting_log_audit_events` table
     (`created`/`completed`/`pdf_generated`/`seal_verified`, server-generated `uuidv4()` id, soft-fail
     writes). New `server/utility/contentSeal.js` (`buildCanonicalPayload`, `computeSeal`, `sealsMatch`,
@@ -2762,6 +2762,7 @@ Costs one extra query per request for Free subs (`resolveEffectiveTier`) and per
     meeting and confirm "Verified" there too; hand-edit a sealed row's field in Supabase and confirm Verify
     now returns "Tampered" on both sides; confirm a pre-feature meeting (no seal) shows no badge on either
     side.
+
 - [x] AI Talk Builder — v1 built (draft-from-topic, Claude, review-before-save; design:
       `docs/ai-talk-builder-design.md`). `server/services/talkGeneration.js`, `POST /api/talks/generate` +
       `GET /api/talks/ai-usage`, per-plan monthly caps in `PLAN_LIMITS.aiGenerationsPerMonth` (Pro 10,
@@ -2775,11 +2776,11 @@ Costs one extra query per request for Free subs (`resolveEffectiveTier`) and per
 - [ ] Cloud AI voice (see ~1736-1741).
 - [ ] Grow the library toward 500+ (see ~1749-1754; currently 134 after 11p).
 - [-] Multi-crew scheduling and equipment check-ins — **dropped** (2026-09-29). No tables or code existed.
-      Workforce scheduling and equipment inspection logging are scope outside TailgatePro's core toolbox-talk
-      compliance loop (run a talk → capture signatures → sealed PDF → GC visibility) and overlap dedicated
-      tools (Rhumbix/busybusy for scheduling, Procore Inspections for equipment) — the same reasoning that
-      already dropped Custom safety manual upload and deferred the form/manual builder above. Removed from
-      Trade Enterprise's pricing copy (`plans.ts`, the strategy doc, `docs/pricing-promise-gaps.md`).
+  Workforce scheduling and equipment inspection logging are scope outside TailgatePro's core toolbox-talk
+  compliance loop (run a talk → capture signatures → sealed PDF → GC visibility) and overlap dedicated
+  tools (Rhumbix/busybusy for scheduling, Procore Inspections for equipment) — the same reasoning that
+  already dropped Custom safety manual upload and deferred the form/manual builder above. Removed from
+  Trade Enterprise's pricing copy (`plans.ts`, the strategy doc, `docs/pricing-promise-gaps.md`).
 
 ### 9f — Integrations (Procore + ACC GC push, Procore + JobTread sub push built; live verification open)
 
@@ -2899,7 +2900,7 @@ they can be worked one at a time. Tick a box here **and** in its source phase wh
       `gc_name_custom`, not just `NULL` (`NULLIF(TRIM(gc_name_custom), '') IS NOT NULL`) —
       the validator-level fix already shipped in 6c; this is schema-level defense-in-depth.
       Done — see Phase 6c (~line 1479). Pre-req: apply the migration to Supabase.
-- [x] 11c. Full tier-gating of PDF branding by *plan name* instead of raw `tier`,
+- [x] 11c. Full tier-gating of PDF branding by _plan name_ instead of raw `tier`,
       plus fixing GC branding to key off owning a Site Pro jobsite (not just GC
       Portfolio tier). Done — see Phase 5e (~line 1159).
 - [x] 11d. Store the foreman's timezone offset on a meeting log (e.g. `held_tz_offset`) so
@@ -2990,7 +2991,7 @@ they can be worked one at a time. Tick a box here **and** in its source phase wh
     may rarely be needed. The review below is done; start from here.
   - **Tamper-evidence is safe.** The seal (`server/utility/contentSeal.js:46-62`) covers only meeting-log
     fields, including the sub's `projectId`. `jobsite_id`, jobsite name and `gc_company_id` are not sealed, so a
-    re-point can't break verification. Never merge or delete the sub's *project* rows; only move their jobsite pointer.
+    re-point can't break verification. Never merge or delete the sub's _project_ rows; only move their jobsite pointer.
   - **Risks to handle:**
     1. Roster collisions on `jobsite_subs_company_unique` / `jobsite_subs_email_unique` (placeholder emails,
        pending invites). Dedupe by `sub_company_id`, keep the earliest `accepted_at` (drives GC Free unlock
@@ -3143,6 +3144,107 @@ plain CommonJS Vitest; client work needs 100% jsdom coverage; domain hooks wrap 
   - [x] Tests for all of the above
 - [x] 13f. Docs + copy: `docs/pricing-promise-gaps.md`, optional GC pricing-card line ("Track your own crews at no extra cost"), update `CLAUDE.md` if the company model summary needs it
 - [ ] 13g. Manual smoke: create a crew on a GC with two sites (attached to both); invite a foreman into the crew and log a talk; confirm it appears on the GC dashboard with the badge, unlocked on GC Free; downgrade the GC and confirm the crew drops to Trade Free; archive a crew with logs (allowed) and try to delete it (409)
+
+## Phase 14 — Working days & "Mark day off" · status: design decided in chat, no code yet
+
+Scope: a **daily** cadence stops requiring weekends, and a foreman can mark a weekday as a day off
+(holiday, weather, no crew). Weekly cadence is untouched. Server tests are plain CommonJS Vitest;
+client work needs 100% jsdom coverage; domain hooks wrap TanStack Query. Needs its own design doc
+first (`docs/no-work-days-design.md`), like the other feature builds.
+
+Rules (daily cadence only):
+
+1. Mon-Fri are required; an unlogged weekday is a miss, as today.
+2. Sat/Sun are never required. An unlogged weekend day counts neither for nor against the sub.
+3. A weekend log forgives one missed weekday in the **same Mon-Sun week**, so a make-up Saturday
+   cannot push a score past 100% and cannot cover a previous week.
+4. A weekday marked `no_work` is removed from the expected periods (not a miss, so a weekend log
+   forgives nothing for it). A log on a day marked `no_work` wins and scores as a normal logged day.
+5. Known consequence: existing daily subs' 30-day scores rise on deploy (weekends stop being misses);
+   note it in `docs/sub-scorecard-design.md`. A weekday holiday is still a miss unless marked or made up.
+
+- [x] 14a. Design doc `docs/no-work-days-design.md` written (rules, scoring pseudocode, table, endpoint
+      contract, client UX, abuse/gating); "planned" notes added to `docs/sub-scorecard-design.md` "Cadence"
+      and `docs/gc-dashboard-design.md`. **Still owed: the maintainer's yes/no on the three open questions**
+      (recommendations in the doc: no GC revoke/cap, whole-site closures as a follow-up, not tier-gated)
+- [x] 14b. Scoring only, no schema (code complete; server suite 1640 passing, touched client suites green):
+  - `server/utility/workweek.js` (`dayOfWeek`, `isWeekend`, `shiftDate`); `rollingDayWindows` now carries each
+    window's local `date`
+  - `computeRollingCompliance` takes `cadence` (default `"daily"`): daily = Mon-Fri expected, weekend log forgives one
+    missed weekday in the same Mon-Sun week, `noWorkDates` (array or Set on a roster entry) excused unless logged;
+    weekly path unchanged (`asOf`). Returns `excusedPeriods` (always 0 for weekly). `scorecards.js` passes `cadence`;
+    `excusedPeriods` is exposed in the scorecard API by 14d; the UI line is 14f
+  - `computeCompliance` takes an optional `excused` Map and returns `off` (+ `reason`) with precedence logged > off > missing
+  - `getOverview`: a daily sub with no log on a Sat/Sun is `off` / `reason: "weekend"`; weekly unchanged; `reason` on
+    every sub (null when not off; masked sub too); `totals.off`
+  - Interim client change so a weekend `off` is not shown as Missing: `GcSubCompliance.status` gains `"off"` and
+    `reason`, `GcOverviewTotals.off`, a neutral **Day off** pill and "No talk required today" in `SubComplianceRow`.
+    The reason label, an off-count tile and the scorecard "days off" line stay in 14f
+  - Tests: workweek, week grouping, make-up Saturday, join mid-week, marked days, weekly unchanged, `off` status,
+    weekend overview (daily off / logged wins / weekly unchanged / locked). Existing daily expectations updated
+    (weekends are no longer expected periods)
+- [x] 14c. Schema + docs (written, not yet applied to any database): `no_work_days` (`id` UUID generated client-side, `jobsite_id`, `company_id`,
+      `off_date DATE`, `reason` TEXT CHECK in (`holiday`, `weather`, `no_crew`, `other`), `created_by`,
+      `created_at` default NOW(); `UNIQUE (jobsite_id, company_id, off_date)`; RLS on) in `Supabase_SQL.sql` + `Supabase_Schema.md`
+  - Written as `CREATE TABLE IF NOT EXISTS no_work_days` + `CREATE INDEX IF NOT EXISTS` + `ENABLE ROW LEVEL SECURITY`
+    (section 19 of `Supabase_SQL.sql`, so the block is safe to re-run); `Supabase_Schema.md` has a "No-work days" section
+  - [x] **Run `Supabase_SQL.sql` section 19 on the non-prod and prod Supabase DBs** (manual; nothing in 14d+ works until applied)
+- [x] 14d. Server: `services/noWorkDays.js` (create idempotent upsert, delete own, list), controller, route,
+      `express-validator` validator. Range: previous 7 days to next 14 days; a malformed date is a `422`,
+      but a weekend or out-of-range date replayed from the offline outbox is accepted as a no-op (same
+      stance as `heldAt`, so a queued row can never strand). Feed the rows into `getOverview` (weekday
+      `off` + reason) and the scorecards (`noWorkDates`). Tests for service, controller, validator
+  - New `services/noWorkDays.js` (`create`, `remove`, `listForProject`, `listForJobsites`), `controllers/noWorkDays.js`,
+    `routes/noWorkDays.js` mounted at `/api/no-work-days` in `server.js`; validators inline in the route like the rest
+    (`id`/`projectId` UUID, `offDate` strict `YYYY-MM-DD`, `reason` in the four values)
+  - `POST`: the project must be the caller's own (404 otherwise), no jobsite -> 409; `jobsite_id` / `company_id` come from
+    the project and the caller, never the body. `201` new, `200` already marked, `200 { ignored: true }` for a Sat/Sun or a
+    date outside -8..+15 days of the server's UTC date (7 back / 14 ahead plus a day of zone slack each way); an id reused
+    for a different mark -> 409
+  - `DELETE`: idempotent (already gone -> 200); a mark older than the range -> 409. `GET ?projectId`: the caller's marks
+    for that jobsite from 8 days back, soonest first
+  - Role guard: none beyond `requireAuth` + `loadUserContext`, because starting a meeting has none either
+  - `getOverview` reads today's marks (skipped on a weekend) and sets `off` + the foreman's `reason` for daily subs only;
+    a log still wins. Scorecards read the 30-day marks, pass each (sub, jobsite)'s `noWorkDates`, and the per-jobsite
+    breakdown now carries `excusedPeriods`
+  - Tests: new `noWorkDays.test.js` (service, 25) and controller (8); `gcDashboard` and `scorecards` tests cover the marks.
+    Server suite 1680 passing
+- [x] 14e. Client: **"Mark day off"** button beside "Start talk" opens a sheet (date defaults to today, "Today"
+      / "Tomorrow" quick buttons plus a date picker, one-tap reason list: holiday / weather / no crew
+      scheduled / other, confirm "Mark [date] off"); remove-own-mark within the same range. `apiNoWorkDays` + `useNoWorkDays` / `useNoWorkDayActions` domain hooks (no inline `useMutation`); outbox op with a
+      client-generated UUID; styled-components via theme only, 48px targets, 16px inputs. Tests at 100% coverage
+  - New: `interfaces/noWorkDay.ts`, `services/apiNoWorkDays.ts` (list / create / delete), `services/noWorkDayReplayHandler.ts`
+    (side-effect import in `App.tsx`; invalidates `["no-work-days"]`), `SyncEntity` `"no_work_day"`, hooks `useNoWorkDays(projectId)`
+    and `useNoWorkDayActions()` (outbox `create` / `delete`, `dependsOnEntityIds: [projectId]`, optimistic cache with rollback),
+    `utils/dayOff.ts` (local-date helpers, 7 back / 14 ahead), `data/noWorkDayReasons.ts` (labels, reused by 14f)
+  - `features/projects/MarkDayOffModal.tsx`: reuses the shared `Modal`, so it is a centered dialog rather than a bottom sheet.
+    Today / Tomorrow buttons, a date field limited to the range, reason radios (no default; confirm stays disabled until one is
+    picked), "Mark [Thu, Nov 26] off" confirm, and an "Already marked off" list with Remove. A weekend, out-of-range or
+    already-marked day shows a hint and disables confirm. No online gate: both actions work offline through the outbox
+  - Entry point: a **Mark day off** button in each project card's Actions panel (there is no "Start talk" button on the project
+    view), shown to subcontractors for live projects linked to a GC job site (`jobsiteId` set)
+  - Tests: new specs for the modal, both hooks, the API wrapper, the replay handler and `dayOff`; `ProjectList` and `Projects`
+    page specs extended. Client suite 2054 passing, coverage gate green
+- [x] 14f. Client: GC dashboard **Day off** badge with the reason on `off` rows; "N days off" count on the sub
+      scorecard so excused days stay visible
+  - `SubComplianceRow`: the Day off pill stays; the meta line now names the reason ("Weekend", "Holiday", "Weather",
+    "No crew scheduled", "Other" + " · no talk required today") via `dayOffReasonLabel` in `data/noWorkDayReasons.ts`
+  - `StatTiles`: a fourth "day off" tile, rendered only when `totals.off > 0` (grid switches 3 -> 4 columns)
+  - `GcSubJobsiteBreakdown.excusedPeriods` (required) and a "· N days off" suffix in `JobsiteBreakdownTable` when > 0
+  - Tests extended for all three; client suite 2058 passing, tsc clean, coverage gate green
+- [x] 14g. Docs: `no-work-days-design.md` status now "built" with open questions resolved and a manual smoke checklist;
+      `gc-dashboard-design.md` and `sub-scorecard-design.md` say "Shipped" instead of "Planned"
+  - [ ] **Manual smoke** (run by you; see "Manual smoke (14g)" in `docs/no-work-days-design.md`): Thursday marked in advance
+        (offline) shows `off` after sync; weekday miss then Saturday log scores 5/5; Saturday with no log is `off`, not
+        `missing`; weekly cadence unchanged
+
+Open questions (resolve in 14a):
+
+- Foreman-only in v1 with GC visibility; is a GC-side revoke or a monthly cap worth adding? (lean: no)
+- Whole-site closures (`company_id IS NULL` row) so a GC holiday needn't be marked per foreman: follow-up
+- Whether this is tier-gated (cadence and SMS nudges are; not yet checked how)
+- Configurable working days per jobsite (`jobsites.working_days`) and a seeded holiday calendar: deliberately
+  left out of v1; the table above does not conflict with adding them later
 
 ## Deferred
 

@@ -138,3 +138,51 @@ describe("computeCompliance", () => {
     expect(result).toEqual([]);
   });
 });
+
+describe("computeCompliance with excused subs", () => {
+  it("should mark an excused sub with no log as off, carrying its reason", () => {
+    // Act
+    const result = computeCompliance({
+      roster: [{ subId: "sub-1" }],
+      logs: [],
+      window: dailyWindow,
+      excused: new Map([["sub-1", "weekend"]]),
+    });
+
+    // Assert
+    expect(result).toEqual([
+      { subId: "sub-1", status: "off", lastLoggedAt: null, count: 0, reason: "weekend" },
+    ]);
+  });
+
+  it("should let a log win over an excused sub: logged, with no reason", () => {
+    // Act
+    const result = computeCompliance({
+      roster: [{ subId: "sub-1" }],
+      logs: [{ subId: "sub-1", heldAt: "2026-09-21T14:00:00.000Z" }],
+      window: dailyWindow,
+      excused: new Map([["sub-1", "weekend"]]),
+    });
+
+    // Assert
+    expect(result).toEqual([
+      { subId: "sub-1", status: "logged", lastLoggedAt: "2026-09-21T14:00:00.000Z", count: 1 },
+    ]);
+  });
+
+  it("should leave a sub that is not excused as missing", () => {
+    // Act
+    const result = computeCompliance({
+      roster: [{ subId: "sub-1" }, { subId: "sub-2" }],
+      logs: [],
+      window: dailyWindow,
+      excused: new Map([["sub-2", "weekend"]]),
+    });
+
+    // Assert
+    expect(result.map(({ subId, status }) => ({ subId, status }))).toEqual([
+      { subId: "sub-1", status: "missing" },
+      { subId: "sub-2", status: "off" },
+    ]);
+  });
+});

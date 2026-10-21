@@ -24,6 +24,7 @@ const detail: GcSubScorecardDetail = {
       jobsiteName: "Downtown Tower",
       cadence: "daily",
       expectedPeriods: 30,
+      excusedPeriods: 0,
       loggedPeriods: 26,
       score: 87,
     },

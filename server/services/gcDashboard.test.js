@@ -6,6 +6,7 @@ const companiesService = require("./companies");
 const storageService = require("./storage");
 const subAccessService = require("./subAccess");
 const jobsitesService = require("./jobsites");
+const noWorkDaysService = require("./noWorkDays");
 const auditLogService = require("./auditLog");
 const contentSeal = require("../utility/contentSeal");
 const {
@@ -26,8 +27,11 @@ const fromSpy = vi.spyOn(supabase, "from");
 
 // Phase 9d: null = nothing locked (a paid GC plan). Locking has its own describe.
 const unlockedSpy = vi.spyOn(subAccessService, "getUnlockedSubIds");
+// Phase 14: no "Mark day off" rows unless a test sets some.
+const noWorkDaysSpy = vi.spyOn(noWorkDaysService, "listForJobsites");
 beforeEach(() => {
   unlockedSpy.mockReset().mockResolvedValue(null);
+  noWorkDaysSpy.mockReset().mockResolvedValue([]);
 });
 
 describe("gcDashboard service: assertGcLinkedProject", () => {
@@ -235,6 +239,7 @@ describe("gcDashboard service: getOverview", () => {
               projectId: "project-1",
               cadence: "daily",
               status: "logged",
+              reason: null,
               lastLoggedAt: "2026-09-21T14:00:00.000Z",
               count: 1,
               inHouse: false,
@@ -243,7 +248,7 @@ describe("gcDashboard service: getOverview", () => {
           ],
         },
       ],
-      totals: { subs: 1, logged: 1, missing: 0 },
+      totals: { subs: 1, logged: 1, missing: 0, off: 0 },
     });
   });
 
@@ -325,6 +330,153 @@ describe("gcDashboard service: getOverview", () => {
     ]);
   });
 
+  describe("on a weekend (2026-09-26 is a Saturday)", () => {
+    const weekendArgs = { date: "2026-09-26", tzOffset: 0 };
+
+    it("should show a daily sub with no log as off with reason weekend, not missing", async () => {
+      // Act
+      const result = await getOverview("gc-1", weekendArgs);
+
+      // Assert
+      expect(result.jobsites[0].subs[0]).toMatchObject({
+        status: "off",
+        reason: "weekend",
+        lastLoggedAt: null,
+        count: 0,
+      });
+      expect(result.totals).toEqual({ subs: 1, logged: 0, missing: 0, off: 1 });
+    });
+
+    it("should still show a daily sub that logged on the weekend as logged", async () => {
+      // Arrange
+      logsResult.data = [{ project_id: "project-1", held_at: "2026-09-26T14:00:00.000Z" }];
+
+      // Act
+      const result = await getOverview("gc-1", weekendArgs);
+
+      // Assert
+      expect(result.jobsites[0].subs[0]).toMatchObject({ status: "logged", reason: null, count: 1 });
+      expect(result.totals).toEqual({ subs: 1, logged: 1, missing: 0, off: 0 });
+    });
+
+    it("should leave a weekly sub's week scored as before: missing with no log this week", async () => {
+      // Arrange
+      jobsitesResult.data = [
+        jobsite({
+          meeting_cadence: "weekly",
+          jobsite_subcontractors: [
+            { sub_company_id: "sub-1", accepted_at: "2026-09-01T00:00:00.000Z", meeting_cadence: null },
+          ],
+        }),
+      ];
+
+      // Act
+      const result = await getOverview("gc-1", weekendArgs);
+
+      // Assert
+      expect(result.jobsites[0].subs[0]).toMatchObject({ cadence: "weekly", status: "missing", reason: null });
+    });
+
+    it("should keep a locked sub's placeholder free of status and reason on a weekend", async () => {
+      // Arrange
+      unlockedSpy.mockResolvedValue(new Set(["someone-else"]));
+
+      // Act
+      const result = await getOverview("gc-1", weekendArgs);
+
+      // Assert
+      expect(result.jobsites[0].subs[0]).toMatchObject({ status: null, reason: null, locked: true });
+      expect(result.totals.off).toBe(1);
+    });
+  });
+
+  describe("a weekday the foreman marked off (Phase 14)", () => {
+    const mark = (overrides) => ({
+      jobsiteId: "jobsite-1",
+      companyId: "sub-1",
+      offDate: "2026-09-21",
+      reason: "weather",
+      ...overrides,
+    });
+
+    it("should ask only for today's marks on the GC's jobsites", async () => {
+      // Act
+      await getOverview("gc-1", overviewArgs);
+
+      // Assert
+      expect(noWorkDaysSpy).toHaveBeenCalledWith({
+        jobsiteIds: ["jobsite-1"],
+        from: "2026-09-21",
+        to: "2026-09-21",
+      });
+    });
+
+    it("should show a daily sub with no log as off with the foreman's reason, not missing", async () => {
+      // Arrange
+      noWorkDaysSpy.mockResolvedValue([mark()]);
+
+      // Act
+      const result = await getOverview("gc-1", overviewArgs);
+
+      // Assert
+      expect(result.jobsites[0].subs[0]).toMatchObject({ status: "off", reason: "weather", count: 0 });
+      expect(result.totals).toEqual({ subs: 1, logged: 0, missing: 0, off: 1 });
+    });
+
+    it("should still show the sub as logged when it logged on the day it marked off", async () => {
+      // Arrange
+      noWorkDaysSpy.mockResolvedValue([mark()]);
+      logsResult.data = [{ project_id: "project-1", held_at: "2026-09-21T14:00:00.000Z" }];
+
+      // Act
+      const result = await getOverview("gc-1", overviewArgs);
+
+      // Assert
+      expect(result.jobsites[0].subs[0]).toMatchObject({ status: "logged", reason: null });
+    });
+
+    it("should not excuse another sub, or the same sub on another jobsite", async () => {
+      // Arrange
+      noWorkDaysSpy.mockResolvedValue([
+        mark({ companyId: "someone-else" }),
+        mark({ jobsiteId: "jobsite-2" }),
+      ]);
+
+      // Act
+      const result = await getOverview("gc-1", overviewArgs);
+
+      // Assert
+      expect(result.jobsites[0].subs[0]).toMatchObject({ status: "missing", reason: null });
+    });
+
+    it("should never excuse a weekly sub", async () => {
+      // Arrange
+      jobsitesResult.data = [
+        jobsite({
+          meeting_cadence: "weekly",
+          jobsite_subcontractors: [
+            { sub_company_id: "sub-1", accepted_at: "2026-09-01T00:00:00.000Z", meeting_cadence: null },
+          ],
+        }),
+      ];
+      noWorkDaysSpy.mockResolvedValue([mark()]);
+
+      // Act
+      const result = await getOverview("gc-1", overviewArgs);
+
+      // Assert
+      expect(result.jobsites[0].subs[0]).toMatchObject({ cadence: "weekly", status: "missing", reason: null });
+    });
+
+    it("should skip the marks query on a weekend, which already excuses every daily sub", async () => {
+      // Act
+      await getOverview("gc-1", { date: "2026-09-26", tzOffset: 0 });
+
+      // Assert
+      expect(noWorkDaysSpy).not.toHaveBeenCalled();
+    });
+  });
+
   it("should flag a subcontractor-originated jobsite as createdBySub and treat a legacy null origin as false", async () => {
     // Arrange
     jobsitesResult.data = [
@@ -355,7 +507,7 @@ describe("gcDashboard service: getOverview", () => {
     const result = await getOverview("gc-1", { ...overviewArgs, allowedJobsiteIds: [] });
 
     // Assert
-    expect(result).toEqual({ jobsites: [], totals: { subs: 0, logged: 0, missing: 0 } });
+    expect(result).toEqual({ jobsites: [], totals: { subs: 0, logged: 0, missing: 0, off: 0 } });
     expect(fromSpy).not.toHaveBeenCalled();
   });
 
@@ -368,7 +520,7 @@ describe("gcDashboard service: getOverview", () => {
       status: "missing",
       count: 0,
     });
-    expect(result.totals).toEqual({ subs: 1, logged: 0, missing: 1 });
+    expect(result.totals).toEqual({ subs: 1, logged: 0, missing: 1, off: 0 });
   });
 
   it("should show an accepted sub with no project as missing with a null projectId", async () => {
@@ -401,7 +553,7 @@ describe("gcDashboard service: getOverview", () => {
     expect(result.jobsites).toEqual([
       { id: "jobsite-1", name: "Riverside Tower", createdBySub: false, subs: [] },
     ]);
-    expect(result.totals).toEqual({ subs: 0, logged: 0, missing: 0 });
+    expect(result.totals).toEqual({ subs: 0, logged: 0, missing: 0, off: 0 });
   });
 
   it("should treat a jobsite without embedded roster rows as having no subs", async () => {
@@ -451,6 +603,7 @@ describe("gcDashboard service: getOverview", () => {
         projectId: "project-1",
         cadence: "daily",
         status: "logged",
+        reason: null,
         lastLoggedAt: "2026-09-21T14:00:00.000Z",
         count: 1,
         inHouse: false,
@@ -499,7 +652,7 @@ describe("gcDashboard service: getOverview", () => {
     // Assert
     expect(result).toEqual({
       jobsites: [],
-      totals: { subs: 0, logged: 0, missing: 0 },
+      totals: { subs: 0, logged: 0, missing: 0, off: 0 },
     });
   });
 
@@ -539,13 +692,14 @@ describe("gcDashboard service: getOverview", () => {
         projectId: null,
         cadence: null,
         status: null,
+        reason: null,
         lastLoggedAt: null,
         count: null,
         inHouse: false,
         locked: true,
       },
     ]);
-    expect(result.totals).toEqual({ subs: 1, logged: 0, missing: 1 });
+    expect(result.totals).toEqual({ subs: 1, logged: 0, missing: 1, off: 0 });
   });
 
   it("should leave an unlocked sub fully visible when others are locked", async () => {

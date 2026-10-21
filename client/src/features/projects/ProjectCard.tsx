@@ -1,6 +1,11 @@
 import { useId, useState } from "react";
 
-import { HiOutlineLink, HiOutlinePencil, HiOutlinePuzzle } from "react-icons/hi";
+import {
+  HiOutlineCalendar,
+  HiOutlineLink,
+  HiOutlinePencil,
+  HiOutlinePuzzle,
+} from "react-icons/hi";
 
 import { Button } from "../../ui_comps/button";
 import type { JobsiteMembership } from "../../interfaces/jobsite";
@@ -25,6 +30,7 @@ interface ProjectCardProps {
   onEdit: (project: Project) => void;
   onLinkGc?: (project: Project) => void;
   onManageIntegrations?: (project: Project) => void;
+  onMarkDayOff?: (project: Project) => void;
   membership?: JobsiteMembership;
   isUnsynced: boolean;
 }
@@ -37,6 +43,7 @@ export const ProjectCard = ({
   onEdit,
   onLinkGc,
   onManageIntegrations,
+  onMarkDayOff,
   membership,
   isUnsynced,
 }: ProjectCardProps) => {
@@ -102,6 +109,17 @@ export const ProjectCard = ({
               aria-label={`Integrations for ${project.name}`}
             >
               Integrations
+            </Button>
+          )}
+          {onMarkDayOff && isLive && project.jobsiteId && (
+            <Button
+              variant="outline"
+              size="sm"
+              leftIcon={<HiOutlineCalendar />}
+              onClick={() => onMarkDayOff(project)}
+              aria-label={`Mark day off for ${project.name}`}
+            >
+              Mark day off
             </Button>
           )}
           <Button

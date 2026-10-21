@@ -317,3 +317,25 @@ Design: `docs/sms-nudges-design.md`. DDL: `Supabase_SQL.sql` section 15.
 
 > RLS: enabled with no policies (server-brokered, deny-all).
 
+## No-work days (Phase 14)
+
+Design: `docs/no-work-days-design.md`. DDL: `Supabase_SQL.sql` section 19.
+
+| Table: `no_work_days` | Type | Constraints | Description |
+| :--- | :--- | :--- | :--- |
+| `id` | UUID | Primary Key | **Generated client-side** (`crypto.randomUUID()`): a mark is made offline through the outbox, so it follows the offline-sync rule (unlike most server-brokered tables here) |
+| `jobsite_id` | UUID | Not Null, FK -> `jobsites.id` (ON DELETE CASCADE) | The jobsite the day off applies to. Derived by the server from the posted project, never taken from the body |
+| `company_id` | UUID | Not Null, FK -> `companies.id` (ON DELETE CASCADE) | The subcontractor (or in-house crew) company that marked the day. Derived from the project's owner, never from the body |
+| `off_date` | Date | Not Null | A local calendar date (the same `YYYY-MM-DD` the compliance windows use), not a timestamp. Only weekdays are ever written; weekends are never required |
+| `reason` | Text | Not Null, CHECK in (`holiday`, `weather`, `no_crew`, `other`) | Why the crew is off; shown to the GC |
+| `created_by` | UUID | Nullable, FK -> `users.id` (ON DELETE SET NULL) | The user who marked the day |
+| `created_at` | Timestamptz | Not Null, Default `now()` | Server-receipt audit stamp. A mark created after its `off_date` reads as "marked later" on the GC view |
+| **UNIQUE** `no_work_days_unique` | | `(jobsite_id, company_id, off_date)` | One mark per crew per site per day; makes a replayed offline mark idempotent (`23505` on a row the caller owns = already marked) |
+| **INDEX** `no_work_days_jobsite_date_idx` | | `(jobsite_id, off_date)` | Dashboard and scorecard reads over a set of jobsites and a date range |
+
+A daily-cadence sub isn't required to log on a marked weekday; it leaves the scorecard's expected
+periods (reported as `excusedPeriods`) and shows `off` on the GC dashboard. A log on a marked day
+still wins. Weekly cadence ignores these rows.
+
+> RLS: enabled with no policies (server-brokered, deny-all) — see `docs/data-access.md`.
+

@@ -13,8 +13,11 @@ export interface GcSubCompliance {
   /** How often this sub must log (effective: the stricter of the jobsite's
    *  default and the sub's own override). Null when `locked`. */
   cadence: MeetingCadence | null;
-  /** Null when `locked`. */
-  status: "logged" | "missing" | null;
+  /** Null when `locked`. `off` means the sub isn't required to log today (a
+   *  weekend for a daily crew), see docs/no-work-days-design.md. */
+  status: "logged" | "missing" | "off" | null;
+  /** Why the sub is `off` (e.g. "weekend"); null otherwise and when `locked`. */
+  reason: string | null;
   lastLoggedAt: string | null;
   /** Null when `locked`. */
   count: number | null;
@@ -40,6 +43,8 @@ export interface GcOverviewTotals {
   subs: number;
   logged: number;
   missing: number;
+  /** Subs not required to log in their current period. */
+  off: number;
 }
 
 /** `GET /api/gc/overview` response body. */

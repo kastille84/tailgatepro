@@ -23,6 +23,8 @@ export const JobsiteBreakdownTable = ({ jobsites }: JobsiteBreakdownTableProps) 
           <StyledJobsiteDays>
             Logged {jobsite.loggedPeriods} of {jobsite.expectedPeriods} expected{" "}
             {jobsite.cadence === "weekly" ? "weeks" : "days"}
+            {jobsite.excusedPeriods > 0 &&
+              ` · ${jobsite.excusedPeriods} ${jobsite.excusedPeriods === 1 ? "day" : "days"} off`}
           </StyledJobsiteDays>
         </StyledJobsiteMeta>
         <ScoreBadge score={jobsite.score} />

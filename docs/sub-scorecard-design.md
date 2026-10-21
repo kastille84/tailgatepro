@@ -139,6 +139,11 @@ overlapping the same 30-day range, and an unlogged, still-open weekly period isn
 fields were renamed `expectedDays`/`loggedDays` → `expectedPeriods`/`loggedPeriods`, and each jobsite entry
 carries `cadence`.
 
+**Shipped (Phase 14, `docs/no-work-days-design.md`):** for a *daily* cadence, Sat/Sun stop being expected
+periods, a weekend log forgives one missed weekday in the same Mon–Sun week, and weekdays a foreman marks
+"day off" are removed from `expectedPeriods` (reported as `excusedPeriods`). Weekly is unchanged. Existing
+daily scores rise, since weekends no longer count as misses; the breakdown prints "N days off" when any were excused.
+
 ## Known v1 limitations
 
 - **Archived jobsites are excluded from scoring.** A sub's finished, fully-compliant jobsite

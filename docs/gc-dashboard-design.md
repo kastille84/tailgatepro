@@ -218,6 +218,8 @@ Daily stays the default; a jobsite can be set to **weekly** (Monday–Sunday in 
 - **Computation:** `getOverview` derives each sub's effective cadence and scores it against its own window
   (`dayWindow` or `weekWindow`) via the same `compliance.js`; logs are fetched once over the widest window.
   Scorecards count *periods* (days or weeks) — see `docs/sub-scorecard-design.md`.
+- **Shipped (Phase 14, `docs/no-work-days-design.md`):** a daily sub is not required on Sat/Sun and can mark
+  weekdays "day off"; the overview gains an `off` status (with a reason) alongside `logged` / `missing`.
 - **Not built:** every-N-days and a configurable week start. DST days are exact when the client sends an IANA
   `timeZone` alongside `date`/`tzOffset` (11h); without it the server falls back to the flat `tzOffset`.
 

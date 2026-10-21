@@ -14,6 +14,9 @@ export interface GcSubJobsiteBreakdown {
   expectedPeriods: number;
   /** Of `expectedPeriods`, how many had a completed log. */
   loggedPeriods: number;
+  /** Weekdays left out of `expectedPeriods` because the foreman marked them
+   *  off (daily cadence only; 0 for weekly). */
+  excusedPeriods: number;
   /** 0-100, this jobsite's own rounded rate. */
   score: number;
 }

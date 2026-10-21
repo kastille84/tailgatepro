@@ -695,3 +695,34 @@ CREATE INDEX idx_sms_recipients_phone ON sms_recipients (phone);
 -- Server-only table: RLS with NO policies (service-role key bypasses it).
 ALTER TABLE sms_recipients ENABLE ROW LEVEL SECURITY;
 
+-- 19. No-Work Days (Phase 14, docs/no-work-days-design.md) -- a weekday a
+-- subcontractor's foreman marked as a day off ("Mark day off": holiday, weather,
+-- no crew). A daily-cadence sub isn't required to log on a marked day, so it
+-- leaves the scorecard's expected periods and shows as `off` on the GC dashboard.
+-- Keyed by (jobsite, company), not project: a scorecard is per (sub, jobsite) and
+-- a sub can have several projects on one jobsite, so one mark covers them all.
+-- The server derives jobsite_id/company_id from the posted project, never from
+-- the request body. `id` IS generated client-side (crypto.randomUUID(), unlike
+-- most server-brokered tables above) because a mark is made offline through the
+-- outbox; the UNIQUE constraint makes a replayed mark idempotent. `off_date` is a
+-- local calendar date (the same YYYY-MM-DD the compliance windows use), not a
+-- timestamp; `created_at` is the server-receipt audit stamp, so a mark created
+-- after its date reads as "marked later" to the GC. Weekend dates are never
+-- written (weekends are never required), so no weekday CHECK is needed here.
+CREATE TABLE IF NOT EXISTS no_work_days (
+  id UUID PRIMARY KEY,
+  jobsite_id UUID NOT NULL REFERENCES jobsites(id) ON DELETE CASCADE,
+  company_id UUID NOT NULL REFERENCES companies(id) ON DELETE CASCADE,
+  off_date DATE NOT NULL,
+  reason TEXT NOT NULL CHECK (reason IN ('holiday', 'weather', 'no_crew', 'other')),
+  created_by UUID REFERENCES users(id) ON DELETE SET NULL,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  CONSTRAINT no_work_days_unique UNIQUE (jobsite_id, company_id, off_date)
+);
+
+-- Dashboard/scorecard reads: a set of jobsites over a date range.
+CREATE INDEX IF NOT EXISTS no_work_days_jobsite_date_idx ON no_work_days (jobsite_id, off_date);
+
+-- Server-only table: RLS with NO policies (service-role key bypasses it).
+ALTER TABLE no_work_days ENABLE ROW LEVEL SECURITY;
+
