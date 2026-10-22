@@ -71,20 +71,17 @@ const fillCredentials = () => {
 };
 
 describe("Login page", () => {
-  let loginWithGoogle: ReturnType<typeof vi.fn>;
   let loginWithEmail: ReturnType<typeof vi.fn>;
 
   beforeEach(() => {
     vi.clearAllMocks();
     localStorage.clear();
-    loginWithGoogle = vi.fn().mockResolvedValue(undefined);
     loginWithEmail = vi
       .fn()
       .mockResolvedValue({ session: { access_token: "token-123" } });
     mockUseAuth.mockReturnValue({
       user: null,
       loading: false,
-      loginWithGoogle,
       loginWithEmail,
     });
     mockCreateProfile.mockResolvedValue({ id: "user-1" });
@@ -98,7 +95,6 @@ describe("Login page", () => {
     mockUseAuth.mockReturnValue({
       user: null,
       loading: true,
-      loginWithGoogle,
       loginWithEmail,
     });
 
@@ -111,7 +107,6 @@ describe("Login page", () => {
     mockUseAuth.mockReturnValue({
       user: { id: "user-1" },
       loading: false,
-      loginWithGoogle,
       loginWithEmail,
     });
 
@@ -121,31 +116,10 @@ describe("Login page", () => {
     expect(mockCreateProfile).not.toHaveBeenCalled();
   });
 
-  it("calls loginWithGoogle when the Google button is clicked", async () => {
+  it("does not offer Google sign-in", () => {
     renderLogin();
 
-    fireEvent.click(
-      screen.getByRole("button", { name: /continue with google/i }),
-    );
-
-    await waitFor(() => {
-      expect(loginWithGoogle).toHaveBeenCalledTimes(1);
-    });
-  });
-
-  it("shows an error toast when Google sign-in fails to start", async () => {
-    loginWithGoogle.mockRejectedValue(new Error("popup blocked"));
-    renderLogin();
-
-    fireEvent.click(
-      screen.getByRole("button", { name: /continue with google/i }),
-    );
-
-    await waitFor(() => {
-      expect(toast.error).toHaveBeenCalledWith(
-        "We couldn't start Google sign-in. Please try again.",
-      );
-    });
+    expect(screen.queryByRole("button", { name: /google/i })).toBeNull();
   });
 
   it("shows validation errors when submitting the email form empty", async () => {
@@ -306,7 +280,6 @@ describe("Login page", () => {
       mockUseAuth.mockReturnValue({
         user: { id: "user-1" },
         loading: false,
-        loginWithGoogle,
         loginWithEmail,
       });
 

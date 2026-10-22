@@ -33,6 +33,9 @@ export const SiteProCheckoutModal = ({
         full compliance on {jobsite.name}. Billed per job site; manage or cancel
         anytime from Settings.
       </StyledNote>
+      <StyledNote>
+        Have a pilot code? Choose monthly, then enter the code at checkout.
+      </StyledNote>
       <StyledSiteProActions>
         <Button
           variant="primary"

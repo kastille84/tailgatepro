@@ -81,6 +81,16 @@ A GC who buys Site Pro on a few sites and then finds Portfolio ($499/mo for 10 s
 - **Client**: a covered site shows a "Covered by GC Portfolio" badge and the Defense Bundle button; the Site Pro upgrade button is hidden.
 - Not handled: a Site Pro purchase already in flight when Portfolio activates (edge race; the next Portfolio event cancels it once its `plan` is `site_pro`).
 
+### Pilot promo codes (2 months free)
+
+Outreach GCs get a free Site Pro pilot on one jobsite via a Stripe promotion code. No code change: both Checkout sessions already set `allow_promotion_codes: true`, and the webhook treats `active`/`trialing` as live, so a $0 first invoice flips `jobsites.plan` normally. Checkout still collects a card, so the GC converts to paid after month 2.
+
+- **Coupon**: 100% off, duration "Multiple months: 2", applied to the GC Site Pro product only. Promotion codes cannot grant trial days, which is why this is a coupon and not a trial.
+- **Promotion codes**: one per GC (e.g. `PILOT-ACMEBUILD`), first-time order only, max redemptions 1, with an expiry (about 45 days). Per-GC codes show who redeemed and let you kill a leaked code.
+- **Annual gotcha**: coupons are scoped to a product, not a price. The 2-month coupon on the annual price would make the whole first year free. Tell pilot GCs to pick Monthly, and check each redemption in the Dashboard. If hardening is wanted later: a monthly-only product, or a server guard.
+- Stripe sends no "free period ending" email for coupons; send your own around day 50. Enable Stripe's upcoming-renewal emails.
+- Test and live mode have separate coupons and codes; recreate them in live when going live.
+
 ## Downgrade policy
 
 When a company drops to `basic`, nothing is deleted. Existing foremen, jobsites and history stay, but limits already apply to new adds (`server/services/seats.js`, `jobsites.js`) and to feature gates (branding, translation, history window), so the company can't grow back past the Free limits.
