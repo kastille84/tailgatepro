@@ -3,14 +3,12 @@ import { Navigate, useLocation, useNavigate } from "react-router-dom";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { FcGoogle } from "react-icons/fc";
 import toast from "react-hot-toast";
 
 import { useAuth } from "../../context/auth";
 import { useCreateProfile } from "../../hooks/useCreateProfile";
 import { Button } from "../../ui_comps/button";
 import { Footer } from "../../ui_comps/footer";
-import { TermsNotice } from "../../ui_comps/terms-notice";
 import { Form, FormField, TextInput } from "../../ui_comps/form";
 import { PasswordInput } from "../../ui_comps/password-input";
 import { checkoutPath, readPendingCheckout } from "../../utils/pendingCheckout";
@@ -21,7 +19,6 @@ import {
   StyledEyebrow,
   StyledHeadline,
   StyledLede,
-  StyledDivider,
   StyledLinkRow,
   StyledLink,
   StyledStatus,
@@ -59,12 +56,11 @@ const getPostLoginPath = (state: unknown) => {
 };
 
 export const Login = () => {
-  const { user, loading, loginWithGoogle, loginWithEmail } = useAuth();
+  const { user, loading, loginWithEmail } = useAuth();
   const { createProfile, isCreating } = useCreateProfile();
   const navigate = useNavigate();
   const { state: locationState } = useLocation();
   const postLoginPath = getPostLoginPath(locationState);
-  const [isConnecting, setIsConnecting] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const {
@@ -76,16 +72,6 @@ export const Login = () => {
     mode: "onTouched",
     defaultValues: { email: getPrefillEmail(locationState), password: "" },
   });
-
-  const handleGoogleLogin = async () => {
-    setIsConnecting(true);
-    try {
-      await loginWithGoogle();
-    } catch {
-      toast.error("We couldn't start Google sign-in. Please try again.");
-      setIsConnecting(false);
-    }
-  };
 
   const onSubmit = async (values: LoginValues) => {
     setIsSubmitting(true);
@@ -141,21 +127,6 @@ export const Login = () => {
             Sign in to get to your toolbox talks, meeting logs, and compliance
             dashboard.
           </StyledLede>
-
-          <Button
-            type="button"
-            variant="primary"
-            size="lg"
-            fullWidth
-            leftIcon={<FcGoogle aria-hidden="true" />}
-            loading={isConnecting}
-            onClick={handleGoogleLogin}
-          >
-            Continue with Google
-          </Button>
-          <TermsNotice />
-
-          <StyledDivider>or</StyledDivider>
 
           <Form onSubmit={handleSubmit(onSubmit)} noValidate $onDark>
             <FormField

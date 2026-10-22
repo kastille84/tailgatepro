@@ -3249,3 +3249,19 @@ Open questions (resolve in 14a):
 ## Deferred
 
 - [-] QuickBooks sync — dropped 2026-10-01 (Procore + ACC GC push and Procore + JobTread sub push shipped, see Phase 9f)
+
+## Phase 15: Site Pro pilot promo codes
+
+Free 2-month Site Pro pilot (1 jobsite per outreach GC) via Stripe promotion codes. No code changes; design in
+`docs/billing-design.md` -> "Pilot promo codes".
+
+- [x] 15a. Docs: billing-design "Pilot promo codes" section (coupon, per-GC code rules, annual-price gotcha)
+- [ ] 15b. **Manual, test mode**: create coupon (100% off, repeating 2 months, GC Site Pro product only); create a promotion
+      code (first-time only, max 1 redemption, expiry); with `stripe listen`, buy Site Pro monthly on a test jobsite with the
+      code and 4242. Confirm $0 invoice, `jobsites.plan` flips to `site_pro`, code shows 1/1 redeemed, reuse is rejected
+- [ ] 15c. **Manual**: Dashboard -> Settings -> Billing: enable upcoming-renewal emails; confirm the Customer Portal allows cancel
+- [ ] 15d. **Manual, live mode** (after the "Going live" checklist): recreate the coupon, then one promotion code per pilot GC;
+      redeem one on a throwaway jobsite, confirm, then cancel
+- [ ] 15e. Outreach: email/DM with code, "choose Monthly", steps (sign up, create jobsite, Upgrade to Site Pro, enter code),
+      "card required, no charge for 2 months, cancel any time"; tracking sheet (GC, code, sent, redeemed, first log, day-50
+      check-in); personal email at about day 50
