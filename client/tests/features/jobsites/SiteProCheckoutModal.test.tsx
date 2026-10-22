@@ -51,6 +51,14 @@ describe("SiteProCheckoutModal", () => {
     expect(annual()).toBeDefined();
   });
 
+  it("tells pilot GCs to pick monthly and enter their code at checkout", () => {
+    renderModal();
+
+    expect(screen.getByRole("dialog").textContent).toContain(
+      "Have a pilot code? Choose monthly, then enter the code at checkout.",
+    );
+  });
+
   it("starts a monthly checkout for that jobsite", () => {
     renderModal();
 
