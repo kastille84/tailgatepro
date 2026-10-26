@@ -17,6 +17,9 @@ const { effectiveCadence, isStricterOrEqual } = require("../utility/cadence");
 const JOBSITE_COLUMNS =
   "id, gc_company_id, name, status, archived_at, origin, plan, meeting_cadence, sms_nudges_enabled, timezone, created_at";
 
+const SMS_NUDGES_UPGRADE_MESSAGE =
+  "SMS nudges are part of GC Site Pro. Upgrade this site to use them.";
+
 // A NULL origin (a jobsite that predates the column) maps to false: unknown is
 // never presented as sub-created.
 const toJobsite = (row) => ({
@@ -246,12 +249,26 @@ const attachChosenCrews = async ({ gcCompanyId, jobsite, crewIds }) => {
 // generating one before an offline write, the way projects.create does.
 // `crewIds` are the in-house crews the GC ticked in the job site form; none are
 // attached automatically.
-const create = async ({ gcCompanyId, name, crewIds = [] }) => {
+// `smsNudgesEnabled` / `timezone` let the GC switch the Monday SMS nudge on at
+// creation. A new site is on the free plan, so only a GC Portfolio company has
+// Site Pro access yet; anyone else gets the same 403 as turning it on later.
+const create = async ({ gcCompanyId, name, crewIds = [], smsNudgesEnabled, timezone }) => {
   await assertJobsiteAvailable(gcCompanyId);
+
+  if (smsNudgesEnabled === true) {
+    const company = await companiesService.getById(gcCompanyId);
+    if (!hasSiteProAccess({ sitePlan: "free", companyTier: company.tier })) {
+      throw new AppError(SMS_NUDGES_UPGRADE_MESSAGE, 403, { data: { code: "PLAN_LIMIT" } });
+    }
+  }
+
+  const row = { id: uuidv4(), gc_company_id: gcCompanyId, name, origin: "gc" };
+  if (smsNudgesEnabled !== undefined) row.sms_nudges_enabled = smsNudgesEnabled;
+  if (timezone !== undefined) row.timezone = timezone;
 
   const { data, error } = await supabase
     .from("jobsites")
-    .insert({ id: uuidv4(), gc_company_id: gcCompanyId, name, origin: "gc" })
+    .insert(row)
     .select(JOBSITE_COLUMNS)
     .single();
 
@@ -320,9 +337,7 @@ const update = async ({ id, gcCompanyId, patch }) => {
   if (patch.smsNudgesEnabled === true) {
     const current = await getOwnedJobsite(id, gcCompanyId);
     if (!current.sitePro) {
-      throw new AppError("SMS nudges are part of GC Site Pro. Upgrade this site to use them.", 403, {
-        data: { code: "PLAN_LIMIT" },
-      });
+      throw new AppError(SMS_NUDGES_UPGRADE_MESSAGE, 403, { data: { code: "PLAN_LIMIT" } });
     }
   }
 

@@ -7,8 +7,10 @@ import { Form, FormField, TextInput } from "../../ui_comps/form";
 import { Select } from "../../ui_comps/select";
 import { useOnlineStatus } from "../../context/online-status";
 import { useJobsiteSmsRecipients } from "../../hooks/useJobsiteSmsRecipients";
+import { useUpdateJobsite } from "../../hooks/useUpdateJobsite";
 import type { Jobsite } from "../../interfaces/jobsite";
 import type { SmsRecipient } from "../../interfaces/sms";
+import { detectTimeZone } from "../../utils/timeZones";
 import {
   StyledMeta,
   StyledName,
@@ -52,6 +54,7 @@ export const SmsRecipientsPanel = ({ jobsite }: SmsRecipientsPanelProps) => {
     removeRecipient,
     isRemoving,
   } = useJobsiteSmsRecipients(jobsite.id);
+  const { updateJobsite, isUpdating } = useUpdateJobsite();
 
   // A locked sub's identity is hidden by the GC's plan, so it can't be picked.
   const acceptedSubs = jobsite.subcontractors.filter(
@@ -81,6 +84,18 @@ export const SmsRecipientsPanel = ({ jobsite }: SmsRecipientsPanelProps) => {
     }
   };
 
+  // Nudges are skipped for a site with no time zone, so enabling also saves one.
+  const handleTurnOn = async () => {
+    try {
+      await updateJobsite({
+        id: jobsite.id,
+        patch: { smsNudgesEnabled: true, timezone: jobsite.timezone ?? detectTimeZone() },
+      });
+    } catch {
+      // useUpdateJobsite already surfaces the failure as a toast.
+    }
+  };
+
   const handleRemove = async (recipientId: string) => {
     try {
       await removeRecipient(recipientId);
@@ -94,10 +109,21 @@ export const SmsRecipientsPanel = ({ jobsite }: SmsRecipientsPanelProps) => {
       <StyledNote>
         {jobsite.smsNudgesEnabled
           ? "Monday 7:00 AM text reminders are on for this job site."
-          : "Monday text reminders are off. Turn them on with Edit on the job site."}{" "}
+          : "Monday text reminders are off for this job site, so no one will be texted."}{" "}
         Add a foreman&apos;s mobile number below; we text them once to confirm.
         Foremen can also turn reminders on themselves in Settings.
       </StyledNote>
+      {!jobsite.smsNudgesEnabled && (
+        <Button
+          variant="primary"
+          size="md"
+          loading={isUpdating}
+          disabled={!isOnline}
+          onClick={handleTurnOn}
+        >
+          Turn on Monday reminders
+        </Button>
+      )}
 
       {isError && (
         <StyledNote role="alert">Could not load the text reminder numbers.</StyledNote>

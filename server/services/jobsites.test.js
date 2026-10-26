@@ -208,6 +208,43 @@ describe("jobsites service: create", () => {
     expect(result).toEqual(mappedJobsite);
   });
 
+  it("should write the SMS nudge flag and timezone for a Portfolio GC", async () => {
+    // Arrange
+    getCompanySpy.mockResolvedValue({ id: "gc-1", companyType: "gc", tier: "premium" });
+
+    // Act
+    await create({
+      gcCompanyId: "gc-1",
+      name: "Riverside Tower",
+      smsNudgesEnabled: true,
+      timezone: "America/Chicago",
+    });
+
+    // Assert
+    const payload = insert.mock.calls[0][0];
+    expect(payload.sms_nudges_enabled).toBe(true);
+    expect(payload.timezone).toBe("America/Chicago");
+  });
+
+  it("should refuse SMS nudges with a 403 PLAN_LIMIT and insert nothing for a non-Portfolio GC", async () => {
+    // Act & Assert
+    await expect(
+      create({ gcCompanyId: "gc-1", name: "Riverside Tower", smsNudgesEnabled: true }),
+    ).rejects.toMatchObject({ statusCode: 403, data: { code: "PLAN_LIMIT" } });
+    expect(insert).not.toHaveBeenCalled();
+  });
+
+  it("should leave the SMS columns out of the insert when they are not given or are off", async () => {
+    // Act
+    await create({ gcCompanyId: "gc-1", name: "Riverside Tower" });
+    await create({ gcCompanyId: "gc-1", name: "Riverside Tower", smsNudgesEnabled: false });
+
+    // Assert
+    expect(insert.mock.calls[0][0]).not.toHaveProperty("sms_nudges_enabled");
+    expect(insert.mock.calls[0][0]).not.toHaveProperty("timezone");
+    expect(insert.mock.calls[1][0].sms_nudges_enabled).toBe(false);
+  });
+
   it("should map a subcontractor-originated row to createdBySub true and a legacy null origin to false", async () => {
     // Arrange
     single.mockResolvedValueOnce({ data: { ...dbRow, origin: "subcontractor" }, error: null });

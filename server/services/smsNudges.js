@@ -250,8 +250,18 @@ const handleInbound = async ({ from, body }) => {
 
 // ---- The Monday tick -------------------------------------------------------
 
-const nudgeBody = (jobsiteName) =>
-  `TailgatePro: no safety talk was logged for ${jobsiteName} last week. Please hold and log one today. Reply STOP to opt out.`;
+const SMS_SEGMENT_LIMIT = 160;
+
+// Names the delinquent companies unless that pushes the text past one SMS
+// segment, in which case it falls back to the shorter wording.
+const nudgeBody = (jobsiteName, companyNames) => {
+  const build = (subject) =>
+    `TailgatePro: no safety talk was logged for ${subject} last week. Please hold and log one today. Reply STOP to opt out.`;
+  const withNames = build(
+    companyNames.length > 0 ? `${companyNames.join(", ")} at ${jobsiteName}` : jobsiteName,
+  );
+  return withNames.length <= SMS_SEGMENT_LIMIT ? withNames : build(jobsiteName);
+};
 
 // Claims this local Monday for the jobsite so two ticks (or two server
 // instances) can never nudge it twice. True when this caller won the claim.
@@ -305,18 +315,25 @@ const findMissingSubIds = async (jobsite, date) => {
 };
 
 // Confirmed, not-opted-out phones for these subs on this site: a foreman's
-// own opt-in (jobsite_id NULL) or a GC-entered number for this site. Deduped.
-const findPhones = async (jobsiteId, subIds) => {
+// own opt-in (jobsite_id NULL) or a GC-entered number for this site. Deduped
+// by phone, carrying the name of each delinquent company that phone covers.
+const findRecipients = async (jobsiteId, subIds) => {
   const { data, error } = await supabase
     .from("sms_recipients")
-    .select("phone")
+    .select("phone, companies(name)")
     .in("sub_company_id", subIds)
     .not("confirmed_at", "is", null)
     .is("opted_out_at", null)
     .or(`jobsite_id.is.null,jobsite_id.eq.${jobsiteId}`);
 
   if (error) throw new AppError("Could not load SMS recipients", 502, { cause: error });
-  return [...new Set(data.map((row) => row.phone))];
+  const namesByPhone = new Map();
+  for (const row of data) {
+    const names = namesByPhone.get(row.phone) ?? new Set();
+    if (row.companies?.name) names.add(row.companies.name);
+    namesByPhone.set(row.phone, names);
+  }
+  return [...namesByPhone].map(([phone, names]) => ({ phone, companyNames: [...names] }));
 };
 
 const nudgeJobsite = async (jobsite, date) => {
@@ -325,10 +342,10 @@ const nudgeJobsite = async (jobsite, date) => {
   const missingSubIds = await findMissingSubIds(jobsite, date);
   if (missingSubIds.length === 0) return 0;
 
-  const phones = await findPhones(jobsite.id, missingSubIds);
+  const recipients = await findRecipients(jobsite.id, missingSubIds);
   let sent = 0;
-  for (const to of phones) {
-    const result = await smsService.sendSms({ to, body: nudgeBody(jobsite.name) });
+  for (const { phone: to, companyNames } of recipients) {
+    const result = await smsService.sendSms({ to, body: nudgeBody(jobsite.name, companyNames) });
     if (result.sent) sent += 1;
   }
   return sent;
