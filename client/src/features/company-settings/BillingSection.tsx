@@ -100,6 +100,14 @@ export const BillingSection = ({
             )}
           </StyledBillingList>
 
+          {billing.isSponsored && (
+            <StyledSectionHelp>
+              Trade Pro features are provided free while you&apos;re on a
+              GC-sponsored job site. They end if you&apos;re removed from the
+              site or it&apos;s archived.
+            </StyledSectionHelp>
+          )}
+
           {status === "past_due" && (
             <StyledBillingWarning role="alert">
               Your last payment didn&apos;t go through. Update your payment

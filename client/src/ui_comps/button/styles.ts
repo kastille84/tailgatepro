@@ -144,7 +144,7 @@ export const StyledButton = styled.button<StyledButtonProps>`
   font-family: inherit;
   font-weight: 700;
   line-height: 1.2;
-  white-space: nowrap;
+  text-align: center;
   border: 0.2rem solid transparent;
   border-radius: ${({ theme }) => theme.borderRadius.md};
   cursor: pointer;
@@ -158,6 +158,9 @@ export const StyledButton = styled.button<StyledButtonProps>`
     transform 0.15s ease;
 
   ${({ $size }) => sizeStyles[$size]}
+  /* Long labels wrap instead of clipping on narrow phones; the min-height
+     above still guarantees the tap target. */
+  padding-block: 0.8rem;
   ${({ $variant }) => variantStyles[$variant]}
 
   &:focus-visible {

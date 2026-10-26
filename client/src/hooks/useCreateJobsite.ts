@@ -4,7 +4,7 @@ import toast from "react-hot-toast";
 import { useAuth } from "../context/auth";
 import { createJobsite } from "../services/apiJobsites";
 import { JOBSITES_QUERY_KEY } from "./useJobsites";
-import type { JobsiteSummary } from "../interfaces/jobsite";
+import type { JobsiteSummary, MeetingCadence } from "../interfaces/jobsite";
 import { PlanLimitError } from "../utils/PlanLimitError";
 
 /**
@@ -20,7 +20,13 @@ export const useCreateJobsite = () => {
   const mutation = useMutation<
     JobsiteSummary,
     Error,
-    { name: string; crewIds?: string[]; smsNudgesEnabled?: boolean; timezone?: string }
+    {
+      name: string;
+      crewIds?: string[];
+      meetingCadence?: MeetingCadence;
+      smsNudgesEnabled?: boolean;
+      timezone?: string;
+    }
   >({
     networkMode: "always",
     mutationFn: (input) => createJobsite(session!.access_token, input),

@@ -1,6 +1,6 @@
 import React from "react";
 import { describe, it, expect, vi } from "vitest";
-import { render, screen, fireEvent } from "@testing-library/react";
+import { cleanup, render, screen, fireEvent } from "@testing-library/react";
 import { MemoryRouter } from "react-router-dom";
 import { ThemeProvider } from "styled-components";
 
@@ -9,6 +9,8 @@ import type { BillingSummary } from "../../../src/interfaces/billing";
 import theme from "../../../src/styles/theme";
 
 const active: BillingSummary = {
+  plan: "trade-pro",
+  isSponsored: false,
   hasBillingAccount: true,
   subscriptionStatus: "active",
   billingInterval: "monthly",
@@ -81,6 +83,8 @@ describe("BillingSection", () => {
     renderSection({
       planName: null,
       billing: {
+        plan: "trade-free",
+        isSponsored: false,
         hasBillingAccount: false,
         subscriptionStatus: null,
         billingInterval: null,
@@ -96,6 +100,15 @@ describe("BillingSection", () => {
         .getByRole("link", { name: /see plans and upgrade/i })
         .getAttribute("href"),
     ).toBe("/pricing");
+  });
+
+  it("explains sponsored Pro access only when the plan is sponsored", () => {
+    renderSection({ billing: active });
+    expect(screen.queryByText(/provided free while you.re on a gc-sponsored/i)).toBeNull();
+    cleanup();
+
+    renderSection({ billing: { ...active, isSponsored: true } });
+    expect(screen.getByText(/provided free while you.re on a gc-sponsored/i)).toBeDefined();
   });
 
   it("omits the renewal row when Stripe has no period end", () => {

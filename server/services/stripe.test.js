@@ -7,10 +7,15 @@ const {
   createPortalSession,
 } = require("./stripe");
 
+const sponsorship = require("./sponsorship");
+
 const fromSpy = vi.spyOn(supabase, "from");
+const isSponsoredSpy = vi.spyOn(sponsorship, "isSponsored");
 
 const billingRow = {
   name: "Acme Roofing",
+  tier: "premium",
+  company_type: "subcontractor",
   stripe_customer_id: null,
   stripe_subscription_id: null,
   subscription_status: null,
@@ -59,6 +64,7 @@ describe("stripe service", () => {
 
   beforeEach(() => {
     fromSpy.mockReset();
+    isSponsoredSpy.mockReset();
   });
 
   describe("getBillingState", () => {
@@ -66,6 +72,8 @@ describe("stripe service", () => {
       mockDb({
         row: {
           name: "Acme",
+          tier: "premium",
+          company_type: "subcontractor",
           stripe_customer_id: "cus_1",
           stripe_subscription_id: "sub_1",
           subscription_status: "active",
@@ -75,6 +83,8 @@ describe("stripe service", () => {
       });
       await expect(getBillingState("company-1")).resolves.toEqual({
         name: "Acme",
+        tier: "premium",
+        companyType: "subcontractor",
         customerId: "cus_1",
         subscriptionId: "sub_1",
         subscriptionStatus: "active",
@@ -99,6 +109,8 @@ describe("stripe service", () => {
       mockDb({
         row: {
           name: "Acme",
+          tier: "premium",
+          company_type: "subcontractor",
           stripe_customer_id: "cus_1",
           stripe_subscription_id: "sub_1",
           subscription_status: "active",
@@ -107,11 +119,33 @@ describe("stripe service", () => {
         },
       });
       await expect(getBillingSummary("company-1")).resolves.toEqual({
+        plan: "trade-pro",
+        isSponsored: false,
         hasBillingAccount: true,
         subscriptionStatus: "active",
         billingInterval: "monthly",
         currentPeriodEnd: "2027-01-01T00:00:00.000Z",
       });
+    });
+
+    it("reports a Free sub on a sponsored jobsite as its own Free plan, flagged sponsored", async () => {
+      mockDb({ row: { ...billingRow, tier: "basic" } });
+      isSponsoredSpy.mockResolvedValue(true);
+      await expect(getBillingSummary("company-1")).resolves.toMatchObject({
+        plan: "trade-free",
+        isSponsored: true,
+      });
+      expect(isSponsoredSpy).toHaveBeenCalledWith("company-1");
+    });
+
+    it("does not check sponsorship for a paid sub or a GC", async () => {
+      mockDb({ row: { ...billingRow, tier: "premium" } });
+      await getBillingSummary("company-1");
+      mockDb({ row: { ...billingRow, tier: "basic", company_type: "gc" } });
+      await expect(getBillingSummary("company-1")).resolves.toMatchObject({
+        isSponsored: false,
+      });
+      expect(isSponsoredSpy).not.toHaveBeenCalled();
     });
 
     it("reports no billing account for a company that never subscribed", async () => {

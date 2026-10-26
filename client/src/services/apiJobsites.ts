@@ -54,6 +54,7 @@ export const createJobsite = async (
   input: {
     name: string;
     crewIds?: string[];
+    meetingCadence?: MeetingCadence;
     smsNudgesEnabled?: boolean;
     timezone?: string;
   },

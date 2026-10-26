@@ -39,6 +39,8 @@ describe("apiStripe", () => {
   describe("getBillingSummary", () => {
     it("GETs /api/stripe/billing with the bearer token", async () => {
       const summary = {
+        plan: "trade-free",
+        isSponsored: false,
         hasBillingAccount: true,
         subscriptionStatus: "active",
         billingInterval: "monthly",

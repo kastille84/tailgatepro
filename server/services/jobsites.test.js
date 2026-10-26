@@ -226,6 +226,16 @@ describe("jobsites service: create", () => {
     expect(payload.timezone).toBe("America/Chicago");
   });
 
+  it("should write meeting_cadence only when a cadence is given", async () => {
+    // Act
+    await create({ gcCompanyId: "gc-1", name: "Riverside Tower" });
+    await create({ gcCompanyId: "gc-1", name: "Riverside Tower", meetingCadence: "daily" });
+
+    // Assert
+    expect(insert.mock.calls[0][0]).not.toHaveProperty("meeting_cadence");
+    expect(insert.mock.calls[1][0].meeting_cadence).toBe("daily");
+  });
+
   it("should refuse SMS nudges with a 403 PLAN_LIMIT and insert nothing for a non-Portfolio GC", async () => {
     // Act & Assert
     await expect(
