@@ -12,12 +12,17 @@ const mockUseOnlineStatus = vi.fn();
 const mockUseRecipients = vi.fn();
 const mockAdd = vi.fn();
 const mockRemove = vi.fn();
+const mockUpdateJobsite = vi.fn();
 
 vi.mock("../../../src/context/online-status", () => ({
   useOnlineStatus: () => mockUseOnlineStatus(),
 }));
 vi.mock("../../../src/hooks/useJobsiteSmsRecipients", () => ({
   useJobsiteSmsRecipients: (id: string) => mockUseRecipients(id),
+}));
+
+vi.mock("../../../src/hooks/useUpdateJobsite", () => ({
+  useUpdateJobsite: () => ({ updateJobsite: mockUpdateJobsite, isUpdating: false }),
 }));
 
 const jobsite: Jobsite = {
@@ -81,6 +86,7 @@ describe("SmsRecipientsPanel", () => {
     mockUseRecipients.mockReturnValue(state());
     mockAdd.mockResolvedValue(undefined);
     mockRemove.mockResolvedValue(undefined);
+    mockUpdateJobsite.mockResolvedValue(undefined);
   });
 
   it("says whether reminders are on for the site", () => {
@@ -92,6 +98,53 @@ describe("SmsRecipientsPanel", () => {
   it("tells the GC to turn reminders on when they are off", () => {
     renderPanel({ ...jobsite, smsNudgesEnabled: false });
     expect(screen.getByText(/text reminders are off/i)).toBeDefined();
+  });
+
+  it("has no Turn on button while reminders are on", () => {
+    renderPanel();
+    expect(screen.queryByRole("button", { name: /turn on monday reminders/i })).toBeNull();
+  });
+
+  it("turns reminders on and keeps the saved time zone", async () => {
+    renderPanel({ ...jobsite, smsNudgesEnabled: false });
+    fireEvent.click(screen.getByRole("button", { name: /turn on monday reminders/i }));
+    await waitFor(() =>
+      expect(mockUpdateJobsite).toHaveBeenCalledWith({
+        id: "j1",
+        patch: { smsNudgesEnabled: true, timezone: "America/Chicago" },
+      }),
+    );
+  });
+
+  it("saves the browser's time zone when the site has none", async () => {
+    const spy = vi
+      .spyOn(Intl.DateTimeFormat.prototype, "resolvedOptions")
+      .mockReturnValue({ timeZone: "America/Phoenix" } as Intl.ResolvedDateTimeFormatOptions);
+    renderPanel({ ...jobsite, smsNudgesEnabled: false, timezone: null });
+    fireEvent.click(screen.getByRole("button", { name: /turn on monday reminders/i }));
+    await waitFor(() =>
+      expect(mockUpdateJobsite).toHaveBeenCalledWith({
+        id: "j1",
+        patch: { smsNudgesEnabled: true, timezone: "America/Phoenix" },
+      }),
+    );
+    spy.mockRestore();
+  });
+
+  it("swallows a failed Turn on (the hook already toasts)", async () => {
+    mockUpdateJobsite.mockRejectedValue(new Error("boom"));
+    renderPanel({ ...jobsite, smsNudgesEnabled: false });
+    fireEvent.click(screen.getByRole("button", { name: /turn on monday reminders/i }));
+    await waitFor(() => expect(mockUpdateJobsite).toHaveBeenCalled());
+  });
+
+  it("disables Turn on while offline", () => {
+    mockUseOnlineStatus.mockReturnValue({ isOnline: false });
+    renderPanel({ ...jobsite, smsNudgesEnabled: false });
+    expect(
+      (screen.getByRole("button", { name: /turn on monday reminders/i }) as HTMLButtonElement)
+        .disabled,
+    ).toBe(true);
   });
 
   it("offers only accepted, unlocked subs, labelled by company or email", () => {

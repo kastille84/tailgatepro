@@ -12,6 +12,7 @@ import { PlanLimitError } from "../../../src/utils/PlanLimitError";
 const mockCreate = vi.fn();
 const mockUpdate = vi.fn();
 const mockUseInHouseCrews = vi.fn();
+let currentPlan: string | null = null;
 let createLimitError: Error | null = null;
 let updateLimitError: Error | null = null;
 
@@ -21,6 +22,9 @@ vi.mock("../../../src/hooks/useCreateJobsite", () => ({
     isCreating: false,
     planLimitError: createLimitError,
   }),
+}));
+vi.mock("../../../src/hooks/useCurrentUser", () => ({
+  useCurrentUser: () => ({ plan: currentPlan }),
 }));
 vi.mock("../../../src/hooks/useInHouseCrews", () => ({
   useInHouseCrews: (...args: unknown[]) => mockUseInHouseCrews(...args),
@@ -60,6 +64,7 @@ const renderForm = (
 describe("JobsiteForm", () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    currentPlan = null;
     createLimitError = null;
     updateLimitError = null;
     mockCreate.mockResolvedValue(undefined);
@@ -233,10 +238,33 @@ describe("JobsiteForm", () => {
       expect(screen.queryByLabelText(/job site time zone/i)).toBeNull();
     });
 
-    it("shows nothing about SMS when creating", () => {
+    it("offers the upgrade note, not the SMS controls, when creating without Portfolio", () => {
       renderForm();
 
-      expect(screen.queryByText(/monday/i)).toBeNull();
+      expect(screen.getByText(/automatic monday text reminders/i)).toBeDefined();
+      expect(screen.queryByLabelText(/job site time zone/i)).toBeNull();
+    });
+
+    it("lets a Portfolio GC turn nudges on and pick a zone when creating", async () => {
+      currentPlan = "gc-portfolio";
+      renderForm();
+
+      expect(screen.queryByText(/automatic monday text reminders/i)).toBeNull();
+      fireEvent.change(screen.getByLabelText(/job site name/i), { target: { value: "Riverside" } });
+      fireEvent.click(screen.getByLabelText(/text subcontractors a reminder/i));
+      fireEvent.change(screen.getByLabelText(/job site time zone/i), {
+        target: { value: "America/Denver" },
+      });
+      fireEvent.click(screen.getByRole("button", { name: /create job site/i }));
+
+      await waitFor(() =>
+        expect(mockCreate).toHaveBeenCalledWith({
+          name: "Riverside",
+          crewIds: [],
+          smsNudgesEnabled: true,
+          timezone: "America/Denver",
+        }),
+      );
     });
 
     it("saves the toggle and time zone on a Site Pro site", async () => {

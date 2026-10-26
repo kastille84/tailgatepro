@@ -51,7 +51,12 @@ export const listJobsites = async (accessToken: string): Promise<Jobsite[]> => {
 /** POST /api/jobsites — admin/safety_manager only (server-enforced). */
 export const createJobsite = async (
   accessToken: string,
-  input: { name: string; crewIds?: string[] },
+  input: {
+    name: string;
+    crewIds?: string[];
+    smsNudgesEnabled?: boolean;
+    timezone?: string;
+  },
 ): Promise<JobsiteSummary> => {
   const res = await fetchWithTimeout("/api/jobsites", {
     method: "POST",

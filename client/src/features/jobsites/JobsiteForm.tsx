@@ -9,6 +9,7 @@ import { Form, FormField, TextInput } from "../../ui_comps/form";
 import { Modal } from "../../ui_comps/modal";
 import { Select } from "../../ui_comps/select";
 import { useCreateJobsite } from "../../hooks/useCreateJobsite";
+import { useCurrentUser } from "../../hooks/useCurrentUser";
 import { useInHouseCrews } from "../../hooks/useInHouseCrews";
 import { useUpdateJobsite } from "../../hooks/useUpdateJobsite";
 import type { Jobsite } from "../../interfaces/jobsite";
@@ -56,6 +57,11 @@ export const JobsiteForm = ({ isOpen, onClose, jobsite, onPlanLimit }: JobsiteFo
   const { createJobsite, isCreating, planLimitError: createLimitError } = useCreateJobsite();
   const { updateJobsite, isUpdating, planLimitError: updateLimitError } = useUpdateJobsite();
   const planLimitError = createLimitError ?? updateLimitError;
+  const { plan } = useCurrentUser();
+
+  // A new site is on the free plan, so only a GC Portfolio company has Site Pro
+  // access at creation; an existing site reports its own (server-derived) flag.
+  const hasSitePro = isEdit ? jobsite!.sitePro : plan === "gc-portfolio";
 
   // Create mode only: the in-house crews that work this site, pre-ticked; the
   // GC unticks the ones that do not (docs/in-house-subs-design.md).
@@ -98,7 +104,7 @@ export const JobsiteForm = ({ isOpen, onClose, jobsite, onPlanLimit }: JobsiteFo
             meetingCadence: values.meetingCadence,
             // The SMS fields only exist for a Site Pro site; sending them for
             // any other would be a server-side 403.
-            ...(jobsite.sitePro && {
+            ...(hasSitePro && {
               smsNudgesEnabled: values.smsNudgesEnabled,
               timezone: values.timezone,
             }),
@@ -110,6 +116,10 @@ export const JobsiteForm = ({ isOpen, onClose, jobsite, onPlanLimit }: JobsiteFo
           crewIds: activeCrews
             .filter((crew) => !uncheckedCrewIds.includes(crew.id))
             .map((crew) => crew.id),
+          ...(hasSitePro && {
+            smsNudgesEnabled: values.smsNudgesEnabled,
+            timezone: values.timezone,
+          }),
         });
       }
       onClose();
@@ -203,7 +213,7 @@ export const JobsiteForm = ({ isOpen, onClose, jobsite, onPlanLimit }: JobsiteFo
           </FormField>
         )}
 
-        {isEdit && jobsite!.sitePro && (
+        {hasSitePro && (
           <>
             <Checkbox
               label="Text subcontractors a reminder every Monday at 7:00 AM when they logged no safety talk last week"
@@ -222,7 +232,7 @@ export const JobsiteForm = ({ isOpen, onClose, jobsite, onPlanLimit }: JobsiteFo
             </FormField>
           </>
         )}
-        {isEdit && !jobsite!.sitePro && (
+        {!hasSitePro && (
           <StyledNote>
             Automatic Monday text reminders are part of{" "}
             <StyledUpgradeLink to="/pricing?audience=gc">
