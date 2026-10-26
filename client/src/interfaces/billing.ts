@@ -11,6 +11,10 @@ export type CheckoutPlanKey =
 
 /** `GET /api/stripe/billing` — what Settings → Billing shows. */
 export interface BillingSummary {
+  /** The company's own plan id � never the sponsorship-adjusted one. */
+  plan: string;
+  /** True when a Free sub is getting Pro access from a GC-sponsored jobsite. */
+  isSponsored: boolean;
   hasBillingAccount: boolean;
   /** Stripe's subscription status (`active`, `past_due`, `canceled`, ...), or
    *  null for a company that never subscribed. */

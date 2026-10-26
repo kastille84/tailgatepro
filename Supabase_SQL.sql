@@ -424,7 +424,7 @@ CREATE TABLE jobsites (
   -- Phase 11f (docs/gc-dashboard-design.md "Configurable cadence"): how often
   -- subs on this site must log a talk. The GC's default; a sub may tighten it
   -- for itself via jobsite_subcontractors.meeting_cadence, never relax it.
-  meeting_cadence TEXT NOT NULL DEFAULT 'daily' CHECK (meeting_cadence IN ('daily', 'weekly')),
+  meeting_cadence TEXT NOT NULL DEFAULT 'weekly' CHECK (meeting_cadence IN ('daily', 'weekly')),
   -- Phase 9e SMS nudges (docs/sms-nudges-design.md): per-site opt-in (default
   -- off, requires Site Pro access), the IANA zone the Monday 7:00 AM send is
   -- evaluated in, and the local Monday date last nudged (once-per-week guard).
@@ -450,7 +450,8 @@ CREATE INDEX idx_jobsites_gc_company ON jobsites (gc_company_id);
 -- ALTER TABLE jobsites ADD COLUMN IF NOT EXISTS site_pro_period_end TIMESTAMPTZ;  -- Phase 12h
 -- ALTER TABLE jobsites ADD COLUMN IF NOT EXISTS origin TEXT CHECK (origin IN ('gc', 'subcontractor'));  -- who created the jobsite; NULL = unknown
 -- ALTER TABLE jobsites ADD COLUMN IF NOT EXISTS join_token TEXT UNIQUE;  -- Phase 9e
--- ALTER TABLE jobsites ADD COLUMN IF NOT EXISTS meeting_cadence TEXT NOT NULL DEFAULT 'daily' CHECK (meeting_cadence IN ('daily', 'weekly'));  -- Phase 11f
+-- ALTER TABLE jobsites ADD COLUMN IF NOT EXISTS meeting_cadence TEXT NOT NULL DEFAULT 'weekly' CHECK (meeting_cadence IN ('daily', 'weekly'));  -- Phase 11f
+-- ALTER TABLE jobsites ALTER COLUMN meeting_cadence SET DEFAULT 'weekly';  -- new jobsites default to weekly (existing rows keep their value)
 -- ALTER TABLE jobsites ADD COLUMN IF NOT EXISTS sms_nudges_enabled BOOLEAN NOT NULL DEFAULT FALSE;  -- Phase 9e SMS
 -- ALTER TABLE jobsites ADD COLUMN IF NOT EXISTS timezone TEXT;  -- Phase 9e SMS
 -- ALTER TABLE jobsites ADD COLUMN IF NOT EXISTS sms_last_nudged_on DATE;  -- Phase 9e SMS

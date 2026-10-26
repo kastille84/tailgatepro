@@ -149,6 +149,20 @@ describe("jobsites controller", () => {
       });
     });
 
+    it("passes meetingCadence through when a GC creates a jobsite", async () => {
+      // Arrange
+      req.body = { name: "Riverside Tower", meetingCadence: "daily" };
+      createSpy.mockResolvedValue(jobsite);
+
+      // Act
+      await createJobsite(req, res, next);
+
+      // Assert
+      expect(createSpy).toHaveBeenCalledWith(
+        expect.objectContaining({ gcCompanyId: "gc-1", meetingCadence: "daily" }),
+      );
+    });
+
     it("forwards a jobsitesService.create failure to next", async () => {
       // Arrange
       req.body = { name: "Riverside Tower" };

@@ -249,10 +249,18 @@ const attachChosenCrews = async ({ gcCompanyId, jobsite, crewIds }) => {
 // generating one before an offline write, the way projects.create does.
 // `crewIds` are the in-house crews the GC ticked in the job site form; none are
 // attached automatically.
+// `meetingCadence` is optional; omitted, the column default (weekly) applies.
 // `smsNudgesEnabled` / `timezone` let the GC switch the Monday SMS nudge on at
 // creation. A new site is on the free plan, so only a GC Portfolio company has
 // Site Pro access yet; anyone else gets the same 403 as turning it on later.
-const create = async ({ gcCompanyId, name, crewIds = [], smsNudgesEnabled, timezone }) => {
+const create = async ({
+  gcCompanyId,
+  name,
+  crewIds = [],
+  meetingCadence,
+  smsNudgesEnabled,
+  timezone,
+}) => {
   await assertJobsiteAvailable(gcCompanyId);
 
   if (smsNudgesEnabled === true) {
@@ -263,6 +271,7 @@ const create = async ({ gcCompanyId, name, crewIds = [], smsNudgesEnabled, timez
   }
 
   const row = { id: uuidv4(), gc_company_id: gcCompanyId, name, origin: "gc" };
+  if (meetingCadence !== undefined) row.meeting_cadence = meetingCadence;
   if (smsNudgesEnabled !== undefined) row.sms_nudges_enabled = smsNudgesEnabled;
   if (timezone !== undefined) row.timezone = timezone;
 
