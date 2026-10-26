@@ -87,7 +87,7 @@ export const JobsiteForm = ({ isOpen, onClose, jobsite, onPlanLimit }: JobsiteFo
     defaultValues: {
       name: jobsite?.name ?? "",
       status: jobsite?.status ?? "active",
-      meetingCadence: jobsite?.meetingCadence ?? "daily",
+      meetingCadence: jobsite?.meetingCadence ?? "weekly",
       smsNudgesEnabled: jobsite?.smsNudgesEnabled ?? false,
       timezone: defaultTimeZone,
     },
@@ -113,6 +113,7 @@ export const JobsiteForm = ({ isOpen, onClose, jobsite, onPlanLimit }: JobsiteFo
       } else {
         await createJobsite({
           name: values.name,
+          meetingCadence: values.meetingCadence,
           crewIds: activeCrews
             .filter((crew) => !uncheckedCrewIds.includes(crew.id))
             .map((crew) => crew.id),
@@ -196,22 +197,20 @@ export const JobsiteForm = ({ isOpen, onClose, jobsite, onPlanLimit }: JobsiteFo
           </FormField>
         )}
 
-        {isEdit && (
-          <FormField
+        <FormField
+          id={cadenceId}
+          label="Safety talk cadence"
+          hint="Weekly is recommended: it gives crews time to absorb each talk, while daily talks can lead to fatigue. A weekly week runs Monday to Sunday; a subcontractor can choose to log daily instead."
+        >
+          <Select
             id={cadenceId}
-            label="Safety talk cadence"
-            hint="How often each subcontractor must log a talk. A weekly week runs Monday to Sunday; a subcontractor can choose to log daily instead."
-          >
-            <Select
-              id={cadenceId}
-              options={[
-                { value: "daily", label: "Daily" },
-                { value: "weekly", label: "Weekly" },
-              ]}
-              {...register("meetingCadence")}
-            />
-          </FormField>
-        )}
+            options={[
+              { value: "daily", label: "Daily" },
+              { value: "weekly", label: "Weekly" },
+            ]}
+            {...register("meetingCadence")}
+          />
+        </FormField>
 
         {hasSitePro && (
           <>

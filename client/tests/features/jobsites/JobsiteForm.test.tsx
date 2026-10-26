@@ -89,7 +89,7 @@ describe("JobsiteForm", () => {
     fireEvent.click(screen.getByRole("button", { name: /create job site/i }));
 
     await waitFor(() =>
-      expect(mockCreate).toHaveBeenCalledWith({ name: "Riverside", crewIds: [] }),
+      expect(mockCreate).toHaveBeenCalledWith({ name: "Riverside", meetingCadence: "weekly", crewIds: [] }),
     );
     await waitFor(() => expect(onClose).toHaveBeenCalled());
   });
@@ -112,7 +112,11 @@ describe("JobsiteForm", () => {
       fireEvent.click(screen.getByRole("button", { name: /create job site/i }));
 
       await waitFor(() =>
-        expect(mockCreate).toHaveBeenCalledWith({ name: "Riverside", crewIds: ["c1"] }),
+        expect(mockCreate).toHaveBeenCalledWith({
+          name: "Riverside",
+          meetingCadence: "weekly",
+          crewIds: ["c1"],
+        }),
       );
     });
 
@@ -126,7 +130,11 @@ describe("JobsiteForm", () => {
       fireEvent.click(screen.getByRole("button", { name: /create job site/i }));
 
       await waitFor(() =>
-        expect(mockCreate).toHaveBeenCalledWith({ name: "Riverside", crewIds: ["c1"] }),
+        expect(mockCreate).toHaveBeenCalledWith({
+          name: "Riverside",
+          meetingCadence: "weekly",
+          crewIds: ["c1"],
+        }),
       );
     });
 
@@ -211,7 +219,7 @@ describe("JobsiteForm", () => {
     await waitFor(() => expect(onClose).toHaveBeenCalled());
   });
 
-  it("saves a changed meeting cadence in edit mode and hides the control when creating", async () => {
+  it("saves a changed meeting cadence in edit mode", async () => {
     renderForm({ jobsite });
 
     fireEvent.change(screen.getByLabelText(/safety talk cadence/i), {
@@ -260,6 +268,7 @@ describe("JobsiteForm", () => {
       await waitFor(() =>
         expect(mockCreate).toHaveBeenCalledWith({
           name: "Riverside",
+          meetingCadence: "weekly",
           crewIds: [],
           smsNudgesEnabled: true,
           timezone: "America/Denver",
@@ -311,10 +320,23 @@ describe("JobsiteForm", () => {
     });
   });
 
-  it("does not show the cadence control when creating", () => {
+  it("defaults the cadence to weekly when creating and sends a changed choice", async () => {
     renderForm();
 
-    expect(screen.queryByLabelText(/safety talk cadence/i)).toBeNull();
+    const cadence = screen.getByLabelText(/safety talk cadence/i) as HTMLSelectElement;
+    expect(cadence.value).toBe("weekly");
+
+    fireEvent.change(screen.getByLabelText(/job site name/i), { target: { value: "Riverside" } });
+    fireEvent.change(cadence, { target: { value: "daily" } });
+    fireEvent.click(screen.getByRole("button", { name: /create job site/i }));
+
+    await waitFor(() =>
+      expect(mockCreate).toHaveBeenCalledWith({
+        name: "Riverside",
+        meetingCadence: "daily",
+        crewIds: [],
+      }),
+    );
   });
 
   it("stays open when saving an edit fails", async () => {

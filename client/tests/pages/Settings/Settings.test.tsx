@@ -278,6 +278,24 @@ describe("Settings page", () => {
       expect(text).toContain("opening: true");
     });
 
+    it("shows the billing summary's own plan, not the sponsorship-adjusted one", () => {
+      mockUseCurrentUser.mockReturnValue({
+        hasBrandingAccess: false,
+        isManagerRole: true,
+        plan: "trade-pro",
+      });
+      mockUseBillingStatus.mockReturnValue({
+        billing: { plan: "trade-free", isSponsored: true },
+        isLoading: false,
+        isError: false,
+      });
+      renderPage();
+
+      expect(screen.getByTestId("billing-section").textContent).toContain(
+        "plan: Trade Free",
+      );
+    });
+
     it("resolves a GC plan id to its name and passes null for an unknown plan", () => {
       mockUseCurrentUser.mockReturnValue({
         hasBrandingAccess: false,

@@ -2,7 +2,8 @@ const Stripe = require("stripe");
 const { supabase } = require("../utility/supabaseClient");
 const { AppError } = require("../utility/AppError");
 const { keysBasedOnEnv } = require("../utility/envUtils");
-const { hasSiteProAccess } = require("../utility/entitlements");
+const { hasSiteProAccess, getPlanId } = require("../utility/entitlements");
+const sponsorship = require("./sponsorship");
 const {
   STRIPE_PLANS,
   SITE_PLAN_KEY,
@@ -31,7 +32,7 @@ const getBillingState = async (companyId) => {
   const { data, error } = await supabase
     .from("companies")
     .select(
-      "name, tier, stripe_customer_id, stripe_subscription_id, subscription_status, billing_interval, current_period_end",
+      "name, tier, company_type, stripe_customer_id, stripe_subscription_id, subscription_status, billing_interval, current_period_end",
     )
     .eq("id", companyId)
     .single();
@@ -46,6 +47,7 @@ const getBillingState = async (companyId) => {
   return {
     name: data.name,
     tier: data.tier,
+    companyType: data.company_type,
     customerId: data.stripe_customer_id,
     subscriptionId: data.stripe_subscription_id,
     subscriptionStatus: data.subscription_status,
@@ -54,10 +56,20 @@ const getBillingState = async (companyId) => {
   };
 };
 
-// What Settings -> Billing shows. Deliberately omits Stripe ids.
+// What Settings -> Billing shows. Deliberately omits Stripe ids. `plan` is the
+// company's *own* plan, not the sponsorship-adjusted one, so a Free sub on a GC's
+// Site Pro jobsite sees "Trade Free" plus `isSponsored`, not a Pro plan it
+// doesn't hold. Only a Free subcontractor can be sponsored, so only it pays
+// for the extra query.
 const getBillingSummary = async (companyId) => {
   const billing = await getBillingState(companyId);
+  const sponsored =
+    billing.companyType === "subcontractor" && billing.tier === "basic"
+      ? await sponsorship.isSponsored(companyId)
+      : false;
   return {
+    plan: getPlanId(billing.companyType, billing.tier),
+    isSponsored: sponsored,
     hasBillingAccount: Boolean(billing.customerId),
     subscriptionStatus: billing.subscriptionStatus,
     billingInterval: billing.billingInterval,

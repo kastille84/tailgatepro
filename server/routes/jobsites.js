@@ -60,6 +60,10 @@ router.post(
     // In-house crews to put on the new site (Phase 13); none are automatic.
     body("crewIds").optional().isArray({ max: 100 }).withMessage("Invalid crews"),
     body("crewIds.*").isUUID().withMessage("Invalid crew id"),
+    body("meetingCadence")
+      .optional()
+      .isIn(CADENCES)
+      .withMessage("Invalid meeting cadence"),
     body("smsNudgesEnabled")
       .optional()
       .isBoolean()

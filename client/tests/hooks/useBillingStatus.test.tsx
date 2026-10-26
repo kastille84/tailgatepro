@@ -19,6 +19,8 @@ vi.mock("../../src/hooks/useCurrentUser", () => ({
 }));
 
 const summary = {
+  plan: "trade-free",
+  isSponsored: false,
   hasBillingAccount: true,
   subscriptionStatus: "active",
   billingInterval: "monthly" as const,

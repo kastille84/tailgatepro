@@ -47,14 +47,17 @@ export const Settings = () => {
   const { role, hasBrandingAccess, isGc, isManagerRole, isInHouseCrew, plan } =
     useCurrentUser();
   const canInvite = role === "admin" || role === "safety_manager";
-  const planName =
-    [...SUB_PLANS, ...GC_PLANS].find((candidate) => candidate.id === plan)
-      ?.name ?? null;
   const {
     billing,
     isLoading: isBillingLoading,
     isError: isBillingError,
   } = useBillingStatus();
+  // The billing summary's own plan, not `plan`: that one is sponsorship-adjusted
+  // for feature gating and would show a sponsored Free sub as Trade Pro.
+  const billedPlan = billing?.plan ?? plan;
+  const planName =
+    [...SUB_PLANS, ...GC_PLANS].find((candidate) => candidate.id === billedPlan)
+      ?.name ?? null;
   const { openPortal, isOpening } = useBillingPortal();
   // Handles ?checkout=success|cancel after Stripe redirects back here.
   const { isConfirming } = useCheckoutReturn();

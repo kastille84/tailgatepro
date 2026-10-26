@@ -19,11 +19,12 @@ exports.listJobsites = async (req, res, next) => {
 
 exports.createJobsite = async (req, res, next) => {
   try {
-    const { name, crewIds, smsNudgesEnabled, timezone } = req.body;
+    const { name, crewIds, meetingCadence, smsNudgesEnabled, timezone } = req.body;
     const data = await jobsitesService.create({
       gcCompanyId: req.user.companyId,
       name,
       crewIds,
+      meetingCadence,
       smsNudgesEnabled,
       timezone,
     });
