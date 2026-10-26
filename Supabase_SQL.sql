@@ -688,7 +688,10 @@ CREATE TABLE sms_recipients (
 );
 
 -- One self opt-in per foreman; one GC-entered number per (jobsite, company, phone).
-CREATE UNIQUE INDEX sms_recipients_user_unique ON sms_recipients (user_id) WHERE user_id IS NOT NULL;
+-- Deliberately NOT a partial index: PostgREST's upsert (onConflict: "user_id")
+-- cannot target a partial index (error 42P10). NULL user_ids are distinct in a
+-- unique index, so GC rows (user_id NULL) still don't collide.
+CREATE UNIQUE INDEX sms_recipients_user_unique ON sms_recipients (user_id);
 CREATE UNIQUE INDEX sms_recipients_gc_unique ON sms_recipients (jobsite_id, sub_company_id, phone) WHERE source = 'gc';
 CREATE INDEX idx_sms_recipients_phone ON sms_recipients (phone);
 

@@ -11,7 +11,8 @@
     "dev": "concurrently \"npm run server\" \"npm run client\"",
     "start-prod": "npm run build --prefix client && npm run server",
     "seed:talks": "node scripts/seed-talks.js",
-    "setup:storage": "node scripts/setup-storage-buckets.js"
+    "setup:storage": "node scripts/setup-storage-buckets.js",
+    "sms:tick": "node scripts/run-nudge-tick.js"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.131.0",

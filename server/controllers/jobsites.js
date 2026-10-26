@@ -19,11 +19,13 @@ exports.listJobsites = async (req, res, next) => {
 
 exports.createJobsite = async (req, res, next) => {
   try {
-    const { name, crewIds } = req.body;
+    const { name, crewIds, smsNudgesEnabled, timezone } = req.body;
     const data = await jobsitesService.create({
       gcCompanyId: req.user.companyId,
       name,
       crewIds,
+      smsNudgesEnabled,
+      timezone,
     });
     return res.status(201).json({ success: true, data });
   } catch (error) {

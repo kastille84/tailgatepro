@@ -297,7 +297,11 @@ describe("runNudgeTick", () => {
   });
 
   // Defaults: subA logged last week, subB did not; subB has one confirmed phone.
-  const setup = ({ jobsites = [jobsiteRow()], claim = [{ id: "j1" }], phones = [{ phone: "+15125550123" }] } = {}) => {
+  const setup = ({
+    jobsites = [jobsiteRow()],
+    claim = [{ id: "j1" }],
+    phones = [{ phone: "+15125550123", companies: { name: "Acme Electric" } }],
+  } = {}) => {
     listLinkedProjectsSpy.mockResolvedValue([project("pA", "subA"), project("pB", "subB")]);
     listLogsSpy.mockResolvedValue([{ project_id: "pA", held_at: "2026-09-30T15:00:00Z" }]);
     return mockTables({
@@ -315,7 +319,7 @@ describe("runNudgeTick", () => {
     expect(sendSmsSpy).toHaveBeenCalledTimes(1);
     expect(sendSmsSpy).toHaveBeenCalledWith({
       to: "+15125550123",
-      body: expect.stringContaining("Tower"),
+      body: expect.stringContaining("Acme Electric at Tower"),
     });
     // Looked only at the sub with no log last week.
     expect(builders.sms_recipients[0].in).toHaveBeenCalledWith("sub_company_id", ["subB"]);
@@ -331,6 +335,31 @@ describe("runNudgeTick", () => {
   it("de-duplicates a phone shared by several rows", async () => {
     setup({ phones: [{ phone: "+15125550123" }, { phone: "+15125550123" }] });
     expect(await smsNudges.runNudgeTick(MONDAY_7AM_CHICAGO)).toBe(1);
+  });
+
+  it("lists every delinquent company that shares a phone in one text", async () => {
+    setup({
+      phones: [
+        { phone: "+15125550123", companies: { name: "Acme Electric" } },
+        { phone: "+15125550123", companies: { name: "Best Plumbing" } },
+      ],
+    });
+    expect(await smsNudges.runNudgeTick(MONDAY_7AM_CHICAGO)).toBe(1);
+    expect(sendSmsSpy.mock.calls[0][0].body).toContain("Acme Electric, Best Plumbing at Tower");
+  });
+
+  it("omits the company name when it is unavailable", async () => {
+    setup({ phones: [{ phone: "+15125550123", companies: null }] });
+    await smsNudges.runNudgeTick(MONDAY_7AM_CHICAGO);
+    expect(sendSmsSpy.mock.calls[0][0].body).toContain("for Tower last week");
+  });
+
+  it("drops the company name when it would push the text past 160 characters", async () => {
+    setup({ phones: [{ phone: "+15125550123", companies: { name: "A".repeat(60) } }] });
+    await smsNudges.runNudgeTick(MONDAY_7AM_CHICAGO);
+    const { body } = sendSmsSpy.mock.calls[0][0];
+    expect(body).toContain("for Tower last week");
+    expect(body).not.toContain("AAAA");
   });
 
   it("counts only messages that were actually sent", async () => {
