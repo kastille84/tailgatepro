@@ -16,6 +16,7 @@ const makeVoice = (overrides: Partial<SpeechSynthesisVoice> = {}) =>
 class MockUtterance {
   text: string;
   voice: SpeechSynthesisVoice | null = null;
+  lang = "";
   onstart: (() => void) | null = null;
   onend: (() => void) | null = null;
   onerror: (() => void) | null = null;
@@ -29,6 +30,7 @@ class MockSpeechSynthesis extends EventTarget {
   voicesValue: SpeechSynthesisVoice[] = [];
   speakFn = vi.fn();
   cancelFn = vi.fn();
+  resumeFn = vi.fn();
 
   getVoices() {
     return this.voicesValue;
@@ -40,6 +42,10 @@ class MockSpeechSynthesis extends EventTarget {
 
   cancel() {
     this.cancelFn();
+  }
+
+  resume() {
+    this.resumeFn();
   }
 }
 
