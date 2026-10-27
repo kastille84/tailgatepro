@@ -1,0 +1,55 @@
+{
+  "id": "hvac-rooftop-fixed-ladder-fall",
+  "title": "Climbing Fixed Ladders to Rooftop Units: Keep Your Hands Free",
+  "primary_trade": "HVAC & Refrigeration",
+  "trade_tags": [
+    "HVAC & Refrigeration",
+    "General Construction"
+  ],
+  "osha_standards": [
+    "29 CFR 1926.1053",
+    "29 CFR 1926.1060",
+    "29 CFR 1926.20(b)"
+  ],
+  "estimated_minutes": 5,
+  "summary": "An air conditioning technician died after falling about 25 feet from a 13-foot fixed ladder to a roof hatch while climbing with a heavy valve in his hand. Plan how you get tools up, and check the ladder and hatch before you climb.",
+  "talking_points": [
+    "In this case, a 58-year-old technician fell from a fixed ladder to a roof hatch. No one saw the fall, so the exact cause is unknown. He may have lost balance carrying a heavy valve, dropped it and lost his footing, or twisted at the top to get around a hatch that was installed backward.",
+    "Use caution every time you climb or work from a ladder. Face the ladder and keep three points of contact.",
+    "Do not carry tools or parts in your hands while climbing. Use a hoist line, bucket, or tool belt, or have a coworker raise them.",
+    "Check the ladder and the roof hatch before you climb. A hatch that opens toward you at the top can force you to twist and let go. Report it and do not climb it until it is safe.",
+    "Plan trips to the truck. Bring the parts and gauges you need to the roof in one safe lift instead of making many climbs.",
+    "Do a job hazard analysis with the crew each day before work. Look at fall hazards, loose debris, electrical hazards, and weather. This day was hot and sunny.",
+    "Employers must train workers to recognize ladder hazards and the steps to reduce them (29 CFR 1926.1060)."
+  ],
+  "site_hazards_to_check": [
+    "Fixed ladder rungs, side rails, or hatch that are damaged or poorly installed",
+    "Roof hatch that opens toward the climber and blocks a safe step-off",
+    "Open drop beside the stairs or landing below the ladder",
+    "Unguarded skylights and roof openings near the rooftop units",
+    "Equipment left on landings or stairs"
+  ],
+  "discussion_questions": [
+    "How will each person get tools, gauges, and parts to the roof without carrying them up the ladder?",
+    "What did you check on the ladder and hatch before climbing?",
+    "What fall hazards are on the roof today besides the ladder?"
+  ],
+  "attribution": {
+    "source": "New Jersey FACE Program",
+    "publisher": "New Jersey FACE Program, New Jersey Department of Health and Senior Services",
+    "copyright": "State FACE program publication distributed through CDC Stacks (NIOSH-funded). Public-domain status not confirmed; credit the originating agency.",
+    "license": "reuse-unverified",
+    "source_url": "https://stacks.cdc.gov/view/cdc/170032/cdc_170032_DS1.pdf",
+    "reuse_verification": "required",
+    "notice": "Worker-facing talk adapted from NJ FACE Investigation 97-NJ-059-01 (Air Conditioning Worker Dies After Falling From a Fixed Ladder). Reuse terms have not been verified with the originating agency; confirm before relying on this content commercially. Based on preliminary investigation data. Not an endorsement by New Jersey FACE Program or NIOSH."
+  },
+  "audit": {
+    "status": "needs_revision",
+    "audited_at": "2026-10-27T17:55:50Z",
+    "osha_accuracy_verified": true,
+    "flags": [
+      "1926.1053 and 1926.1060 valid. Source says cause unknown and the talk keeps that hedging.",
+      "reuse-unverified (blocking until resolved): attribution.license is 'reuse-unverified' with reuse_verification 'required'. Public-domain status of this state FACE publication is not confirmed, scripts/lib/talkRow.js does not read license or reuse_verification (isApproved checks only audit.status and attribution is copied verbatim) and docs/content-attribution.md has no policy for this license, so approving would seed it automatically to a paid product. Owner must confirm reuse terms with the originating agency and document the policy; then set status to approved. Content accuracy itself was verified against the raw source."
+    ]
+  }
+}

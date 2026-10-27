@@ -1,0 +1,55 @@
+{
+  "id": "demolition-crane-roof-removal-wall-collapse",
+  "title": "Roof Removal with a Crane: Brace Free-Standing Walls and Use Radios",
+  "primary_trade": "Demolition",
+  "trade_tags": [
+    "Demolition",
+    "Heavy Equipment",
+    "Masonry"
+  ],
+  "osha_standards": [
+    "29 CFR 1926.854",
+    "29 CFR 1926.1419",
+    "29 CFR 1926.1420"
+  ],
+  "estimated_minutes": 5,
+  "summary": "A worker giving crane signals was killed when a 4-foot brick parapet wall collapsed as a roof section was lifted free. The wall was not braced and he stood below it. Brace tall walls and use two-way radios so signal people can stand in safe places.",
+  "talking_points": [
+    "A crew removed a roof from a fire-damaged two-story building by cutting it into sections about 25 feet square and lifting each one with a 75-ton crane. The crane operator could not see the load, so a coworker gave hand signals from a second-story window.",
+    "As a roof section lifted off, the brick parapet wall above that window fell inward. Removing the roof had left a free-standing brick wall more than one story tall, with no lateral bracing.",
+    "Brace free-standing walls more than one story high with lateral bracing. The wall was not built to stand alone once the roof was removed.",
+    "Use two-way radios between the crane operator and the signal person. With a radio, the signal person can stand where the roof is already gone and falling material cannot reach.",
+    "Before a lift, ask where this wall, roof edge, or load will fall if it shifts. Keep people out of that area.",
+    "Pick the signal person's position for safety first, not only for line of sight."
+  ],
+  "site_hazards_to_check": [
+    "Brick parapets or walls left free-standing after the roof or floors are removed",
+    "No lateral bracing on walls over one story",
+    "Signal person standing under or beside walls, edges, or loads",
+    "Crane operator with no line of sight and no radio",
+    "Fire-damaged or vacant buildings with weakened structures"
+  ],
+  "discussion_questions": [
+    "Which walls will be free-standing during this work, and how are they braced?",
+    "Where will the signal person stand, and what could fall on that spot?",
+    "How will the crane operator and signal person communicate?"
+  ],
+  "attribution": {
+    "source": "Minnesota FACE Program",
+    "publisher": "Minnesota FACE Program (NIOSH State FACE)",
+    "copyright": "State FACE program publication distributed through CDC Stacks (NIOSH-funded). Public-domain status not confirmed; credit the originating agency.",
+    "license": "reuse-unverified",
+    "source_url": "https://stacks.cdc.gov/view/cdc/167200/cdc_167200_DS1.pdf",
+    "reuse_verification": "required",
+    "notice": "Worker-facing talk adapted from MN FACE Case Report 94MN020 (Crane Operator Dies After Being Crushed by Collapsed Brick Building Wall). Reuse terms have not been verified with the originating agency; confirm before relying on this content commercially. Based on preliminary investigation data. Not an endorsement by Minnesota FACE Program or NIOSH."
+  },
+  "audit": {
+    "status": "needs_revision",
+    "audited_at": "2026-10-27T17:55:50Z",
+    "osha_accuracy_verified": true,
+    "flags": [
+      "Verified 29 CFR 1926.854(b) (eCFR): a wall section more than one story high may not stand alone without lateral bracing, so the bracing point is supported. 1926.1419 (signals, general) and 1926.1420 (radio/electronic signals) are valid Subpart CC sections; the radio point is a MN FACE recommendation and the talk words it as one. Best-judgment mapping accepted.",
+      "reuse-unverified (blocking until resolved): attribution.license is 'reuse-unverified' with reuse_verification 'required'. Public-domain status of this state FACE publication is not confirmed, scripts/lib/talkRow.js does not read license or reuse_verification (isApproved checks only audit.status and attribution is copied verbatim) and docs/content-attribution.md has no policy for this license, so approving would seed it automatically to a paid product. Owner must confirm reuse terms with the originating agency and document the policy; then set status to approved. Content accuracy itself was verified against the raw source."
+    ]
+  }
+}

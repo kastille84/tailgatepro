@@ -1,0 +1,57 @@
+{
+  "id": "framing-roof-bracket-scaffold-fall",
+  "title": "Roof Brackets: Use Locking Brackets and Real Fall Protection",
+  "primary_trade": "Framing",
+  "trade_tags": [
+    "Framing",
+    "Roofing",
+    "Carpentry"
+  ],
+  "osha_standards": [
+    "29 CFR 1926.501(b)(13)",
+    "29 CFR 1926.502",
+    "29 CFR 1926.503(a)"
+  ],
+  "estimated_minutes": 5,
+  "summary": "A carpenter died after a roof bracket folded flat when he reached for a plank, and he fell about 19 feet. The adjustable brackets had no locks and were not used with other fall protection. Use locking brackets, follow the maker's spacing, and tie off.",
+  "talking_points": [
+    "A carpenter climbed onto a roof to get a plank from a bracket scaffold. When the plank bounced, the bracket's arm lifted out of its notch and the bracket folded flat. He fell about 19 feet and died.",
+    "Fall protection is required at 6 feet or more in residential construction. Use conventional fall protection: a guardrail system, a safety net, or a personal fall arrest system.",
+    "OSHA does not count roof brackets as conventional fall protection. In most cases use them only together with guardrails or a personal fall arrest system.",
+    "A personal fall arrest system needs a full-body harness, a connector, and an anchor that holds at least 5,000 pounds or twice the intended load. A body belt is not allowed for fall arrest.",
+    "Guardrail top rails are 39 to 45 inches high and must hold 200 pounds. Midrails sit halfway between the top rail and the surface. On a new house, install guardrails early and leave them in place.",
+    "Do not use adjustable roof brackets that have no locking mechanism. Use brackets that lock the support arm into the base, or fixed brackets.",
+    "Follow the manufacturer's instructions. These brackets were spaced about 12 feet apart, and most makers call for closer spacing.",
+    "Employers must have a safety and health program that covers fall prevention and spotting unsafe conditions, with training for every worker."
+  ],
+  "site_hazards_to_check": [
+    "Adjustable roof brackets with no locking mechanism",
+    "Bracket spacing wider than the manufacturer allows",
+    "Planks that bounce, shift, or are not secured",
+    "No guardrail, safety net, or personal fall arrest system at the roof edge",
+    "Workers climbing onto a roof only to retrieve materials with no tie-off"
+  ],
+  "discussion_questions": [
+    "What type of fall protection do we have at the roof edge today?",
+    "Do our roof brackets lock, and are they spaced as the maker requires?",
+    "Where is the anchor point for each person who goes on this roof?"
+  ],
+  "attribution": {
+    "source": "Massachusetts FACE Program",
+    "publisher": "Massachusetts FACE Program",
+    "copyright": "State FACE program publication distributed through CDC Stacks (NIOSH-funded). Public-domain status not confirmed; credit the originating agency.",
+    "license": "reuse-unverified",
+    "source_url": "https://stacks.cdc.gov/view/cdc/165200/cdc_165200_DS1.pdf",
+    "reuse_verification": "required",
+    "notice": "Worker-facing talk adapted from Massachusetts FACE Report 10MA036 (Carpenter Fell from the Roof of a Single Family Home Under Construction). Reuse terms have not been verified with the originating agency; confirm before relying on this content commercially. Based on preliminary investigation data. Not an endorsement by Massachusetts FACE Program or NIOSH."
+  },
+  "audit": {
+    "status": "needs_revision",
+    "audited_at": "2026-10-27T17:55:50Z",
+    "osha_accuracy_verified": true,
+    "flags": [
+      "Verified 5,000 lb anchor, 39-45 in top rail, 200 lb, 12 ft spacing, 6-foot residential trigger against MA FACE report and 1926.501(b)(13).",
+      "reuse-unverified (blocking until resolved): attribution.license is 'reuse-unverified' with reuse_verification 'required'. Public-domain status of this state FACE publication is not confirmed, scripts/lib/talkRow.js does not read license or reuse_verification (isApproved checks only audit.status and attribution is copied verbatim) and docs/content-attribution.md has no policy for this license, so approving would seed it automatically to a paid product. Owner must confirm reuse terms with the originating agency and document the policy; then set status to approved. Content accuracy itself was verified against the raw source."
+    ]
+  }
+}

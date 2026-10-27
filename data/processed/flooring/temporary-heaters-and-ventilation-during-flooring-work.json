@@ -1,0 +1,55 @@
+{
+  "id": "temporary-heaters-and-ventilation-during-flooring-work",
+  "title": "Temporary Heaters and Ventilation During Flooring Work",
+  "primary_trade": "Flooring",
+  "trade_tags": [
+    "Flooring",
+    "Painting & Coatings"
+  ],
+  "osha_standards": [
+    "29 CFR 1926.154",
+    "29 CFR 1926.152"
+  ],
+  "estimated_minutes": 5,
+  "summary": "Cold weather often means temporary heaters in rooms where adhesives and finishes are used. This talk covers OSHA's ventilation, clearance and fuel rules for temporary heating devices.",
+  "talking_points": [
+    "Fresh air must be supplied in sufficient quantities to maintain the health and safety of workers. Where natural means are inadequate, provide mechanical ventilation (29 CFR 1926.154(a)(1)).",
+    "When heaters are used in confined spaces, take special care to provide enough ventilation for proper combustion, worker health and safety, and to limit temperature rise (1926.154(a)(2)).",
+    "Temporary heaters must be installed with at least the clearance to combustible material shown in Table F-4, unless listed for less (1926.154(b)(1)-(2)).",
+    "Heaters not suitable for wood floors must not be set directly on them or on other combustibles. They must rest on suitable heat insulating material or at least 1 inch of concrete, extending 2 feet or more in all directions (1926.154(b)(3)).",
+    "Heaters must be at least 10 feet from combustible tarps, canvas or similar coverings, and the coverings must be fastened securely (1926.154(b)(4)).",
+    "Heaters must be set level unless the manufacturer allows otherwise (1926.154(c)). Solid fuel salamanders are prohibited in buildings and on scaffolds (1926.154(d)).",
+    "Flammable liquid-fired heaters must have a primary safety control that stops fuel flow on flame failure (1926.154(e)(1)).",
+    "Category 1, 2 or 3 flammable liquids may be used only where there are no open flames or other ignition sources within 50 feet of the operation (1926.152(f)(3)). Check where heaters are before opening adhesive."
+  ],
+  "site_hazards_to_check": [
+    "Heater near adhesive, solvent or rags",
+    "Heater too close to combustibles or tarps",
+    "Closed room with a fuel-burning heater",
+    "Heater sitting on a wood subfloor",
+    "Solid fuel salamander in a building",
+    "No fresh air supply"
+  ],
+  "discussion_questions": [
+    "Where will heaters be while adhesives are in use?",
+    "How do we get fresh air into this room?",
+    "Who checks heater clearances at the start of the shift?"
+  ],
+  "attribution": {
+    "source": "TailgatePro",
+    "publisher": "TailgatePro",
+    "copyright": "Original TailgatePro content, written from 29 CFR 1926.154 (Temporary heating devices) and 1926.152(f)(3) (ignition sources). Regulation and agency text is U.S. Government work in the public domain; the wording here is TailgatePro's own.",
+    "license": "original-work",
+    "source_url": "https://www.ecfr.gov/current/title-29/section-1926.154",
+    "source_ref": "ECFR-FL-04",
+    "notice": "Written from 29 CFR 1926.154 (Temporary heating devices) and 1926.152(f)(3) (ignition sources). General guidance only; follow your company safety program and site-specific requirements. Not an endorsement by OSHA."
+  },
+  "audit": {
+    "status": "approved",
+    "audited_at": "2026-10-27T18:25:58.056Z",
+    "osha_accuracy_verified": true,
+    "flags": [
+      "eCFR (title 29, current as of 2026-10-01) 1926.154(a)(1)-(2), (b)(1)-(4) and Table F-4, (c), (d), (e)(1); 1926.152(f)(3) verified verbatim. No changes required."
+    ]
+  }
+}

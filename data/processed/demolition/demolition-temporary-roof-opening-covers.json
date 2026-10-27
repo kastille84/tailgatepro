@@ -1,0 +1,55 @@
+{
+  "id": "demolition-temporary-roof-opening-covers",
+  "title": "Cover and Secure Roof Openings During Demolition",
+  "primary_trade": "Demolition",
+  "trade_tags": [
+    "Demolition",
+    "General Construction"
+  ],
+  "osha_standards": [
+    "29 CFR 1926.501(b)(4)",
+    "29 CFR 1926.502(i)",
+    "29 CFR 1926.503(a)"
+  ],
+  "estimated_minutes": 5,
+  "summary": "A demolition foreman died after a 35-foot fall through a roof opening that was covered only by loose plywood. When he moved the sheet, the hole was open. Cover roof openings, secure the cover, and guard the area.",
+  "talking_points": [
+    "A crew had cut a 44 by 78 inch hole in a flat roof so a crane could lower a cable through it. When the task ended, a 48 by 96 inch plywood sheet was laid over it. It was not nailed or screwed down and had no railing around it.",
+    "The foreman walked onto the roof to get that plywood for another job. He wore no harness. When he moved the sheet, he fell 35 feet to the concrete floor.",
+    "Cover temporary roof openings and secure the cover so it cannot be moved by accident.",
+    "Add guardrails around the opening or cover so no one can remove or displace the cover. Rails also give you a tie-off option.",
+    "Never take material that is covering a hole unless the hole is made safe first.",
+    "Get training in fall hazards and fall protection, even if you have worked for the company for years.",
+    "A competent person should do scheduled and unscheduled inspections. A competent person can find hazards and has the authority to fix them quickly."
+  ],
+  "site_hazards_to_check": [
+    "Plywood or other covers lying over holes without fasteners or markings",
+    "Roof openings with no railing around them",
+    "Materials stored or staged on top of covered openings",
+    "Workers on the roof without a harness or tie-off point",
+    "No one assigned to inspect the work area for hazards"
+  ],
+  "discussion_questions": [
+    "What openings did we make in the roof or floors, and how is each one covered and secured?",
+    "Who is the competent person who inspects the site today?",
+    "What do you do if you need material that is covering an opening?"
+  ],
+  "attribution": {
+    "source": "Kentucky FACE Program",
+    "publisher": "Kentucky FACE Program, Kentucky Injury Prevention and Research Center (KIPRC)",
+    "copyright": "State FACE program publication distributed through CDC Stacks (NIOSH-funded). Public-domain status not confirmed; credit the originating agency.",
+    "license": "reuse-unverified",
+    "source_url": "https://stacks.cdc.gov/view/cdc/170250/cdc_170250_DS1.pdf",
+    "reuse_verification": "required",
+    "notice": "Worker-facing talk adapted from Kentucky FACE Report KY9405101 (Demolition Foreman Dies After 35-Foot Fall Through Hole in Flat Roof). Reuse terms have not been verified with the originating agency; confirm before relying on this content commercially. Based on preliminary investigation data. Not an endorsement by Kentucky FACE Program or NIOSH."
+  },
+  "audit": {
+    "status": "needs_revision",
+    "audited_at": "2026-10-27T17:55:50Z",
+    "osha_accuracy_verified": true,
+    "flags": [
+      "Verified 1926.501(b)(4), 1926.502(i), 1926.503(a); cover-and-secure wording matches 1926.502(i).",
+      "reuse-unverified (blocking until resolved): attribution.license is 'reuse-unverified' with reuse_verification 'required'. Public-domain status of this state FACE publication is not confirmed, scripts/lib/talkRow.js does not read license or reuse_verification (isApproved checks only audit.status and attribution is copied verbatim) and docs/content-attribution.md has no policy for this license, so approving would seed it automatically to a paid product. Owner must confirm reuse terms with the originating agency and document the policy; then set status to approved. Content accuracy itself was verified against the raw source."
+    ]
+  }
+}

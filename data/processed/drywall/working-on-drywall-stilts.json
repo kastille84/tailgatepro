@@ -1,0 +1,53 @@
+{
+  "id": "working-on-drywall-stilts",
+  "title": "Working on Drywall Stilts",
+  "primary_trade": "Drywall",
+  "trade_tags": [
+    "Drywall",
+    "Painting & Coatings"
+  ],
+  "osha_standards": [
+    "29 CFR 1926.452",
+    "29 CFR 1926.25",
+    "29 CFR 1926.56"
+  ],
+  "estimated_minutes": 5,
+  "summary": "Stilts put your feet higher and make every trip hazard on the floor more dangerous. This talk covers what OSHA's scaffold rules require when stilts are used, plus the floor and lighting conditions that keep you upright.",
+  "talking_points": [
+    "Stilts must be properly maintained, and any change to the original equipment must be approved by the manufacturer (29 CFR 1926.452(y)(4)).",
+    "The surface you walk on in stilts must be flat and free of pits, holes and obstructions such as debris, and free of other tripping and falling hazards (1926.452(y)(3)).",
+    "Walk the whole area before you strap in. Scrap, cords, screws and boards left on the floor are exactly the debris this rule is talking about. Debris must be kept cleared from work areas, passageways and stairs (1926.25(a)).",
+    "An employee may wear stilts on a scaffold only if it is a large area scaffold (1926.452(y)(1)). Do not walk up to a mobile tower or a small platform on stilts.",
+    "Where a guardrail system provides fall protection on a large area scaffold, the guardrail must be raised by the height of the stilts being used (1926.452(y)(2)).",
+    "Light matters. Construction areas, corridors and storage areas must be lit to at least the minimum levels in Table D-3 while work is in progress, for example 5 foot-candles for general construction area lighting and for indoor corridors and hallways (1926.56(a)). If you cannot see the floor ahead of you, stop and get more light."
+  ],
+  "site_hazards_to_check": [
+    "Screws, cords, joint compound buckets or scrap boards on the floor",
+    "Holes, floor openings, gaps or uneven slab transitions",
+    "Stilts that are damaged, loose or modified from the original",
+    "Dim work areas or shadows across the floor",
+    "Guardrails on a large area scaffold not raised to account for stilt height"
+  ],
+  "discussion_questions": [
+    "Who walks the floor before stilts go on, and what do we do with what we find?",
+    "Has anyone altered or repaired their stilts, and was it approved by the manufacturer?",
+    "Where on this job is the floor not flat or not clear enough for stilts?"
+  ],
+  "attribution": {
+    "source": "TailgatePro",
+    "publisher": "TailgatePro",
+    "copyright": "Original TailgatePro content, written from 29 CFR 1926.452(y) (Stilts), 1926.25 (Housekeeping) and 1926.56 (Illumination). Regulation and agency text is U.S. Government work in the public domain; the wording here is TailgatePro's own.",
+    "license": "original-work",
+    "source_url": "https://www.ecfr.gov/current/title-29/section-1926.452",
+    "source_ref": "ECFR-DW-01",
+    "notice": "Written from 29 CFR 1926.452(y) (Stilts), 1926.25 (Housekeeping) and 1926.56 (Illumination). General guidance only; follow your company safety program and site-specific requirements. Not an endorsement by OSHA."
+  },
+  "audit": {
+    "status": "approved",
+    "audited_at": "2026-10-27T18:25:58.043Z",
+    "osha_accuracy_verified": true,
+    "flags": [
+      "eCFR (title 29, current as of 2026-10-01) 1926.452(y)(1)-(4) verified verbatim (large area scaffold only; guardrail raised by stilt height; flat surface free of pits, holes, debris; maintained, alterations approved by manufacturer). 1926.25(a) housekeeping and 1926.56(a) Table D-3 (5 fc general construction and indoor corridors/hallways) verified. No UK terms; no changes required."
+    ]
+  }
+}

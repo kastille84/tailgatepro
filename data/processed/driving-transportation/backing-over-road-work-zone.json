@@ -1,0 +1,59 @@
+{
+  "id": "backing-over-road-work-zone",
+  "title": "Road Work Zones: Don't Get Backed Over",
+  "primary_trade": "Driving & Transportation",
+  "trade_tags": [
+    "Driving & Transportation",
+    "Heavy Equipment",
+    "General Construction"
+  ],
+  "osha_standards": [
+    "29 CFR 1926.601(b)(4)",
+    "29 CFR 1926.602(a)(9)",
+    "29 CFR 1926.201(a)"
+  ],
+  "estimated_minutes": 5,
+  "summary": "An engineering technician pushing a wheelbarrow of concrete was killed by a cement mixer backing out of a road job. He heard the alarm and tried to hurry away. Workers on foot and drivers must plan, communicate, and stay out of each other's paths.",
+  "talking_points": [
+    "The technician took a concrete sample from one mixer and walked past the back of another mixer to reach his truck. The second driver had finished washing out, started backing out, and did not see him. Back-up alarms were sounding, but he was struck anyway.",
+    "Use an Internal Traffic Control Plan (ITCP) for each road work zone. It shows where and how vehicles and people on foot interact, and it should be updated as the site changes.",
+    "Where possible, drivers should drive out forward instead of backing out. Use alternate routes if they are available.",
+    "Park and work where you will not be in the path of exiting vehicles. Plan your walking route and your parking spot before you start.",
+    "Workers on foot and drivers must communicate by radio, hand signals, or eye contact. Review the agreed signals before each shift.",
+    "Before backing, the driver should walk around the vehicle, then use a trained spotter. Window down, radio off, no phone, foot on the brake. If you lose sight of the spotter, stop.",
+    "Spotters stand alone, with no phone and no crowd. They must see the driver's face in the mirror, use both hands with big motions, watch for pinch points, keep an escape route, and never turn their back on traffic.",
+    "Wear a reflective vest that is visible from all sides when you are exposed to moving equipment.",
+    "Ask about warning devices: hard-hat mirrors, parabolic mirrors, ultrasonic back-up sensors, and rear cameras. A back-up alarm alone may not be enough, especially when more than one machine is backing up."
+  ],
+  "site_hazards_to_check": [
+    "Vehicles backing out of tight spaces with no spotter",
+    "Several trucks with back-up alarms sounding at the same time",
+    "Workers on foot carrying loads through equipment travel paths",
+    "Parking spots or work positions in the exit flow of trucks",
+    "Workers without high-visibility apparel",
+    "No traffic control plan"
+  ],
+  "discussion_questions": [
+    "Where do vehicles and people on foot cross paths on this site?",
+    "What hand signals will drivers, spotters, and walkers use today?",
+    "Where will you park and walk so you are out of vehicle paths?"
+  ],
+  "attribution": {
+    "source": "Michigan FACE Program",
+    "publisher": "Michigan FACE Program (MIFACE)",
+    "copyright": "State FACE program publication distributed through CDC Stacks (NIOSH-funded). Public-domain status not confirmed; credit the originating agency.",
+    "license": "reuse-unverified",
+    "source_url": "https://stacks.cdc.gov/view/cdc/166374/cdc_166374_DS1.pdf",
+    "reuse_verification": "required",
+    "notice": "Worker-facing talk adapted from MIFACE Investigation 04MI107 (Engineering Technician Dies When Backed Over by Cement Mixer). Reuse terms have not been verified with the originating agency; confirm before relying on this content commercially. Based on preliminary investigation data. Not an endorsement by Michigan FACE Program or NIOSH."
+  },
+  "audit": {
+    "status": "needs_revision",
+    "audited_at": "2026-10-27T17:55:50Z",
+    "osha_accuracy_verified": true,
+    "flags": [
+      "Scope note (non-blocking): 1926.601 applies to vehicles on an off-highway jobsite not open to public traffic and 1926.602(a)(9) to earthmoving equipment; a road work zone open to traffic falls under 1926.200(g)/MUTCD. Citations kept as closest 1926 mappings, not sole governing rules.",
+      "reuse-unverified (blocking until resolved): attribution.license is 'reuse-unverified' with reuse_verification 'required'. Public-domain status of this state FACE publication is not confirmed, scripts/lib/talkRow.js does not read license or reuse_verification (isApproved checks only audit.status and attribution is copied verbatim) and docs/content-attribution.md has no policy for this license, so approving would seed it automatically to a paid product. Owner must confirm reuse terms with the originating agency and document the policy; then set status to approved. Content accuracy itself was verified against the raw source."
+    ]
+  }
+}

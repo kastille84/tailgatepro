@@ -1,0 +1,55 @@
+{
+  "id": "demolition-steel-structure-collapse",
+  "title": "Demolition Starts with a Plan: Steel Structure Collapse",
+  "primary_trade": "Demolition",
+  "trade_tags": [
+    "Demolition",
+    "Steel Erection",
+    "General Construction"
+  ],
+  "osha_standards": [
+    "29 CFR 1926.850(a)",
+    "29 CFR 1926.21(b)(2)",
+    "29 CFR 1926.850(b)"
+  ],
+  "estimated_minutes": 5,
+  "summary": "A laborer with no demolition experience was crushed and killed when a 30-foot steel structure collapsed in a different direction than the crew planned. Survey the structure, write a plan, and make sure everyone knows it before cutting.",
+  "talking_points": [
+    "A crew was taking down a 30-foot steel structure to sell as scrap. It sat on sloping pavement, and its legs were different lengths, so it leaned about four feet downhill.",
+    "The crew cut it with a torch from a forklift platform and rigged a rope to pull it in the direction of the lean. While the laborer cut a cross brace from a stepladder, the structure collapsed the opposite way and a steel beam crushed him. He had never done demolition work.",
+    "Before demolition starts, a competent person must make an engineering survey of the structure. It checks the structure's strength and the chance of unplanned collapse of any part. Keep the written proof.",
+    "Demolition must be done under competent supervision with safe working conditions for workers.",
+    "Write a project-specific demolition safety plan with step-by-step instructions for how the work will be done safely.",
+    "Tell every worker what the plan says and what hazards and precautions apply to them."
+  ],
+  "site_hazards_to_check": [
+    "A structure on slope, uneven ground, or with legs of different lengths",
+    "Unplanned fall direction or no plan for how members will come down",
+    "Workers cutting from stepladders or temporary platforms near load-bearing parts",
+    "New or inexperienced workers on demolition tasks without training",
+    "People standing in the possible fall zone"
+  ],
+  "discussion_questions": [
+    "Has a competent person surveyed this structure, and where is the written survey?",
+    "What is the planned fall direction, and what if it does not go that way?",
+    "Who has not yet been briefed on the demolition plan?"
+  ],
+  "attribution": {
+    "source": "Washington State FACE Program",
+    "publisher": "Washington State FACE Program, Dept. of Labor & Industries (SHARP)",
+    "copyright": "State FACE program publication distributed through CDC Stacks (NIOSH-funded). Public-domain status not confirmed; credit the originating agency.",
+    "license": "reuse-unverified",
+    "source_url": "https://lni.wa.gov/safety-health/safety-research/files/2016/laborercrushedduringdemolition.pdf",
+    "reuse_verification": "required",
+    "notice": "Worker-facing talk adapted from WA FACE Fatality Narrative 71-147-2016 (Laborer Crushed during Demolition of Steel Structure). Reuse terms have not been verified with the originating agency; confirm before relying on this content commercially. Based on preliminary investigation data. Not an endorsement by Washington State FACE Program or NIOSH."
+  },
+  "audit": {
+    "status": "needs_revision",
+    "audited_at": "2026-10-27T17:55:50Z",
+    "osha_accuracy_verified": true,
+    "flags": [
+      "Removed 29 CFR 1926.859 (mechanical demolition), which does not match a torch-cut, rope-pulled steel structure; added 1926.850(b). Survey and competent supervision map to 1926.850(a) (source cites WAC 296-155-775).",
+      "reuse-unverified (blocking until resolved): attribution.license is 'reuse-unverified' with reuse_verification 'required'. Public-domain status of this state FACE publication is not confirmed, scripts/lib/talkRow.js does not read license or reuse_verification (isApproved checks only audit.status and attribution is copied verbatim) and docs/content-attribution.md has no policy for this license, so approving would seed it automatically to a paid product. Owner must confirm reuse terms with the originating agency and document the policy; then set status to approved. Content accuracy itself was verified against the raw source."
+    ]
+  }
+}

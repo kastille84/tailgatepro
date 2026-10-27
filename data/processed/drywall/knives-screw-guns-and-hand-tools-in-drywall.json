@@ -1,0 +1,56 @@
+{
+  "id": "knives-screw-guns-and-hand-tools-in-drywall",
+  "title": "Knives, Screw Guns and Hand Tools in Drywall",
+  "primary_trade": "Drywall",
+  "trade_tags": [
+    "Drywall",
+    "Carpentry",
+    "Painting & Coatings"
+  ],
+  "osha_standards": [
+    "29 CFR 1926.300",
+    "29 CFR 1926.301",
+    "29 CFR 1926.95"
+  ],
+  "estimated_minutes": 5,
+  "summary": "Utility knives, rasps, screw guns and sanders are in every drywall hand all day. This talk covers OSHA's tool condition, switch and protective equipment rules.",
+  "talking_points": [
+    "All hand and power tools must be maintained in a safe condition, whether the employer or the employee furnished them (29 CFR 1926.300(a)).",
+    "Employers shall not issue or permit the use of unsafe hand tools (1926.301(a)). Treat a knife with a loose handle or damaged blade as an unsafe tool and take it out of use.",
+    "Wooden tool handles must be free of splinters or cracks and kept tight in the tool (1926.301(d)). Impact tools such as chisels and drift pins must be kept free of mushroomed heads (1926.301(c)).",
+    "Hand-held powered drills, fastener drivers, disc sanders and belt sanders must have a momentary contact on-off control. A lock-on is allowed only if you can turn it off with a single motion of the same finger or fingers that turn it on (1926.300(d)(2)).",
+    "When a power tool is designed to accommodate a guard, it must have the guard in place when in use (1926.300(b)(1)).",
+    "Employees using tools and exposed to falling, flying, abrasive or splashing objects, or harmful dusts, must be provided the PPE needed, such as eye protection and gloves where the hazard calls for them (1926.300(c)). PPE must be of safe design, fit the worker and be maintained (1926.95(a), (c)).",
+    "Good practice (not an OSHA requirement): cut away from your body and your helper, and keep your free hand out of the path of the blade. Retract or cover a knife blade when you are done with it."
+  ],
+  "site_hazards_to_check": [
+    "Dull, chipped or bent blades",
+    "Loose, cracked or taped handles",
+    "Missing guards on power tools",
+    "Cords and bits lying where people step",
+    "Helpers standing in the line of a cut",
+    "Dust and flying chips with no eye protection"
+  ],
+  "discussion_questions": [
+    "What do we do with a damaged knife or screw gun, and who replaces it?",
+    "Where do we leave knives and cutters when not in use?",
+    "What PPE is required for sanding and cutting on this job?"
+  ],
+  "attribution": {
+    "source": "TailgatePro",
+    "publisher": "TailgatePro",
+    "copyright": "Original TailgatePro content, written from 29 CFR 1926.300 (General requirements for tools), 1926.301 (Hand tools) and 1926.95 (PPE criteria). Regulation and agency text is U.S. Government work in the public domain; the wording here is TailgatePro's own.",
+    "license": "original-work",
+    "source_url": "https://www.ecfr.gov/current/title-29/section-1926.300",
+    "source_ref": "ECFR-DW-05",
+    "notice": "Written from 29 CFR 1926.300 (General requirements for tools), 1926.301 (Hand tools) and 1926.95 (PPE criteria). General guidance only; follow your company safety program and site-specific requirements. Not an endorsement by OSHA."
+  },
+  "audit": {
+    "status": "approved",
+    "audited_at": "2026-10-27T18:25:58.049Z",
+    "osha_accuracy_verified": true,
+    "flags": [
+      "eCFR (title 29, current as of 2026-10-01) 1926.300(a), (b)(1), (c), (d)(2) (momentary contact on-off; lock-on only if turn-off by single motion of same finger(s); fastener drivers, drills, disc and belt sanders listed), 1926.301(a),(c),(d), 1926.95(a),(c) verified verbatim. Fixed: knife-handling bullet had no regulatory source and read like a rule; now labeled \"Good practice (not an OSHA requirement)\". 1926.301(a) application to knives reworded as an interpretation, not a quotation."
+    ]
+  }
+}

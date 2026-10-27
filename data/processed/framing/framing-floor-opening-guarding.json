@@ -1,0 +1,58 @@
+{
+  "id": "framing-floor-opening-guarding",
+  "title": "Guard Floor Openings and Stairwells During Framing",
+  "primary_trade": "Framing",
+  "trade_tags": [
+    "Framing",
+    "Carpentry",
+    "General Construction"
+  ],
+  "osha_standards": [
+    "29 CFR 1926.501(b)(4)",
+    "29 CFR 1926.502(b)",
+    "29 CFR 1926.20(b)",
+    "29 CFR 1926.501(b)(1)",
+    "29 CFR 1926.501(b)(14)"
+  ],
+  "estimated_minutes": 5,
+  "summary": "A carpenter died after backing into an unguarded 6-foot stairwell opening and falling 19 feet to the basement. Guard every floor opening, check the work area each day, and know your emergency plan.",
+  "talking_points": [
+    "A carpenter was cutting plywood on a second floor and handing it up to the roof. A sheet snagged in the trusses. While he pulled and repositioned it, he backed into an open stairwell and fell 19 feet. No steps or railings were in the opening.",
+    "Guard floor openings with railings. A standard railing has a top rail about 42 inches above the floor, a midrail halfway between, and a toeboard to keep tools and debris from falling in.",
+    "Open-sided floors and wall openings need the same kind of guarding.",
+    "Walk the work area with the crew each morning. Look for floor openings, loose debris, electrical hazards, and weather, then correct or avoid them. Do this again when work changes.",
+    "Watch your footing when you handle large sheets. Do not step backward without looking.",
+    "Have an emergency plan so help comes fast. In this case the owner drove about a mile to find a phone.",
+    "Employers should learn and follow OSHA standards, and they should have a safety program with fall hazard training."
+  ],
+  "site_hazards_to_check": [
+    "Unguarded stairwell openings and floor holes",
+    "Open-sided floors and wall openings",
+    "Work areas in a hallway or near openings where people back up while handling material",
+    "Large sheets that can snag on trusses and pull a worker off balance",
+    "No working phone or emergency plan at a rural site"
+  ],
+  "discussion_questions": [
+    "Which floor and stairwell openings are on this site, and how is each guarded?",
+    "What will you do if a sheet snags and you have to pull it free?",
+    "If someone is hurt here, who calls 911 and how do they give our location?"
+  ],
+  "attribution": {
+    "source": "New Jersey FACE Program",
+    "publisher": "New Jersey FACE Program, New Jersey Department of Health",
+    "copyright": "State FACE program publication distributed through CDC Stacks (NIOSH-funded). Public-domain status not confirmed; credit the originating agency.",
+    "license": "reuse-unverified",
+    "source_url": "https://stacks.cdc.gov/view/cdc/170121/cdc_170121_DS1.pdf",
+    "reuse_verification": "required",
+    "notice": "Worker-facing talk adapted from NJ FACE Report 91NJ018 (Carpenter Dies After Falling 19 Feet Through a Floor Opening). Reuse terms have not been verified with the originating agency; confirm before relying on this content commercially. Based on preliminary investigation data. Not an endorsement by New Jersey FACE Program or NIOSH."
+  },
+  "audit": {
+    "status": "needs_revision",
+    "audited_at": "2026-10-27T17:55:50Z",
+    "osha_accuracy_verified": true,
+    "flags": [
+      "Added 1926.501(b)(1) and (b)(14) for the open-sided floor and wall-opening point. 42-inch top rail, midrail, toeboard match source and 1926.502(b).",
+      "reuse-unverified (blocking until resolved): attribution.license is 'reuse-unverified' with reuse_verification 'required'. Public-domain status of this state FACE publication is not confirmed, scripts/lib/talkRow.js does not read license or reuse_verification (isApproved checks only audit.status and attribution is copied verbatim) and docs/content-attribution.md has no policy for this license, so approving would seed it automatically to a paid product. Owner must confirm reuse terms with the originating agency and document the policy; then set status to approved. Content accuracy itself was verified against the raw source."
+    ]
+  }
+}

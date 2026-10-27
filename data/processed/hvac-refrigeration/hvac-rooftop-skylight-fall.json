@@ -1,0 +1,57 @@
+{
+  "id": "hvac-rooftop-skylight-fall",
+  "title": "Rooftop HVAC Service: Guard the Skylights",
+  "primary_trade": "HVAC & Refrigeration",
+  "trade_tags": [
+    "HVAC & Refrigeration",
+    "Roofing",
+    "General Construction"
+  ],
+  "osha_standards": [
+    "29 CFR 1926.501(b)(4)",
+    "29 CFR 1926.502(i)",
+    "29 CFR 1926.503(a)"
+  ],
+  "estimated_minutes": 5,
+  "summary": "An HVAC technician working on rooftop units tripped on the lip of an unguarded skylight and fell about 26 feet to a concrete floor. No fall protection was in use. Find and guard skylights before any rooftop work starts.",
+  "talking_points": [
+    "In this incident, three workers had been changing belts on rooftop units for about four hours. The roof was flat and the skylights were unguarded. The technician turned to talk to a coworker, tripped on a skylight lip, and fell through.",
+    "Skylights usually cannot hold a person's weight. Treat every skylight as a hole.",
+    "Before work starts, assess the roof for fall hazards. Do this for maintenance work, not only for new construction.",
+    "Protect skylights with a guardrail system, a cover or screen, or a personal fall arrest system (body harness, lanyard, connectors, and anchor points).",
+    "Covers must be strong enough for the weight placed on them, secured against moving, and marked HOLE or COVER.",
+    "Stay aware of where skylights are when you walk, turn, or talk. Do not walk backward or look away while moving.",
+    "Wear fall protection when skylights are not guarded. PPE should be used after other reasonable ways to reduce the hazard have been tried.",
+    "Building owners, designers, and contractors should consider guarding skylights with screens or guardrails for workers who must work on the roof."
+  ],
+  "site_hazards_to_check": [
+    "Unguarded skylights or skylights with low curbs that you can trip on",
+    "Skylights, hatches, and roof openings along the path to the rooftop units",
+    "No guardrails, screens, or covers on skylights",
+    "No anchor points or harnesses for the crew",
+    "Workers walking and talking, carrying parts, or turning near skylights"
+  ],
+  "discussion_questions": [
+    "Where are all the skylights and roof openings on this roof, and how are they guarded?",
+    "What fall protection will each of us use on this roof?",
+    "What could distract you while you move around the roof, and how do we manage that?"
+  ],
+  "attribution": {
+    "source": "Washington State FACE Program",
+    "publisher": "Washington State FACE Program, Dept. of Labor & Industries (SHARP)",
+    "copyright": "State FACE program publication distributed through CDC Stacks (NIOSH-funded). Public-domain status not confirmed; credit the originating agency.",
+    "license": "reuse-unverified",
+    "source_url": "https://stacks.cdc.gov/view/cdc/211417/cdc_211417_DS1.pdf",
+    "reuse_verification": "required",
+    "notice": "Worker-facing talk adapted from WA FACE Fatality Narrative 12WA02101 (HVAC Technician Falls Through Skylight). Reuse terms have not been verified with the originating agency; confirm before relying on this content commercially. Based on preliminary investigation data. Not an endorsement by Washington State FACE Program or NIOSH."
+  },
+  "audit": {
+    "status": "needs_revision",
+    "audited_at": "2026-10-27T17:55:50Z",
+    "osha_accuracy_verified": true,
+    "flags": [
+      "Verified 1926.501(b)(4), 1926.502(i), 1926.503(a).",
+      "reuse-unverified (blocking until resolved): attribution.license is 'reuse-unverified' with reuse_verification 'required'. Public-domain status of this state FACE publication is not confirmed, scripts/lib/talkRow.js does not read license or reuse_verification (isApproved checks only audit.status and attribution is copied verbatim) and docs/content-attribution.md has no policy for this license, so approving would seed it automatically to a paid product. Owner must confirm reuse terms with the originating agency and document the policy; then set status to approved. Content accuracy itself was verified against the raw source."
+    ]
+  }
+}

@@ -1,0 +1,57 @@
+{
+  "id": "flooring-chemicals-labels-sds-and-protective-equipment",
+  "title": "Flooring Chemicals: Labels, SDS and Protective Equipment",
+  "primary_trade": "Flooring",
+  "trade_tags": [
+    "Flooring",
+    "Painting & Coatings"
+  ],
+  "osha_standards": [
+    "29 CFR 1926.59",
+    "29 CFR 1910.1200",
+    "29 CFR 1926.95",
+    "29 CFR 1926.103"
+  ],
+  "estimated_minutes": 5,
+  "summary": "Adhesives, primers, sealers and cleaners carry their own hazards. This talk covers OSHA's rules on labels, safety data sheets, training and protective equipment for flooring chemicals.",
+  "talking_points": [
+    "The construction hazard communication requirements are identical to those in 29 CFR 1910.1200 (29 CFR 1926.59).",
+    "Employers must provide effective information and training on hazardous chemicals in the work area at initial assignment and whenever a new chemical hazard is introduced. Chemical-specific information must always be available through labels and safety data sheets (1910.1200(h)(1)).",
+    "Employees must be informed of operations in their area where hazardous chemicals are present and where the written hazard communication program, chemical list and safety data sheets are located (1910.1200(h)(2)).",
+    "Training must cover how to detect the presence or release of a chemical, its physical and health hazards, and the measures to protect yourself, such as work practices and protective equipment (1910.1200(h)(3)).",
+    "Do not remove or deface existing labels on incoming containers unless the container is immediately re-marked (1910.1200(f)(9)). Workplace labels or other forms of warning must be legible, in English, and prominently displayed on the container or readily available in the work area throughout each shift (1910.1200(f)(10)).",
+    "Portable containers that you fill from a labeled container are exempt from labeling only when they are for your immediate use as the person who transferred the chemical (1910.1200(f)(8)). Otherwise label them.",
+    "Protective equipment must be provided, used and maintained where chemical hazards or mechanical irritants could cause injury through absorption, inhalation or contact. It must be of safe design and fit each employee, and the employer pays for it, with limited exceptions (1926.95(a), (c), (d)).",
+    "Respirators on construction sites are governed by the same rules as 29 CFR 1910.134 (1926.103). Do not use one without training and fit testing."
+  ],
+  "site_hazards_to_check": [
+    "Unlabeled containers or decanted cans",
+    "No SDS in the work area",
+    "Skin contact with adhesive or solvent",
+    "Strong fumes in closed rooms",
+    "Wrong glove type for the chemical",
+    "Respirator not fit tested"
+  ],
+  "discussion_questions": [
+    "Where is the SDS binder for today's products?",
+    "What does the label say about skin, eye and breathing protection?",
+    "What is our plan if someone gets product in their eyes?"
+  ],
+  "attribution": {
+    "source": "TailgatePro",
+    "publisher": "TailgatePro",
+    "copyright": "Original TailgatePro content, written from 29 CFR 1926.59 (Hazard communication), 1910.1200(f) and (h), 1926.95 (PPE criteria) and 1926.103 (Respiratory protection). Regulation and agency text is U.S. Government work in the public domain; the wording here is TailgatePro's own.",
+    "license": "original-work",
+    "source_url": "https://www.ecfr.gov/current/title-29/section-1926.59",
+    "source_ref": "ECFR-FL-02",
+    "notice": "Written from 29 CFR 1926.59 (Hazard communication), 1910.1200(f) and (h), 1926.95 (PPE criteria) and 1926.103 (Respiratory protection). General guidance only; follow your company safety program and site-specific requirements. Not an endorsement by OSHA."
+  },
+  "audit": {
+    "status": "approved",
+    "audited_at": "2026-10-27T18:25:58.054Z",
+    "osha_accuracy_verified": true,
+    "flags": [
+      "eCFR (title 29, current as of 2026-10-01) and 29 CFR 1910.1200: (f)(8) portable-container exemption (immediate use of the employee who transfers), (f)(9) and (f)(10) label paragraphs, (h)(1), (h)(2), (h)(3) verified; 1926.59 and 1926.103 notes verified; 1926.95(a),(c),(d) verified. Fixed: (f)(10) paraphrase dropped the \"or readily available in the work area\" alternative."
+    ]
+  }
+}

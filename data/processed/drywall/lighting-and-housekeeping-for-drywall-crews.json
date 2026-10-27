@@ -1,0 +1,57 @@
+{
+  "id": "lighting-and-housekeeping-for-drywall-crews",
+  "title": "Lighting and Housekeeping for Drywall Crews",
+  "primary_trade": "Drywall",
+  "trade_tags": [
+    "Drywall",
+    "Painting & Coatings",
+    "General Construction"
+  ],
+  "osha_standards": [
+    "29 CFR 1926.56",
+    "29 CFR 1926.25",
+    "29 CFR 1926.1153",
+    "29 CFR 1926.1053"
+  ],
+  "estimated_minutes": 5,
+  "summary": "Board scraps, buckets and cords pile up quickly in finished spaces, and drywall rooms are often dim. This talk covers OSHA's lighting and housekeeping rules.",
+  "talking_points": [
+    "Construction areas, ramps, corridors and storage areas must be lighted to at least the minimum levels in Table D-3 while any work is in progress (29 CFR 1926.56(a)).",
+    "Table D-3 lists 5 foot-candles for general construction area lighting and for indoor corridors, hallways and exitways, 10 for general construction plant and shops (such as active storerooms and indoor workrooms), and 30 for first aid stations and offices (1926.56(a)).",
+    "Form and scrap lumber with protruding nails, and all other debris, must be kept cleared from work areas, passageways and stairs in and around buildings (1926.25(a)). Cut-off pieces of board count.",
+    "Combustible scrap and debris must be removed at regular intervals, and safe means must be provided to facilitate removal (1926.25(b)). Plan a drop point or chute for waste.",
+    "Provide containers for waste, trash, oily and used rags and other refuse. Containers for oily, flammable or hazardous waste, such as harmful dusts, must have covers, and waste must be disposed of at frequent and regular intervals (1926.25(c)).",
+    "Where silica exposure could result, do not dry sweep or dry brush, and do not use compressed air to clean surfaces, unless the standard's exceptions apply (1926.1153(f)(1)-(2)). Check the SDS and use wet sweeping or a HEPA vacuum where dust is hazardous.",
+    "The area around the top and bottom of ladders must be kept clear (1926.1053(b)(9)). Good practice: also keep stair landings and exit routes clear of buckets and boards."
+  ],
+  "site_hazards_to_check": [
+    "Cut-off board pieces and trim in walkways",
+    "Dim corridors and stairs",
+    "Open buckets and mud pans left on the floor",
+    "Full or uncovered waste containers",
+    "Dust piled on surfaces and floors",
+    "Cords across the walking path"
+  ],
+  "discussion_questions": [
+    "Where do we put waste and cut-off pieces so they are not in the walkway?",
+    "Who checks that the area is lit before the crew starts?",
+    "When we clean up dust, what method do we use?"
+  ],
+  "attribution": {
+    "source": "TailgatePro",
+    "publisher": "TailgatePro",
+    "copyright": "Original TailgatePro content, written from 29 CFR 1926.56 (Illumination), 1926.25 (Housekeeping) and 1926.1153(f) (silica housekeeping). Regulation and agency text is U.S. Government work in the public domain; the wording here is TailgatePro's own.",
+    "license": "original-work",
+    "source_url": "https://www.ecfr.gov/current/title-29/section-1926.56",
+    "source_ref": "ECFR-DW-06",
+    "notice": "Written from 29 CFR 1926.56 (Illumination), 1926.25 (Housekeeping) and 1926.1153(f) (silica housekeeping). General guidance only; follow your company safety program and site-specific requirements. Not an endorsement by OSHA."
+  },
+  "audit": {
+    "status": "approved",
+    "audited_at": "2026-10-27T18:25:58.049Z",
+    "osha_accuracy_verified": true,
+    "flags": [
+      "eCFR (title 29, current as of 2026-10-01) 1926.56(a) and Table D-3 (5 fc general construction and indoor corridors/hallways/exitways; 10 fc general construction plant and shops incl. active storerooms and indoor workrooms; 30 fc first aid/offices) verified. 1926.25(a)-(c) verified verbatim. 1926.1153(f)(1)-(2) verified. Fixed: last bullet attributed stair-landing/escape requirements to 1926.1053(b)(9), which only covers the area at the top and bottom of ladders; extra advice now labeled \"Good practice\"."
+    ]
+  }
+}

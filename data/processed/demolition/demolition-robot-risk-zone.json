@@ -1,0 +1,56 @@
+{
+  "id": "demolition-robot-risk-zone",
+  "title": "Demolition Robots: Stay Out of the Risk Zone",
+  "primary_trade": "Demolition",
+  "trade_tags": [
+    "Demolition",
+    "Heavy Equipment",
+    "General Construction"
+  ],
+  "osha_standards": [
+    "29 CFR 1926.20(b)",
+    "29 CFR 1926.21(b)(2)",
+    "29 CFR 1926.850"
+  ],
+  "estimated_minutes": 5,
+  "summary": "Two workers were severely injured by remote-controlled demolition robots, one crushed against a wall and one with a foot crushed under an outrigger. Learn the machine's risk zone, stay outside it, and stop the machine before you step in.",
+  "talking_points": [
+    "In one case, an operator bumped the remote control against the machine while moving a power cable. The machine was not in emergency stop, so it moved and pinned him against a wall. He was working alone, though he usually had a partner.",
+    "In the other case, an operator stood in a tight spot between the machine and an excavation wall. When he pressed hard with the breaker, the front outrigger lifted, the machine shifted, and the outrigger came down on his foot.",
+    "Do a job hazard analysis with the operators for each new job. Include crush points such as outriggers, not only the swing radius of the arm.",
+    "Use the manufacturer's safety instructions to set the risk zone for the machine, the attachment, and the task. Redefine it as the work changes.",
+    "Stay outside the risk zone while the machine runs. Do not enter until the machine is in emergency stop or de-energized.",
+    "Operators need real training, more than a hands-on demonstration and a quick read of the manual. Read and follow the manufacturer's safety instructions.",
+    "Consider a spotter, and consider a proximity warning system such as one based on RFID, to keep a safe distance between worker and machine."
+  ],
+  "site_hazards_to_check": [
+    "Tight spots where the operator has no room to stand outside the machine's reach",
+    "Outriggers, arms, and attachments near walls or excavation sides",
+    "Power cables that must be moved while the machine is energized",
+    "Operators working alone",
+    "Operators with little time on this machine model"
+  ],
+  "discussion_questions": [
+    "What is the risk zone for this machine and this attachment today?",
+    "Where is the emergency stop, and when must we use it?",
+    "Who is the spotter, and where do they stand?"
+  ],
+  "attribution": {
+    "source": "Washington State FACE Program",
+    "publisher": "Washington State FACE Program, Dept. of Labor & Industries (SHARP)",
+    "copyright": "State FACE program publication distributed through CDC Stacks (NIOSH-funded). Public-domain status not confirmed; credit the originating agency.",
+    "license": "reuse-unverified",
+    "source_url": "https://lni.wa.gov/safety-health/safety-research/files/2019/DemolitionRobotAlert.pdf",
+    "reuse_verification": "required",
+    "notice": "Worker-facing talk adapted from WA FACE Construction Hazard Alert 47-26-2019 (Workers Severely Injured Using Demolition Robots). Reuse terms have not been verified with the originating agency; confirm before relying on this content commercially. Based on preliminary investigation data. Not an endorsement by Washington State FACE Program or NIOSH."
+  },
+  "audit": {
+    "status": "needs_revision",
+    "audited_at": "2026-10-27T17:55:50Z",
+    "osha_accuracy_verified": true,
+    "flags": [
+      "Verified emergency stop, 5 days on machine, hands-on-demo training, RFID proximity warning against WA L&I Hazard Alert. 1926.20(b), 1926.21(b)(2), 1926.850 are generic but applicable.",
+      "reuse-unverified (blocking until resolved): attribution.license is 'reuse-unverified' with reuse_verification 'required'. Public-domain status of this state FACE publication is not confirmed, scripts/lib/talkRow.js does not read license or reuse_verification (isApproved checks only audit.status and attribution is copied verbatim) and docs/content-attribution.md has no policy for this license, so approving would seed it automatically to a paid product. Owner must confirm reuse terms with the originating agency and document the policy; then set status to approved. Content accuracy itself was verified against the raw source."
+    ]
+  }
+}

@@ -1,0 +1,55 @@
+{
+  "id": "flooring-adhesives-and-flammable-liquids",
+  "title": "Flooring Adhesives and Flammable Liquids",
+  "primary_trade": "Flooring",
+  "trade_tags": [
+    "Flooring",
+    "Painting & Coatings"
+  ],
+  "osha_standards": [
+    "29 CFR 1926.152",
+    "29 CFR 1926.151"
+  ],
+  "estimated_minutes": 5,
+  "summary": "Many flooring adhesives, primers and cleaning solvents are flammable liquids. This talk covers OSHA's rules for containers, storage and keeping ignition sources away.",
+  "talking_points": [
+    "Only approved containers and portable tanks may be used for storing and handling flammable liquids. Approved safety cans or DOT-approved containers are required for quantities of 5 gallons or less (with an exception for highly viscid materials), and original containers may be used for one gallon or less (29 CFR 1926.152(a)(1)).",
+    "Flammable liquids must not be stored in exits, stairways or places normally used for safe passage (1926.152(a)(2)).",
+    "No more than 25 gallons of flammable liquids may be stored in a room outside of an approved storage cabinet (1926.152(b)(1)).",
+    "Keep Category 1, 2 and 3 flammable liquids in closed containers when not actually in use (1926.152(f)(1)).",
+    "Dispose of leaks and spills promptly and safely (1926.152(f)(2)).",
+    "Category 1, 2 or 3 flammable liquids may be used only where there are no open flames or other ignition sources within 50 feet of the operation, unless conditions warrant more clearance (1926.152(f)(3)).",
+    "Smoking must be prohibited near operations that create a fire hazard, and the area must be posted \"No Smoking or Open Flame\" (1926.151(a)(3)).",
+    "Check the label and the safety data sheet to find out whether the product is flammable and what category it falls in."
+  ],
+  "site_hazards_to_check": [
+    "Open adhesive pails or solvent cans",
+    "Pilot lights, heaters or sparks within 50 feet of the work",
+    "Spills on the subfloor or rags soaked with solvent",
+    "Flammables stored in stairways or exits",
+    "More than 25 gallons stored outside a cabinet",
+    "Smoking near the work area"
+  ],
+  "discussion_questions": [
+    "Where do we store adhesives and solvents on this job?",
+    "What ignition sources are within 50 feet of where we will work?",
+    "Who has read the SDS for the product we use today?"
+  ],
+  "attribution": {
+    "source": "TailgatePro",
+    "publisher": "TailgatePro",
+    "copyright": "Original TailgatePro content, written from 29 CFR 1926.152 (Flammable liquids) and 1926.151(a) (Ignition hazards). Regulation and agency text is U.S. Government work in the public domain; the wording here is TailgatePro's own.",
+    "license": "original-work",
+    "source_url": "https://www.ecfr.gov/current/title-29/section-1926.152",
+    "source_ref": "ECFR-FL-01",
+    "notice": "Written from 29 CFR 1926.152 (Flammable liquids) and 1926.151(a) (Ignition hazards). General guidance only; follow your company safety program and site-specific requirements. Not an endorsement by OSHA."
+  },
+  "audit": {
+    "status": "approved",
+    "audited_at": "2026-10-27T18:25:58.054Z",
+    "osha_accuracy_verified": true,
+    "flags": [
+      "eCFR (title 29, current as of 2026-10-01) 1926.152(a)(1)-(2), (b)(1) (25 gal), (f)(1)-(3) (50 ft, closed containers, spills), 1926.151(a)(3) (No Smoking or Open Flame) verified verbatim. No changes required."
+    ]
+  }
+}

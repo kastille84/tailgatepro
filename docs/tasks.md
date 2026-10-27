@@ -337,6 +337,19 @@ tsx` now tracks `editingTalk` alongside `isFormOpen`
       flow, confirming the lock notice is visible in both create and edit
       mode
 
+### 2z — Thin-trade library expansion (Oct 2026) · status: 9 approved, 11 FACE talks held for reuse rights
+
+- [x] Collect + structure + audit 20 new talks (masonry, concrete-formwork, hvac, demolition,
+      framing, painting, driving); `index-by-trade.json` total 134 → 154.
+- [ ] Seed the 9 approved talks (`npm run seed:talks`).
+- [ ] Confirm reuse terms for the 11 state FACE talks (`license: reuse-unverified`), add a
+      policy line to `docs/content-attribution.md`, then flip to approved. Consider making
+      `talkRow.js` refuse `reuse_verification: "required"`.
+- [ ] Drywall, steel-erection, flooring still have 0 new talks (osha.gov / cdc.gov/niosh
+      returned 403 to the collectors) — needs manually saved sources.
+- [ ] Review the 1926.601 scope flag on the three driving talks (road work zones open to
+      traffic fall under 1926.200(g) / MUTCD).
+
 ## Phase 3 — Offline foundation · epic, design spike first
 
 - [x] Design doc: IndexedDB schema + sync state machine (reviewed) — `docs/offline-sync-design.md`

@@ -1,0 +1,56 @@
+{
+  "id": "before-the-first-piece-is-set-approvals-layout-and-plan",
+  "title": "Before the First Piece Is Set: Approvals, Layout and Plan",
+  "primary_trade": "Steel Erection",
+  "trade_tags": [
+    "Steel Erection",
+    "Concrete & Formwork"
+  ],
+  "osha_standards": [
+    "29 CFR 1926.752",
+    "29 CFR 1926.755",
+    "29 CFR 1926.753"
+  ],
+  "estimated_minutes": 5,
+  "summary": "Steel goes up safely only if the foundation, site and plan are ready. This talk covers what must be in place and in writing before erection starts.",
+  "talking_points": [
+    "The controlling contractor must give the steel erector written notice that footing, pier and wall concrete (and masonry mortar) has reached 75 percent of the intended minimum compressive design strength, or enough strength to carry erection loads, based on an appropriate ASTM test of field-cured samples (29 CFR 1926.752(a)(1)).",
+    "A steel erector must not erect steel until it receives that written notification (1926.752(b)).",
+    "The controlling contractor must provide adequate access roads for delivery and movement of cranes, trucks and material, and means of pedestrian and vehicle control, plus a firm, properly graded, drained area close to the work with space for materials and equipment (1926.752(c)).",
+    "All hoisting operations must be pre-planned so that no one works under a load except as the rules allow (1926.752(d), 1926.753(d)).",
+    "Where an employer elects, due to site-specific conditions, to use the alternate means and methods allowed in 1926.753(c)(5), 1926.757(a)(4) or 1926.757(e)(4), a site-specific erection plan must be developed by a qualified person and be available at the work site (1926.752(e)).",
+    "All columns must be anchored by at least four anchor rods, and each column must be evaluated by a competent person to see whether guying or bracing is needed (1926.755(a)(1), (a)(4)).",
+    "Columns must be set on level finished floors, pre-grouted leveling plates, leveling nuts or shim packs adequate to transfer construction loads (1926.755(a)(3)).",
+    "Anchor rods cannot be repaired, replaced or field-modified without the approval of the structural engineer of record, and the controlling contractor must notify the erector in writing of any such change before the column is erected (1926.755(b), 1926.752(a)(2))."
+  ],
+  "site_hazards_to_check": [
+    "No written concrete strength notification",
+    "Soft, wet or poorly graded laydown area",
+    "Crane access blocked or unplanned",
+    "Anchor rods bent, repaired or modified without approval",
+    "Column bases shimmed with inadequate material",
+    "Plan not on site"
+  ],
+  "discussion_questions": [
+    "Do we have the written concrete strength notice in hand?",
+    "Where is the site-specific erection plan, if we need one?",
+    "Who evaluates columns for guying or bracing?"
+  ],
+  "attribution": {
+    "source": "TailgatePro",
+    "publisher": "TailgatePro",
+    "copyright": "Original TailgatePro content, written from 29 CFR 1926.752 (Site layout, site-specific erection plan and construction sequence) and 1926.755 (Column anchorage). Regulation and agency text is U.S. Government work in the public domain; the wording here is TailgatePro's own.",
+    "license": "original-work",
+    "source_url": "https://www.ecfr.gov/current/title-29/section-1926.752",
+    "source_ref": "ECFR-SE-03",
+    "notice": "Written from 29 CFR 1926.752 (Site layout, site-specific erection plan and construction sequence) and 1926.755 (Column anchorage). General guidance only; follow your company safety program and site-specific requirements. Not an endorsement by OSHA."
+  },
+  "audit": {
+    "status": "approved",
+    "audited_at": "2026-10-27T18:25:58.050Z",
+    "osha_accuracy_verified": true,
+    "flags": [
+      "eCFR (title 29, current as of 2026-10-01) 1926.752(a)(1)-(2), (b), (c)(1)-(2), (d), (e); 1926.755(a)(1),(a)(3),(a)(4),(b)(1)-(2); 1926.753(d) verified verbatim (75 percent / ASTM field-cured samples, four anchor rods, competent-person guying evaluation, structural engineer of record approval, written notice to erector). Fixed: site-specific erection plan bullet was broader than 1926.752(e), which applies when electing the alternates in 753(c)(5), 757(a)(4), 757(e)(4). Added 1926.753 to osha_standards."
+    ]
+  }
+}
