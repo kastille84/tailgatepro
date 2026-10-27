@@ -1,0 +1,60 @@
+{
+  "id": "dump-truck-safety-construction",
+  "title": "Dump Truck Safety: Backing, Tip-Overs, Power Lines, and Falls",
+  "primary_trade": "Driving & Transportation",
+  "trade_tags": [
+    "Driving & Transportation",
+    "Heavy Equipment",
+    "Excavation"
+  ],
+  "osha_standards": [
+    "29 CFR 1926.600(a)(3)(i)",
+    "29 CFR 1926.601(b)(10)",
+    "29 CFR 1926.601(b)(4)",
+    "29 CFR 1926.602(a)(9)"
+  ],
+  "estimated_minutes": 5,
+  "summary": "Dump trucks killed 809 construction and extraction workers from 2011 to 2020. Drivers and ground workers face struck-by, tip-over, crushing, electrical, and fall hazards. Know your part in preventing each one.",
+  "talking_points": [
+    "Stay out of blind spots. The most dangerous places are directly behind, near the front bumper, and on the passenger side. If a driver is in the cab, confirm they know before you cross their path, even when the truck is stopped.",
+    "Use a trained, dedicated spotter when backing. Agree on signals and confirm before the truck moves. Keep a direct line of sight and stand where a moving truck will not hit the spotter.",
+    "Stay out of worker-free zones marked with cones, warning lines, and barricades. Stay on marked walking routes in busy areas.",
+    "Prevent tip-overs. Do not dump on soft, unstable, or sloped ground. Load evenly, keep the load within the rated limit, and avoid driving with the bed raised unless needed. Watch for high winds and check tire pressure.",
+    "Always wear your seat belt.",
+    "Before dumping, make sure the tailgate is unlocked. Do not dump when parked side by side with another vehicle.",
+    "If you work under a raised bed, use a safety support or brace that is positive, permanently attached, and lockable. Use lockout/tagout during maintenance.",
+    "Dump far from power lines. If the truck touches a line, stay in the cab and call 911. If the truck is on fire, jump clear without touching the truck and the ground at the same time. Do not approach a truck that has touched a line.",
+    "Face the ladder and use three points of contact when climbing on or off. Check steps and handholds for mud and other slippery conditions.",
+    "Keep work areas clear of scrap and debris, and have enough lighting at night.",
+    "Follow your site's rules for mobile phone use while working around or driving the truck."
+  ],
+  "site_hazards_to_check": [
+    "No spotter or physical barriers where ground workers are near trucks",
+    "Soft, uneven, sloped, or rutted dumping areas",
+    "Overhead power lines near dumping or travel routes",
+    "Raised dump bed without a brace during maintenance",
+    "Mud, ice, or debris on steps, ladders, and handholds",
+    "Poor lighting or visibility"
+  ],
+  "discussion_questions": [
+    "Where are the blind spots on the trucks we are using today?",
+    "Where will trucks dump, and is the ground stable and clear of power lines?",
+    "What do you do if a truck touches a power line?"
+  ],
+  "attribution": {
+    "source": "NIOSH",
+    "publisher": "National Institute for Occupational Safety and Health (NIOSH)",
+    "copyright": "U.S. Government work — public domain.",
+    "license": "public-domain",
+    "source_url": "https://www.cdc.gov/niosh/docs/2023-137/pdfs/2023-137.pdf",
+    "notice": "Adapted from the NIOSH publication Preventing Dump Truck-related Injuries and Deaths During Construction: Guidance for Employers (NIOSH 2023-137). Reproduced with attribution for jobsite safety training; not an endorsement by NIOSH."
+  },
+  "audit": {
+    "status": "approved",
+    "audited_at": "2026-10-27T17:55:50Z",
+    "osha_accuracy_verified": true,
+    "flags": [
+      "Verified 809 deaths 2011-2020, blind spots, tailgate, side-by-side dumping, 911/jump guidance against NIOSH 2023-137. 1926.601(b)(10) dump-body support and 1926.600(a)(3)(i) (dump bodies lowered or blocked) confirmed on eCFR. Scope note: 1926.601 covers off-highway jobsites. Public-domain NIOSH source."
+    ]
+  }
+}

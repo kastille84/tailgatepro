@@ -1,0 +1,55 @@
+{
+  "id": "removing-old-resilient-flooring-asbestos-presumption",
+  "title": "Removing Old Resilient Flooring: Asbestos Presumption",
+  "primary_trade": "Flooring",
+  "trade_tags": [
+    "Flooring",
+    "General Construction",
+    "Demolition"
+  ],
+  "osha_standards": [
+    "29 CFR 1926.1101"
+  ],
+  "estimated_minutes": 5,
+  "summary": "Old vinyl and asphalt flooring, mastic and backing may contain asbestos. This talk covers the presumption rule and the work practices required to remove such flooring.",
+  "talking_points": [
+    "Asphalt and vinyl flooring material installed no later than 1980 must be considered asbestos-containing unless it is determined not to be asbestos-containing (29 CFR 1926.1101(k)(1)(i)).",
+    "Resilient flooring material, including associated mastic and backing, is assumed to be asbestos-containing unless an industrial hygienist determines it is asbestos-free using recognized analytical techniques (1926.1101(g)(8)(i)(I)).",
+    "For removal of such flooring: do not sand the flooring or its backing, and mechanical chipping is prohibited unless done in a negative pressure enclosure (1926.1101(g)(8)(i)(A), (F)).",
+    "Remove resilient sheeting by cutting with wetting of the snip point and wetting during delamination. Rip-up of sheet flooring is prohibited (1926.1101(g)(8)(i)(C)).",
+    "Do all scraping of residual adhesive and backing by wet methods, and never dry sweep. Clean floors with a HEPA vacuum with a disposable bag and a metal floor tool, no brush (1926.1101(g)(8)(i)(B), (D), (E)).",
+    "Remove tiles intact unless intact removal is not possible, and wetting may be omitted when tiles are heated and removed intact (1926.1101(g)(8)(i)(G)-(H)).",
+    "The permissible exposure limit is 0.1 fiber per cubic centimeter as an 8-hour time-weighted average (1926.1101(c)(1)), with an excursion limit of 1.0 fiber per cubic centimeter averaged over 30 minutes (1926.1101(c)(2)).",
+    "Employees must be trained in these work practices (1926.1101(g)(8)(i), (k)(9)), and Class II work must be supervised by a competent person (1926.1101(g)(7)(i)). Stop and ask before you disturb flooring in an older building."
+  ],
+  "site_hazards_to_check": [
+    "Pre-1981 vinyl or asphalt tile and sheet flooring",
+    "Black mastic or adhesive under old flooring",
+    "Dust from sanding, grinding or scraping",
+    "Dry sweeping of debris",
+    "No asbestos survey or test result on file",
+    "Other trades entering the work area"
+  ],
+  "discussion_questions": [
+    "Do we have a test result for the flooring and mastic in this building?",
+    "Who is our competent person for asbestos work?",
+    "What wet methods and HEPA equipment do we have on hand?"
+  ],
+  "attribution": {
+    "source": "TailgatePro",
+    "publisher": "TailgatePro",
+    "copyright": "Original TailgatePro content, written from 29 CFR 1926.1101 (Asbestos), including paragraphs (c), (g)(8)(i) and (k)(1). Regulation and agency text is U.S. Government work in the public domain; the wording here is TailgatePro's own.",
+    "license": "original-work",
+    "source_url": "https://www.ecfr.gov/current/title-29/section-1926.1101",
+    "source_ref": "ECFR-FL-03",
+    "notice": "Written from 29 CFR 1926.1101 (Asbestos), including paragraphs (c), (g)(8)(i) and (k)(1). General guidance only; follow your company safety program and site-specific requirements. Not an endorsement by OSHA."
+  },
+  "audit": {
+    "status": "approved",
+    "audited_at": "2026-10-27T18:25:58.055Z",
+    "osha_accuracy_verified": true,
+    "flags": [
+      "eCFR (title 29, current as of 2026-10-01) 1926.1101: (c)(1) 0.1 f/cc 8-hr TWA and (c)(2) 1.0 f/cc 30-min excursion (confirmed paragraph letters; previously cited only as (c)); (g)(8)(i)(A)-(I) lettering confirmed exactly (A sanding, B HEPA vac, C resilient sheeting, D wet scraping, E dry sweeping, F chipping/negative pressure, G intact tiles, H heated tiles, I industrial hygienist); (k)(1)(i) 1980 presumption; (k)(9) training; (g)(7)(i) competent person. Fixed: paragraph precision on (c) and (k)(1)(i); added competent-person supervision. Scope note: (g)(8)(i) is stated by the standard for buildings constructed no later than 1980 where absence of ACM is unverified; the talk presents it as the presumption rule."
+    ]
+  }
+}

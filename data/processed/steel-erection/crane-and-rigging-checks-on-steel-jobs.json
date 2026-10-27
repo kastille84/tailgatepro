@@ -1,0 +1,53 @@
+{
+  "id": "crane-and-rigging-checks-on-steel-jobs",
+  "title": "Crane and Rigging Checks on Steel Jobs",
+  "primary_trade": "Steel Erection",
+  "trade_tags": [
+    "Steel Erection",
+    "Heavy Equipment"
+  ],
+  "osha_standards": [
+    "29 CFR 1926.753"
+  ],
+  "estimated_minutes": 5,
+  "summary": "Cranes and rigging move every piece of steel. This talk covers the pre-shift inspection and rigging rules in Subpart R.",
+  "talking_points": [
+    "Cranes used in steel erection must be visually inspected before each shift by a competent person, including observation for deficiencies during operation (29 CFR 1926.753(c)(1)(i)). Subpart CC also applies to hoisting and rigging (1926.753(a)).",
+    "The inspection includes control mechanisms, wear and contamination, safety devices such as boom angle indicators, boom stops and anti-two block devices, pressurized lines, hooks and latches, wire rope reeving, the hydraulic fluid level, tires, level position, and ground conditions including settling around outriggers (1926.753(c)(1)(i)(A)-(L)).",
+    "If a deficiency is found, a competent person must decide right away whether it is a hazard. A hazardous deficiency means the crane comes out of service until corrected (1926.753(c)(1)(ii)-(iii)).",
+    "The operator is responsible for operations under direct control and has the authority to stop and refuse to handle loads until safety is assured (1926.753(c)(1)(iv)).",
+    "A qualified rigger must inspect the rigging before each shift (1926.753(c)(2)).",
+    "The headache ball, hook or load must not be used to carry people. A crane or derrick may hoist employees only on a personnel platform meeting the Subpart CC rules (1926.753(c)(3)-(4)).",
+    "Safety latches on hooks must not be deactivated or made inoperable, except where a qualified rigger has determined that placing purlins and single joists is safer that way, or where equivalent protection is in a site-specific erection plan (1926.753(c)(5))."
+  ],
+  "site_hazards_to_check": [
+    "Soft or sloping ground under outriggers",
+    "Damaged hooks, latches or wire rope",
+    "Safety devices bypassed or not working",
+    "Hydraulic leaks or low fluid",
+    "Rigging not inspected today",
+    "Anyone riding the load or hook"
+  ],
+  "discussion_questions": [
+    "Who is the competent person who inspects the crane each shift?",
+    "Who is our qualified rigger?",
+    "When can the operator stop the lift, and who backs that up?"
+  ],
+  "attribution": {
+    "source": "TailgatePro",
+    "publisher": "TailgatePro",
+    "copyright": "Original TailgatePro content, written from 29 CFR 1926.753 (Hoisting and rigging), paragraphs (a) to (c). Regulation and agency text is U.S. Government work in the public domain; the wording here is TailgatePro's own.",
+    "license": "original-work",
+    "source_url": "https://www.ecfr.gov/current/title-29/section-1926.753",
+    "source_ref": "ECFR-SE-04",
+    "notice": "Written from 29 CFR 1926.753 (Hoisting and rigging), paragraphs (a) to (c). General guidance only; follow your company safety program and site-specific requirements. Not an endorsement by OSHA."
+  },
+  "audit": {
+    "status": "approved",
+    "audited_at": "2026-10-27T18:25:58.052Z",
+    "osha_accuracy_verified": true,
+    "flags": [
+      "eCFR (title 29, current as of 2026-10-01) 1926.753(a), (c)(1)(i)(A)-(L), (c)(1)(ii)-(iv), (c)(2), (c)(3)-(5) verified verbatim. Talk correctly notes Subpart CC applies; note that 753(a) excepts 1926.1431(a). No changes required."
+    ]
+  }
+}

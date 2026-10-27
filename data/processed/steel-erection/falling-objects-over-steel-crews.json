@@ -1,0 +1,55 @@
+{
+  "id": "falling-objects-over-steel-crews",
+  "title": "Falling Objects Over Steel Crews",
+  "primary_trade": "Steel Erection",
+  "trade_tags": [
+    "Steel Erection",
+    "General Construction"
+  ],
+  "osha_standards": [
+    "29 CFR 1926.759",
+    "29 CFR 1926.754",
+    "29 CFR 1926.100"
+  ],
+  "estimated_minutes": 5,
+  "summary": "A dropped bolt or tool becomes a serious projectile from height. This talk covers the Subpart R and head protection rules that keep objects from falling on people below.",
+  "talking_points": [
+    "All materials, equipment and tools that are not in use while aloft must be secured against accidental displacement (29 CFR 1926.759(a)).",
+    "The controlling contractor must bar other construction processes below steel erection unless overhead protection is provided for the employees below (1926.759(b)).",
+    "Loose items such as dunnage and flashing on top of metal decking bundles must be secured to the bundles when hoisted. Bundle packaging and strapping must not be used for hoisting unless designed for it (1926.754(e)(1)(i)-(ii)).",
+    "Metal decking must be secured against displacement at the end of the shift or when conditions require it (1926.754(e)(1)(v)).",
+    "Wire mesh, exterior plywood or equivalent must be installed around columns where decking does not fit tightly. It must be strong enough to carry personnel and prevent objects from falling through (1926.754(e)(4)).",
+    "On multi-story structures, a fully planked or decked floor, or nets, must be maintained within two stories or 30 feet, whichever is less, directly under any erection work being performed (1926.754(b)(3)).",
+    "Employees in areas with a possible danger of head injury from falling or flying objects must be protected by protective helmets (1926.100(a))."
+  ],
+  "site_hazards_to_check": [
+    "Tools and bolts left loose on beams",
+    "Unsecured items on decking bundles",
+    "Decking gaps around columns",
+    "Other trades working below the steel",
+    "No overhead protection or exclusion zone",
+    "Missing or damaged hard hats"
+  ],
+  "discussion_questions": [
+    "How do we tie off tools and bolt bags up top?",
+    "Who keeps other trades out from under steel work?",
+    "What do we use to close gaps around columns?"
+  ],
+  "attribution": {
+    "source": "TailgatePro",
+    "publisher": "TailgatePro",
+    "copyright": "Original TailgatePro content, written from 29 CFR 1926.759 (Falling object protection), 1926.754(b)(3) and (e), and 1926.100 (Head protection). Regulation and agency text is U.S. Government work in the public domain; the wording here is TailgatePro's own.",
+    "license": "original-work",
+    "source_url": "https://www.ecfr.gov/current/title-29/section-1926.759",
+    "source_ref": "ECFR-SE-06",
+    "notice": "Written from 29 CFR 1926.759 (Falling object protection), 1926.754(b)(3) and (e), and 1926.100 (Head protection). General guidance only; follow your company safety program and site-specific requirements. Not an endorsement by OSHA."
+  },
+  "audit": {
+    "status": "approved",
+    "audited_at": "2026-10-27T18:25:58.052Z",
+    "osha_accuracy_verified": true,
+    "flags": [
+      "eCFR (title 29, current as of 2026-10-01) 1926.759(a)-(b), 1926.754(e)(1)(i),(ii),(v), (e)(4), (b)(3), 1926.100(a) verified verbatim. Fixed: 754(b)(3) bullet omitted that 754(b) applies to multi-story structures."
+    ]
+  }
+}

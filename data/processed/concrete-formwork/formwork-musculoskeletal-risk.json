@@ -1,0 +1,52 @@
+{
+  "id": "formwork-musculoskeletal-risk",
+  "title": "Protect Your Back and Shoulders When Building Concrete Forms",
+  "primary_trade": "Concrete & Formwork",
+  "trade_tags": [
+    "Concrete & Formwork",
+    "Carpentry",
+    "General Construction"
+  ],
+  "osha_standards": [
+    "OSH Act Section 5(a)(1) General Duty Clause"
+  ],
+  "estimated_minutes": 5,
+  "summary": "Form workers have a high rate of muscle and joint injuries, mostly in the back, neck, and shoulders. Repetition, awkward postures, and heavy force cause most of the problems. Plan the work to reduce all three.",
+  "talking_points": [
+    "Work-related muscle and joint problems (musculoskeletal disorders, or MSDs) are more than half of all construction injuries and illnesses. Form workers report symptoms no matter what type of formwork they use.",
+    "Most formwork tasks carry medium to high risk for the lower back, upper back, neck, and shoulders.",
+    "Form workers say the biggest causes are repetition, awkward working postures, and use of force.",
+    "Prefabricated or engineered (modular) forms are pre-assembled and lighter. They take less effort for many tasks and may cause less strain. Use them when you can.",
+    "Use lift assists and lifting devices such as forklifts, hoists, and cranes instead of lifting by hand.",
+    "Rotate form workers through different tasks during the shift so the same muscles are not stressed all day.",
+    "Use a two-person lift team for components that weigh more than 51 pounds.",
+    "Report pain or discomfort early. Do not wait until it becomes an injury."
+  ],
+  "site_hazards_to_check": [
+    "Heavy panels or components being lifted by one person",
+    "No forklift, hoist, or crane available at the form stack or placement area",
+    "Awkward positions, such as reaching overhead or bending low for long periods",
+    "The same worker assigned to the same repetitive task all shift"
+  ],
+  "discussion_questions": [
+    "Which form tasks today strain your back, neck, or shoulders the most?",
+    "What lifting equipment can we use to avoid carrying panels by hand?",
+    "How can we rotate tasks so nobody does the same motion all day?"
+  ],
+  "attribution": {
+    "source": "CPWR",
+    "publisher": "CPWR — The Center for Construction Research and Training",
+    "copyright": "© 2021 CPWR — The Center for Construction Research and Training. All rights reserved.",
+    "license": "free-use-with-attribution",
+    "source_url": "https://www.cpwr.com/wp-content/uploads/KF2021-Formwork-MSDs.pdf",
+    "notice": "Adapted from a CPWR Key Findings research summary (Gambatese and Jin, CPWR Small Study, 2021), produced under NIOSH cooperative agreement OH 009762. Reproduced with attribution for jobsite safety training; not an endorsement by CPWR or NIOSH."
+  },
+  "audit": {
+    "status": "approved",
+    "audited_at": "2026-10-27T17:55:50Z",
+    "osha_accuracy_verified": true,
+    "flags": [
+      "General Duty Clause (OSH Act 5(a)(1)) is the only mapping because no construction ergonomics standard exists; the talk makes no legal claim, which is appropriate. 51-pound two-person lift, MSD share and risk ratings verified against the raw CPWR Key Findings. CPWR copyright and notice preserved; source on cpwr.com or CDC Stacks (CPWR publication); free-use-with-attribution conditions in docs/content-attribution.md are met by displaying attribution.copyright and notice (no resale of individual talks, no endorsement implied). Claims checked against data/raw source."
+    ]
+  }
+}

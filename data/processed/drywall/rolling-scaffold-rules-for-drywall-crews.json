@@ -1,0 +1,56 @@
+{
+  "id": "rolling-scaffold-rules-for-drywall-crews",
+  "title": "Rolling Scaffold Rules for Drywall Crews",
+  "primary_trade": "Drywall",
+  "trade_tags": [
+    "Drywall",
+    "Painting & Coatings",
+    "Carpentry"
+  ],
+  "osha_standards": [
+    "29 CFR 1926.452",
+    "29 CFR 1926.451"
+  ],
+  "estimated_minutes": 5,
+  "summary": "Drywall crews move mobile scaffolds all day to hang and finish ceilings. This talk covers OSHA's rules for bracing, locking, moving and riding a mobile scaffold, and when fall protection is required.",
+  "talking_points": [
+    "Mobile scaffolds must be braced to prevent racking or collapse, and they must be plumb, level and squared. All brace connections must be secured (29 CFR 1926.452(w)(1)).",
+    "Lock the casters or wheels with positive wheel and/or swivel locks whenever the scaffold is used in a stationary manner (1926.452(w)(2)). Where leveling is needed, use screw jacks or equivalent, and pin or otherwise secure the caster stems (1926.452(w)(8)-(9)).",
+    "Push from low. Apply manual force as close to the base as practicable, but not more than 5 feet above the supporting surface (1926.452(w)(3)). Do not use a forklift, truck or similar vehicle to move a scaffold unless it is designed for that (1926.452(w)(4)).",
+    "Tell everyone on the scaffold before it moves (1926.452(w)(10)). Employees may ride a moving scaffold only when the surface is within 3 degrees of level and free of pits, holes and obstructions, the height-to-base-width ratio is two to one or less (unless designed to meet recognized stability tests), outrigger frames are on both sides if used, and no one is on a part that extends beyond the wheels or supports (1926.452(w)(6)).",
+    "Platforms must not extend past the base supports unless outrigger frames or equivalent devices are used (1926.452(w)(7)).",
+    "Anyone on a scaffold more than 10 feet above a lower level must be protected from falling, using a personal fall arrest system or guardrail system as the standard requires for the scaffold type (1926.451(g)(1)).",
+    "A competent person must inspect the scaffold for visible defects before each work shift and after any event that could affect its structural integrity (1926.451(f)(3)). Do not exceed the rated load (1926.451(f)(1)).",
+    "Stay clear of power lines. For insulated lines of 300 volts to 50 kV, keep at least 10 feet away unless the utility has de-energized, relocated or covered the lines (1926.451(f)(6))."
+  ],
+  "site_hazards_to_check": [
+    "Casters unlocked or missing wheel locks",
+    "Uneven floors, floor holes or debris in the rolling path",
+    "Tall narrow scaffold with a base too small for its height",
+    "Missing braces, guardrails or planks",
+    "Overhead power lines or temporary lighting near the work",
+    "Crew riding the scaffold while it moves"
+  ],
+  "discussion_questions": [
+    "Who is the competent person who inspects our scaffold each shift, and where is that recorded?",
+    "What is our height-to-base ratio, and when do we need outriggers?",
+    "How do we warn everyone on the platform before a move?"
+  ],
+  "attribution": {
+    "source": "TailgatePro",
+    "publisher": "TailgatePro",
+    "copyright": "Original TailgatePro content, written from 29 CFR 1926.452(w) (Mobile scaffolds) and 1926.451 (General requirements for scaffolds). Regulation and agency text is U.S. Government work in the public domain; the wording here is TailgatePro's own.",
+    "license": "original-work",
+    "source_url": "https://www.ecfr.gov/current/title-29/section-1926.452",
+    "source_ref": "ECFR-DW-02",
+    "notice": "Written from 29 CFR 1926.452(w) (Mobile scaffolds) and 1926.451 (General requirements for scaffolds). General guidance only; follow your company safety program and site-specific requirements. Not an endorsement by OSHA."
+  },
+  "audit": {
+    "status": "approved",
+    "audited_at": "2026-10-27T18:25:58.047Z",
+    "osha_accuracy_verified": true,
+    "flags": [
+      "eCFR (title 29, current as of 2026-10-01) 1926.452(w)(1)-(10) verified (bracing, caster locks, 5 ft push height, 3 degree / 2:1 ride conditions, outriggers, screw jacks, notify before move). 1926.451(g)(1) (10 ft fall protection), (f)(1), (f)(3), (f)(6) (300 V to 50 kV = 10 ft; exception requires utility notification and de-energize/relocate/cover) verified. Talk correctly limits the power-line number to the insulated 300 V-50 kV example. No changes required."
+    ]
+  }
+}

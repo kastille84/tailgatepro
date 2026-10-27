@@ -1,0 +1,57 @@
+{
+  "id": "demolition-roof-skylight-fall",
+  "title": "Demolition Roof Work: Guard Skylights Before You Step",
+  "primary_trade": "Demolition",
+  "trade_tags": [
+    "Demolition",
+    "Roofing",
+    "General Construction"
+  ],
+  "osha_standards": [
+    "29 CFR 1926.501(b)(4)",
+    "29 CFR 1926.502(i)",
+    "29 CFR 1926.503(a)(1)"
+  ],
+  "estimated_minutes": 5,
+  "summary": "A demolition laborer died after stepping backward onto a skylight while removing roofing. He fell about 19 feet to a concrete floor and had no fall protection or fall protection training. Guard skylights and get trained before roof work.",
+  "talking_points": [
+    "A 44-year-old laborer was removing roofing components. He walked backward onto a skylight, it broke, and he fell about 19 feet. He was not using personal fall arrest equipment and had not been given fall protection training by the demolition employer.",
+    "OSHA requires protection from falling through skylights more than 6 feet above a lower level. Use a personal fall arrest system, skylight covers, or a guardrail system around them.",
+    "Guardrails or screens on all skylights should go up before roofing work begins and stay until all work is complete.",
+    "Skylight covers must support at least twice the weight of workers, equipment, and materials placed on them. They must be secured against wind, equipment, and workers, and marked HOLE or COVER.",
+    "Guardrails, covers, and safety nets are preferred over personal fall arrest systems. Use fall arrest when the other controls are being installed or are not workable.",
+    "Do a job hazard analysis or pre-task plan before roof work. Find the hazards and the fall protection each task needs.",
+    "Training should be in a language and form you understand. Speak up if you have not been trained.",
+    "On a multi-employer site, each employer may have duties for your safety. Ask who is in charge of fall protection."
+  ],
+  "site_hazards_to_check": [
+    "Skylights in the roof with no railing, screen, or cover",
+    "Roof edges and openings exposed during roofing removal",
+    "Workers walking backward or looking away from the surface behind them",
+    "No harnesses, anchors, or fall protection training for the crew",
+    "Unclear responsibility for safety between the demolition contractor and subcontractors"
+  ],
+  "discussion_questions": [
+    "Where are the skylights and openings on this roof, and how are they protected?",
+    "What fall protection will each person use on the roof?",
+    "Has everyone been trained, in a language they understand, on fall hazards for this job?"
+  ],
+  "attribution": {
+    "source": "Kentucky FACE Program",
+    "publisher": "Kentucky FACE Program, Kentucky Injury Prevention and Research Center (KIPRC)",
+    "copyright": "State FACE program publication distributed through CDC Stacks (NIOSH-funded). Public-domain status not confirmed; credit the originating agency.",
+    "license": "reuse-unverified",
+    "source_url": "https://stacks.cdc.gov/view/cdc/164841/cdc_164841_DS1.pdf",
+    "reuse_verification": "required",
+    "notice": "Worker-facing talk adapted from Kentucky FACE Report 22KY046 (Demolition Laborer Dies in Fall Through Skylight). Reuse terms have not been verified with the originating agency; confirm before relying on this content commercially. Based on preliminary investigation data. Not an endorsement by Kentucky FACE Program or NIOSH."
+  },
+  "audit": {
+    "status": "needs_revision",
+    "audited_at": "2026-10-27T17:55:50Z",
+    "osha_accuracy_verified": true,
+    "flags": [
+      "Verified 1926.501(b)(4), 1926.502(i) (twice weight, HOLE/COVER), 1926.503(a)(1). Softened 'Training must be in a language you understand' to 'should be' because 1926.503(a)(1) states no language rule.",
+      "reuse-unverified (blocking until resolved): attribution.license is 'reuse-unverified' with reuse_verification 'required'. Public-domain status of this state FACE publication is not confirmed, scripts/lib/talkRow.js does not read license or reuse_verification (isApproved checks only audit.status and attribution is copied verbatim) and docs/content-attribution.md has no policy for this license, so approving would seed it automatically to a paid product. Owner must confirm reuse terms with the originating agency and document the policy; then set status to approved. Content accuracy itself was verified against the raw source."
+    ]
+  }
+}

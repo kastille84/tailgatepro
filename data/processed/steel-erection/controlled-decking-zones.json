@@ -1,0 +1,55 @@
+{
+  "id": "controlled-decking-zones",
+  "title": "Controlled Decking Zones",
+  "primary_trade": "Steel Erection",
+  "trade_tags": [
+    "Steel Erection"
+  ],
+  "osha_standards": [
+    "29 CFR 1926.760",
+    "29 CFR 1926.761",
+    "29 CFR 1926.754"
+  ],
+  "estimated_minutes": 5,
+  "summary": "A controlled decking zone is a limited area where trained workers lay the first deck at heights from 15 to 30 feet. This talk covers what Subpart R requires inside and around a CDZ.",
+  "talking_points": [
+    "A CDZ may be established only in the area of the structure over 15 and up to 30 feet above a lower level, where metal decking is initially being installed and forms the leading edge of a work area (29 CFR 1926.760(c)).",
+    "Employees working at the leading edge in a CDZ must be protected from fall hazards of more than two stories or 30 feet, whichever is less (1926.760(c)(1)).",
+    "Only employees engaged in leading edge work may enter the CDZ (1926.760(c)(2)).",
+    "The boundaries must be designated and clearly marked with control lines or the equivalent, and the CDZ may not be more than 90 feet wide and 90 feet deep from any leading edge (1926.760(c)(3)).",
+    "Every employee in the CDZ must have completed CDZ training, which covers the hazards of the zone and its establishment, access, proper installation techniques and work practices (1926.760(c)(4), 1926.761(c)(3)).",
+    "Unsecured decking in a CDZ must not exceed 3,000 square feet (1926.760(c)(5)).",
+    "Safety deck attachments are made in the CDZ from the leading edge back to the control line, with at least two attachments for each metal decking panel (1926.760(c)(6)).",
+    "Final deck attachments and installation of shear connectors must not be done in the CDZ (1926.760(c)(7), 1926.754(c)(2)). Outside a CDZ, deck must be laid tightly and secured immediately (1926.754(e)(5)(i))."
+  ],
+  "site_hazards_to_check": [
+    "Untrained people in the zone",
+    "Control lines missing, down or not visible",
+    "More than 3,000 square feet of unsecured deck",
+    "Fewer than two attachments per panel",
+    "Shear connectors installed from the CDZ",
+    "Work at the zone edge without a plan for the fall hazard"
+  ],
+  "discussion_questions": [
+    "Where are our control lines and who checks them?",
+    "How do we keep the area limited to leading edge crews?",
+    "What counts as a safety deck attachment, and what counts as final?"
+  ],
+  "attribution": {
+    "source": "TailgatePro",
+    "publisher": "TailgatePro",
+    "copyright": "Original TailgatePro content, written from 29 CFR 1926.760(c) (Controlled Decking Zone), 1926.761(c)(3) (CDZ training) and 1926.754(c), (e)(5). Regulation and agency text is U.S. Government work in the public domain; the wording here is TailgatePro's own.",
+    "license": "original-work",
+    "source_url": "https://www.ecfr.gov/current/title-29/section-1926.760",
+    "source_ref": "ECFR-SE-02",
+    "notice": "Written from 29 CFR 1926.760(c) (Controlled Decking Zone), 1926.761(c)(3) (CDZ training) and 1926.754(c), (e)(5). General guidance only; follow your company safety program and site-specific requirements. Not an endorsement by OSHA."
+  },
+  "audit": {
+    "status": "approved",
+    "audited_at": "2026-10-27T18:25:58.051Z",
+    "osha_accuracy_verified": true,
+    "flags": [
+      "eCFR (title 29, current as of 2026-10-01) 1926.760(c)(1)-(7) (over 15 up to 30 ft; 90 x 90 ft; 3,000 sq ft; two attachments per panel; no final attachments or shear connectors), 1926.761(c)(3), 1926.754(c)(2) and (e)(5)(i) verified verbatim. No changes required."
+    ]
+  }
+}

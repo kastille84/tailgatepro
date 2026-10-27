@@ -1,0 +1,60 @@
+{
+  "id": "drywall-dust-respirators-and-silica-awareness",
+  "title": "Drywall Dust, Respirators and Silica Awareness",
+  "primary_trade": "Drywall",
+  "trade_tags": [
+    "Drywall",
+    "Painting & Coatings",
+    "General Construction"
+  ],
+  "osha_standards": [
+    "29 CFR 1926.300",
+    "29 CFR 1926.95",
+    "29 CFR 1926.103",
+    "29 CFR 1926.59",
+    "29 CFR 1926.1153",
+    "29 CFR 1910.1200",
+    "29 CFR 1910.134"
+  ],
+  "estimated_minutes": 5,
+  "summary": "Cutting, sanding and cleaning up drywall fills the air with fine dust. This talk covers OSHA's rules on protective equipment, product information (SDS) and silica, and shows how to find out what is in the dust you are breathing.",
+  "talking_points": [
+    "Employees using hand and power tools who are exposed to harmful dusts, fumes, mists, vapors or gases must be provided with the personal protective equipment needed to protect them (29 CFR 1926.300(c)).",
+    "Protective equipment, including respiratory devices, must be provided, used and maintained in a sanitary and reliable condition where hazards or mechanical irritants could harm the body through inhalation or contact, and it must fit each employee (1926.95(a), (c)). The employer pays for it, with limited exceptions (1926.95(d)).",
+    "For respirator requirements, 1926.103 states that construction work follows the same rules as 29 CFR 1910.134. Do not wear a respirator you have not been trained and fitted for.",
+    "Hazard communication in construction is identical to 29 CFR 1910.1200 (1926.59). Employees must get training on hazardous chemicals in their work area, and chemical-specific information must always be available through labels and safety data sheets (1910.1200(h)(1)).",
+    "Read the safety data sheet for each compound, texture, primer and board you work with. The SDS is how you find out whether a product lists crystalline silica or other hazards; do not assume either way.",
+    "The OSHA construction silica standard (1926.1153) sets a permissible exposure limit of 50 micrograms per cubic meter of respirable crystalline silica as an 8-hour average (1926.1153(d)(1)). For tasks listed on Table 1, the employer may instead implement the controls on that table (1926.1153(c)(1)); for example, a handheld drill with a commercially available shroud and dust collection system and a HEPA-filtered vacuum for cleaning holes. The standard does not apply where exposure will stay below 25 micrograms per cubic meter under any foreseeable conditions (1926.1153(a)).",
+    "Where silica exposure could result, the employer may not allow dry sweeping or dry brushing, or compressed air to clean clothing or surfaces, unless the standard's exceptions apply (1926.1153(f)(1)-(2)). Wet sweeping or a HEPA-filtered vacuum are the methods the standard names."
+  ],
+  "site_hazards_to_check": [
+    "Dust clouds from sanding or sweeping",
+    "Missing or unread safety data sheets for compound and primer",
+    "Respirator not fitted or not rated for the dust",
+    "Drilling into concrete or masonry without dust collection",
+    "Dry sweeping or blowing off surfaces with compressed air",
+    "Poor ventilation in closed rooms"
+  ],
+  "discussion_questions": [
+    "Where are the safety data sheets for the products on this job?",
+    "What does the SDS say is in the dust, and does it list silica?",
+    "Who here has been fit tested for the respirator they would use?"
+  ],
+  "attribution": {
+    "source": "TailgatePro",
+    "publisher": "TailgatePro",
+    "copyright": "Original TailgatePro content, written from 29 CFR 1926.300(c), 1926.95, 1926.103, 1926.59 and 1926.1153 (silica), with 29 CFR 1910.1200 (Hazard communication), which 1926.59 adopts. Regulation and agency text is U.S. Government work in the public domain; the wording here is TailgatePro's own.",
+    "license": "original-work",
+    "source_url": "https://www.ecfr.gov/current/title-29/section-1926.300",
+    "source_ref": "ECFR-DW-04",
+    "notice": "Written from 29 CFR 1926.300(c), 1926.95, 1926.103, 1926.59 and 1926.1153 (silica), with 29 CFR 1910.1200 (Hazard communication), which 1926.59 adopts. General guidance only; follow your company safety program and site-specific requirements. Not an endorsement by OSHA."
+  },
+  "audit": {
+    "status": "approved",
+    "audited_at": "2026-10-27T18:25:58.048Z",
+    "osha_accuracy_verified": true,
+    "flags": [
+      "eCFR (title 29, current as of 2026-10-01) 1926.300(c), 1926.95(a),(c),(d), 1926.103 note (identical to 1910.134), 1926.59 note (identical to 1910.1200), 1910.1200(h)(1) verified. Silica: PEL of 50 ug/m3 8-hr TWA is at 1926.1153(d)(1) (confirmed paragraph letter); Table 1 is referenced at (c)(1); Table 1 row (vii) handheld drills requires shroud/dust collection + HEPA vacuum for hole cleaning (confirmed); (f)(1)-(2) housekeeping verified. Fixed: PEL sentence reworded because (d)(1) sits under alternative methods, added the 25 ug/m3 scope exclusion at (a); SDS bullet no longer implies drywall dust contains silica (talk makes no claim that it does); housekeeping bullet now names the methods the standard actually names. Added 1910.1200 and 1910.134 to osha_standards because the talk relies on them."
+    ]
+  }
+}

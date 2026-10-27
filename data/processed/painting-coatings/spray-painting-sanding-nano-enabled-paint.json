@@ -1,0 +1,55 @@
+{
+  "id": "spray-painting-sanding-nano-enabled-paint",
+  "title": "Spray Painting and Sanding Nano-Enabled Paint",
+  "primary_trade": "Painting & Coatings",
+  "trade_tags": [
+    "Painting & Coatings",
+    "General Construction"
+  ],
+  "osha_standards": [
+    "29 CFR 1910.134",
+    "29 CFR 1926.59",
+    "29 CFR 1926.102",
+    "29 CFR 1926.101",
+    "29 CFR 1926.103"
+  ],
+  "estimated_minutes": 5,
+  "summary": "Paints with nano titanium dioxide can put nanoparticles into the air when you spray or sand them. NIOSH believes this nanomaterial might harm workers. Capture dust at the source, use a respirator, and protect your eyes, skin, and hearing.",
+  "talking_points": [
+    "Nano titanium dioxide is a common nanomaterial in paint. NIOSH believes it might be harmful because it causes lung damage and cancer in lab animals, and NIOSH has a recommended exposure limit for it.",
+    "OSHA has no specific standard for engineered nanomaterials, but other standards, such as respiratory protection and hazard communication, may apply.",
+    "Ask your employer whether the paint is nano-enabled. Check the label and safety data sheet, and CPWR's inventory at nano.elcosh.org. The information is often missing.",
+    "Connect your orbital sander to a vacuum with a HEPA filter to capture dust before it gets in the air. Otherwise use the dust bag that came with the sander.",
+    "Use a respirator for spray mist and sanding dust. Your employer must provide the right type through a full respiratory protection program. N95 or P100 filters effectively capture nanomaterials.",
+    "Work upwind when you spray, and rotate painters to reduce exposure.",
+    "Wear goggles or a face shield, gloves, and disposable clothing when spray painting.",
+    "Wear hearing protection when using an orbital sander."
+  ],
+  "site_hazards_to_check": [
+    "Airless spraying with no ventilation or respirator",
+    "Sanding without a vacuum-attached sander",
+    "Co-workers who sand dried paint near other workers",
+    "Painting products with no information about nanomaterials"
+  ],
+  "discussion_questions": [
+    "What could we do to keep mist and dust out of the air on this job?",
+    "How can you find out whether this paint is nano-enabled?",
+    "What will we do to prevent exposure to mist or dust today?"
+  ],
+  "attribution": {
+    "source": "CPWR",
+    "publisher": "CPWR — The Center for Construction Research and Training",
+    "copyright": "© 2018 CPWR — The Center for Construction Research and Training. All rights reserved.",
+    "license": "free-use-with-attribution",
+    "source_url": "https://stacks.cdc.gov/view/cdc/156730/cdc_156730_DS1.pdf",
+    "notice": "Adapted from a CPWR Toolbox Talk, produced under NIOSH cooperative agreement OH 009762. Reproduced with attribution for jobsite safety training; not an endorsement by CPWR or NIOSH."
+  },
+  "audit": {
+    "status": "approved",
+    "audited_at": "2026-10-27T17:55:50Z",
+    "osha_accuracy_verified": true,
+    "flags": [
+      "Verified upwind and rotate, goggles, disposable clothing, hearing protection, HEPA sander against raw source; no nano standard (stated). Replaced 1910.1200 with 1926.59; added 1926.103. CPWR copyright and notice preserved; source on cpwr.com or CDC Stacks (CPWR publication); free-use-with-attribution conditions in docs/content-attribution.md are met by displaying attribution.copyright and notice (no resale of individual talks, no endorsement implied). Claims checked against data/raw source."
+    ]
+  }
+}

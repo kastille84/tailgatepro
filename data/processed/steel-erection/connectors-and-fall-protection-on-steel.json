@@ -1,0 +1,56 @@
+{
+  "id": "connectors-and-fall-protection-on-steel",
+  "title": "Connectors and Fall Protection on Steel",
+  "primary_trade": "Steel Erection",
+  "trade_tags": [
+    "Steel Erection"
+  ],
+  "osha_standards": [
+    "29 CFR 1926.760",
+    "29 CFR 1926.761",
+    "29 CFR 1926.756",
+    "29 CFR 1926.502"
+  ],
+  "estimated_minutes": 5,
+  "summary": "Steel erectors work at heights where a fall can be fatal. This talk covers the Subpart R fall protection rules for connectors and others on the steel.",
+  "talking_points": [
+    "Employees engaged in steel erection on a surface with an unprotected side or edge more than 15 feet above a lower level must be protected by guardrail systems, safety net systems, personal fall arrest systems, positioning device systems or fall restraint systems (29 CFR 1926.760(a)(1)).",
+    "Connectors must be protected from fall hazards of more than two stories or 30 feet, whichever is less, and must have completed connector training (1926.760(b)(1)-(2)).",
+    "At heights over 15 and up to 30 feet, connectors must be provided with a personal fall arrest, positioning device or fall restraint system and wear the equipment needed to be tied off, or be provided other protection under (a)(1) (1926.760(b)(3)).",
+    "On multi-story structures, perimeter safety cables must be installed at the final interior and exterior perimeters of the floors as soon as the metal decking has been installed (1926.760(a)(2)).",
+    "Perimeter columns must extend at least 48 inches above the finished floor and have holes or devices at 42 to 45 inches above the floor and at the midpoint, to allow the cables to be installed, except where constructibility does not allow (1926.756(e)).",
+    "Fall protection equipment must meet the criteria in 1926.502 (1926.760(d)). Training must be given by a qualified person and cover recognizing fall hazards, using and inspecting the systems, and the Subpart R requirements (1926.761(a)-(b)).",
+    "Connector training must cover the hazards of connecting and the proper connecting techniques and work practices (1926.761(c)(2)).",
+    "Steel erector fall protection stays in place for other trades only if the controlling contractor has directed it and has inspected and accepted responsibility for it (1926.760(e))."
+  ],
+  "site_hazards_to_check": [
+    "Unprotected edges more than 15 feet up",
+    "Connectors without training or tie-off equipment",
+    "Perimeter cable not installed after decking",
+    "Damaged harnesses, lanyards or anchorage points",
+    "Leading edge work without a plan",
+    "Other trades using fall protection left by erectors without handover"
+  ],
+  "discussion_questions": [
+    "At what heights do connectors on this job have to tie off, and what do we use?",
+    "Who has completed connector training?",
+    "Who inspects perimeter cables, and when?"
+  ],
+  "attribution": {
+    "source": "TailgatePro",
+    "publisher": "TailgatePro",
+    "copyright": "Original TailgatePro content, written from 29 CFR 1926.760 (Fall protection), 1926.761 (Training) and 1926.756(e) (Perimeter columns). Regulation and agency text is U.S. Government work in the public domain; the wording here is TailgatePro's own.",
+    "license": "original-work",
+    "source_url": "https://www.ecfr.gov/current/title-29/section-1926.760",
+    "source_ref": "ECFR-SE-01",
+    "notice": "Written from 29 CFR 1926.760 (Fall protection), 1926.761 (Training) and 1926.756(e) (Perimeter columns). General guidance only; follow your company safety program and site-specific requirements. Not an endorsement by OSHA."
+  },
+  "audit": {
+    "status": "approved",
+    "audited_at": "2026-10-27T18:25:58.050Z",
+    "osha_accuracy_verified": true,
+    "flags": [
+      "eCFR (title 29, current as of 2026-10-01) 1926.760(a)(1),(a)(2),(b)(1)-(3),(d),(e); 1926.761(a),(b),(c)(2); 1926.756(e)(1)-(2) verified verbatim (15 ft; two stories or 30 ft; over 15 up to 30 ft; 48 in; 42-45 in and midpoint). Added 1926.502 to osha_standards (cited via 760(d)). No wording changes required."
+    ]
+  }
+}

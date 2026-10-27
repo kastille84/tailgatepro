@@ -1,0 +1,53 @@
+{
+  "id": "tuckpointing-nano-enabled-mortar",
+  "title": "Tuckpointing: Protect Yourself from Silica and Nano-Enabled Mortar Dust",
+  "primary_trade": "Masonry",
+  "trade_tags": [
+    "Masonry",
+    "General Construction"
+  ],
+  "osha_standards": [
+    "29 CFR 1926.1153",
+    "29 CFR 1926.103",
+    "29 CFR 1910.134",
+    "29 CFR 1926.59"
+  ],
+  "estimated_minutes": 5,
+  "summary": "Grinding out mortar makes dust with respirable crystalline silica. Some mortar also contains engineered nanomaterials such as graphene. The health risk from graphene is not well understood, so keep dust out of the air and out of your lungs.",
+  "talking_points": [
+    "Grinding mortar with a handheld grinder makes dust that contains respirable crystalline silica. Breathing it can cause lung cancer and scarring of the lungs.",
+    "Some mortars are nano-enabled. They have engineered nanoparticles, such as graphene, added to make them stronger. Cutting or grinding them puts those particles in the air. Animal studies suggest graphene could harm the lungs. The risk to construction workers is not well understood.",
+    "Ask your employer whether the mortar contains graphene. Check the product label and Safety Data Sheet (SDS). This information is often missing, so also check CPWR's inventory of nano-enabled products at nano.elcosh.org.",
+    "Follow OSHA's silica standard (29 CFR 1926.1153) and its Table 1 for engineering controls and respirators when you grind mortar.",
+    "Use a handheld grinder with a shroud on the grinding wheel and a dust collection hose connected to a vacuum with a HEPA filter. CPWR testing found this was very effective at cutting worker exposure to graphene.",
+    "Your employer must provide the right respirator under a full respiratory protection program. N95 or P100 filters effectively capture nanomaterials. Choose one that fits the length of the mortar removal in your shift.",
+    "Wear a face shield or goggles to protect your eyes from dust, and wear hearing protection."
+  ],
+  "site_hazards_to_check": [
+    "Grinders with no shroud, no vacuum hose, or a vacuum without a HEPA filter",
+    "Unknown mortar products with no SDS or no nano information on the label",
+    "Visible dust drifting from the work area toward other workers",
+    "Workers grinding without a fitted respirator, eye protection, or hearing protection"
+  ],
+  "discussion_questions": [
+    "How can we find out whether this mortar contains graphene or other nanomaterials?",
+    "What dust controls are set up on each grinder today?",
+    "What will we do at this worksite to prevent exposure to dust from grinding the mortar?"
+  ],
+  "attribution": {
+    "source": "CPWR",
+    "publisher": "CPWR — The Center for Construction Research and Training",
+    "copyright": "© 2024 CPWR — The Center for Construction Research and Training. All rights reserved.",
+    "license": "free-use-with-attribution",
+    "source_url": "https://www.cpwr.com/wp-content/uploads/TT-nano-enabled_tuckpointing.pdf",
+    "notice": "Adapted from a CPWR Toolbox Talk, produced under NIOSH cooperative agreement OH 009762. Reproduced with attribution for jobsite safety training; not an endorsement by CPWR or NIOSH."
+  },
+  "audit": {
+    "status": "approved",
+    "audited_at": "2026-10-27T17:55:50Z",
+    "osha_accuracy_verified": true,
+    "flags": [
+      "Verified shrouded grinder with HEPA vacuum, N95/P100 statement, animal-study caveat and nano.elcosh.org against raw source; 1926.1153 Table 1 correct. 1910.1200 replaced with 1926.59 (construction hazcom). Talk correctly says graphene risk is not well understood. CPWR copyright and notice preserved; source on cpwr.com or CDC Stacks (CPWR publication); free-use-with-attribution conditions in docs/content-attribution.md are met by displaying attribution.copyright and notice (no resale of individual talks, no endorsement implied). Claims checked against data/raw source."
+    ]
+  }
+}

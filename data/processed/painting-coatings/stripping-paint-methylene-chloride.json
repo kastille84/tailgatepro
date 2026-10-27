@@ -1,0 +1,57 @@
+{
+  "id": "stripping-paint-methylene-chloride",
+  "title": "Stripping Paint: Methylene Chloride Can Kill",
+  "primary_trade": "Painting & Coatings",
+  "trade_tags": [
+    "Painting & Coatings",
+    "Plumbing",
+    "General Construction"
+  ],
+  "osha_standards": [
+    "29 CFR 1926.1152",
+    "29 CFR 1910.1052",
+    "29 CFR 1926.59",
+    "29 CFR 1910.134",
+    "29 CFR 1926.103"
+  ],
+  "estimated_minutes": 5,
+  "summary": "Many paint strippers and solvents contain methylene chloride. Breathing it can kill you within minutes, and long-term exposure can cause cancer and other serious health problems. Check the label and ask for a safer product.",
+  "talking_points": [
+    "Many liquid strippers and solvents for paint removal and bathtub refinishing contain methylene chloride (MeCl). One worker died stripping paint from a church baptismal font in a tight, unventilated space with no respirator and inadequate protective clothing.",
+    "Check the label and safety data sheet for 'methylene chloride,' 'dichloromethane,' or 'methylene dichloride.' Your employer must train you on how to work safely with toxic chemicals.",
+    "Do not work alone. Make sure the work area is properly ventilated.",
+    "If MeCl must be used, your employer must give you PPE: gloves made of polyvinyl alcohol (PVA) or polyethylene/ethylene vinyl alcohol (EVOH) laminate, or other gloves the maker rates for methylene chloride, face shield or chemical goggles, NIOSH-certified supplied-air respirators, and MeCl-resistant aprons, sleeves, and boots or shoe covers.",
+    "Ask for safer products. Less toxic strippers are available that work just as well and cost about the same.",
+    "Long-term effects include cancer, brain and nervous system damage, heart problems for those with heart disease, and fertility problems.",
+    "Headache, nausea, irritated eyes, nose, and throat, skin irritation or burns, and dizziness or sleepiness can be signs you have already felt the effects. Tell your supervisor.",
+    "OSHA requires employers to follow its Methylene Chloride standard. If you think you are in danger, contact your supervisor or union, or call OSHA at 1-800-321-6742."
+  ],
+  "site_hazards_to_check": [
+    "Strippers or solvents with methylene chloride on the label or SDS",
+    "Small, enclosed, or unventilated spaces such as bathrooms, tanks, and fonts",
+    "Workers alone in the area",
+    "Missing respirators, gloves, or protective clothing rated for methylene chloride",
+    "No training on the hazards of the product"
+  ],
+  "discussion_questions": [
+    "Does any product we are using today contain methylene chloride? How do you know?",
+    "Where could we get a safer product for this job?",
+    "What do we do if someone feels dizzy or sick while stripping?"
+  ],
+  "attribution": {
+    "source": "CPWR",
+    "publisher": "CPWR — The Center for Construction Research and Training",
+    "copyright": "© 2016 CPWR — The Center for Construction Research and Training. All rights reserved.",
+    "license": "free-use-with-attribution",
+    "source_url": "https://www.cpwr.com/wp-content/uploads/publications/Stripping-Paint_web_2.pdf",
+    "notice": "Adapted from a CPWR Hazard Alert, produced under NIOSH cooperative agreement OH 009762. Reproduced with attribution for jobsite safety training; not an endorsement by CPWR or NIOSH."
+  },
+  "audit": {
+    "status": "approved",
+    "audited_at": "2026-10-27T17:55:50Z",
+    "osha_accuracy_verified": true,
+    "flags": [
+      "Corrected glove names in place (source's 'polyethylene vinyl alcohol (PVA)/ethylene vinyl alcohol (EVA)' is garbled; aligned with NIOSH 2013-110 PE/EVOH laminate guidance). Verified baptismal font case, fertility effects, safer-product claim, OSHA 1-800-321-6742 against raw source. 1926.1152 correct for construction. Replaced 1910.1200 with 1926.59; added 1926.103. CPWR copyright and notice preserved; source on cpwr.com or CDC Stacks (CPWR publication); free-use-with-attribution conditions in docs/content-attribution.md are met by displaying attribution.copyright and notice (no resale of individual talks, no endorsement implied). Claims checked against data/raw source."
+    ]
+  }
+}

@@ -1,0 +1,56 @@
+{
+  "id": "framing-top-plate-fall",
+  "title": "Never Stand on Wall Top Plates Without Fall Protection",
+  "primary_trade": "Framing",
+  "trade_tags": [
+    "Framing",
+    "Carpentry",
+    "General Construction"
+  ],
+  "osha_standards": [
+    "29 CFR 1926.501(b)(13)",
+    "29 CFR 1926.502",
+    "29 CFR 1926.503(a)",
+    "29 CFR 1926.1060"
+  ],
+  "estimated_minutes": 5,
+  "summary": "A 22-year-old framer died after falling about 24 feet from the top plate of a second-story wall. He had no fall protection or training. The foreman had told him to get down but walked away. Protect every worker at 6 feet or more.",
+  "talking_points": [
+    "The worker climbed a stepladder to reach the top plate of an exterior second-story wall and stepped onto it. He had no fall protection. A short time later he lost his balance coming down and fell about 24 feet to frozen ground.",
+    "The foreman saw him on the plate and told him to get down and use the stepladder, but then walked away. Telling a worker to get down is not enough. Fix the setup so the work can be done safely.",
+    "Fall protection is required for exposure of 6 feet or more in residential framing. Use a guardrail system, a safety net, or a personal fall arrest system.",
+    "Install guardrails early on new construction: along floor and roof edges, across door and window openings, and around open stairwells. Keep them in place and move them as needed.",
+    "Training is required on fall protection, ladders, and scaffolds. Ladder training covers choosing the right ladder for the job, including its type, length, and duty rating.",
+    "Employers need a safety program that covers hazard recognition, fall protection, ladders, floor openings, nail guns, and PPE, and they must enforce it."
+  ],
+  "site_hazards_to_check": [
+    "Workers walking or standing on wall top plates",
+    "Open edges, open stairwells, and openings in unfinished floors",
+    "Stepladders set up next to open walls where a fall to the outside is possible",
+    "Hard or frozen ground below an open edge",
+    "No fall protection or ladder training for new workers"
+  ],
+  "discussion_questions": [
+    "How will each person reach high framing work without standing on a top plate?",
+    "Where is fall protection set up for second-floor and roof-level work?",
+    "Who has had fall protection and ladder training for this job?"
+  ],
+  "attribution": {
+    "source": "Massachusetts FACE Program",
+    "publisher": "Massachusetts FACE Program",
+    "copyright": "State FACE program publication distributed through CDC Stacks (NIOSH-funded). Public-domain status not confirmed; credit the originating agency.",
+    "license": "reuse-unverified",
+    "source_url": "https://stacks.cdc.gov/view/cdc/164993/cdc_164993_DS1.pdf",
+    "reuse_verification": "required",
+    "notice": "Worker-facing talk adapted from Massachusetts FACE Report 16-MA-001-01 (Laborer Fatally Injured After Falling from a Home Under Construction). Reuse terms have not been verified with the originating agency; confirm before relying on this content commercially. Based on preliminary investigation data. Not an endorsement by Massachusetts FACE Program or NIOSH."
+  },
+  "audit": {
+    "status": "needs_revision",
+    "audited_at": "2026-10-27T17:55:50Z",
+    "osha_accuracy_verified": true,
+    "flags": [
+      "Verified 1926.501(b)(13) six-foot residential trigger and 1926.1060 ladder training.",
+      "reuse-unverified (blocking until resolved): attribution.license is 'reuse-unverified' with reuse_verification 'required'. Public-domain status of this state FACE publication is not confirmed, scripts/lib/talkRow.js does not read license or reuse_verification (isApproved checks only audit.status and attribution is copied verbatim) and docs/content-attribution.md has no policy for this license, so approving would seed it automatically to a paid product. Owner must confirm reuse terms with the originating agency and document the policy; then set status to approved. Content accuracy itself was verified against the raw source."
+    ]
+  }
+}

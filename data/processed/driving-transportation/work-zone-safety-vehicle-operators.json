@@ -1,0 +1,55 @@
+{
+  "id": "work-zone-safety-vehicle-operators",
+  "title": "Work Zone Safety for Vehicle Operators: Prevent Backing Incidents",
+  "primary_trade": "Driving & Transportation",
+  "trade_tags": [
+    "Driving & Transportation",
+    "Heavy Equipment",
+    "General Construction"
+  ],
+  "osha_standards": [
+    "29 CFR 1926.601(b)",
+    "29 CFR 1926.602(a)(9)",
+    "29 CFR 1926.201(a)"
+  ],
+  "estimated_minutes": 5,
+  "summary": "About five workers are killed each month and many more are injured when hit or backed over by a construction vehicle. Check the vehicle, avoid backing, and use a spotter and your back-up alarm.",
+  "talking_points": [
+    "A delivery driver backed a truck without knowing two workers were still behind it. One worker jumped clear. The other, who had gone to check the tailgate, was hit and died.",
+    "Before you operate a vehicle, check the service, emergency, and parking brakes, back-up alarm or horn, steering, operating controls, tires, and seat belts.",
+    "Avoid backing up whenever possible. Park so you can pull in and out driving forward.",
+    "Keep mirrors clean and positioned correctly. Check blind spots and the area around you before you move.",
+    "Use a spotter and make sure you both understand the backing hand signals. Follow spotter and flagger directions. Stop if you lose sight of the spotter.",
+    "Use the back-up alarm or beep your horn two times before you reverse.",
+    "Do not back up more than 100 feet before you stop and check that the area is still clear.",
+    "Obey signs and follow the designated travel routes. Turn off the radio and put away distractions.",
+    "Keep your windows open so you can see and hear workers nearby, and wear your seat belt."
+  ],
+  "site_hazards_to_check": [
+    "Back-up alarms, mirrors, brakes, or seat belts that do not work",
+    "Workers on foot behind or beside trucks, such as at tailgates",
+    "Tight or congested areas where backing is required",
+    "No spotter, flagger, or marked routes for vehicles"
+  ],
+  "discussion_questions": [
+    "What caused this incident, and how could it have been prevented?",
+    "Have you ever come close to hitting a worker? What happened?",
+    "What will we do at this worksite to avoid backing over or hitting workers?"
+  ],
+  "attribution": {
+    "source": "CPWR",
+    "publisher": "CPWR — The Center for Construction Research and Training",
+    "copyright": "CPWR — The Center for Construction Research and Training. All rights reserved.",
+    "license": "free-use-with-attribution",
+    "source_url": "https://stacks.cdc.gov/view/cdc/157268/cdc_157268_DS1.pdf",
+    "notice": "Adapted from a CPWR Toolbox Talk, produced under NIOSH cooperative agreement OH 009762. Reproduced with attribution for jobsite safety training; not an endorsement by CPWR or NIOSH."
+  },
+  "audit": {
+    "status": "approved",
+    "audited_at": "2026-10-27T17:55:50Z",
+    "osha_accuracy_verified": true,
+    "flags": [
+      "Verified five workers per month, 100 ft backing limit, two horn beeps, windows open against raw source. Scope note: 1926.601(b) applies to off-highway jobsites not open to public traffic; 1926.201(a) concerns flaggers. CPWR copyright and notice preserved; source on cpwr.com or CDC Stacks (CPWR publication); free-use-with-attribution conditions in docs/content-attribution.md are met by displaying attribution.copyright and notice (no resale of individual talks, no endorsement implied). Claims checked against data/raw source."
+    ]
+  }
+}
