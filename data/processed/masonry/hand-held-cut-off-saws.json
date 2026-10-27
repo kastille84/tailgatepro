@@ -1,0 +1,64 @@
+{
+  "id": "hand-held-cut-off-saws",
+  "title": "Hand-Held Cut-Off Saws: Control Kickback and Silica Dust",
+  "primary_trade": "Masonry",
+  "trade_tags": [
+    "Masonry",
+    "Concrete & Formwork",
+    "General Construction"
+  ],
+  "osha_standards": [
+    "29 CFR 1926.300",
+    "29 CFR 1926.1153",
+    "29 CFR 1926.102",
+    "29 CFR 1926.101"
+  ],
+  "estimated_minutes": 5,
+  "summary": "Hand-held cut-off saws are powerful tools. If the blade pinches or binds, the saw can kick back toward you. They also throw sparks, debris, noise, and silica dust. Know the hazards and control each one before you cut.",
+  "talking_points": [
+    "Read the manufacturer's manual for the exact saw you are using. Each saw is different.",
+    "Use the right blade for the material and follow the blade and guard specs. Never use the saw without the blade guard or above the maximum speed marked on the blade.",
+    "Inspect the saw and blade before use. Look for a warped or damaged blade and a guard that does not work. Tag out any saw with missing or broken parts, including a broken wet-cutting system.",
+    "After mounting a new blade, test it at normal speed for 30 seconds with the guard in place before you cut.",
+    "Know the three reactive forces: pull-away, climbing, and rotational kickback. Kickback is the most dangerous. It happens when the blade jerks up and back toward you.",
+    "Prevent pinching. Do not jam or wedge the blade. Do not push sideways on the blade. Support and secure the material so it cannot fall, pinch the blade, or crush a worker. Use extreme caution when re-entering a cut.",
+    "Keep a firm grip with both hands, good balance, and solid footing. Keep all body parts away from the blade. Do not let the blade overheat, because heat can warp it and cause kickback.",
+    "Never use a hand-held saw overhead or on a ladder or stepstool. If you must cut at height, use a scissor lift, scaffold, or other elevated work platform.",
+    "Control silica dust. Use integrated water delivery or dust collection as OSHA's silica standard (Table 1) requires, and use respiratory protection when it is required.",
+    "Check for gas or electric lines in the cutting zone. Clear combustibles away because the saw makes sparks. Let a gas saw cool before refueling.",
+    "Wear fitted PPE: hard hat, safety glasses or face shield, hearing protection, cut-resistant gloves, safety shoes, and a respirator when required. Do not wear loose clothing that can catch in the blade.",
+    "Make sure the saw cannot start by accident when you change blades. Unplug it or remove the battery. For gas saws, remove the spark plug wire or use the run safety switch."
+  ],
+  "site_hazards_to_check": [
+    "Missing, damaged, or non-working blade guards",
+    "Warped, cracked, or wrong blades for the material",
+    "No water feed or dust collection on the saw when cutting concrete, block, or brick",
+    "Gas-powered saws used in basements, vaults, pipes, or other poorly ventilated spaces (carbon monoxide)",
+    "Combustible material near the cutting area",
+    "Unsupported material that can shift, fall, or pinch the blade",
+    "Gas or electric lines embedded in the cut zone",
+    "Other workers standing near the cut without eye, face, and hearing protection"
+  ],
+  "discussion_questions": [
+    "What causes a cut-off saw to kick back, and what can you do to prevent it?",
+    "How is dust controlled on the saws we are using today?",
+    "Why should we never cut overhead or from a ladder with a hand-held saw?",
+    "What must we check on the saw and blade before we start?"
+  ],
+  "attribution": {
+    "source": "CPWR",
+    "publisher": "CPWR — The Center for Construction Research and Training",
+    "copyright": "© 2025 CPWR — The Center for Construction Research and Training. All rights reserved.",
+    "license": "free-use-with-attribution",
+    "source_url": "https://www.cpwr.com/wp-content/uploads/FS-Cut-Off_Saws.pdf",
+    "notice": "Adapted from a CPWR Fact Sheet, produced under NIOSH cooperative agreement OH 012761. Reproduced with attribution for jobsite safety training; not an endorsement by CPWR or NIOSH."
+  },
+  "audit": {
+    "status": "approved",
+    "audited_at": "2026-10-27T17:55:50Z",
+    "osha_accuracy_verified": true,
+    "flags": [
+      "Verified 30-second blade test, no overhead or ladder use, reactive forces, utility lines, cooling before refuel, spark plug wire against raw CPWR fact sheet; silica Table 1 reference (1926.1153) correct. CPWR copyright and notice preserved; source on cpwr.com or CDC Stacks (CPWR publication); free-use-with-attribution conditions in docs/content-attribution.md are met by displaying attribution.copyright and notice (no resale of individual talks, no endorsement implied). Claims checked against data/raw source."
+    ]
+  }
+}

@@ -1,0 +1,53 @@
+{
+  "id": "nano-enabled-paints-and-coatings",
+  "title": "Nanomaterials in Paints and Coatings: Know the Risks",
+  "primary_trade": "Painting & Coatings",
+  "trade_tags": [
+    "Painting & Coatings",
+    "General Construction"
+  ],
+  "osha_standards": [
+    "29 CFR 1926.59",
+    "29 CFR 1910.134",
+    "29 CFR 1926.103"
+  ],
+  "estimated_minutes": 5,
+  "summary": "Many paints and coatings now contain engineered nanomaterials. Health effects are not well understood, and spraying may exceed recommended exposure limits. Use the same dust and mist controls you already use, and ask what is in the product.",
+  "talking_points": [
+    "Nanomaterials are engineered particles up to 100,000 times thinner than a human hair. Adding them can make paint anti-corrosive, anti-graffiti, anti-microbial, self-cleaning, UV protective, or water repellent.",
+    "CPWR has found nearly 1,000 construction products that report nanomaterials. More than half are paints and coatings. Check nano.elcosh.org for the products you use.",
+    "OSHA has no exposure standard for nanomaterials. NIOSH has recommended exposure limits for a few, such as carbon nanotubes, carbon nanofibers, titanium dioxide, and silver. NIOSH considers nano-sized titanium dioxide a potential occupational carcinogen.",
+    "CPWR tests found that spraying nano paints and coatings may exceed NIOSH limits. Airless spraying is one task that may overexpose you.",
+    "Breathing is the main route of exposure. Nanoparticles can reach deep in the lungs and move to other organs. Skin contact and swallowing should not be ignored.",
+    "Use local exhaust ventilation and wet methods. Both cut exposure to nanomaterials as they do for larger particles. Good work practices also reduce exposure to bystanders.",
+    "Use a respirator when needed. Filters and cartridges that are used correctly do capture nanoparticles.",
+    "Safety data sheets often do not list nanomaterials or their hazards. Ask your employer what is in the product."
+  ],
+  "site_hazards_to_check": [
+    "Spray painting or sanding in areas without ventilation or local exhaust",
+    "Unknown coating products with a missing or incomplete SDS",
+    "Bystanders working near spray or sanding",
+    "Respirators that are the wrong type, unfit, or with the wrong cartridges"
+  ],
+  "discussion_questions": [
+    "Do we know if any product we are using today contains nanomaterials?",
+    "Which tasks today are most likely to put mist or dust in the air?",
+    "What ventilation or respirator controls are in place for these tasks?"
+  ],
+  "attribution": {
+    "source": "CPWR",
+    "publisher": "CPWR — The Center for Construction Research and Training",
+    "copyright": "© 2024 CPWR — The Center for Construction Research and Training. All rights reserved.",
+    "license": "free-use-with-attribution",
+    "source_url": "https://www.cpwr.com/wp-content/uploads/FS-Nanomaterials-paint-coverings.pdf",
+    "notice": "Adapted from a CPWR Fact Sheet, produced under NIOSH cooperative agreement OH 009762. Reproduced with attribution for jobsite safety training; not an endorsement by CPWR or NIOSH."
+  },
+  "audit": {
+    "status": "approved",
+    "audited_at": "2026-10-27T17:55:50Z",
+    "osha_accuracy_verified": true,
+    "flags": [
+      "Verified ~1,000 products, 100,000x, NIOSH RELs, TiO2 potential carcinogen, airless-spray overexposure against raw source; OSHA has no nano standard (stated in talk). Replaced 1910.1200 with 1926.59; added 1926.103. CPWR copyright and notice preserved; source on cpwr.com or CDC Stacks (CPWR publication); free-use-with-attribution conditions in docs/content-attribution.md are met by displaying attribution.copyright and notice (no resale of individual talks, no endorsement implied). Claims checked against data/raw source."
+    ]
+  }
+}

@@ -1,0 +1,56 @@
+{
+  "id": "suspended-loads-and-multiple-lifts",
+  "title": "Suspended Loads and Multiple Lifts",
+  "primary_trade": "Steel Erection",
+  "trade_tags": [
+    "Steel Erection",
+    "Heavy Equipment"
+  ],
+  "osha_standards": [
+    "29 CFR 1926.753",
+    "29 CFR 1926.761",
+    "29 CFR 1926.752"
+  ],
+  "estimated_minutes": 5,
+  "summary": "Steel hangs over heads, and sometimes several beams ride one hook. This talk covers OSHA's rules for working under loads and for multiple lifts.",
+  "talking_points": [
+    "Routes for suspended loads must be pre-planned so that no one has to work directly under a suspended load, except those making the initial connection of the steel and those hooking or unhooking the load (29 CFR 1926.753(d)(1)).",
+    "When people do work under a suspended load, materials must be rigged to prevent unintentional displacement, hooks with self-closing safety latches or equivalent must be used, and a qualified rigger must rig all loads (1926.753(d)(2)).",
+    "A multiple lift is allowed only if a multiple lift rigging assembly is used, no more than five members are hoisted, only beams and similar structural members are lifted, and all employees involved are trained (1926.753(e)(1)).",
+    "The crane must not be used for a multiple lift if that is contrary to the manufacturer's specifications and limitations (1926.753(e)(1)(v)).",
+    "Rigging assembly components must be designed for a maximum capacity for the total assembly and each attachment point, certified by the manufacturer or a qualified rigger, with a 5 to 1 safety factor (1926.753(e)(2)). The total load must stay within the crane load charts and rigging rating charts (1926.753(e)(3)).",
+    "Members must be attached at their center of gravity, kept reasonably level, rigged from the top down and at least 7 feet apart (1926.753(e)(4)).",
+    "Set members from the bottom up, and use controlled load lowering whenever the load is over the connectors (1926.753(e)(5)-(6)).",
+    "Employees who do multiple lift rigging must be trained in the hazards of multiple lifts and the proper procedures and equipment (1926.761(c)(1))."
+  ],
+  "site_hazards_to_check": [
+    "People standing under the load path",
+    "Rigging not designed for multiple lifts",
+    "More than five members on one assembly",
+    "Members out of level or hung too close together",
+    "Load over connectors lowered fast",
+    "Untrained riggers on a multiple lift"
+  ],
+  "discussion_questions": [
+    "Who decides the load path, and how do we keep people out from under it?",
+    "Do we have a certified multiple lift assembly, and where is the certification?",
+    "How do we signal controlled lowering over the connectors?"
+  ],
+  "attribution": {
+    "source": "TailgatePro",
+    "publisher": "TailgatePro",
+    "copyright": "Original TailgatePro content, written from 29 CFR 1926.753(d) (Working under loads), 1926.753(e) (Multiple lift rigging), 1926.761(c)(1) and 1926.752(d). Regulation and agency text is U.S. Government work in the public domain; the wording here is TailgatePro's own.",
+    "license": "original-work",
+    "source_url": "https://www.ecfr.gov/current/title-29/section-1926.753",
+    "source_ref": "ECFR-SE-05",
+    "notice": "Written from 29 CFR 1926.753(d) (Working under loads), 1926.753(e) (Multiple lift rigging), 1926.761(c)(1) and 1926.752(d). General guidance only; follow your company safety program and site-specific requirements. Not an endorsement by OSHA."
+  },
+  "audit": {
+    "status": "approved",
+    "audited_at": "2026-10-27T18:25:58.053Z",
+    "osha_accuracy_verified": true,
+    "flags": [
+      "eCFR (title 29, current as of 2026-10-01) 1926.753(d)(1)-(2), (e)(1)(i)-(v), (e)(2)-(6) (five members, 5 to 1, 7 ft, top-down rig / bottom-up set, controlled lowering), 1926.761(c)(1), 1926.752(d) verified verbatim. No changes required."
+    ]
+  }
+}

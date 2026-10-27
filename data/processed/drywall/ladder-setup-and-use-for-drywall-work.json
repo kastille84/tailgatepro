@@ -1,0 +1,54 @@
+{
+  "id": "ladder-setup-and-use-for-drywall-work",
+  "title": "Ladder Setup and Use for Drywall Work",
+  "primary_trade": "Drywall",
+  "trade_tags": [
+    "Drywall",
+    "Painting & Coatings"
+  ],
+  "osha_standards": [
+    "29 CFR 1926.1053"
+  ],
+  "estimated_minutes": 5,
+  "summary": "Drywall crews climb stepladders and extension ladders all day, often with boards, buckets and tools in hand. This talk covers OSHA's ladder use rules for setup, climbing and inspection.",
+  "talking_points": [
+    "When a portable ladder is used to reach an upper landing, the side rails must extend at least 3 feet above the landing. When that extension is not possible because of the ladder length, the ladder must be secured at its top to a rigid support and a grasping device such as a grabrail provided (29 CFR 1926.1053(b)(1)).",
+    "Set a non-self-supporting ladder at an angle where the base is approximately one-quarter of the working length away from the top support (1926.1053(b)(5)(i)).",
+    "Use ladders only on stable, level surfaces unless secured (1926.1053(b)(6)). Keep the area around the top and bottom clear (1926.1053(b)(9)).",
+    "Ladders in doorways, passageways or other places where traffic can bump them must be secured or the area barricaded (1926.1053(b)(8)). Door openings are common on drywall jobs.",
+    "Keep ladders free of oil, grease and other slipping hazards (1926.1053(b)(2)). Wipe off joint compound and other wet material before climbing.",
+    "Never use the top or top step of a stepladder as a step, and do not climb the rear cross-bracing unless the ladder is designed for it (1926.1053(b)(13)-(14)).",
+    "Do not move, shift or extend a ladder while someone is on it, and do not load it beyond its rated capacity (1926.1053(b)(11), (b)(3)).",
+    "Inspect ladders for visible defects. Tag or mark a ladder with broken or missing rungs, split rails or corroded parts and pull it from service until repaired (1926.1053(b)(15)-(16))."
+  ],
+  "site_hazards_to_check": [
+    "Ladder set in a doorway or hallway with traffic",
+    "Wet compound, mud or dust on rungs and feet",
+    "Uneven or slippery floor under the ladder feet",
+    "Carrying boards or buckets up the ladder",
+    "Damaged rungs or rails",
+    "Standing on the top step or reaching far to the side"
+  ],
+  "discussion_questions": [
+    "How do we carry boards and tools so both hands are free to climb?",
+    "Where can we get a tag for a damaged ladder, and who pulls it?",
+    "Where on this floor are ladders most likely to get bumped?"
+  ],
+  "attribution": {
+    "source": "TailgatePro",
+    "publisher": "TailgatePro",
+    "copyright": "Original TailgatePro content, written from 29 CFR 1926.1053 (Ladders), paragraph (b) on use. Regulation and agency text is U.S. Government work in the public domain; the wording here is TailgatePro's own.",
+    "license": "original-work",
+    "source_url": "https://www.ecfr.gov/current/title-29/section-1926.1053",
+    "source_ref": "ECFR-DW-03",
+    "notice": "Written from 29 CFR 1926.1053 (Ladders), paragraph (b) on use. General guidance only; follow your company safety program and site-specific requirements. Not an endorsement by OSHA."
+  },
+  "audit": {
+    "status": "approved",
+    "audited_at": "2026-10-27T18:25:58.047Z",
+    "osha_accuracy_verified": true,
+    "flags": [
+      "eCFR (title 29, current as of 2026-10-01) 1926.1053(b)(1),(2),(3),(5)(i),(6),(8),(9),(11),(13),(14),(15),(16) verified verbatim. Fixed in place: (b)(1) bullet now states the secure-at-top alternative applies only when the 3 ft extension is not possible (previously read as a free choice)."
+    ]
+  }
+}

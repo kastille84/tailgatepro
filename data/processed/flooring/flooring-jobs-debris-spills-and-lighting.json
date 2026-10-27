@@ -1,0 +1,56 @@
+{
+  "id": "flooring-jobs-debris-spills-and-lighting",
+  "title": "Flooring Jobs: Debris, Spills and Lighting",
+  "primary_trade": "Flooring",
+  "trade_tags": [
+    "Flooring",
+    "General Construction"
+  ],
+  "osha_standards": [
+    "29 CFR 1926.25",
+    "29 CFR 1926.56",
+    "29 CFR 1926.152",
+    "29 CFR 1926.1053"
+  ],
+  "estimated_minutes": 5,
+  "summary": "Flooring crews work at floor level, where debris, spills and poor light cause slips, trips and fires. This talk covers OSHA's housekeeping, lighting and spill rules.",
+  "talking_points": [
+    "Form and scrap lumber with protruding nails, and all other debris, must be kept cleared from work areas, passageways and stairs in and around buildings (29 CFR 1926.25(a)).",
+    "Combustible scrap and debris must be removed at regular intervals, and safe means must be provided to facilitate removal (1926.25(b)).",
+    "Containers must be provided for waste, trash, oily and used rags and other refuse. Containers for oily, flammable or hazardous waste, such as caustics, acids and harmful dusts, must have covers, and waste must be disposed of at frequent and regular intervals (1926.25(c)). Put solvent and adhesive rags in a covered container.",
+    "Leakage and spillage of flammable liquids must be disposed of promptly and safely (1926.152(f)(2)).",
+    "Construction areas, corridors and storage areas must be lit to at least the Table D-3 minimums while work is in progress, for example 5 foot-candles for general construction area lighting and for indoor corridors and hallways (1926.56(a)).",
+    "Keep ladder bases and landing areas clear, and keep ladder rungs free of oil and grease, such as adhesive (1926.1053(b)(2), (b)(9)).",
+    "Good practice: plan the work so you do not trap yourself. Leave a clear path to the exit and keep stored material out of walkways."
+  ],
+  "site_hazards_to_check": [
+    "Wet adhesive, solvent or water on floors",
+    "Cutoffs and scraps in walkways",
+    "Uncovered rag and waste containers",
+    "Dim rooms and hallways",
+    "Cords and tools across paths",
+    "Material blocking exits"
+  ],
+  "discussion_questions": [
+    "Where is our waste and rag container, and who empties it?",
+    "How do we mark and protect wet or freshly laid areas?",
+    "Where is the light too low for this task?"
+  ],
+  "attribution": {
+    "source": "TailgatePro",
+    "publisher": "TailgatePro",
+    "copyright": "Original TailgatePro content, written from 29 CFR 1926.25 (Housekeeping), 1926.56 (Illumination) and 1926.152(f)(2) (spills). Regulation and agency text is U.S. Government work in the public domain; the wording here is TailgatePro's own.",
+    "license": "original-work",
+    "source_url": "https://www.ecfr.gov/current/title-29/section-1926.25",
+    "source_ref": "ECFR-FL-05",
+    "notice": "Written from 29 CFR 1926.25 (Housekeeping), 1926.56 (Illumination) and 1926.152(f)(2) (spills). General guidance only; follow your company safety program and site-specific requirements. Not an endorsement by OSHA."
+  },
+  "audit": {
+    "status": "approved",
+    "audited_at": "2026-10-27T18:25:58.055Z",
+    "osha_accuracy_verified": true,
+    "flags": [
+      "eCFR (title 29, current as of 2026-10-01) 1926.25(a)-(c), 1926.56(a) Table D-3, 1926.152(f)(2), 1926.1053(b)(2),(9) verified verbatim. Fixed: uncited exit-path advice now labeled \"Good practice\"."
+    ]
+  }
+}

@@ -1,0 +1,61 @@
+{
+  "id": "methylene-chloride-bathtub-refinishing",
+  "title": "Bathtub Refinishing: Methylene Chloride in Small Rooms",
+  "primary_trade": "Painting & Coatings",
+  "trade_tags": [
+    "Painting & Coatings",
+    "Plumbing",
+    "General Construction"
+  ],
+  "osha_standards": [
+    "29 CFR 1926.1152",
+    "29 CFR 1910.1052",
+    "29 CFR 1926.59",
+    "29 CFR 1926.95",
+    "29 CFR 1910.134",
+    "29 CFR 1926.103"
+  ],
+  "estimated_minutes": 5,
+  "summary": "At least 14 workers have died since 2000 after stripping bathtubs with products that contain methylene chloride. Vapors build up fast in small bathrooms. Use a safer product, or follow every control the OSHA standard requires.",
+  "talking_points": [
+    "Methylene chloride is a sweet-smelling solvent. You absorb it by breathing it and through your skin. If you smell it, you are already overexposed. Your nose can also stop noticing the smell.",
+    "Investigations found workers using it alone, in small windowless bathrooms, with no or poor respirators, the wrong gloves, and no training.",
+    "It affects the brain, causes dizziness, fatigue, headaches, and nausea, and at high levels can stop breathing. It breaks down into carbon monoxide in the body, which can trigger heart attacks in workers with heart disease. Long-term exposure may cause cancer.",
+    "The best protection is a product with no methylene chloride. Check labels and SDSs. Safer substitutes may have other hazards, such as flammability, so use them safely too.",
+    "A bathroom fan or open window is not adequate ventilation. Use local exhaust ventilation with fresh make-up air that is not contaminated by exhaust or car fumes.",
+    "OSHA requires air testing when methylene chloride is used. The limits are 25 ppm as an 8-hour average and 125 ppm over any 15 minutes.",
+    "Avoid spraying. Use long-handled tools so you do not lean into the tub. Leave the room right after applying the stripper.",
+    "When controls cannot keep levels below the limits, wear a full-face supplied-air respirator. Air-purifying respirators and half-masks are not allowed.",
+    "Latex, nitrile, neoprene, and polyethylene gloves do not protect against methylene chloride. Use gloves made of PE/EVOH or other laminate that resist it, and check them often.",
+    "Training in a language you understand is required, including the hazards, PPE, emergency procedures, and how to read labels and SDSs."
+  ],
+  "site_hazards_to_check": [
+    "Bathrooms or other small rooms with no windows or poor ventilation",
+    "Stripping products that contain high percentages of methylene chloride",
+    "Workers alone while using the product",
+    "Wrong gloves, a half-mask, or an air-purifying respirator",
+    "No air monitoring or local exhaust ventilation",
+    "Flammable stripper vapors near ignition sources"
+  ],
+  "discussion_questions": [
+    "Does this stripper contain methylene chloride, and is there a safer alternative?",
+    "How is the room ventilated, and has the air been tested?",
+    "What are the early signs of overexposure, and what do we do if someone shows them?"
+  ],
+  "attribution": {
+    "source": "NIOSH",
+    "publisher": "National Institute for Occupational Safety and Health (NIOSH)",
+    "copyright": "U.S. Government work — public domain.",
+    "license": "public-domain",
+    "source_url": "https://www.cdc.gov/niosh/docs/2013-110/pdfs/2013-110.pdf",
+    "notice": "Adapted from the NIOSH publication Methylene Chloride Hazards for Bathtub Refinishers (OSHA-NIOSH Hazard Alert, NIOSH 2013-110). Reproduced with attribution for jobsite safety training; not an endorsement by NIOSH."
+  },
+  "audit": {
+    "status": "approved",
+    "audited_at": "2026-10-27T17:55:50Z",
+    "osha_accuracy_verified": true,
+    "flags": [
+      "Verified 14 deaths since 2000, 25 ppm TWA / 125 ppm STEL, full-face supplied-air only, glove materials, fan/window inadequate against NIOSH 2013-110. 1926.1152 is the construction standard; 1910.1052 retained because the source cites it. Replaced 1910.1200 with 1926.59 and 1910.132 with 1926.95; added 1926.103. Public-domain NIOSH source."
+    ]
+  }
+}
