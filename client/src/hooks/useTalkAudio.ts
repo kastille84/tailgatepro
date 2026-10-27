@@ -64,6 +64,7 @@ export const useTalkAudio = (): UseTalkAudioResult => {
   // The raw, unmapped voices -- needed to set utterance.voice, kept out of
   // the public return value so consumers only ever see the plain POJO shape.
   const rawVoicesRef = useRef<SpeechSynthesisVoice[]>([]);
+  const activeUtteranceRef = useRef<SpeechSynthesisUtterance | null>(null);
 
   useEffect(() => {
     if (!isSupported) return;
@@ -124,17 +125,34 @@ export const useTalkAudio = (): UseTalkAudioResult => {
 
       const synth = window.speechSynthesis;
       synth.cancel();
+      // iOS Safari can leave the synth stuck in a paused state after a
+      // cancel (or an interrupted prior session), which makes the next
+      // speak() queue silently and never play.
+      synth.resume();
 
       const utterance = new SpeechSynthesisUtterance(text);
       const voice = rawVoicesRef.current.find(
         (candidate) => candidate.voiceURI === selectedVoiceURI,
       );
-      if (voice) utterance.voice = voice;
+      if (voice) {
+        utterance.voice = voice;
+        // iOS ignores `voice` alone for some voices; `lang` must agree.
+        utterance.lang = voice.lang;
+      }
 
       utterance.onstart = () => setIsSpeaking(true);
-      utterance.onend = () => setIsSpeaking(false);
-      utterance.onerror = () => setIsSpeaking(false);
+      utterance.onend = () => {
+        activeUtteranceRef.current = null;
+        setIsSpeaking(false);
+      };
+      utterance.onerror = () => {
+        activeUtteranceRef.current = null;
+        setIsSpeaking(false);
+      };
 
+      // Safari garbage-collects an utterance with no live reference while
+      // it's speaking, which silently drops it and its end/error events.
+      activeUtteranceRef.current = utterance;
       synth.speak(utterance);
     },
     [isSupported, selectedVoiceURI],
