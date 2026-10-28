@@ -21,6 +21,12 @@ describe("regeneratePlan: parseArgs", () => {
   ])("should throw for %j", (argv) => {
     expect(() => parseArgs(argv)).toThrow(/Usage/);
   });
+
+  it("should name the calling script in the usage message", () => {
+    expect(() => parseArgs(["--bogus"], "backfill-pdf-seals.js")).toThrow(
+      /scripts\/backfill-pdf-seals\.js/,
+    );
+  });
 });
 
 describe("regeneratePlan: selectMeetings", () => {

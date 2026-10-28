@@ -31,3 +31,15 @@ export const StyledTamperedNote = styled.p`
   font-weight: 600;
   color: ${({ theme }) => theme.colors.red[600]};
 `;
+
+// Opens the public /verify/:id page, where a PDF (e.g. one forwarded by email)
+// can be checked against the original. 48px min tap height per field UX.
+export const StyledCheckFileLink = styled.a`
+  display: inline-flex;
+  align-items: center;
+  min-height: 4.8rem;
+  font-size: 1.3rem;
+  font-weight: 600;
+  color: ${({ theme }) => theme.colors.navy[600]};
+  text-decoration: underline;
+`;

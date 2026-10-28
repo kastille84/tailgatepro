@@ -1,7 +1,15 @@
 // Plain CommonJS — see requireAuth.test.js for why (nested require() sharing).
 process.env.MEETING_LOG_SEAL_SECRET = "test-secret-one";
 
-const { buildCanonicalPayload, computeSeal, shortSeal, sealsMatch } = require("./contentSeal");
+const {
+  buildCanonicalPayload,
+  computeSeal,
+  shortSeal,
+  sealsMatch,
+  sha256Hex,
+  buildPdfPayload,
+  computePdfSeal,
+} = require("./contentSeal");
 
 const meetingLog = {
   id: "meeting-1",
@@ -184,5 +192,82 @@ describe("contentSeal: sealsMatch", () => {
   it("should return false when either argument isn't a string", () => {
     expect(sealsMatch(null, "abc")).toBe(false);
     expect(sealsMatch("abc", undefined)).toBe(false);
+  });
+});
+
+describe("contentSeal: sha256Hex", () => {
+  it("should return the known SHA-256 hex digest of the bytes", () => {
+    // Act & Assert — digest of the ASCII string "abc"
+    expect(sha256Hex(Buffer.from("abc"))).toBe(
+      "ba7816bf8f01cfea414140de5dae2223b00361a396177a9cb410ff61f20015ad",
+    );
+  });
+});
+
+describe("contentSeal: buildPdfPayload / computePdfSeal", () => {
+  const blobHashes = {
+    crewPhoto: "photo-hash",
+    signatures: { "sig-b": "hash-b", "sig-a": "hash-a" },
+  };
+
+  it("should produce the same payload regardless of signature key order", () => {
+    // Act
+    const forward = buildPdfPayload({ id: "m1", pdfSha256: "pdf", blobHashes });
+    const reversed = buildPdfPayload({
+      id: "m1",
+      pdfSha256: "pdf",
+      blobHashes: {
+        crewPhoto: "photo-hash",
+        signatures: { "sig-a": "hash-a", "sig-b": "hash-b" },
+      },
+    });
+
+    // Assert
+    expect(forward).toBe(reversed);
+    expect(Object.keys(JSON.parse(forward).blobHashes.signatures)).toEqual([
+      "sig-a",
+      "sig-b",
+    ]);
+  });
+
+  it("should default missing blob hashes to a null crew photo and no signatures", () => {
+    // Act
+    const payload = JSON.parse(
+      buildPdfPayload({ id: "m1", pdfSha256: "pdf", blobHashes: undefined }),
+    );
+
+    // Assert
+    expect(payload.blobHashes).toEqual({ crewPhoto: null, signatures: {} });
+  });
+
+  it("should produce a different seal when the pdf hash or any blob hash changes", () => {
+    // Arrange
+    const base = computePdfSeal(
+      buildPdfPayload({ id: "m1", pdfSha256: "pdf", blobHashes }),
+    );
+
+    // Act
+    const otherPdf = computePdfSeal(
+      buildPdfPayload({ id: "m1", pdfSha256: "pdf2", blobHashes }),
+    );
+    const otherBlob = computePdfSeal(
+      buildPdfPayload({
+        id: "m1",
+        pdfSha256: "pdf",
+        blobHashes: { ...blobHashes, crewPhoto: "swapped" },
+      }),
+    );
+
+    // Assert
+    expect(otherPdf).not.toBe(base);
+    expect(otherBlob).not.toBe(base);
+  });
+
+  it("should be domain-separated from the content seal over the same string", () => {
+    // Arrange
+    const payload = buildPdfPayload({ id: "m1", pdfSha256: "pdf", blobHashes });
+
+    // Act & Assert
+    expect(computePdfSeal(payload)).not.toBe(computeSeal(payload));
   });
 });

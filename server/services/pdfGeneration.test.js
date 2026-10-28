@@ -338,6 +338,30 @@ describe("pdfGeneration: renderMeetingLogPdf", () => {
     expect(text).not.toContain("Content seal:");
   });
 
+  it("prints the verify URL and embeds a QR image when a verifyUrl is given", async () => {
+    const withQr = await renderMeetingLogPdf({
+      meetingLog,
+      project,
+      talk: talkWithAttributionAndQuiz,
+      signatures,
+      company,
+      verifyUrl: "https://app.example/verify/meeting-1",
+    });
+    const without = await renderMeetingLogPdf({
+      meetingLog,
+      project,
+      talk: talkWithAttributionAndQuiz,
+      signatures,
+      company,
+    });
+    const text = decodeRenderedText(withQr);
+
+    expect(text).toContain("https://app.example/verify/meeting-1");
+    expect(text).toContain("Scan to verify this report is unaltered");
+    expect(withQr.toString("latin1")).toContain("/Subtype /Image");
+    expect(decodeRenderedText(without)).not.toContain("Scan to verify");
+  });
+
   it("prints the liability disclaimer on every report", async () => {
     const buffer = await renderMeetingLogPdf({
       meetingLog,

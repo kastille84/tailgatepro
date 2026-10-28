@@ -90,4 +90,53 @@ const sealsMatch = (a, b) => {
   return crypto.timingSafeEqual(Buffer.from(a), Buffer.from(b));
 };
 
-module.exports = { buildCanonicalPayload, computeSeal, shortSeal, sealsMatch };
+// SHA-256 hex digest of raw bytes (a rendered PDF, or a signature / crew-photo
+// blob). Unkeyed on purpose: the browser-side "check this file" flow hashes
+// the dropped PDF with SubtleCrypto and can only reproduce a plain digest.
+const sha256Hex = (buffer) =>
+  crypto.createHash("sha256").update(buffer).digest("hex");
+
+/**
+ * Canonical JSON the PDF seal is computed over: the PDF's own digest plus the
+ * digest of every blob embedded in it. Signature hashes are keyed by signature
+ * id and emitted in sorted order so object key order never changes the seal.
+ * A `null` hash means that blob couldn't be downloaded at render time and is
+ * skipped (not treated as tampered) on verification.
+ * @param {object} params
+ * @param {string} params.id - meeting log id.
+ * @param {string} params.pdfSha256
+ * @param {{crewPhoto?: string|null, signatures?: Object<string, string|null>}} params.blobHashes
+ * @returns {string}
+ */
+const buildPdfPayload = ({ id, pdfSha256, blobHashes }) => {
+  const signatureHashes = blobHashes?.signatures ?? {};
+  const sortedSignatures = {};
+  Object.keys(signatureHashes)
+    .sort()
+    .forEach((signatureId) => {
+      sortedSignatures[signatureId] = signatureHashes[signatureId];
+    });
+
+  return JSON.stringify({
+    id,
+    pdfSha256,
+    blobHashes: {
+      crewPhoto: blobHashes?.crewPhoto ?? null,
+      signatures: sortedSignatures,
+    },
+  });
+};
+
+// HMAC of a PDF payload, domain-separated from the content seal so the two
+// can never be swapped for one another even though they share a key.
+const computePdfSeal = (payload) => computeSeal(`pdf:${payload}`);
+
+module.exports = {
+  buildCanonicalPayload,
+  computeSeal,
+  shortSeal,
+  sealsMatch,
+  sha256Hex,
+  buildPdfPayload,
+  computePdfSeal,
+};

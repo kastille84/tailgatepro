@@ -15,6 +15,13 @@ const auditLogService = require("./auditLog");
 const jobsiteIntegrationsService = require("./jobsiteIntegrations");
 const projectIntegrationsService = require("./projectIntegrations");
 const { enqueue, regenerate } = require("./pdfGenerationQueue");
+const {
+  sha256Hex,
+  buildPdfPayload,
+  computePdfSeal,
+} = require("../utility/contentSeal");
+
+process.env.MEETING_LOG_SEAL_SECRET = "test-secret-one";
 
 const meetingLog = {
   id: "meeting-1",
@@ -108,6 +115,10 @@ describe("pdfGenerationQueue: enqueue", () => {
       .mockReset()
       .mockReturnValue("meeting-1/report.pdf");
     vi.spyOn(meetingLogsService, "setFinalPdfUrl").mockReset().mockResolvedValue(undefined);
+    vi.spyOn(meetingLogsService, "getPdfSeal")
+      .mockReset()
+      .mockResolvedValue({ pdfSha256: null, pdfSeal: null, blobHashes: null });
+    vi.spyOn(meetingLogsService, "setPdfSeal").mockReset().mockResolvedValue(undefined);
     vi.spyOn(projectsService, "getById").mockReset().mockResolvedValue(project);
     vi.spyOn(talksService, "getById").mockReset().mockResolvedValue(talk);
     vi.spyOn(signaturesService, "listForMeeting").mockReset().mockResolvedValue(signatures);
@@ -197,6 +208,7 @@ describe("pdfGenerationQueue: enqueue", () => {
       crewPhotoBuffer: Buffer.from("photo-bytes"),
       company,
       logoBuffer: null,
+      verifyUrl: expect.stringMatching(/\/verify\/meeting-1$/),
     });
     expect(storageService.uploadBlob).toHaveBeenCalledWith(
       "meeting-pdfs",
@@ -212,9 +224,68 @@ describe("pdfGenerationQueue: enqueue", () => {
     expect(auditLogService.record).toHaveBeenCalledWith({
       meetingLogId: "meeting-1",
       eventType: "pdf_generated",
-      metadata: { path: "meeting-1/report.pdf" },
+      metadata: { path: "meeting-1/report.pdf", sha256: sha256Hex(pdfBuffer) },
     });
     expect(consoleErrorSpy).not.toHaveBeenCalled();
+  });
+
+  it("should hash the PDF and every embedded blob, and persist an HMAC over them (PDF seal)", async () => {
+    // Arrange
+    const blobHashes = {
+      crewPhoto: sha256Hex(Buffer.from("photo-bytes")),
+      signatures: { "sig-1": sha256Hex(Buffer.from("sig-bytes:meeting-1/sig-1.png")) },
+    };
+    const pdfSha256 = sha256Hex(pdfBuffer);
+
+    // Act
+    await enqueue("meeting-1", "company-1");
+
+    // Assert
+    expect(meetingLogsService.setPdfSeal).toHaveBeenCalledWith("meeting-1", "company-1", {
+      pdfSha256,
+      pdfSeal: computePdfSeal(buildPdfPayload({ id: "meeting-1", pdfSha256, blobHashes })),
+      blobHashes,
+    });
+  });
+
+  it("should record a null hash for a blob that failed to download instead of failing the render", async () => {
+    // Arrange
+    storageService.downloadBlob.mockImplementation(async (bucket, path) => {
+      if (bucket === "crew-photos") throw new Error("gone");
+      return downloadBlobImpl(bucket, path);
+    });
+
+    // Act
+    await enqueue("meeting-1", "company-1");
+
+    // Assert
+    expect(meetingLogsService.setPdfSeal).toHaveBeenCalledWith(
+      "meeting-1",
+      "company-1",
+      expect.objectContaining({
+        blobHashes: expect.objectContaining({ crewPhoto: null }),
+      }),
+    );
+  });
+
+  it("should abort the render when a previously sealed blob no longer matches its sealed hash", async () => {
+    // Arrange — the sealed signature hash differs from what Storage returns now
+    meetingLogsService.getPdfSeal.mockResolvedValue({
+      pdfSha256: "old",
+      pdfSeal: "old-seal",
+      blobHashes: {
+        crewPhoto: sha256Hex(Buffer.from("photo-bytes")),
+        signatures: { "sig-1": sha256Hex(Buffer.from("the-original-signature")) },
+      },
+    });
+
+    // Act
+    await enqueue("meeting-1", "company-1");
+
+    // Assert — soft-fail: logged, nothing uploaded or re-sealed
+    expect(storageService.uploadBlob).not.toHaveBeenCalled();
+    expect(meetingLogsService.setPdfSeal).not.toHaveBeenCalled();
+    expect(consoleErrorSpy).toHaveBeenCalled();
   });
 
   it("should not build a signed URL or send an email when the project is unlinked and has no gc_contact_email", async () => {
@@ -526,6 +597,10 @@ describe("pdfGenerationQueue: regenerate", () => {
       .mockReset()
       .mockReturnValue("meeting-1/report.pdf");
     vi.spyOn(meetingLogsService, "setFinalPdfUrl").mockReset().mockResolvedValue(undefined);
+    vi.spyOn(meetingLogsService, "getPdfSeal")
+      .mockReset()
+      .mockResolvedValue({ pdfSha256: null, pdfSeal: null, blobHashes: null });
+    vi.spyOn(meetingLogsService, "setPdfSeal").mockReset().mockResolvedValue(undefined);
     vi.spyOn(projectsService, "getById").mockReset().mockResolvedValue(project);
     vi.spyOn(talksService, "getById").mockReset().mockResolvedValue(talk);
     vi.spyOn(signaturesService, "listForMeeting").mockReset().mockResolvedValue(signatures);
@@ -574,10 +649,30 @@ describe("pdfGenerationQueue: regenerate", () => {
     expect(auditLogService.record).toHaveBeenCalledWith({
       meetingLogId: "meeting-1",
       eventType: "pdf_generated",
-      metadata: { path: "meeting-1/report.pdf", regenerated: true },
+      metadata: {
+        path: "meeting-1/report.pdf",
+        sha256: sha256Hex(pdfBuffer),
+        regenerated: true,
+      },
     });
     expect(storageService.getSignedUrl).not.toHaveBeenCalled();
     expect(emailService.sendMeetingLogEmail).not.toHaveBeenCalled();
+  });
+
+  it("should refuse to re-seal when an embedded crew photo changed since it was sealed", async () => {
+    // Arrange
+    meetingLogsService.getPdfSeal.mockResolvedValue({
+      pdfSha256: "old",
+      pdfSeal: "old-seal",
+      blobHashes: { crewPhoto: sha256Hex(Buffer.from("original-photo")), signatures: {} },
+    });
+
+    // Act & Assert
+    await expect(regenerate("meeting-1", "company-1")).rejects.toMatchObject({
+      statusCode: 409,
+    });
+    expect(storageService.uploadBlob).not.toHaveBeenCalled();
+    expect(meetingLogsService.setPdfSeal).not.toHaveBeenCalled();
   });
 
   it("should rethrow when rendering fails so the caller can report it", async () => {

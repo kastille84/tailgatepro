@@ -11,6 +11,7 @@
 // document.
 
 const PDFDocument = require("pdfkit");
+const QRCode = require("qrcode");
 const { hasBrandingAccess } = require("../utility/entitlements");
 const { formatDate } = require("../utility/formatDate");
 const { shortSeal } = require("../utility/contentSeal");
@@ -21,6 +22,8 @@ const BOLD_FONT = "Helvetica-Bold";
 // codebase yet (pre-launch), this is the one place it's hardcoded.
 const CTA_URL = "https://www.getTailgatePro.com";
 const GC_SIGNUP_URL = `${CTA_URL}/signup`;
+// Printed size (pt) of the verify QR code.
+const QR_SIZE = 72;
 
 // pdfkit auto-paginates wrapped text (checks remaining page height and
 // calls addPage() internally) but not images — an image near the bottom of
@@ -79,9 +82,12 @@ const bulletList = (doc, headingText, items) => {
  *   subcontractor, or `null` if unavailable.
  * @param {Buffer|null} [params.logoBuffer] - pre-fetched company logo bytes, or `null` if the
  *   company has no logo uploaded (or isn't Trade Pro+). This function does no Storage I/O itself.
+ * @param {string|null} [params.verifyUrl] - public `/verify/:id` page for this meeting. When
+ *   set, a QR code and the plain URL are printed beside the content seal so a GC holding a paper
+ *   or forwarded copy can check the file against the original.
  * @returns {Promise<Buffer>}
  */
-const renderMeetingLogPdf = ({
+const renderMeetingLogPdf = async ({
   meetingLog,
   project,
   talk,
@@ -89,8 +95,16 @@ const renderMeetingLogPdf = ({
   crewPhotoBuffer = null,
   company = null,
   logoBuffer = null,
-}) =>
-  new Promise((resolve, reject) => {
+  verifyUrl = null,
+}) => {
+  // Rendered before the pdfkit Promise below: QRCode.toBuffer is async, and
+  // an awaited value inside the synchronous drawing code would force the
+  // whole layout into callbacks.
+  const qrBuffer = verifyUrl
+    ? await QRCode.toBuffer(verifyUrl, { margin: 1, width: 240 })
+    : null;
+
+  return new Promise((resolve, reject) => {
     const doc = new PDFDocument({ margin: 50, compress: false });
     const chunks = [];
     doc.on("data", (chunk) => chunks.push(chunk));
@@ -216,6 +230,31 @@ const renderMeetingLogPdf = ({
       doc.fillColor("black");
     }
 
+    // Verify-this-file QR (PDF-byte tamper evidence,
+    // docs/tamper-evidence-design.md): points at the public /verify/:id page,
+    // where the reader drops this file to compare its SHA-256 against the one
+    // recorded at render time. QR image + URL are kept together on one page.
+    if (qrBuffer) {
+      ensureRoomFor(doc, QR_SIZE + 30);
+      doc.moveDown(0.5);
+      const qrTop = doc.y;
+      doc.image(qrBuffer, doc.page.margins.left, qrTop, { fit: [QR_SIZE, QR_SIZE] });
+      doc
+        .fontSize(8)
+        .fillColor("#555555")
+        .text(
+          "Scan to verify this report is unaltered, or open:",
+          doc.page.margins.left + QR_SIZE + 10,
+          qrTop + 8,
+        )
+        .text(verifyUrl, { link: verifyUrl, underline: true });
+      doc.fillColor("black");
+      // Text above is positioned absolutely; hand the cursor back below the
+      // QR so the sections that follow don't overlap it.
+      doc.x = doc.page.margins.left;
+      doc.y = qrTop + QR_SIZE + 6;
+    }
+
     // Static free-tier watermark (docs/pricing-and-positioning-strategy_V2.md:
     // Trade Free PDFs carry this, Trade Pro+ removes it and adds the
     // company's own logo instead — gated on
@@ -279,5 +318,6 @@ const renderMeetingLogPdf = ({
 
     doc.end();
   });
+};
 
 module.exports = { renderMeetingLogPdf, ensureRoomFor };
