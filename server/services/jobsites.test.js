@@ -3,6 +3,7 @@ const { supabase } = require("../utility/supabaseClient");
 const projectsService = require("./projects");
 const companiesService = require("./companies");
 const subAccessService = require("./subAccess");
+const stripeService = require("./stripe");
 const {
   create,
   listForGc,
@@ -542,6 +543,54 @@ describe("jobsites service: update", () => {
     expect(payload.archived_at).toEqual(expect.any(String));
   });
 
+  describe("Site Pro billing follows jobsite liveness", () => {
+    const proRow = { ...dbRow, plan: "site_pro" };
+    let cancelSpy;
+
+    beforeEach(() => {
+      cancelSpy = vi.spyOn(stripeService, "setSiteCancelAtPeriodEnd").mockResolvedValue();
+    });
+
+    afterEach(() => {
+      cancelSpy.mockRestore();
+    });
+
+    it("should schedule cancellation when a Site Pro jobsite is completed", async () => {
+      single.mockResolvedValue({ data: { ...proRow, status: "completed" }, error: null });
+
+      await updateJobsite({ id: "jobsite-1", gcCompanyId: "gc-1", patch: { status: "completed" } });
+
+      expect(cancelSpy).toHaveBeenCalledWith("jobsite-1", true);
+    });
+
+    it("should schedule cancellation when a Site Pro jobsite is archived", async () => {
+      single.mockResolvedValue({
+        data: { ...proRow, archived_at: "2026-10-27T00:00:00.000Z" },
+        error: null,
+      });
+
+      await updateJobsite({ id: "jobsite-1", gcCompanyId: "gc-1", patch: { archived: true } });
+
+      expect(cancelSpy).toHaveBeenCalledWith("jobsite-1", true);
+    });
+
+    it("should not touch Stripe for a Site Pro jobsite when only the name changes", async () => {
+      single.mockResolvedValue({ data: proRow, error: null });
+
+      await updateJobsite({ id: "jobsite-1", gcCompanyId: "gc-1", patch: { name: "x" } });
+
+      expect(cancelSpy).not.toHaveBeenCalled();
+    });
+
+    it("should not touch Stripe for a free jobsite that is completed", async () => {
+      single.mockResolvedValue({ data: { ...dbRow, status: "completed" }, error: null });
+
+      await updateJobsite({ id: "jobsite-1", gcCompanyId: "gc-1", patch: { status: "completed" } });
+
+      expect(cancelSpy).not.toHaveBeenCalled();
+    });
+  });
+
   describe("restoring a dormant jobsite (plan cap)", () => {
     let lookup;
     let capQuery;
@@ -565,6 +614,20 @@ describe("jobsites service: update", () => {
 
       // Assert
       expect(update).toHaveBeenCalledWith({ archived_at: null });
+    });
+
+    it("should un-schedule Stripe cancellation when a Site Pro jobsite is restored", async () => {
+      // Arrange
+      const cancelSpy = vi.spyOn(stripeService, "setSiteCancelAtPeriodEnd").mockResolvedValue();
+      wire({ ...dbRow, plan: "site_pro", archived_at: "2026-02-01T00:00:00.000Z" }, [0, 0]);
+      single.mockResolvedValue({ data: { ...dbRow, plan: "site_pro" }, error: null });
+
+      // Act
+      await updateJobsite({ id: "jobsite-1", gcCompanyId: "gc-1", patch: { archived: false } });
+
+      // Assert
+      expect(cancelSpy).toHaveBeenCalledWith("jobsite-1", false);
+      cancelSpy.mockRestore();
     });
 
     it("should refuse with a 403 PLAN_LIMIT when restoring would exceed the cap", async () => {
