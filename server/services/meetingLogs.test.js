@@ -18,6 +18,8 @@ const {
   uploadCrewPhoto,
   getCrewPhotoUrl,
   setFinalPdfUrl,
+  getPdfSeal,
+  setPdfSeal,
   getPdfUrl,
   getDefenseBundleEntries,
 } = require("./meetingLogs");
@@ -1197,6 +1199,46 @@ describe("meetingLogs service: verifySeal", () => {
     expect(result.valid).toBe(true);
   });
 
+  it("should return valid:false with the mismatched images when an embedded signature was swapped after the PDF was sealed", async () => {
+    // Arrange — a PDF seal over the original signature bytes; Storage now
+    // returns different bytes for it
+    const original = Buffer.from("original-signature");
+    const blobHashes = {
+      crewPhoto: null,
+      signatures: { "sig-1": contentSeal.sha256Hex(original) },
+    };
+    const pdfSha256 = contentSeal.sha256Hex(Buffer.from("%PDF"));
+    single.mockResolvedValue({
+      data: {
+        ...sealedRow,
+        content_seal: validSeal,
+        pdf_sha256: pdfSha256,
+        blob_hashes: blobHashes,
+        pdf_seal: contentSeal.computePdfSeal(
+          contentSeal.buildPdfPayload({ id: "meeting-1", pdfSha256, blobHashes }),
+        ),
+      },
+      error: null,
+    });
+    sigEq.mockResolvedValue({
+      data: [{ ...sigRows[0], signature_path: "meeting-1/sig-1.png" }],
+      error: null,
+    });
+    vi.spyOn(storageService, "downloadBlob")
+      .mockReset()
+      .mockResolvedValue(Buffer.from("swapped-signature"));
+
+    // Act
+    const result = await verifySeal("meeting-1", "company-1");
+
+    // Assert
+    expect(result).toEqual({
+      valid: false,
+      sealedAt: "2026-09-14T01:00:00.000Z",
+      imageMismatches: [{ kind: "signature", id: "sig-1", workerName: "Jane Doe" }],
+    });
+  });
+
   it("should return valid:false when the stored seal no longer matches the row's current fields", async () => {
     // Arrange — a field changed after sealing (a direct DB edit, e.g. a
     // service-role write bypassing the app)
@@ -1467,6 +1509,88 @@ describe("meetingLogs service: setFinalPdfUrl", () => {
       statusCode: 502,
       message: "Could not save the generated PDF",
     });
+  });
+});
+
+describe("meetingLogs service: getPdfSeal / setPdfSeal", () => {
+  let single;
+  let eqCompany;
+  let eqId;
+  let select;
+  let updateFn;
+  let updateEqCompany;
+
+  beforeEach(() => {
+    single = vi.fn().mockResolvedValue({
+      data: { pdf_sha256: "abc", pdf_seal: "seal", blob_hashes: { crewPhoto: null, signatures: {} } },
+      error: null,
+    });
+    eqCompany = vi.fn(() => ({ single }));
+    eqId = vi.fn(() => ({ eq: eqCompany }));
+    select = vi.fn(() => ({ eq: eqId }));
+    updateEqCompany = vi.fn().mockResolvedValue({ error: null });
+    updateFn = vi.fn(() => ({ eq: vi.fn(() => ({ eq: updateEqCompany })) }));
+
+    fromSpy.mockReset();
+    fromSpy.mockImplementation((table) => {
+      if (table === "meeting_logs") return { select, update: updateFn };
+      throw new Error(`Unexpected table: ${table}`);
+    });
+  });
+
+  it("should read the pdf seal columns scoped to the company and map them to camelCase", async () => {
+    // Act
+    const result = await getPdfSeal("meeting-1", "company-1");
+
+    // Assert
+    expect(select).toHaveBeenCalledWith("pdf_sha256, pdf_seal, blob_hashes");
+    expect(eqId).toHaveBeenCalledWith("id", "meeting-1");
+    expect(eqCompany).toHaveBeenCalledWith("company_id", "company-1");
+    expect(result).toEqual({
+      pdfSha256: "abc",
+      pdfSeal: "seal",
+      blobHashes: { crewPhoto: null, signatures: {} },
+    });
+  });
+
+  it("should 404 for an unknown meeting and 502 for any other read failure", async () => {
+    // Arrange & Act & Assert
+    single.mockResolvedValueOnce({ data: null, error: { code: "PGRST116" } });
+    await expect(getPdfSeal("meeting-1", "company-1")).rejects.toMatchObject({
+      statusCode: 404,
+    });
+
+    single.mockResolvedValueOnce({ data: null, error: { code: "XX000" } });
+    await expect(getPdfSeal("meeting-1", "company-1")).rejects.toMatchObject({
+      statusCode: 502,
+    });
+  });
+
+  it("should persist the hashes and seal, scoped to the company", async () => {
+    // Act
+    await setPdfSeal("meeting-1", "company-1", {
+      pdfSha256: "abc",
+      pdfSeal: "seal",
+      blobHashes: { crewPhoto: null, signatures: {} },
+    });
+
+    // Assert
+    expect(updateFn).toHaveBeenCalledWith({
+      pdf_sha256: "abc",
+      pdf_seal: "seal",
+      blob_hashes: { crewPhoto: null, signatures: {} },
+    });
+    expect(updateEqCompany).toHaveBeenCalledWith("company_id", "company-1");
+  });
+
+  it("should throw a 502 AppError when the update fails", async () => {
+    // Arrange
+    updateEqCompany.mockResolvedValue({ error: new Error("db down") });
+
+    // Act & Assert
+    await expect(
+      setPdfSeal("meeting-1", "company-1", { pdfSha256: "a", pdfSeal: "b", blobHashes: {} }),
+    ).rejects.toMatchObject({ statusCode: 502, message: "Could not save the PDF seal" });
   });
 });
 

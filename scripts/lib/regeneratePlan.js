@@ -1,13 +1,13 @@
 // Pure, I/O-free helpers for scripts/regenerate-pdfs.js (docs/tasks.md 11e).
 
-const USAGE =
-  "Usage: node scripts/regenerate-pdfs.js [--apply] [--id <uuid>] [--company <uuid>] [--since <ISO date>] [--limit <n>]";
+const usage = (script) =>
+  `Usage: node scripts/${script} [--apply] [--id <uuid>] [--company <uuid>] [--since <ISO date>] [--limit <n>]`;
 
 const VALUE_FLAGS = { "--id": "id", "--company": "company", "--since": "since", "--limit": "limit" };
 
 // Returns { apply, id, company, since, limit } (unset filters are null).
 // Throws on an unknown flag, a missing value, or an invalid --since/--limit.
-const parseArgs = (argv) => {
+const parseArgs = (argv, script = "regenerate-pdfs.js") => {
   const options = { apply: false, id: null, company: null, since: null, limit: null };
   for (let i = 0; i < argv.length; i += 1) {
     const arg = argv[i];
@@ -16,21 +16,21 @@ const parseArgs = (argv) => {
     } else if (VALUE_FLAGS[arg]) {
       const value = argv[i + 1];
       if (value === undefined || value.startsWith("--")) {
-        throw new Error(`${arg} needs a value. ${USAGE}`);
+        throw new Error(`${arg} needs a value. ${usage(script)}`);
       }
       options[VALUE_FLAGS[arg]] = value;
       i += 1;
     } else {
-      throw new Error(`Unknown argument "${arg}". ${USAGE}`);
+      throw new Error(`Unknown argument "${arg}". ${usage(script)}`);
     }
   }
   if (options.since !== null && Number.isNaN(new Date(options.since).getTime())) {
-    throw new Error(`--since must be an ISO date. ${USAGE}`);
+    throw new Error(`--since must be an ISO date. ${usage(script)}`);
   }
   if (options.limit !== null) {
     const limit = Number(options.limit);
     if (!Number.isInteger(limit) || limit < 1) {
-      throw new Error(`--limit must be a positive integer. ${USAGE}`);
+      throw new Error(`--limit must be a positive integer. ${usage(script)}`);
     }
     options.limit = limit;
   }

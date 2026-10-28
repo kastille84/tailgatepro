@@ -33,6 +33,8 @@ const envUtils = require("../utility/envUtils");
 // companiesService/emailService above — it's safe to require at the top
 // level, unlike meetingLogsService/signaturesService below.
 const auditLogService = require("./auditLog");
+const contentSeal = require("../utility/contentSeal");
+const { AppError } = require("../utility/AppError");
 
 const PDF_BUCKET = "meeting-pdfs";
 const CREW_PHOTO_BUCKET = "crew-photos";
@@ -63,6 +65,44 @@ const resolveGcContactEmail = async (project) => {
     }
   }
   return project.gcContactEmail ?? null;
+};
+
+// A re-render must not silently re-seal an image that was swapped in Storage
+// since the report was first sealed: if a previously sealed blob hash exists
+// and the freshly downloaded blob no longer matches it, abort instead of
+// baking the swapped image into a new, validly-sealed PDF. Blobs that were
+// null (or are null now) on either side can't be compared and are skipped.
+const assertBlobsUnchanged = async (
+  meetingLogsService,
+  meetingLogId,
+  companyId,
+  newHashes,
+) => {
+  const previous = (await meetingLogsService.getPdfSeal(meetingLogId, companyId))
+    .blobHashes;
+  if (!previous) return;
+
+  const changed = [];
+  if (
+    previous.crewPhoto &&
+    newHashes.crewPhoto &&
+    previous.crewPhoto !== newHashes.crewPhoto
+  ) {
+    changed.push("crew photo");
+  }
+  Object.entries(previous.signatures ?? {}).forEach(([signatureId, hash]) => {
+    const current = newHashes.signatures[signatureId];
+    if (hash && current && hash !== current) {
+      changed.push(`signature ${signatureId}`);
+    }
+  });
+
+  if (changed.length > 0) {
+    throw new AppError(
+      `An embedded image changed since this report was sealed (${changed.join(", ")})`,
+      409,
+    );
+  }
 };
 
 // Fetches every input, renders the PDF, uploads it to its deterministic path
@@ -153,6 +193,23 @@ const renderAndStore = async (meetingLogId, companyId) => {
     }),
   );
 
+  // PDF-byte tamper evidence (docs/tamper-evidence-design.md "PDF seal"):
+  // hash every blob that is about to be embedded. A blob that couldn't be
+  // downloaded is recorded as null and skipped on verify, never treated as
+  // tampered.
+  const blobHashes = {
+    crewPhoto: crewPhotoBuffer ? contentSeal.sha256Hex(crewPhotoBuffer) : null,
+    signatures: Object.fromEntries(
+      signaturesWithImages.map((signature) => [
+        signature.id,
+        signature.imageBuffer
+          ? contentSeal.sha256Hex(signature.imageBuffer)
+          : null,
+      ]),
+    ),
+  };
+  await assertBlobsUnchanged(meetingLogsService, meetingLogId, companyId, blobHashes);
+
   const pdfBuffer = await pdfGeneration.renderMeetingLogPdf({
     meetingLog,
     project,
@@ -161,22 +218,34 @@ const renderAndStore = async (meetingLogId, companyId) => {
     crewPhotoBuffer,
     company,
     logoBuffer,
+    verifyUrl: `${envUtils.keysBasedOnEnv().clientUrl}/verify/${meetingLogId}`,
   });
 
   const path = meetingLogsService.pdfPath(meetingLogId);
   await storageService.uploadBlob(PDF_BUCKET, path, pdfBuffer, "application/pdf");
   await meetingLogsService.setFinalPdfUrl(meetingLogId, companyId, path);
-  return { path, meetingLog, project, company, pdfBuffer };
+
+  // The PDF's own digest can't live inside the PDF, so it's stored on the row
+  // (and HMAC'd with the blob hashes so a DB-only writer can't forge a pair).
+  const pdfSha256 = contentSeal.sha256Hex(pdfBuffer);
+  await meetingLogsService.setPdfSeal(meetingLogId, companyId, {
+    pdfSha256,
+    pdfSeal: contentSeal.computePdfSeal(
+      contentSeal.buildPdfPayload({ id: meetingLogId, pdfSha256, blobHashes }),
+    ),
+    blobHashes,
+  });
+  return { path, meetingLog, project, company, pdfBuffer, pdfSha256 };
 };
 
 const enqueue = async (meetingLogId, companyId) => {
   try {
-    const { path, meetingLog, project, company, pdfBuffer } =
+    const { path, meetingLog, project, company, pdfBuffer, pdfSha256 } =
       await renderAndStore(meetingLogId, companyId);
     await auditLogService.record({
       meetingLogId,
       eventType: "pdf_generated",
-      metadata: { path },
+      metadata: { path, sha256: pdfSha256 },
     });
 
     const filename = buildPdfFilename({
@@ -243,14 +312,17 @@ const enqueue = async (meetingLogId, companyId) => {
 // Re-renders an already-completed meeting's PDF with the current renderer
 // (docs/tasks.md 11e), for scripts/regenerate-pdfs.js. Overwrites the same
 // path, so previously emailed signed links keep working. Never emails, and
-// never touches the seal: content_seal covers ids/timestamps/signature fields,
-// not PDF bytes or final_pdf_url. Throws so the caller can report per row.
+// never touches content_seal (ids/timestamps/signature fields). It does
+// replace pdf_sha256/pdf_seal with the new render's; the previous digest stays
+// recorded in the earlier pdf_generated audit event, so an older emailed copy
+// verifies as "superseded" rather than failing. Throws so the caller can
+// report per row.
 const regenerate = async (meetingLogId, companyId) => {
-  const { path } = await renderAndStore(meetingLogId, companyId);
+  const { path, pdfSha256 } = await renderAndStore(meetingLogId, companyId);
   await auditLogService.record({
     meetingLogId,
     eventType: "pdf_generated",
-    metadata: { path, regenerated: true },
+    metadata: { path, sha256: pdfSha256, regenerated: true },
   });
   return path;
 };

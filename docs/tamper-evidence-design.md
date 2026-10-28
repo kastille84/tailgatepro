@@ -131,17 +131,80 @@ every other row. Once a result comes back, the button itself turns green
 ("Verified") or red ("Tampered", with a one-line explanatory note) and stays
 clickable to re-check.
 
+## PDF seal: file bytes, embedded images and the QR code
+
+The content seal covers DB fields only, so a PDF edited in Acrobat, or a
+signature image replaced in Storage, used to pass "Verify". Three additions
+close that, without changing `content_seal` (already-sealed meetings keep
+verifying):
+
+- **Fingerprint at render time.** `pdfGenerationQueue.renderAndStore` hashes
+  the rendered PDF (`pdf_sha256`) and every embedded blob (`blob_hashes`:
+  `{ crewPhoto, signatures: { <id>: hash } }`, `null` where a download failed)
+  and stores an HMAC over both (`pdf_seal`, domain-separated from
+  `content_seal` via `contentSeal.computePdfSeal`). A PDF can't contain its
+  own hash, hence columns on the row. Each render also records its `sha256` in
+  its `pdf_generated` audit event, so an older emailed copy reads "superseded"
+  after a regenerate rather than "no match".
+- **Re-render guard.** Before re-rendering, previously sealed blob hashes are
+  compared to the freshly downloaded blobs; a mismatch aborts with a 409
+  instead of baking a swapped image into a new, validly sealed PDF.
+- **Authenticated verify folds it in.** `verify-seal` (sub and GC) also checks
+  the `pdf_seal` HMAC and re-downloads each sealed blob. Any mismatch makes
+  `valid: false` and adds `imageMismatches` (`crewPhoto` or a named
+  signature). A download failure propagates as a 502, never as "tampered".
+
+### Public verification (QR code)
+
+Every PDF now prints a QR code and URL, `${CLIENT_URL}/verify/:meetingId`,
+beside the content-seal line. That page needs no account (a GC who never
+signed up, an insurer, an inspector):
+
+| Endpoint | Body | Success |
+| --- | --- | --- |
+| `GET /api/public/meetings/:id/verify` | none | `{ sealed, valid, sealedAt, fileFingerprint, imageMismatchCount }` |
+| `POST /api/public/meetings/:id/verify-file` | `{ sha256 }` (64 hex) | `{ matches, status }`, `status` one of `current`, `superseded`, `no-match`, `record-altered` |
+
+The browser hashes the dropped PDF with SubtleCrypto; the file is never
+uploaded. Responses are pass/fail only: no company, project or worker names,
+and the image check returns a count, not names. Both record a `seal_verified`
+audit event with `via: "public"`. Meetings sealed before this shipped have no
+fingerprint: the page checks records only (`fileFingerprint: false`) and
+`verify-file` 404s.
+
+### Backfilling earlier meetings (optional)
+
+`node scripts/backfill-pdf-seals.js [--apply] [--id|--company|--since|--limit]`
+(dry run by default) gives sealed meetings that predate the PDF seal a file
+fingerprint. It hashes the PDF and embedded images **currently in Storage** and
+seals those hashes (`server/services/pdfSealBackfill.js`), so it vouches for what
+is stored today, not for what existed at completion. It never re-renders, so the
+file (and any copy already emailed) keeps its bytes, and these PDFs have no QR
+code; the "Check a PDF file" link on the badge is how they get checked. Meetings
+whose content seal already fails are skipped, a Storage read failure aborts that
+meeting so a re-run can retry it, and each run records a `pdf_generated` audit
+event with `backfilled: true` so a later regenerate leaves the old file
+"superseded". Idempotent: a meeting with a PDF seal is never selected.
+
 ## Known v1 limitations
 
 - **No backfill.** A meeting completed before this shipped has no seal — its
   row shows no badge at all, never a false claim either way.
-- **No blob integrity.** Signature and crew-photo image bytes aren't hashed,
-  only their DB-referenced storage paths/ids — a blob swapped in place at the
-  same path wouldn't be caught.
+- **Image blobs are only covered after the first render.** Signature and
+  crew-photo bytes are hashed when the PDF is rendered (see "PDF seal" below),
+  not when the meeting is completed, so a blob swapped in the few seconds
+  between `complete()` and the render is sealed as if genuine. The original
+  `content_seal` itself still pins only storage paths/ids.
 - **The printed PDF fragment isn't self-verifying.** `shortSeal`'s 12
-  characters on the footer are a human receipt, not a checksum the client
-  validates alone — real verification always calls the endpoint, which
-  recomputes the full digest server-side.
+  characters on the footer are a human receipt, not a checksum. Real
+  verification goes through the endpoints, or the QR code beside it.
+- **Superseded history is unsealed.** "Superseded" file matches are read from
+  `pdf_generated` audit events, which aren't individually HMAC'd, so they are
+  a weaker answer than "current".
+- **Public endpoints are throttled per IP only.** `/api/public/*` allows 30
+  requests/minute per IP (`publicRateLimit`); the image re-check still
+  downloads blobs on every allowed request, and the limit relies on
+  `trust proxy` matching the real deployment.
 - **The audit log has no viewer UI yet.** `meeting_log_audit_events` is
   write-only in v1 — no admin/GC page reads it.
 - **No GPS capture**, by decision (see "Scope").

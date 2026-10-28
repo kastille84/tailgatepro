@@ -6,6 +6,7 @@ const { encodeCursor, decodeCursor } = require("../utility/cursor");
 const { resolveHeldAt, resolveHeldTzOffset } = require("../utility/heldAt");
 const entitlementsService = require("../utility/entitlements");
 const contentSeal = require("../utility/contentSeal");
+const sealVerification = require("./sealVerification");
 const pdfGenerationQueue = require("./pdfGenerationQueue");
 const storageService = require("./storage");
 const projectsService = require("./projects");
@@ -431,7 +432,7 @@ const verifySeal = async (id, companyId, actorId = null) => {
   const { data, error } = await supabase
     .from("meeting_logs")
     .select(
-      "id, project_id, talk_id, foreman_id, crew_photo_url, held_at, completed_at, content_seal, sealed_at",
+      "id, project_id, talk_id, foreman_id, crew_photo_url, held_at, completed_at, content_seal, sealed_at, pdf_sha256, pdf_seal, blob_hashes",
     )
     .eq("id", id)
     .eq("company_id", companyId)
@@ -449,7 +450,7 @@ const verifySeal = async (id, companyId, actorId = null) => {
 
   const { data: signatures, error: signaturesError } = await supabase
     .from("signatures")
-    .select("id, worker_name, quiz_score, quiz_passed")
+    .select("id, worker_name, quiz_score, quiz_passed, signature_path")
     .eq("meeting_id", id);
   if (signaturesError) {
     throw new AppError("Could not verify the meeting's signatures", 502, {
@@ -478,7 +479,15 @@ const verifySeal = async (id, companyId, actorId = null) => {
     }),
   );
 
-  const valid = contentSeal.sealsMatch(expectedSeal, data.content_seal);
+  // PDF-byte tamper evidence: the recorded PDF fingerprint must still match
+  // its HMAC and every image embedded in the report must still match the hash
+  // sealed at render time. Both are no-ops (no I/O) for a meeting that has no
+  // PDF seal yet.
+  const imageMismatches = await sealVerification.findImageMismatches(data, signatures);
+  const valid =
+    contentSeal.sealsMatch(expectedSeal, data.content_seal) &&
+    sealVerification.isPdfSealIntact(data) !== false &&
+    imageMismatches.length === 0;
 
   await auditLogService.record({
     meetingLogId: id,
@@ -487,7 +496,11 @@ const verifySeal = async (id, companyId, actorId = null) => {
     metadata: { valid, via: "sub" },
   });
 
-  return { valid, sealedAt: data.sealed_at };
+  return {
+    valid,
+    sealedAt: data.sealed_at,
+    ...(imageMismatches.length > 0 && { imageMismatches }),
+  };
 };
 
 // The path a meeting's crew photo lives at, relative to the `crew-photos`
@@ -558,6 +571,45 @@ const setFinalPdfUrl = async (id, companyId, path) => {
 
   if (error) {
     throw new AppError("Could not save the generated PDF", 502, { cause: error });
+  }
+};
+
+// PDF-byte tamper evidence (docs/tamper-evidence-design.md "PDF seal"):
+// pdfGenerationQueue.js hashes each render and the blobs embedded in it. These
+// columns are server-only (not in MEETING_LOG_COLUMNS / toMeetingLog) so the
+// client never sees them. Returns the camelCase hashes, or nulls if the row
+// has never been rendered with a PDF seal.
+const getPdfSeal = async (id, companyId) => {
+  const { data, error } = await supabase
+    .from("meeting_logs")
+    .select("pdf_sha256, pdf_seal, blob_hashes")
+    .eq("id", id)
+    .eq("company_id", companyId)
+    .single();
+
+  if (error) {
+    if (error.code === "PGRST116") {
+      throw new AppError("Meeting not found", 404, { cause: error });
+    }
+    throw new AppError("Could not load the PDF seal", 502, { cause: error });
+  }
+
+  return {
+    pdfSha256: data.pdf_sha256,
+    pdfSeal: data.pdf_seal,
+    blobHashes: data.blob_hashes,
+  };
+};
+
+const setPdfSeal = async (id, companyId, { pdfSha256, pdfSeal, blobHashes }) => {
+  const { error } = await supabase
+    .from("meeting_logs")
+    .update({ pdf_sha256: pdfSha256, pdf_seal: pdfSeal, blob_hashes: blobHashes })
+    .eq("id", id)
+    .eq("company_id", companyId);
+
+  if (error) {
+    throw new AppError("Could not save the PDF seal", 502, { cause: error });
   }
 };
 
@@ -690,6 +742,8 @@ module.exports = {
   getCrewPhotoUrl,
   pdfPath,
   setFinalPdfUrl,
+  getPdfSeal,
+  setPdfSeal,
   getPdfUrl,
   getDefenseBundleEntries,
   // Exposed so gcDashboard.js's own pdf-url lookup (built from the *meeting's*

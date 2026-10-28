@@ -1315,6 +1315,59 @@ describe("gcDashboard service: verifySeal", () => {
     expect(result.valid).toBe(true);
   });
 
+  it("should return valid:false with the mismatched images when the crew photo was swapped after the PDF was sealed", async () => {
+    // Arrange — PDF seal over the original photo; Storage now returns other bytes
+    const blobHashes = {
+      crewPhoto: contentSeal.sha256Hex(Buffer.from("original-photo")),
+      signatures: {},
+    };
+    const pdfSha256 = contentSeal.sha256Hex(Buffer.from("%PDF"));
+    const photoPath = "meeting-1/photo.jpg";
+    const sealedWithPhoto = contentSeal.computeSeal(
+      contentSeal.buildCanonicalPayload({
+        meetingLog: {
+          id: "meeting-1",
+          projectId: "project-1",
+          talkId: "talk-1",
+          companyId: "sub-1",
+          foremanId: "user-1",
+          crewPhotoUrl: photoPath,
+          heldAt: "2026-09-21T14:00:00.000Z",
+          completedAt: "2026-09-21T14:05:00.000Z",
+        },
+        signatures: [
+          { id: "sig-1", workerName: "Jane Doe", quizScore: 3, quizPassed: true },
+        ],
+      }),
+    );
+    meetingSingle.mockResolvedValue({
+      data: {
+        ...dbMeeting,
+        crew_photo_url: photoPath,
+        content_seal: sealedWithPhoto,
+        pdf_sha256: pdfSha256,
+        blob_hashes: blobHashes,
+        pdf_seal: contentSeal.computePdfSeal(
+          contentSeal.buildPdfPayload({ id: "meeting-1", pdfSha256, blobHashes }),
+        ),
+      },
+      error: null,
+    });
+    vi.spyOn(storageService, "downloadBlob")
+      .mockReset()
+      .mockResolvedValue(Buffer.from("swapped-photo"));
+
+    // Act
+    const result = await verifySeal("meeting-1", "gc-1");
+
+    // Assert
+    expect(result).toEqual({
+      valid: false,
+      sealedAt: "2026-09-21T14:05:00.000Z",
+      imageMismatches: [{ kind: "crewPhoto" }],
+    });
+  });
+
   it("should return valid:false when the stored seal no longer matches the row's current fields", async () => {
     // Arrange
     meetingSingle.mockResolvedValue({

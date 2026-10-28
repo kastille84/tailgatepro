@@ -57,6 +57,7 @@ import { GcMeetingReport } from "./pages/GcMeetingReport";
 import { GcSubcontractors } from "./pages/GcSubcontractors";
 import { GcSubcontractorDetail } from "./pages/GcSubcontractorDetail";
 import { GcPolicyPush } from "./pages/GcPolicyPush";
+import { VerifyMeeting } from "./pages/VerifyMeeting";
 
 // Pins Navbar + SyncStatusBanner together as one scroll-fixed block, so the
 // banner never scrolls away from the nav it sits under.
@@ -121,6 +122,7 @@ function App() {
                       path="/crew-join/:token"
                       element={<JoinCrew />}
                     ></Route>
+                    <Route path="/verify/:id" element={<VerifyMeeting />}></Route>
                     <Route element={<RequireAuth />}>
                       <Route path="/dashboard" element={<Dashboard />}></Route>
                       <Route path="/projects" element={<Projects />}></Route>

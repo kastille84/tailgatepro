@@ -6,7 +6,12 @@ import {
 
 import { Button } from "../../ui_comps/button";
 import type { SealVerification } from "../../interfaces/meetingLog";
-import { StyledSealPill, StyledSealRow, StyledTamperedNote } from "./SealBadge.styles";
+import {
+  StyledCheckFileLink,
+  StyledSealPill,
+  StyledSealRow,
+  StyledTamperedNote,
+} from "./SealBadge.styles";
 
 interface SealBadgeProps {
   meetingId: string;
@@ -82,10 +87,24 @@ export const SealBadge = ({
       )}
       {rowResult && !rowResult.valid && (
         <StyledTamperedNote role="alert">
-          This record's seal no longer matches — it may have been edited after
-          completion.
+          {rowResult.imageMismatches?.length
+            ? `An image in this report was replaced after it was created: ${rowResult.imageMismatches
+                .map((m) =>
+                  m.kind === "crewPhoto"
+                    ? "crew photo"
+                    : `${m.workerName}'s signature`,
+                )
+                .join(", ")}.`
+            : "This record's seal no longer matches — it may have been edited after completion."}
         </StyledTamperedNote>
       )}
+      <StyledCheckFileLink
+        href={`/verify/${meetingId}`}
+        target="_blank"
+        rel="noopener noreferrer"
+      >
+        Check a PDF file
+      </StyledCheckFileLink>
     </StyledSealRow>
   );
 };
