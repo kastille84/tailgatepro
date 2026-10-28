@@ -24,8 +24,18 @@ export const useUpdateJobsite = () => {
     networkMode: "always",
     mutationFn: ({ id, patch }) =>
       updateJobsite(session!.access_token, id, patch),
-    onSuccess: () => {
+    onSuccess: (jobsite) => {
       queryClient.invalidateQueries({ queryKey: JOBSITES_QUERY_KEY });
+      // The server schedules a paid site's subscription to end with the paid
+      // period once the site is completed or archived; tell the GC so the
+      // charge doesn't come as a surprise.
+      if (jobsite.plan === "site_pro" && (jobsite.archivedAt || jobsite.status !== "active")) {
+        toast.success(
+          "Job site updated. Its Site Pro billing will stop at the end of the current billing period.",
+          { duration: 8000 },
+        );
+        return;
+      }
       toast.success("Job site updated");
     },
     onError: (error) => {

@@ -265,8 +265,37 @@ const createPortalSession = async (
   return { url: session.url };
 };
 
+// A completed/archived jobsite should stop billing: schedule its Site Pro
+// subscription to end with the paid period (no proration or refund), and
+// un-schedule it if the jobsite is brought back before then. The plan stays
+// 'site_pro' until Stripe's `deleted` event, which the webhook turns into
+// 'free'. A jobsite with no subscription (Portfolio-covered, or never paid) is a
+// no-op; an already-ended subscription is left alone.
+const setSiteCancelAtPeriodEnd = async (jobsiteId, cancelAtPeriodEnd, stripe = getStripe()) => {
+  const { data: jobsite, error } = await supabase
+    .from("jobsites")
+    .select("stripe_subscription_id")
+    .eq("id", jobsiteId)
+    .maybeSingle();
+
+  if (error) {
+    throw new AppError("Could not load the jobsite", 502, { cause: error });
+  }
+  if (!jobsite?.stripe_subscription_id) return;
+
+  await callStripe("Could not update the Site Pro subscription", async () => {
+    const current = await stripe.subscriptions.retrieve(jobsite.stripe_subscription_id);
+    if (current.status === "canceled") return;
+    if (current.cancel_at_period_end === cancelAtPeriodEnd) return;
+    await stripe.subscriptions.update(jobsite.stripe_subscription_id, {
+      cancel_at_period_end: cancelAtPeriodEnd,
+    });
+  });
+};
+
 module.exports = {
   getStripe,
+  setSiteCancelAtPeriodEnd,
   getBillingState,
   getBillingSummary,
   createCheckoutSession,
