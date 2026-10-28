@@ -8,6 +8,7 @@ const projectsService = require("./projects");
 const { isSubLocked } = require("../utility/subLocking");
 const companiesService = require("./companies");
 const subAccessService = require("./subAccess");
+const stripeService = require("./stripe");
 const { isJobsiteAllowed } = require("./siteScope");
 const { effectiveCadence, isStricterOrEqual } = require("../utility/cadence");
 
@@ -375,6 +376,14 @@ const update = async ({ id, gcCompanyId, patch }) => {
       throw new AppError("Jobsite not found", 404, { cause: error });
     }
     throw new AppError("Could not update the jobsite", 502, { cause: error });
+  }
+
+  // A paid site that stops being live stops billing at the end of the paid
+  // period; bringing it back before then undoes that. Only runs when the patch
+  // actually changed liveness, so unrelated edits never reach Stripe.
+  if (data.plan === "site_pro" && (patch.status !== undefined || patch.archived !== undefined)) {
+    const isLive = data.status === "active" && !data.archived_at;
+    await stripeService.setSiteCancelAtPeriodEnd(id, !isLive);
   }
 
   return toJobsite(data);

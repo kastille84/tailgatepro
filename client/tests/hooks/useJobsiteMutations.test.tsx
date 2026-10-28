@@ -129,6 +129,50 @@ describe("jobsite mutation hooks", () => {
       expect(toast.success).toHaveBeenCalledWith("Job site updated");
     });
 
+    it.each([
+      ["completed", { status: "completed", archivedAt: null }],
+      ["archived", { status: "active", archivedAt: "2026-10-27T00:00:00.000Z" }],
+    ])("warns that Site Pro billing will stop when a paid site is %s", async (_label, state) => {
+      vi.mocked(apiJobsites.updateJobsite).mockResolvedValue({
+        plan: "site_pro",
+        ...state,
+      } as never);
+
+      const { result } = renderHook(() => useUpdateJobsite(), { wrapper });
+      await result.current.updateJobsite({ id: "j1", patch: { archived: true } });
+
+      expect(toast.success).toHaveBeenCalledWith(
+        expect.stringContaining("Site Pro billing will stop"),
+        { duration: 8000 },
+      );
+    });
+
+    it("uses the plain toast when a paid site stays live", async () => {
+      vi.mocked(apiJobsites.updateJobsite).mockResolvedValue({
+        plan: "site_pro",
+        status: "active",
+        archivedAt: null,
+      } as never);
+
+      const { result } = renderHook(() => useUpdateJobsite(), { wrapper });
+      await result.current.updateJobsite({ id: "j1", patch: { archived: false } });
+
+      expect(toast.success).toHaveBeenCalledWith("Job site updated");
+    });
+
+    it("uses the plain toast when a free site is archived", async () => {
+      vi.mocked(apiJobsites.updateJobsite).mockResolvedValue({
+        plan: "free",
+        status: "active",
+        archivedAt: "2026-10-27T00:00:00.000Z",
+      } as never);
+
+      const { result } = renderHook(() => useUpdateJobsite(), { wrapper });
+      await result.current.updateJobsite({ id: "j1", patch: { archived: true } });
+
+      expect(toast.success).toHaveBeenCalledWith("Job site updated");
+    });
+
     it("toasts the server message and rejects on failure", async () => {
       vi.mocked(apiJobsites.updateJobsite).mockRejectedValue(new Error("Nope"));
 
