@@ -35,4 +35,36 @@ export interface MeetingLog {
 export interface SealVerification {
   valid: boolean;
   sealedAt: string;
+  /** Present only when an image embedded in the PDF no longer matches the
+   *  hash sealed at render time (a Storage-level swap). */
+  imageMismatches?: SealImageMismatch[];
+}
+
+/** One embedded image that no longer matches its sealed hash. */
+export type SealImageMismatch =
+  | { kind: "crewPhoto" }
+  | { kind: "signature"; id: string; workerName: string };
+
+/** The result of the unauthenticated `GET /api/public/meetings/:id/verify`
+ *  behind the QR code printed on every report. Pass/fail only, no names. */
+export interface PublicSealStatus {
+  sealed: true;
+  valid: boolean;
+  sealedAt: string;
+  /** Whether a file fingerprint exists to check a dropped PDF against; false
+   *  for a meeting completed before the PDF seal shipped. */
+  fileFingerprint: boolean;
+  imageMismatchCount: number;
+}
+
+/** How a dropped PDF compares to the one TailgatePro generated. */
+export type PdfFileCheckStatus =
+  | "current"
+  | "superseded"
+  | "no-match"
+  | "record-altered";
+
+export interface PdfFileCheck {
+  matches: boolean;
+  status: PdfFileCheckStatus;
 }

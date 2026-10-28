@@ -280,6 +280,16 @@ CREATE TABLE meeting_logs (
   -- (not backfilled).
   content_seal TEXT,
   sealed_at TIMESTAMPTZ,
+  -- PDF-byte tamper-evidence (docs/tamper-evidence-design.md "PDF seal"): the
+  -- SHA-256 of the latest rendered PDF, the SHA-256 of every signature / crew
+  -- photo blob embedded in it ({ crewPhoto, signatures: { <id>: <hash> } }),
+  -- and an HMAC (same MEETING_LOG_SEAL_SECRET) over both so a DB-only writer
+  -- can't forge a matching pair. Written by pdfGenerationQueue after each
+  -- render, so they can't live inside the PDF itself. NULL until the first
+  -- render, and for every meeting completed before this shipped.
+  pdf_sha256 TEXT,
+  pdf_seal TEXT,
+  blob_hashes JSONB,
   created_at TIMESTAMPTZ DEFAULT NOW()
 );
 
@@ -294,6 +304,7 @@ ALTER TABLE meeting_logs ENABLE ROW LEVEL SECURITY;
 -- ALTER TABLE meeting_logs ADD COLUMN IF NOT EXISTS held_tz_offset SMALLINT;  -- Phase 11d
 -- ALTER TABLE meeting_logs ADD COLUMN IF NOT EXISTS content_seal TEXT;  -- Phase 9e
 -- ALTER TABLE meeting_logs ADD COLUMN IF NOT EXISTS sealed_at TIMESTAMPTZ;  -- Phase 9e
+-- ALTER TABLE meeting_logs ADD COLUMN IF NOT EXISTS pdf_sha256 TEXT, ADD COLUMN IF NOT EXISTS pdf_seal TEXT, ADD COLUMN IF NOT EXISTS blob_hashes JSONB;  -- PDF seal
 -- ALTER TABLE meeting_logs ENABLE ROW LEVEL SECURITY;
 -- UPDATE meeting_logs SET company_id = (SELECT owner_company_id FROM projects WHERE projects.id = meeting_logs.project_id) WHERE company_id IS NULL;
 -- Backfill (Phase 6): existing completed meetings keep the date they have today.

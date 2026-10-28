@@ -3278,3 +3278,28 @@ Free 2-month Site Pro pilot (1 jobsite per outreach GC) via Stripe promotion cod
 - [ ] 15e. Outreach: email/DM with code, "choose Monthly", steps (sign up, create jobsite, Upgrade to Site Pro, enter code),
       "card required, no charge for 2 months, cancel any time"; tracking sheet (GC, code, sent, redeemed, first log, day-50
       check-in); personal email at about day 50
+
+## Phase 16: PDF-byte tamper evidence + QR verify page · status: code complete, server and client tests passing; manual verify pending
+
+Closes the gap in `docs/tamper-evidence-design.md` where an edited PDF (or a swapped Storage image) still passed
+"Verify". Design: "PDF seal" and "Public verification" sections of that doc; plan in
+`~/.claude/plans/how-does-the-tamper-luminous-flurry.md`.
+
+- [x] 16a. Schema: `meeting_logs.pdf_sha256`, `pdf_seal`, `blob_hashes` (`Supabase_SQL.sql`, `Supabase_Schema.md`)
+- [x] 16b. `contentSeal.js`: `sha256Hex`, `buildPdfPayload`, `computePdfSeal`
+- [x] 16c. `pdfGenerationQueue`: hash PDF + embedded blobs, store the seal, record `sha256` in `pdf_generated`; refuse a
+      re-render when a sealed blob changed (409)
+- [x] 16d. `pdfGeneration`: QR code + `/verify/:id` URL in the footer (new root dep `qrcode`)
+- [x] 16e. `sealVerification.js` shared checks; sub and GC `verify-seal` now also fail on a bad PDF seal or replaced image
+- [x] 16f. Public `GET /api/public/meetings/:id/verify` and `POST .../verify-file` (+ service, controller, route, tests)
+- [x] 16g. Client: `/verify/:id` page, `usePublicSealStatus`, `useVerifyPdfFile`, `sha256File`, "Check a PDF file" link in `SealBadge`
+- [x] 16h. Docs: tamper-evidence-design.md
+- [x] 16i. **Manual**: run the `ALTER TABLE` in Supabase; complete a meeting; scan the QR; drop the untouched PDF (expect
+      "original"), then re-save it in Acrobat (expect "does not match"); replace a signature PNG in Storage (expect
+      "Tampered" on the badge); run `scripts/regenerate-pdfs.js` on one meeting (old file reads "superseded")
+- [x] 16j. Rate-limit `/api/public/*`: `express-rate-limit`, 30 req/min per IP (`server/middlewares/publicRateLimit.js`); production sets `trust proxy` to 1 hop, so confirm that matches the host
+- [x] 16k. Code: `scripts/backfill-pdf-seals.js` + `server/services/pdfSealBackfill.js` hash the PDFs and images currently in
+      Storage for already-completed meetings (vouches for whatever is stored today, so only run it knowingly); skips
+      meetings whose content seal fails; dry-run by default
+- [ ] 16l. **Manual** (needs live Supabase): `node scripts/backfill-pdf-seals.js` to review the list, then `--apply`; open
+      `/verify/:id` for an old meeting and drop its stored PDF (expect "original")

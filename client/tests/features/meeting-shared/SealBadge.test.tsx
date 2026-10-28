@@ -76,6 +76,33 @@ describe("SealBadge", () => {
     );
   });
 
+  it("names the replaced images in the note when the result carries image mismatches", () => {
+    renderBadge({
+      verifyingId: "meeting-1",
+      result: {
+        valid: false,
+        sealedAt: "2026-09-21T06:00:00.000Z",
+        imageMismatches: [
+          { kind: "crewPhoto" },
+          { kind: "signature", id: "sig-1", workerName: "Jane Doe" },
+        ],
+      },
+    });
+
+    expect(screen.getByRole("alert").textContent).toMatch(
+      /replaced after it was created: crew photo, Jane Doe's signature\./i,
+    );
+  });
+
+  it("links to the public verify page so a forwarded PDF can be checked", () => {
+    renderBadge();
+
+    const link = screen.getByRole("link", { name: "Check a PDF file" });
+    expect(link.getAttribute("href")).toBe("/verify/meeting-1");
+    expect(link.getAttribute("target")).toBe("_blank");
+    expect(link.getAttribute("rel")).toContain("noopener");
+  });
+
   it("ignores a result that belongs to a different row's verification", () => {
     renderBadge({
       verifyingId: "meeting-2",

@@ -25,6 +25,7 @@ const jobsitesService = require("./jobsites");
 const noWorkDaysService = require("./noWorkDays");
 const storageService = require("./storage");
 const auditLogService = require("./auditLog");
+const sealVerification = require("./sealVerification");
 const { PDF_BUCKET, PDF_URL_TTL_SECONDS } = require("./meetingLogs");
 
 // Default/ceiling page size for GET /meetings (docs/tasks.md's "pagination for
@@ -470,7 +471,7 @@ const getCompletedLinkedMeeting = async (id, gcCompanyId, allowedJobsiteIds) => 
   const { data, error } = await supabase
     .from("meeting_logs")
     .select(
-      "id, project_id, company_id, talk_id, foreman_id, crew_photo_url, held_at, held_tz_offset, completed_at, final_pdf_url, content_seal, sealed_at",
+      "id, project_id, company_id, talk_id, foreman_id, crew_photo_url, held_at, held_tz_offset, completed_at, final_pdf_url, content_seal, sealed_at, pdf_sha256, pdf_seal, blob_hashes",
     )
     .eq("id", id)
     .single();
@@ -580,7 +581,7 @@ const verifySeal = async (id, gcCompanyId, allowedJobsiteIds = null, actorId = n
 
   const { data: signatures, error } = await supabase
     .from("signatures")
-    .select("id, worker_name, quiz_score, quiz_passed")
+    .select("id, worker_name, quiz_score, quiz_passed, signature_path")
     .eq("meeting_id", id);
   if (error) {
     throw new AppError("Could not verify the meeting's signatures", 502, { cause: error });
@@ -607,7 +608,13 @@ const verifySeal = async (id, gcCompanyId, allowedJobsiteIds = null, actorId = n
     }),
   );
 
-  const valid = contentSeal.sealsMatch(expectedSeal, row.content_seal);
+  // Same PDF-byte checks as meetingLogs.js's verifySeal (no-ops for a meeting
+  // with no PDF seal).
+  const imageMismatches = await sealVerification.findImageMismatches(row, signatures);
+  const valid =
+    contentSeal.sealsMatch(expectedSeal, row.content_seal) &&
+    sealVerification.isPdfSealIntact(row) !== false &&
+    imageMismatches.length === 0;
 
   await auditLogService.record({
     meetingLogId: id,
@@ -616,7 +623,11 @@ const verifySeal = async (id, gcCompanyId, allowedJobsiteIds = null, actorId = n
     metadata: { valid, via: "gc" },
   });
 
-  return { valid, sealedAt: row.sealed_at };
+  return {
+    valid,
+    sealedAt: row.sealed_at,
+    ...(imageMismatches.length > 0 && { imageMismatches }),
+  };
 };
 
 // GET /api/gc/jobsites/:id/defense-bundle (Phase 9e,

@@ -104,6 +104,9 @@
 | `synced_at` | Timestamptz| Nullable | Used for offline-sync tracking |
 | `content_seal` | Text | Nullable | Phase 9e (`docs/tamper-evidence-design.md`): HMAC-SHA256 seal over this row's immutable-post-completion fields plus its signatures, keyed by the server-only `MEETING_LOG_SEAL_SECRET`. Set once, atomically, in the same update that stamps `completed_at`. `NULL` while in progress, and for every meeting completed before this feature shipped (not backfilled) |
 | `sealed_at` | Timestamptz | Nullable | When `content_seal` was computed — always equal to `completed_at` for a meeting sealed by this feature |
+| `pdf_sha256` | Text | Nullable | SHA-256 hex of the latest rendered PDF. Set by `pdfGenerationQueue` after each render (a PDF can't contain its own hash). Server-only; never returned to the client. NULL until first render and for meetings completed before the PDF seal shipped |
+| `pdf_seal` | Text | Nullable | HMAC-SHA256 (`MEETING_LOG_SEAL_SECRET`, domain-separated from `content_seal`) over `pdf_sha256` + `blob_hashes`, so a DB-only writer can't forge a matching pair |
+| `blob_hashes` | JSONB | Nullable | `{ crewPhoto: <sha256\|null>, signatures: { <signature id>: <sha256\|null> } }` for the blobs embedded in the latest PDF; `null` = the blob couldn't be downloaded at render time and is skipped on verify |
 
 > RLS: enabled with no policies (server-brokered, deny-all) — see `docs/data-access.md`.
 

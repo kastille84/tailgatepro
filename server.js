@@ -21,6 +21,7 @@ const companiesRoutes = require("./server/routes/companies");
 const jobsitesRoutes = require("./server/routes/jobsites");
 const gcRoutes = require("./server/routes/gc");
 const noWorkDaysRoutes = require("./server/routes/noWorkDays");
+const publicVerifyRoutes = require("./server/routes/publicVerify");
 // const authRoutes = require("./server/routes/auth");
 // const assetRoutes = require("./server/routes/assets");
 // const moderateRoutes = require("./server/routes/moderate");
@@ -39,6 +40,13 @@ const { runNudgeTick } = require("./server/services/smsNudges");
 // } = require("./server/controllers/flyers");
 
 const app = express();
+
+// In production the API sits behind one reverse proxy; trust its
+// X-Forwarded-For so req.ip (used by the /api/public rate limiter) is the real
+// client, not the proxy. Adjust the hop count if the deployment changes.
+if ((process.env.NODE_ENV || "").toLowerCase() === "production") {
+  app.set("trust proxy", 1);
+}
 
 if ((process.env.NODE_ENV || "").toLowerCase() === "production") {
   const corsOptions = {
@@ -74,6 +82,9 @@ app.use("/api/companies", companiesRoutes);
 app.use("/api/jobsites", jobsitesRoutes);
 app.use("/api/gc", gcRoutes);
 app.use("/api/no-work-days", noWorkDaysRoutes);
+// Unauthenticated: backs the QR code on every report. Mounted before the
+// bare "/api" routers below so none of their router-level auth intercepts it.
+app.use("/api/public", publicVerifyRoutes);
 // app.use("/api/auth", authRoutes);
 // app.use("/api/assets", assetRoutes);
 // app.use("/api/moderate", moderateRoutes);
