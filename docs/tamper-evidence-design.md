@@ -153,6 +153,13 @@ verifying):
   the `pdf_seal` HMAC and re-downloads each sealed blob. Any mismatch makes
   `valid: false` and adds `imageMismatches` (`crewPhoto` or a named
   signature). A download failure propagates as a 502, never as "tampered".
+- **A visible mark on the report.** A sealed meeting's PDF carries a navy
+  shield-with-check icon: small beside the title ("TAMPER-EVIDENT RECORD") and
+  as a labelled block in the footer above the `Content seal:` fragment
+  (`drawSealIcon` in `pdfGeneration.js`, vector, no image asset). It is a
+  presentation cue only: anyone could copy it onto an edited file, so it proves
+  nothing by itself. The QR code / `/verify/:id` page is the actual check.
+  Unsealed meetings get neither mark.
 
 ### Public verification (QR code)
 
