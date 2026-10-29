@@ -325,6 +325,36 @@ describe("pdfGeneration: renderMeetingLogPdf", () => {
     expect(text).toContain(`Content seal: ${shortSeal("a1b2c3d4e5f60708090a0b0c0d0e0f10")}`);
   });
 
+  it("shows the tamper-evident mark in the header and a labelled seal block in the footer for a sealed meeting", async () => {
+    const buffer = await renderMeetingLogPdf({
+      meetingLog: { ...meetingLog, contentSeal: "a1b2c3d4e5f60708090a0b0c0d0e0f10" },
+      project,
+      talk: talkWithAttributionAndQuiz,
+      signatures,
+      company,
+    });
+    const text = decodeRenderedText(buffer);
+
+    // Header mark (two lines) + footer headline.
+    expect(text).toContain("TAMPER-EVIDENT");
+    expect(text).toContain("TAMPER-EVIDENT RECORD");
+    expect(text).toContain("Sealed by TailgatePro when this meeting was completed");
+    // The icon is vector: no image is embedded without a QR code.
+    expect(buffer.toString("latin1")).not.toContain("/Subtype /Image");
+  });
+
+  it("omits the tamper-evident mark and block for an unsealed meeting", async () => {
+    const buffer = await renderMeetingLogPdf({
+      meetingLog,
+      project,
+      talk: talkWithAttributionAndQuiz,
+      signatures,
+      company,
+    });
+
+    expect(decodeRenderedText(buffer)).not.toContain("TAMPER-EVIDENT");
+  });
+
   it("omits the content seal footer line for a meeting with no seal yet (in progress, or completed before this feature shipped)", async () => {
     const buffer = await renderMeetingLogPdf({
       meetingLog, // no contentSeal field
