@@ -25,6 +25,28 @@ const GC_SIGNUP_URL = `${CTA_URL}/signup`;
 // Printed size (pt) of the verify QR code.
 const QR_SIZE = 72;
 
+// Brand navy for the tamper-evident mark (theme navy scale, hardcoded because a
+// PDF has no CSS custom properties).
+const SEAL_COLOR = "#1f3a5f";
+
+// Vector "sealed" shield with a check, drawn with pdfkit paths so there is no
+// image asset to ship. `size` is the printed width/height in pt; the shield is
+// designed on a 24x24 grid and scaled. Leaves the cursor untouched.
+const drawSealIcon = (doc, x, y, size) => {
+  doc
+    .save()
+    .translate(x, y)
+    .scale(size / 24)
+    .path("M12 1 L22 5 V12 C22 18 17.5 22 12 24 C6.5 22 2 18 2 12 V5 Z")
+    .fill(SEAL_COLOR)
+    .path("M7 12.5 L10.5 16 L17 8.5")
+    .lineWidth(2.4)
+    .lineCap("round")
+    .lineJoin("round")
+    .stroke("white")
+    .restore();
+};
+
 // pdfkit auto-paginates wrapped text (checks remaining page height and
 // calls addPage() internally) but not images — an image near the bottom of
 // a page just gets clipped at the boundary instead of flowing to the next
@@ -119,6 +141,23 @@ const renderMeetingLogPdf = async ({
       ensureRoomFor(doc, 60);
       doc.image(logoBuffer, { fit: [120, 60] });
       doc.moveDown(0.5);
+    }
+    // Small tamper-evident mark at the top-right of page 1 so a reader sees the
+    // report is sealed before reaching the footer. Positioned absolutely, so the
+    // cursor is handed back to where the title starts.
+    if (meetingLog.contentSeal) {
+      const headerTop = doc.y;
+      const markLeft = doc.page.width - doc.page.margins.right - 108;
+      drawSealIcon(doc, markLeft, headerTop, 28);
+      doc
+        .font(BOLD_FONT)
+        .fontSize(8)
+        .fillColor(SEAL_COLOR)
+        .text("TAMPER-EVIDENT", markLeft + 34, headerTop + 5, { lineBreak: false })
+        .text("RECORD", markLeft + 34, headerTop + 15, { lineBreak: false });
+      doc.fillColor("black");
+      doc.x = doc.page.margins.left;
+      doc.y = headerTop;
     }
     doc.fontSize(20).font(BOLD_FONT).text("Toolbox Talk Safety Meeting Report");
     doc.font(BODY_FONT);
@@ -223,11 +262,32 @@ const renderMeetingLogPdf = async ({
     // recomputes the full digest server-side. Absent for any meeting
     // completed before this shipped (content_seal is null, not backfilled).
     if (meetingLog.contentSeal) {
+      // Icon + headline + one-line explanation, kept together on one page.
+      const SEAL_ICON_SIZE = 40;
+      ensureRoomFor(doc, SEAL_ICON_SIZE + 16);
+      doc.moveDown(0.5);
+      const sealTop = doc.y;
+      const textLeft = doc.page.margins.left + SEAL_ICON_SIZE + 10;
+      const textWidth =
+        doc.page.width - doc.page.margins.right - textLeft;
+      drawSealIcon(doc, doc.page.margins.left, sealTop, SEAL_ICON_SIZE);
       doc
+        .font(BOLD_FONT)
+        .fontSize(11)
+        .fillColor(SEAL_COLOR)
+        .text("TAMPER-EVIDENT RECORD", textLeft, sealTop + 2, { width: textWidth });
+      doc
+        .font(BODY_FONT)
         .fontSize(8)
         .fillColor("#555555")
-        .text(`Content seal: ${shortSeal(meetingLog.contentSeal)}`);
+        .text(
+          "Sealed by TailgatePro when this meeting was completed. Any later change to the record or to this file can be detected.",
+          { width: textWidth },
+        )
+        .text(`Content seal: ${shortSeal(meetingLog.contentSeal)}`, { width: textWidth });
       doc.fillColor("black");
+      doc.x = doc.page.margins.left;
+      doc.y = Math.max(doc.y, sealTop + SEAL_ICON_SIZE) + 6;
     }
 
     // Verify-this-file QR (PDF-byte tamper evidence,

@@ -3301,5 +3301,8 @@ Closes the gap in `docs/tamper-evidence-design.md` where an edited PDF (or a swa
 - [x] 16k. Code: `scripts/backfill-pdf-seals.js` + `server/services/pdfSealBackfill.js` hash the PDFs and images currently in
       Storage for already-completed meetings (vouches for whatever is stored today, so only run it knowingly); skips
       meetings whose content seal fails; dry-run by default
+- [x] 16m. Code: tamper-evident shield icon + label in the PDF header and footer (`drawSealIcon`, sealed meetings only)
+- [ ] 16n. **Manual**: open a freshly generated report and eyeball the header mark and footer block (free-tier and Pro+ logo
+      variants); regenerate prod meetings with `scripts/regenerate-pdfs.js` if older reports should get the icon
 - [ ] 16l. **Manual** (needs live Supabase): `node scripts/backfill-pdf-seals.js` to review the list, then `--apply`; open
       `/verify/:id` for an old meeting and drop its stored PDF (expect "original")
