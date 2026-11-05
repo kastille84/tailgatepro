@@ -36,11 +36,27 @@ exports.createJobsite = async (req, res, next) => {
 
 exports.updateJobsite = async (req, res, next) => {
   try {
-    const { name, status, archived, meetingCadence, smsNudgesEnabled, timezone } = req.body;
+    const {
+      name,
+      status,
+      archived,
+      meetingCadence,
+      smsNudgesEnabled,
+      completionEmailEnabled,
+      timezone,
+    } = req.body;
     const data = await jobsitesService.update({
       id: req.params.id,
       gcCompanyId: req.user.companyId,
-      patch: { name, status, archived, meetingCadence, smsNudgesEnabled, timezone },
+      patch: {
+        name,
+        status,
+        archived,
+        meetingCadence,
+        smsNudgesEnabled,
+        completionEmailEnabled,
+        timezone,
+      },
     });
     return res.status(200).json({ success: true, data });
   } catch (error) {

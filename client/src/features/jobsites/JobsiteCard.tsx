@@ -9,8 +9,10 @@ import {
 } from "react-icons/hi";
 
 import { Button } from "../../ui_comps/button";
+import { Checkbox } from "../../ui_comps/checkbox";
 import type { Jobsite } from "../../interfaces/jobsite";
 import {
+  StyledActionsFullRow,
   StyledActionsPanel,
   StyledActionsToggle,
   StyledArchivedBadge,
@@ -32,6 +34,10 @@ interface JobsiteCardProps {
   onManageIntegrations?: (jobsite: Jobsite) => void;
   onUpgrade?: (jobsite: Jobsite) => void;
   onDownloadBundle: (jobsite: Jobsite) => void;
+  /** Present => the Actions panel gets the "Email me completed reports"
+   *  checkbox (manager only; Phase 17). Shown on every jobsite. */
+  onToggleCompletionEmail?: (jobsite: Jobsite, enabled: boolean) => void;
+  isUpdatingCompletionEmail?: boolean;
   isDownloadingBundle: boolean;
   isOnline: boolean;
 }
@@ -55,6 +61,8 @@ export const JobsiteCard = ({
   onManageIntegrations,
   onUpgrade,
   onDownloadBundle,
+  onToggleCompletionEmail,
+  isUpdatingCompletionEmail = false,
   isDownloadingBundle,
   isOnline,
 }: JobsiteCardProps) => {
@@ -168,6 +176,18 @@ export const JobsiteCard = ({
             >
               Edit
             </Button>
+          )}
+          {onToggleCompletionEmail && (
+            <StyledActionsFullRow>
+              <Checkbox
+                label="Email me completed reports"
+                checked={jobsite.completionEmailEnabled}
+                disabled={!isOnline || isUpdatingCompletionEmail}
+                onChange={(event) =>
+                  onToggleCompletionEmail(jobsite, event.target.checked)
+                }
+              />
+            </StyledActionsFullRow>
           )}
         </StyledActionsPanel>
       )}

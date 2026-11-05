@@ -47,6 +47,10 @@ export interface Jobsite {
   /** Phase 9e: the GC has switched on the Monday 7:00 AM SMS nudge for this
    *  site. Only ever true on a Site Pro site (server-enforced). */
   smsNudgesEnabled: boolean;
+  /** Phase 17: each completed report is also emailed to the GC. Defaults on;
+   *  can only be turned off while a Procore/ACC connection receives the PDFs
+   *  instead (server-enforced). */
+  completionEmailEnabled: boolean;
   /** IANA zone (e.g. `America/Chicago`) the Monday 7:00 AM send is evaluated
    *  in; null until the GC sets one, and nudges skip a site without one. */
   timezone: string | null;
@@ -65,6 +69,7 @@ export interface JobsitePatch {
   archived?: boolean;
   meetingCadence?: MeetingCadence;
   smsNudgesEnabled?: boolean;
+  completionEmailEnabled?: boolean;
   timezone?: string;
 }
 

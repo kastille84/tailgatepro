@@ -16,7 +16,7 @@ const { effectiveCadence, isStricterOrEqual } = require("../utility/cadence");
 // mapper applied to each row before it leaves the service. Services never
 // leak DB column names to the controller layer.
 const JOBSITE_COLUMNS =
-  "id, gc_company_id, name, status, archived_at, origin, plan, meeting_cadence, sms_nudges_enabled, timezone, created_at";
+  "id, gc_company_id, name, status, archived_at, origin, plan, meeting_cadence, sms_nudges_enabled, completion_email_enabled, timezone, created_at";
 
 const SMS_NUDGES_UPGRADE_MESSAGE =
   "SMS nudges are part of GC Site Pro. Upgrade this site to use them.";
@@ -45,6 +45,9 @@ const toJobsite = (row) => ({
   // Phase 9e SMS nudges: per-site opt-in and the IANA zone the Monday 7:00 AM
   // send is evaluated in (docs/sms-nudges-design.md).
   smsNudgesEnabled: row.sms_nudges_enabled ?? false,
+  // Whether each completed report is also emailed to the GC. Defaults on; the
+  // GC can switch it off per jobsite whether or not an integration exists.
+  completionEmailEnabled: row.completion_email_enabled ?? true,
   timezone: row.timezone ?? null,
   createdAt: row.created_at,
 });
@@ -103,6 +106,29 @@ const hasActiveSitePro = async (gcCompanyId) => {
     "Could not check your job site plan",
   );
   return count > 0;
+};
+
+// Whether a completed report should still be emailed to the GC for this
+// jobsite. Called from pdfGenerationQueue, which must never lose an email to a
+// lookup problem, so an unlinked project, a missing row or a failed read all
+// fail open to "send".
+const isCompletionEmailEnabled = async (jobsiteId) => {
+  if (!jobsiteId) return true;
+
+  const { data, error } = await supabase
+    .from("jobsites")
+    .select("completion_email_enabled")
+    .eq("id", jobsiteId)
+    .single();
+
+  if (error) {
+    console.error(
+      `jobsites: could not read completion_email_enabled for ${jobsiteId}`,
+      error,
+    );
+    return true;
+  }
+  return data?.completion_email_enabled ?? true;
 };
 
 // Throws a 403 PLAN_LIMIT when the GC already has as many live (active, not
@@ -354,6 +380,9 @@ const update = async ({ id, gcCompanyId, patch }) => {
   const nextPatch = {};
   if (patch.name !== undefined) nextPatch.name = patch.name;
   if (patch.smsNudgesEnabled !== undefined) nextPatch.sms_nudges_enabled = patch.smsNudgesEnabled;
+  if (patch.completionEmailEnabled !== undefined) {
+    nextPatch.completion_email_enabled = patch.completionEmailEnabled;
+  }
   if (patch.timezone !== undefined) nextPatch.timezone = patch.timezone;
   if (patch.status !== undefined) nextPatch.status = patch.status;
   if (patch.meetingCadence !== undefined) nextPatch.meeting_cadence = patch.meetingCadence;
@@ -878,4 +907,5 @@ module.exports = {
   attachInHouseCrew,
   getOwnedJobsite,
   hasActiveSitePro,
+  isCompletionEmailEnabled,
 };

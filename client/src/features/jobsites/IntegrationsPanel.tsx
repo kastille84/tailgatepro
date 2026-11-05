@@ -10,6 +10,8 @@ import type {
 } from "../../interfaces/integration";
 import { IntegrationConnectForm } from "./IntegrationConnectForm";
 import {
+  StyledDocsLink,
+  StyledDocsLinks,
   StyledIntegrationCard,
   StyledIntegrationError,
   StyledIntegrationHeader,
@@ -143,6 +145,21 @@ export const IntegrationsPanel = ({
               ) : (
                 <>
                   <StyledNote>{config.help}</StyledNote>
+                  {config.docs && (
+                    <StyledDocsLinks aria-label={`${config.label} setup guides`}>
+                      {config.docs.map((doc) => (
+                        <li key={doc.url}>
+                          <StyledDocsLink
+                            href={doc.url}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                          >
+                            {doc.label}
+                          </StyledDocsLink>
+                        </li>
+                      ))}
+                    </StyledDocsLinks>
+                  )}
                   <IntegrationConnectForm
                     config={config}
                     onConnect={onConnect}

@@ -222,6 +222,84 @@ describe("SubMeetingsModal", () => {
     expect(mockFetchNextPage).toHaveBeenCalled();
   });
 
+  describe("date filter", () => {
+    const setDates = (from?: string, to?: string) => {
+      if (from) {
+        fireEvent.change(screen.getByLabelText("From"), {
+          target: { value: from },
+        });
+      }
+      if (to) {
+        fireEvent.change(screen.getByLabelText("To"), {
+          target: { value: to },
+        });
+      }
+    };
+
+    it("sends local-day bounds, with `to` exclusive of the day after", () => {
+      renderModal();
+      setDates("2026-09-01", "2026-09-30");
+
+      expect(mockUseGcMeetings).toHaveBeenLastCalledWith(
+        {
+          projectId: "project-1",
+          from: new Date(2026, 8, 1).toISOString(),
+          to: new Date(2026, 9, 1).toISOString(),
+        },
+        true,
+      );
+    });
+
+    it("supports a one-sided range", () => {
+      renderModal();
+      setDates("2026-09-01");
+
+      expect(mockUseGcMeetings).toHaveBeenLastCalledWith(
+        { projectId: "project-1", from: new Date(2026, 8, 1).toISOString() },
+        true,
+      );
+    });
+
+    it("shows Clear dates only once a date is set, and clears both", () => {
+      renderModal();
+      expect(screen.queryByRole("button", { name: /clear dates/i })).toBeNull();
+
+      setDates("2026-09-01", "2026-09-30");
+      fireEvent.click(screen.getByRole("button", { name: /clear dates/i }));
+
+      expect(mockUseGcMeetings).toHaveBeenLastCalledWith(
+        { projectId: "project-1" },
+        true,
+      );
+    });
+
+    it("uses a range-specific empty message while filtered", () => {
+      mockUseGcMeetings.mockReturnValue({
+        meetings: [],
+        isLoading: false,
+        isError: false,
+      });
+      renderModal();
+      setDates("2026-09-01");
+
+      expect(screen.getByText(/no completed talks in this date range/i)).toBeDefined();
+    });
+
+    it("resets the dates when the modal is closed", () => {
+      const onClose = vi.fn();
+      renderModal({ onClose });
+      setDates("2026-09-01");
+
+      fireEvent.click(screen.getByRole("button", { name: /close/i }));
+
+      expect(onClose).toHaveBeenCalled();
+      expect(mockUseGcMeetings).toHaveBeenLastCalledWith(
+        { projectId: "project-1" },
+        true,
+      );
+    });
+  });
+
   it("disables Load more while offline", () => {
     mockUseOnlineStatus.mockReturnValue({ isOnline: false });
     mockUseGcMeetings.mockReturnValue({

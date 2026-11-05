@@ -280,7 +280,14 @@ const enqueue = async (meetingLogId, companyId) => {
     // resolves to anything (see resolveGcContactEmail above), per docs/tasks.md
     // 5f/8b. No log for the skip itself; it's an expected, common state (e.g.
     // an unlinked project with no manual email either), not a failure.
-    const gcContactEmail = await resolveGcContactEmail(project);
+    //
+    // The GC can also switch the email off per jobsite (Phase 17), whether or
+    // not an integration exists. Required lazily for the same circular-load
+    // reason as the integration services above.
+    const emailEnabled = await require("./jobsites").isCompletionEmailEnabled(
+      project.jobsiteId,
+    );
+    const gcContactEmail = emailEnabled ? await resolveGcContactEmail(project) : null;
     if (gcContactEmail) {
       const pdfUrl = await storageService.getSignedUrl(
         PDF_BUCKET,

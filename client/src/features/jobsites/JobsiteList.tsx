@@ -22,6 +22,11 @@ interface JobsiteListProps {
    *  not per-company-role. A non-Site-Pro jobsite renders an upgrade link
    *  instead of a working button, so the paid feature stays visible. */
   onDownloadBundle: (jobsite: Jobsite) => void;
+  /** Present => every card's Actions panel gets the completion-email checkbox
+   *  (manager only; Phase 17). */
+  onToggleCompletionEmail?: (jobsite: Jobsite, enabled: boolean) => void;
+  /** True while a completion-email change is saving; disables the checkboxes. */
+  isUpdatingCompletionEmail?: boolean;
   /** True while any bundle download is in flight — disables every Defense
    *  Bundle button, same one-at-a-time simplification `useGcMeetingPdfUrl`'s
    *  callers already accept for the single-PDF download. */
@@ -41,6 +46,8 @@ export const JobsiteList = ({
   onManageIntegrations,
   onUpgrade,
   onDownloadBundle,
+  onToggleCompletionEmail,
+  isUpdatingCompletionEmail = false,
   isDownloadingBundle = false,
   isOnline,
 }: JobsiteListProps) => {
@@ -64,6 +71,8 @@ export const JobsiteList = ({
           onManageIntegrations={onManageIntegrations}
           onUpgrade={onUpgrade}
           onDownloadBundle={onDownloadBundle}
+          onToggleCompletionEmail={onToggleCompletionEmail}
+          isUpdatingCompletionEmail={isUpdatingCompletionEmail}
           isDownloadingBundle={isDownloadingBundle}
           isOnline={isOnline}
         />

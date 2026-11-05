@@ -211,4 +211,33 @@ describe("IntegrationsModal", () => {
     render_();
     expect(screen.getByRole("button", { name: /retry/i }).getAttribute("aria-busy")).toBe("true");
   });
+
+  it("links to the official Procore and Autodesk setup guides before anything is connected", () => {
+    render_();
+
+    const links = screen.getAllByRole("link") as HTMLAnchorElement[];
+    expect(links.map((link) => link.href)).toEqual([
+      "https://procore.github.io/documentation/developer-managed-service-accounts",
+      "https://help.autodesk.com/cloudhelp/ENU/Docs-Admin/files/account-administration/Custom_Integrations.html",
+      "https://aps.autodesk.com/getting-started",
+    ]);
+    links.forEach((link) => {
+      expect(link.target).toBe("_blank");
+      expect(link.rel).toBe("noopener noreferrer");
+    });
+  });
+
+  it("hides a provider's guide links once it is connected", () => {
+    mockUseIntegrations.mockReturnValue({
+      integrations: [procoreIntegration],
+      recentPushes: [],
+      isLoading: false,
+      isError: false,
+    });
+    render_();
+
+    const hrefs = (screen.getAllByRole("link") as HTMLAnchorElement[]).map((link) => link.href);
+    expect(hrefs.some((href) => href.includes("procore.github.io"))).toBe(false);
+    expect(hrefs.some((href) => href.includes("autodesk.com"))).toBe(true);
+  });
 });

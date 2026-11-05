@@ -442,6 +442,9 @@ CREATE TABLE jobsites (
   sms_nudges_enabled BOOLEAN NOT NULL DEFAULT FALSE,
   timezone TEXT,
   sms_last_nudged_on DATE,
+  -- Phase 17: also email the GC each completed report. A plain per-jobsite
+  -- on/off the GC sets from the jobsite card's Actions panel.
+  completion_email_enabled BOOLEAN NOT NULL DEFAULT TRUE,
   created_at TIMESTAMPTZ DEFAULT NOW()
 );
 
@@ -466,6 +469,7 @@ CREATE INDEX idx_jobsites_gc_company ON jobsites (gc_company_id);
 -- ALTER TABLE jobsites ADD COLUMN IF NOT EXISTS sms_nudges_enabled BOOLEAN NOT NULL DEFAULT FALSE;  -- Phase 9e SMS
 -- ALTER TABLE jobsites ADD COLUMN IF NOT EXISTS timezone TEXT;  -- Phase 9e SMS
 -- ALTER TABLE jobsites ADD COLUMN IF NOT EXISTS sms_last_nudged_on DATE;  -- Phase 9e SMS
+-- ALTER TABLE jobsites ADD COLUMN IF NOT EXISTS completion_email_enabled BOOLEAN NOT NULL DEFAULT TRUE;  -- Phase 17
 
 -- 12. Jobsite Subcontractors (Phase 8d) — folds the GC's invite-by-email into
 -- the jobsite roster instead of a separate invites table, so "invited, not

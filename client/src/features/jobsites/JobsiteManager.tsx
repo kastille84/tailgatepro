@@ -11,6 +11,7 @@ import { useCurrentUser } from "../../hooks/useCurrentUser";
 import { useDownloadDefenseBundle } from "../../hooks/useDownloadDefenseBundle";
 import { useJobsites } from "../../hooks/useJobsites";
 import { useSiteCheckoutReturn } from "../../hooks/useSiteCheckoutReturn";
+import { useUpdateJobsite } from "../../hooks/useUpdateJobsite";
 import type { Jobsite } from "../../interfaces/jobsite";
 import { IntegrationsModal } from "./IntegrationsModal";
 import { JobsiteForm } from "./JobsiteForm";
@@ -36,6 +37,7 @@ export const JobsiteManager = () => {
   const { downloadBundle, isPending: isDownloadingBundle } = useDownloadDefenseBundle();
   const upgrade = useUpgradeModal();
   useSiteCheckoutReturn();
+  const { updateJobsite, isUpdating } = useUpdateJobsite();
 
   const [showArchived, setShowArchived] = useState(false);
   const { jobsites, isLoading, isError } = useJobsites();
@@ -59,6 +61,14 @@ export const JobsiteManager = () => {
   const openCreate = () => {
     setEditing(undefined);
     setIsFormOpen(true);
+  };
+
+  const toggleCompletionEmail = async (jobsite: Jobsite, enabled: boolean) => {
+    try {
+      await updateJobsite({ id: jobsite.id, patch: { completionEmailEnabled: enabled } });
+    } catch {
+      // useUpdateJobsite already surfaces the failure as a toast.
+    }
   };
 
   const openEdit = (jobsite: Jobsite) => {
@@ -107,6 +117,8 @@ export const JobsiteManager = () => {
           onManageIntegrations={canManage ? (jobsite) => setIntegrationsId(jobsite.id) : undefined}
           onUpgrade={canManage ? (jobsite) => setSiteProId(jobsite.id) : undefined}
           onDownloadBundle={downloadBundle}
+          onToggleCompletionEmail={canManage ? toggleCompletionEmail : undefined}
+          isUpdatingCompletionEmail={isUpdating}
           isDownloadingBundle={isDownloadingBundle}
           isOnline={isOnline}
         />
