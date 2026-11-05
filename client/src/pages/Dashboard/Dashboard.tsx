@@ -2,7 +2,8 @@ import {
   HiBookOpen,
   HiBuildingOffice2,
   HiClipboardDocumentList,
-  HiShieldCheck,
+  HiCog6Tooth,
+  HiPlayCircle,
 } from "react-icons/hi2";
 
 import { useAuth } from "../../context/auth";
@@ -20,7 +21,9 @@ import {
   StyledContainer,
   StyledCardGrid,
   StyledCard,
-  StyledCardSoon,
+  StyledPrimaryAction,
+  StyledPrimaryActionTitle,
+  StyledPrimaryActionText,
   StyledCardTitle,
   StyledCardText,
   StyledStatus,
@@ -30,9 +33,9 @@ import {
 /** The authenticated hub. GC users land on their compliance view (the same
  *  content as `/gc`) instead of the generic card grid — that's their primary
  *  landing experience, not something to click through to. Everyone else sees
- *  entry-point cards for the product areas; only Projects is live today, the
- *  rest are "coming soon" placeholders. Reached only through the RequireAuth
- *  route guard, but stays defensive on its own. */
+ *  a Start a Talk call to action plus entry-point cards for the product
+ *  areas. Reached only through the RequireAuth route guard, but stays
+ *  defensive on its own. */
 export const Dashboard = () => {
   const { user, loading /*logout*/ } = useAuth();
   const { isGc, isLoading: isCurrentUserLoading } = useCurrentUser();
@@ -103,6 +106,15 @@ export const Dashboard = () => {
 
       <StyledSection>
         <StyledContainer>
+          <StyledPrimaryAction to="/meetings/new">
+            <HiPlayCircle size={40} aria-hidden="true" />
+            <span>
+              <StyledPrimaryActionTitle>Start a Talk</StyledPrimaryActionTitle>
+              <StyledPrimaryActionText>
+                Run a toolbox talk and collect signatures.
+              </StyledPrimaryActionText>
+            </span>
+          </StyledPrimaryAction>
           <StyledCardGrid>
             <StyledCard to="/projects">
               <StyledCardIconContainer>
@@ -130,7 +142,7 @@ export const Dashboard = () => {
                 Browse the OSHA safety-talk library.
               </StyledCardText>
             </StyledCard>
-            <StyledCard to="/meetings/new">
+            <StyledCard to="/meetings">
               <StyledCardIconContainer>
                 <HiClipboardDocumentList
                   size={22}
@@ -138,26 +150,22 @@ export const Dashboard = () => {
                   aria-hidden="true"
                 />
               </StyledCardIconContainer>
-              <StyledCardTitle>Meeting Logs</StyledCardTitle>
-              <StyledCardText>
-                Start a toolbox talk and collect signatures.
-              </StyledCardText>
+              <StyledCardTitle>Past Meetings</StyledCardTitle>
+              <StyledCardText>Review your signed talk history.</StyledCardText>
             </StyledCard>
-            {/* Only non-GC viewers ever reach this card — a GC lands on
-                GcDashboard above instead. */}
-            <StyledCardSoon aria-disabled="true">
+            <StyledCard to="/settings">
               <StyledCardIconContainer>
-                <HiShieldCheck
+                <HiCog6Tooth
                   size={22}
-                  color="var(--color-red-500)"
+                  color="var(--color-navy-600)"
                   aria-hidden="true"
                 />
               </StyledCardIconContainer>
-              <StyledCardTitle>GC Compliance</StyledCardTitle>
+              <StyledCardTitle>Settings</StyledCardTitle>
               <StyledCardText>
-                Audit subcontractor safety logs. Coming soon.
+                Manage your company profile and account.
               </StyledCardText>
-            </StyledCardSoon>
+            </StyledCard>
           </StyledCardGrid>
         </StyledContainer>
       </StyledSection>

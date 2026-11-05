@@ -89,7 +89,7 @@ describe("Dashboard page", () => {
     expect(talksCard?.getAttribute("href")).toBe("/talks");
   });
 
-  it("shows the live Meeting Logs card link", () => {
+  it("shows a prominent Start a Talk link to the meeting flow", () => {
     mockUseAuth.mockReturnValue({
       user: { email: "alex@example.com" },
       loading: false,
@@ -97,15 +97,12 @@ describe("Dashboard page", () => {
 
     renderDashboard();
 
-    const meetingLogsCard = screen
-      .getByRole("heading", { name: /^meeting logs$/i })
-      .closest("a");
+    const startLink = screen.getByRole("link", { name: /start a talk/i });
 
-    expect(meetingLogsCard).not.toBeNull();
-    expect(meetingLogsCard?.getAttribute("href")).toBe("/meetings/new");
+    expect(startLink.getAttribute("href")).toBe("/meetings/new");
   });
 
-  it("renders the remaining placeholder card without a link", () => {
+  it("shows the Past Meetings card link to meeting history", () => {
     mockUseAuth.mockReturnValue({
       user: { email: "alex@example.com" },
       loading: false,
@@ -113,7 +110,28 @@ describe("Dashboard page", () => {
 
     renderDashboard();
 
-    expect(screen.getByText(/gc compliance/i).closest("a")).toBeNull();
+    const pastMeetingsCard = screen
+      .getByRole("heading", { name: /^past meetings$/i })
+      .closest("a");
+
+    expect(pastMeetingsCard).not.toBeNull();
+    expect(pastMeetingsCard?.getAttribute("href")).toBe("/meetings");
+  });
+
+  it("shows the Settings card link to the settings page", () => {
+    mockUseAuth.mockReturnValue({
+      user: { email: "alex@example.com" },
+      loading: false,
+    });
+
+    renderDashboard();
+
+    const settingsCard = screen
+      .getByRole("heading", { name: /^settings$/i })
+      .closest("a");
+
+    expect(settingsCard).not.toBeNull();
+    expect(settingsCard?.getAttribute("href")).toBe("/settings");
   });
 
   it("shows a loading status while the current-user profile is resolving", () => {
