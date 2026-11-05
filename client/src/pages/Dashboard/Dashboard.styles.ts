@@ -108,10 +108,35 @@ export const StyledCard = styled(Link)`
   }
 `;
 
-export const StyledCardSoon = styled.div`
-  ${cardBase};
-  opacity: 0.55;
-  cursor: not-allowed;
+export const StyledPrimaryAction = styled(Link)`
+  display: flex;
+  align-items: center;
+  gap: 1.6rem;
+  min-height: 6.4rem;
+  margin-bottom: 1.6rem;
+  padding: 2rem;
+  border-radius: ${({ theme }) => theme.borderRadius.md};
+  background-color: ${({ theme }) => theme.colors.orange[500]};
+  box-shadow: ${({ theme }) => theme.shadows.md};
+  color: ${({ theme }) => theme.colors.navy[500]};
+  text-decoration: none;
+  transition: background-color 0.2s ease;
+
+  &:hover {
+    background-color: ${({ theme }) => theme.colors.orange[400]};
+  }
+`;
+
+export const StyledPrimaryActionTitle = styled.span`
+  display: block;
+  font-size: 2rem;
+  font-weight: 800;
+`;
+
+export const StyledPrimaryActionText = styled.span`
+  display: block;
+  font-size: 1.4rem;
+  font-weight: 600;
 `;
 
 export const StyledCardIconContainer = styled.div`
