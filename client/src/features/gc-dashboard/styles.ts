@@ -205,6 +205,18 @@ export const StyledMeetingDate = styled.span`
   color: ${({ theme }) => theme.colors.navy[400]};
 `;
 
+export const StyledDateFilter = styled.div`
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: 1.2rem;
+  margin-bottom: 1.6rem;
+
+  > * {
+    flex: 1 1 14rem;
+  }
+`;
+
 export const StyledLoadMore = styled.div`
   display: flex;
   justify-content: center;

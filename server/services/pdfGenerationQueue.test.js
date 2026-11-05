@@ -12,6 +12,7 @@ const usersService = require("./users");
 const pdfGeneration = require("./pdfGeneration");
 const emailService = require("./email");
 const auditLogService = require("./auditLog");
+const jobsitesService = require("./jobsites");
 const jobsiteIntegrationsService = require("./jobsiteIntegrations");
 const projectIntegrationsService = require("./projectIntegrations");
 const { enqueue, regenerate } = require("./pdfGenerationQueue");
@@ -135,6 +136,7 @@ describe("pdfGenerationQueue: enqueue", () => {
     vi.spyOn(projectIntegrationsService, "pushMeeting")
       .mockReset()
       .mockResolvedValue(undefined);
+    vi.spyOn(jobsitesService, "isCompletionEmailEnabled").mockReset().mockResolvedValue(true);
 
     consoleErrorSpy = vi.spyOn(console, "error").mockImplementation(() => {});
   });
@@ -399,6 +401,44 @@ describe("pdfGenerationQueue: enqueue", () => {
     // Assert
     expect(storageService.getSignedUrl).not.toHaveBeenCalled();
     expect(emailService.sendMeetingLogEmail).not.toHaveBeenCalled();
+  });
+
+  it("should skip the GC email when the jobsite has completion emails off, with or without integrations (Phase 17)", async () => {
+    // Arrange
+    vi.spyOn(jobsiteIntegrationsService, "pushMeeting").mockReset().mockResolvedValue(undefined);
+    jobsitesService.isCompletionEmailEnabled.mockResolvedValue(false);
+    projectsService.getById.mockResolvedValue({
+      ...project,
+      jobsiteId: "jobsite-1",
+      gcContactEmail: "gc@example.com",
+    });
+
+    // Act
+    await enqueue("meeting-1", "company-1");
+
+    // Assert
+    expect(jobsitesService.isCompletionEmailEnabled).toHaveBeenCalledWith("jobsite-1");
+    expect(storageService.getSignedUrl).not.toHaveBeenCalled();
+    expect(emailService.sendMeetingLogEmail).not.toHaveBeenCalled();
+    expect(pdfGeneration.renderMeetingLogPdf).toHaveBeenCalled();
+  });
+
+  it("should still email the GC when the jobsite has completion emails on (Phase 17)", async () => {
+    // Arrange
+    vi.spyOn(jobsiteIntegrationsService, "pushMeeting").mockReset().mockResolvedValue(undefined);
+    projectsService.getById.mockResolvedValue({
+      ...project,
+      jobsiteId: "jobsite-1",
+      gcContactEmail: "gc@example.com",
+    });
+
+    // Act
+    await enqueue("meeting-1", "company-1");
+
+    // Assert
+    expect(emailService.sendMeetingLogEmail).toHaveBeenCalledWith(
+      expect.objectContaining({ to: "gc@example.com" }),
+    );
   });
 
   it("should pass talk: null and skip fetching a talk when the meeting has none attached", async () => {

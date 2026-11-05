@@ -93,6 +93,15 @@ describe("ProjectIntegrationsModal", () => {
     expect(screen.queryByText("connect acc")).toBeNull();
   });
 
+  it("links the Procore guide but nothing for JobTread, which has no official how-to", () => {
+    renderModal();
+
+    const links = screen.getAllByRole("link") as HTMLAnchorElement[];
+    expect(links.map((link) => link.href)).toEqual([
+      "https://procore.github.io/documentation/developer-managed-service-accounts",
+    ]);
+  });
+
   it("connects against this TailgatePro project", () => {
     renderModal();
     fireEvent.click(screen.getByText("connect jobtread"));

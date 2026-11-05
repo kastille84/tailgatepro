@@ -7,11 +7,19 @@ export interface IntegrationFieldConfig {
   secret?: boolean;
 }
 
+export interface IntegrationDocLink {
+  label: string;
+  url: string;
+}
+
 export interface IntegrationProviderConfig {
   provider: IntegrationProvider;
   label: string;
   /** Where the customer's admin gets the credentials below. */
   help: string;
+  /** Official setup guides, shown under `help`. Omitted when the vendor has no
+   *  official how-to to point at. */
+  docs?: IntegrationDocLink[];
   credentialFields: IntegrationFieldConfig[];
   projectLabel: string;
   /** False when the provider attaches to the project/job itself (JobTread). */
@@ -28,6 +36,12 @@ export const INTEGRATION_PROVIDERS: IntegrationProviderConfig[] = [
     provider: "procore",
     label: "Procore",
     help: "In Procore, an admin creates a Developer Managed Service Account and gives it access to the project. Paste its Client ID and Secret below.",
+    docs: [
+      {
+        label: "Procore: Developer Managed Service Accounts",
+        url: "https://procore.github.io/documentation/developer-managed-service-accounts",
+      },
+    ],
     credentialFields: [
       { name: "clientId", label: "Client ID" },
       { name: "clientSecret", label: "Client secret", secret: true },
@@ -42,6 +56,16 @@ export const INTEGRATION_PROVIDERS: IntegrationProviderConfig[] = [
     provider: "acc",
     label: "Autodesk ACC",
     help: "In Autodesk, an account admin adds a custom integration to your ACC account. Paste its Client ID and Secret below.",
+    docs: [
+      {
+        label: "Autodesk: add a custom integration",
+        url: "https://help.autodesk.com/cloudhelp/ENU/Docs-Admin/files/account-administration/Custom_Integrations.html",
+      },
+      {
+        label: "Autodesk: create an app for your Client ID",
+        url: "https://aps.autodesk.com/getting-started",
+      },
+    ],
     credentialFields: [
       { name: "clientId", label: "Client ID" },
       { name: "clientSecret", label: "Client secret", secret: true },

@@ -79,6 +79,22 @@ one entry in `client/src/data/integrationProviders.ts`.
 - **Trade Enterprise** (sub-side) is covered by the "Sub-side" section below.- **Secrets:** losing or rotating `INTEGRATIONS_ENCRYPTION_KEY` makes stored credentials undecryptable;
   affected integrations show as `error` on the next push and must be reconnected.
 
+## Completion email (Phase 17)
+
+By default the GC contact is emailed each completed report. Every jobsite card has an "Email me completed reports"
+checkbox in its Actions panel (admin / safety_manager only), regardless of plan or whether an integration is connected
+(`jobsites.completion_email_enabled`, default on). It is a plain on/off:
+
+- Off means no completion email for that jobsite. The PDF is still rendered, pushed to any connected integrations and
+  available on the GC Report page.
+- `pdfGenerationQueue.enqueue` asks `jobsites.isCompletionEmailEnabled(jobsiteId)`. An unlinked project, a missing row or
+  a failed lookup all fail open (the email is sent) so a lookup problem can never silence it.
+- Subcontractors get no completion email, so there is nothing to toggle on the sub side.
+
+The Integrations modal links to the vendors' official setup guides under each provider's instructions (Procore:
+Developer Managed Service Accounts; Autodesk: Custom Integrations and APS Getting Started). JobTread has no official
+how-to link yet. The links live in `client/src/data/integrationProviders.ts` (`docs`).
+
 ## Sub-side: Trade Enterprise (Procore + JobTread)
 
 A subcontractor manager on **Trade Enterprise** (`hasTradeEnterpriseAccess`, company tier) connects one of their
