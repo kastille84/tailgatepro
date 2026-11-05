@@ -17,6 +17,7 @@ const base: Jobsite = {
   createdBySub: false,
   plan: "free",
   sitePro: false,
+  completionEmailEnabled: true,
   createdAt: "x",
   subcontractors: [
     { id: "s1", email: "a@a.com", status: "accepted", companyName: "A Co" },
@@ -117,6 +118,52 @@ describe("JobsiteList", () => {
 
     expect(onManageSubs).toHaveBeenCalledWith(base);
     expect(onEdit).toHaveBeenCalledWith(base);
+  });
+
+  describe("completion email checkbox", () => {
+    const box = () =>
+      screen.getByRole("checkbox", { name: /email me completed reports/i }) as HTMLInputElement;
+
+    it("is omitted when no onToggleCompletionEmail is provided", () => {
+      renderList();
+      expect(screen.queryByRole("checkbox")).toBeNull();
+    });
+
+    it("shows on a free jobsite with no integration, checked by default", () => {
+      renderList({ onToggleCompletionEmail: vi.fn() });
+      expect(box().checked).toBe(true);
+    });
+
+    it("shows on Site Pro and archived jobsites too, unchecked when the email is off", () => {
+      renderList({
+        onToggleCompletionEmail: vi.fn(),
+        jobsites: [
+          { ...base, plan: "site_pro", sitePro: true, completionEmailEnabled: false },
+          { ...base, id: "j2", name: "Archived", archivedAt: "2026-09-02" },
+        ],
+      });
+      const boxes = screen.getAllByRole("checkbox") as HTMLInputElement[];
+      expect(boxes).toHaveLength(2);
+      expect(boxes[0].checked).toBe(false);
+      expect(boxes[1].checked).toBe(true);
+    });
+
+    it("reports the jobsite and the new value", () => {
+      const onToggleCompletionEmail = vi.fn();
+      renderList({ onToggleCompletionEmail });
+
+      fireEvent.click(box());
+      expect(onToggleCompletionEmail).toHaveBeenCalledWith(base, false);
+    });
+
+    it("is disabled while offline or saving", () => {
+      const { unmount } = renderList({ onToggleCompletionEmail: vi.fn(), isOnline: false });
+      expect(box().disabled).toBe(true);
+      unmount();
+
+      renderList({ onToggleCompletionEmail: vi.fn(), isUpdatingCompletionEmail: true });
+      expect(box().disabled).toBe(true);
+    });
   });
 
   it("omits Edit when no onEdit is provided", () => {

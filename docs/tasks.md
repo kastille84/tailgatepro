@@ -3306,3 +3306,28 @@ Closes the gap in `docs/tamper-evidence-design.md` where an edited PDF (or a swa
       variants); regenerate prod meetings with `scripts/regenerate-pdfs.js` if older reports should get the icon
 - [ ] 16l. **Manual** (needs live Supabase): `node scripts/backfill-pdf-seals.js` to review the list, then `--apply`; open
       `/verify/:id` for an old meeting and drop its stored PDF (expect "original")
+
+## Phase 17: Per-jobsite completion-email toggle + integration setup links · status: code complete, server and client tests passing; manual verify pending
+
+A GC with Procore/ACC connected (or anyone who just doesn't want the inbox copy) still got an email per completed talk.
+Each jobsite card's Actions panel now has an "Email me completed reports" checkbox (manager only, every jobsite, default
+on). Off = no completion email for that jobsite; the PDF still goes to integrations and the GC Report page. The
+Integrations modal also links to the vendors' official setup guides. See `docs/integrations-design.md` -> "Completion
+email (Phase 17)".
+
+- [x] 17a. Schema: `jobsites.completion_email_enabled BOOLEAN NOT NULL DEFAULT TRUE` (`Supabase_SQL.sql`, `Supabase_Schema.md`)
+- [x] 17b. Server: `jobsites.update` accepts `completionEmailEnabled` (route validator + controller pass-through);
+      `jobsites.isCompletionEmailEnabled` (fails open); `pdfGenerationQueue.enqueue` skips the GC email when it is off
+- [x] 17c. Client: `completionEmailEnabled` on `Jobsite`/`JobsitePatch`; checkbox in `JobsiteCard`'s Actions panel, wired
+      through `JobsiteList` and `JobsiteManager` (`useUpdateJobsite`)
+- [x] 17d. Tests: server (`jobsites`, `pdfGenerationQueue`, controller) and client (`JobsiteList`, `JobsiteManager`)
+- [x] 17f. Integration setup links: `docs` on `IntegrationProviderConfig`, rendered by `IntegrationsPanel` (Procore, Autodesk
+      ACC; none for JobTread, no official how-to found); tests in `IntegrationsModal` / `ProjectIntegrationsModal`
+- [ ] 17e. **Manual**: run the `ALTER TABLE` in Supabase; untick the box on a jobsite with no integration, complete a talk
+      (PDF on the GC Report page, no email), retick (email resumes); open Integrations and confirm the guide links open
+
+Possible future work (not scheduled):
+
+- [ ] **Settings page** "Report emails" section listing every jobsite with a toggle, for GCs with many sites who want to
+      switch them in one place; needs a list endpoint
+- [ ] A JobTread setup-guide link once JobTread publishes an official grant-key how-to

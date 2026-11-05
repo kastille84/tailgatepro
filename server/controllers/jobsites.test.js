@@ -606,6 +606,24 @@ describe("jobsites controller: meeting cadence", () => {
     });
   });
 
+  it("passes completionEmailEnabled through when a GC patches a jobsite", async () => {
+    // Arrange
+    req.user.companyId = "gc-1";
+    req.params.id = "jobsite-1";
+    req.body = { completionEmailEnabled: false };
+    updateSpy.mockReset().mockResolvedValue(jobsite);
+
+    // Act
+    await updateJobsite(req, res, next);
+
+    // Assert
+    expect(updateSpy).toHaveBeenCalledWith({
+      id: "jobsite-1",
+      gcCompanyId: "gc-1",
+      patch: expect.objectContaining({ completionEmailEnabled: false }),
+    });
+  });
+
   it("lists the caller's own company's memberships", async () => {
     // Arrange
     const memberships = [{ jobsiteId: "jobsite-1", effectiveCadence: "daily" }];

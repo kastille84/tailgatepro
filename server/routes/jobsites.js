@@ -113,6 +113,11 @@ router.patch(
       .isBoolean()
       .withMessage("Invalid SMS nudges flag")
       .toBoolean(),
+    body("completionEmailEnabled")
+      .optional()
+      .isBoolean()
+      .withMessage("Invalid completion email flag")
+      .toBoolean(),
     body("timezone")
       .optional()
       .custom(isValidTimeZone)

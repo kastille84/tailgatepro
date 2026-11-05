@@ -20,10 +20,11 @@ const {
   setMyCadence,
   attachCrew,
   attachInHouseCrew,
+  isCompletionEmailEnabled,
 } = require("./jobsites");
 
 const JOBSITE_COLUMNS =
-  "id, gc_company_id, name, status, archived_at, origin, plan, meeting_cadence, sms_nudges_enabled, timezone, created_at";
+  "id, gc_company_id, name, status, archived_at, origin, plan, meeting_cadence, sms_nudges_enabled, completion_email_enabled, timezone, created_at";
 const LIST_SELECT = `${JOBSITE_COLUMNS}, companies(tier), jobsite_subcontractors(id, sub_company_id, invited_email, accepted_at, companies(name, parent_gc_company_id))`;
 const ROSTER_COLUMNS =
   "id, jobsite_id, sub_company_id, invited_email, token, expires_at, accepted_at";
@@ -50,6 +51,7 @@ const mappedJobsite = {
   sitePro: false,
   meetingCadence: "daily",
   smsNudgesEnabled: false,
+  completionEmailEnabled: true,
   timezone: null,
   createdAt: "2026-01-01T00:00:00.000Z",
 };
@@ -495,6 +497,22 @@ describe("jobsites service: update", () => {
       ).rejects.toMatchObject({ statusCode: 403, data: { code: "PLAN_LIMIT" } });
       expect(update).not.toHaveBeenCalled();
     });
+  });
+
+  it("should write completion_email_enabled in either direction without any plan or integration check", async () => {
+    await updateJobsite({
+      id: "jobsite-1",
+      gcCompanyId: "gc-1",
+      patch: { completionEmailEnabled: false },
+    });
+    expect(update).toHaveBeenLastCalledWith({ completion_email_enabled: false });
+
+    await updateJobsite({
+      id: "jobsite-1",
+      gcCompanyId: "gc-1",
+      patch: { completionEmailEnabled: true },
+    });
+    expect(update).toHaveBeenLastCalledWith({ completion_email_enabled: true });
   });
 
   it("should write only the name key when only name is patched", async () => {
@@ -2110,5 +2128,53 @@ describe("jobsites service: create (in-house crew fan-out, Phase 13)", () => {
       expect.anything(),
     );
     expect(createSpy).not.toHaveBeenCalled();
+  });
+});
+
+describe("jobsites service: isCompletionEmailEnabled", () => {
+  const mockRead = (result) => {
+    const single = vi.fn().mockResolvedValue(result);
+    const eq = vi.fn(() => ({ single }));
+    const select = vi.fn(() => ({ eq }));
+    fromSpy.mockReset();
+    fromSpy.mockImplementation(() => ({ select }));
+    return { select, eq };
+  };
+
+  beforeEach(() => {
+    vi.spyOn(console, "error").mockImplementation(() => {});
+  });
+
+  it("should send without querying when the project has no jobsite", async () => {
+    fromSpy.mockReset();
+
+    await expect(isCompletionEmailEnabled(null)).resolves.toBe(true);
+    expect(fromSpy).not.toHaveBeenCalled();
+  });
+
+  it("should read the flag for the jobsite", async () => {
+    const { select, eq } = mockRead({ data: { completion_email_enabled: false }, error: null });
+
+    await expect(isCompletionEmailEnabled("jobsite-1")).resolves.toBe(false);
+    expect(select).toHaveBeenCalledWith("completion_email_enabled");
+    expect(eq).toHaveBeenCalledWith("id", "jobsite-1");
+  });
+
+  it("should be on when the flag is true or the column is missing", async () => {
+    mockRead({ data: { completion_email_enabled: true }, error: null });
+    await expect(isCompletionEmailEnabled("jobsite-1")).resolves.toBe(true);
+
+    mockRead({ data: {}, error: null });
+    await expect(isCompletionEmailEnabled("jobsite-1")).resolves.toBe(true);
+
+    mockRead({ data: null, error: null });
+    await expect(isCompletionEmailEnabled("jobsite-1")).resolves.toBe(true);
+  });
+
+  it("should fail open and log when the lookup errors", async () => {
+    mockRead({ data: null, error: { message: "boom" } });
+
+    await expect(isCompletionEmailEnabled("jobsite-1")).resolves.toBe(true);
+    expect(console.error).toHaveBeenCalled();
   });
 });

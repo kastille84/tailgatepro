@@ -21,6 +21,12 @@ export {
   StyledStatusBadge,
 } from "../projects/styles";
 
+/** A full-width row inside the card's actions grid, so a control that isn't a
+ *  button (the completion-email checkbox) sits on its own line below them. */
+export const StyledActionsFullRow = styled.div`
+  grid-column: 1 / -1;
+`;
+
 /** Inline upgrade prompt shown when the server refuses an action with PLAN_LIMIT. */
 export const StyledUpgradePrompt = styled.div`
   display: flex;
@@ -201,6 +207,25 @@ export const StyledIntegrationTitle = styled.h3`
   margin: 0;
   font-size: 1.8rem;
   color: ${({ theme }) => theme.colors.navy[700]};
+`;
+
+/** Official setup-guide links under a provider's help text. */
+export const StyledDocsLinks = styled.ul`
+  display: flex;
+  flex-direction: column;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+`;
+
+export const StyledDocsLink = styled.a`
+  display: inline-flex;
+  align-items: center;
+  min-height: 4.8rem;
+  width: fit-content;
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: ${({ theme }) => theme.colors.orange[600]};
 `;
 
 export const StyledIntegrationError = styled.p`

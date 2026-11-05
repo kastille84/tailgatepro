@@ -1,6 +1,6 @@
 import React from "react";
 import { describe, it, expect, vi, beforeEach } from "vitest";
-import { render, screen, fireEvent } from "@testing-library/react";
+import { render, screen, fireEvent, waitFor } from "@testing-library/react";
 import { MemoryRouter } from "react-router-dom";
 import { ThemeProvider } from "styled-components";
 
@@ -13,6 +13,8 @@ const mockUseCurrentUser = vi.fn();
 const mockUseJobsites = vi.fn();
 const mockUseDownloadDefenseBundle = vi.fn();
 const mockUseSiteCheckoutReturn = vi.fn();
+const mockUpdateJobsite = vi.fn();
+let isUpdating = false;
 
 vi.mock("../../../src/context/online-status", () => ({
   useOnlineStatus: () => mockUseOnlineStatus(),
@@ -22,6 +24,9 @@ vi.mock("../../../src/hooks/useCurrentUser", () => ({
 }));
 vi.mock("../../../src/hooks/useJobsites", () => ({
   useJobsites: () => mockUseJobsites(),
+}));
+vi.mock("../../../src/hooks/useUpdateJobsite", () => ({
+  useUpdateJobsite: () => ({ updateJobsite: mockUpdateJobsite, isUpdating }),
 }));
 vi.mock("../../../src/hooks/useSiteCheckoutReturn", () => ({
   useSiteCheckoutReturn: () => mockUseSiteCheckoutReturn(),
@@ -58,6 +63,8 @@ vi.mock("../../../src/features/jobsites/JobsiteList", () => ({
     onManageIntegrations,
     onUpgrade,
     onDownloadBundle,
+    onToggleCompletionEmail,
+    isUpdatingCompletionEmail,
     isDownloadingBundle,
   }: {
     jobsites: Jobsite[];
@@ -67,6 +74,8 @@ vi.mock("../../../src/features/jobsites/JobsiteList", () => ({
     onManageIntegrations?: (j: Jobsite) => void;
     onUpgrade?: (j: Jobsite) => void;
     onDownloadBundle: (j: Jobsite) => void;
+    onToggleCompletionEmail?: (j: Jobsite, enabled: boolean) => void;
+    isUpdatingCompletionEmail?: boolean;
     isDownloadingBundle?: boolean;
     isOnline: boolean;
   }) => (
@@ -95,6 +104,11 @@ vi.mock("../../../src/features/jobsites/JobsiteList", () => ({
       {jobsites[0] && onUpgrade && (
         <button type="button" onClick={() => onUpgrade(jobsites[0])}>
           stub-upgrade
+        </button>
+      )}
+      {jobsites[0] && onToggleCompletionEmail && (
+        <button type="button" onClick={() => onToggleCompletionEmail(jobsites[0], false)}>
+          stub-email {String(isUpdatingCompletionEmail)}
         </button>
       )}
       {jobsites[0] && (
@@ -209,6 +223,8 @@ const renderManager = () =>
 describe("JobsiteManager", () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    isUpdating = false;
+    mockUpdateJobsite.mockResolvedValue(undefined);
     mockUseOnlineStatus.mockReturnValue({ isOnline: true });
     mockUseCurrentUser.mockReturnValue({ role: "admin", plan: "gc-portfolio" });
     mockUseJobsites.mockReturnValue({
@@ -352,6 +368,38 @@ describe("JobsiteManager", () => {
 
     fireEvent.click(screen.getByRole("button", { name: /stub-integrations-close/i }));
     expect(screen.queryByRole("dialog")).toBeNull();
+  });
+
+  it("saves the completion-email toggle through useUpdateJobsite for a manager", () => {
+    renderManager();
+
+    fireEvent.click(screen.getByRole("button", { name: /stub-email/i }));
+    expect(mockUpdateJobsite).toHaveBeenCalledWith({
+      id: "j1",
+      patch: { completionEmailEnabled: false },
+    });
+  });
+
+  it("passes the saving state to the list", () => {
+    isUpdating = true;
+    renderManager();
+
+    expect(screen.getByRole("button", { name: /stub-email true/i })).toBeDefined();
+  });
+
+  it("leaves a failed toggle to the hook's toast", async () => {
+    mockUpdateJobsite.mockRejectedValue(new Error("nope"));
+    renderManager();
+
+    fireEvent.click(screen.getByRole("button", { name: /stub-email/i }));
+    await waitFor(() => expect(mockUpdateJobsite).toHaveBeenCalled());
+  });
+
+  it("hides the completion-email toggle for a foreman", () => {
+    mockUseCurrentUser.mockReturnValue({ role: "foreman", plan: "gc-portfolio" });
+    renderManager();
+
+    expect(screen.queryByRole("button", { name: /stub-email/i })).toBeNull();
   });
 
   it("hides Integrations for a foreman", () => {
