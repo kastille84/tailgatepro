@@ -27,6 +27,15 @@ const ROLE_OPTIONS: SelectOption[] = [
   { value: "admin", label: "Admin" },
 ];
 
+// A subcontractor only has two tiers in practice. admin and safety_manager
+// have identical permissions server-side (both are MANAGER_ROLES), so a sub
+// gets a single "Manager" choice, stored as admin (the role the company's
+// creator already has). Several managers per company is fine.
+const SUB_ROLE_OPTIONS: SelectOption[] = [
+  { value: "foreman", label: "Foreman" },
+  { value: "admin", label: "Manager" },
+];
+
 // Superintendent (Phase 9d-2) is a GC-only, GC-Portfolio-only role: it makes
 // no sense for a subcontractor company, and the server 403 PLAN_LIMIT on any
 // other GC plan. Appended rather than merged into ROLE_OPTIONS so a
@@ -68,7 +77,7 @@ export const InviteTeammateForm = () => {
   // Pro still submits, and the server's 403 PLAN_LIMIT surfaces below as the
   // same inline upgrade prompt a jobsite-cap rejection uses — no need to
   // pre-filter the option by plan here.
-  const roleOptions = isGc ? [...ROLE_OPTIONS, SUPERINTENDENT_OPTION] : ROLE_OPTIONS;
+  const roleOptions = isGc ? [...ROLE_OPTIONS, SUPERINTENDENT_OPTION] : SUB_ROLE_OPTIONS;
 
   const {
     register,
