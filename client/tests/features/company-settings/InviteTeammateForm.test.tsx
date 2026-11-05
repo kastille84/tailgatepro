@@ -55,7 +55,20 @@ describe("InviteTeammateForm", () => {
     expect(screen.getByRole("button", { name: /send invite/i })).toBeDefined();
   });
 
-  it("labels safety_manager as Safety Director", () => {
+  it("offers a subcontractor only Foreman and Manager (stored as admin)", () => {
+    renderForm();
+
+    const options = Array.from(
+      (screen.getByLabelText(/role/i) as HTMLSelectElement).options,
+    ).map((option) => [option.value, option.text]);
+    expect(options).toEqual([
+      ["foreman", "Foreman"],
+      ["admin", "Manager"],
+    ]);
+  });
+
+  it("labels safety_manager as Safety Director for a GC", () => {
+    mockUseCurrentUser.mockReturnValue({ isGc: true });
     renderForm();
 
     const options = Array.from(
@@ -117,14 +130,14 @@ describe("InviteTeammateForm", () => {
       target: { value: "newhire@example.com" },
     });
     fireEvent.change(screen.getByLabelText(/role/i), {
-      target: { value: "safety_manager" },
+      target: { value: "admin" },
     });
     fireEvent.click(screen.getByRole("button", { name: /send invite/i }));
 
     await waitFor(() =>
       expect(mockInvite).toHaveBeenCalledWith({
         email: "newhire@example.com",
-        role: "safety_manager",
+        role: "admin",
       }),
     );
     await waitFor(() =>
