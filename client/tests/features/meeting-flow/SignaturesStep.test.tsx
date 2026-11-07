@@ -27,6 +27,10 @@ const { mockPadInstances, MockSignaturePad } = vi.hoisted(() => {
     offFn = vi.fn();
     clearFn = vi.fn();
     toDataURLFn = vi.fn(() => "data:image/png;base64,AAAA");
+    toData() {
+      return [];
+    }
+    fromData() {}
 
     addEventListener(type: string, callback: () => void) {
       (this.listeners[type] ??= []).push(callback);

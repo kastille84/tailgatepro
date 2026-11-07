@@ -98,7 +98,7 @@ describe("ProjectIntegrationsModal", () => {
 
     const links = screen.getAllByRole("link") as HTMLAnchorElement[];
     expect(links.map((link) => link.href)).toEqual([
-      "https://procore.github.io/documentation/developer-managed-service-accounts",
+      "https://developers.procore.com/documentation/developer-managed-service-accounts",
     ]);
   });
 

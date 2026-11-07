@@ -25,6 +25,16 @@ const { mockPadInstances, MockSignaturePad } = vi.hoisted(() => {
       this.isEmptyValue = true;
     });
     toDataURLFn = vi.fn(() => "data:image/png;base64,AAAA");
+    strokes: Array<{ points: Array<{ x: number; y: number; time: number }> }> = [];
+    fromDataFn = vi.fn();
+
+    toData() {
+      return this.strokes;
+    }
+
+    fromData(data: unknown) {
+      this.fromDataFn(data);
+    }
 
     constructor(canvas: HTMLCanvasElement) {
       this.canvas = canvas;
@@ -226,6 +236,76 @@ describe("SignaturePad", () => {
       value: originalRatio,
       configurable: true,
     });
+  });
+
+  it("expands to a dialog on Expand, and collapses on Done and on Escape", () => {
+    renderWithTheme(<SignaturePad aria-label="Sign here" />);
+    expect(screen.queryByRole("dialog")).toBeNull();
+
+    fireEvent.click(screen.getByRole("button", { name: /expand/i }));
+    expect(screen.getByRole("dialog", { name: "Sign here (expanded)" })).toBeDefined();
+    expect(document.body.style.overflow).toBe("hidden");
+
+    fireEvent.click(screen.getByRole("button", { name: /done/i }));
+    expect(screen.queryByRole("dialog")).toBeNull();
+    expect(document.body.style.overflow).not.toBe("hidden");
+
+    fireEvent.click(screen.getByRole("button", { name: /expand/i }));
+    fireEvent.keyDown(document, { key: "a" });
+    expect(screen.getByRole("dialog")).toBeDefined();
+    fireEvent.keyDown(document, { key: "Escape" });
+    expect(screen.queryByRole("dialog")).toBeNull();
+  });
+
+  it("keeps the same pad instance when expanding", () => {
+    renderWithTheme(<SignaturePad />);
+    fireEvent.click(screen.getByRole("button", { name: /expand/i }));
+    expect(mockPadInstances).toHaveLength(1);
+  });
+
+  it("redraws existing strokes scaled to the new canvas size on resize", () => {
+    const widthSpy = vi.spyOn(HTMLElement.prototype, "offsetWidth", "get").mockReturnValue(100);
+    const heightSpy = vi.spyOn(HTMLElement.prototype, "offsetHeight", "get").mockReturnValue(50);
+    renderWithTheme(<SignaturePad />);
+    const pad = mockPadInstances[0];
+    pad.strokes = [{ points: [{ x: 10, y: 10, time: 1 }] }];
+    widthSpy.mockReturnValue(200);
+    heightSpy.mockReturnValue(100);
+
+    fireEvent(window, new Event("resize"));
+
+    expect(pad.fromDataFn).toHaveBeenCalledWith([
+      { points: [{ x: 20, y: 20, time: 1 }] },
+    ]);
+    widthSpy.mockRestore();
+    heightSpy.mockRestore();
+  });
+
+  it("uses a ResizeObserver when available and disconnects it on unmount", () => {
+    const observe = vi.fn();
+    const disconnect = vi.fn();
+    let trigger: () => void = () => {};
+    vi.stubGlobal(
+      "ResizeObserver",
+      class {
+        constructor(callback: () => void) {
+          trigger = callback;
+        }
+        observe = observe;
+        disconnect = disconnect;
+      },
+    );
+    const { unmount } = renderWithTheme(<SignaturePad />);
+    const pad = mockPadInstances[0];
+    const clearsBefore = pad.clearFn.mock.calls.length;
+
+    expect(observe).toHaveBeenCalledWith(screen.getByRole("img"));
+    trigger();
+    expect(pad.clearFn.mock.calls.length).toBeGreaterThan(clearsBefore);
+
+    unmount();
+    expect(disconnect).toHaveBeenCalled();
+    vi.unstubAllGlobals();
   });
 
   it("unbinds the resize listener and the pad's own listeners on unmount", () => {

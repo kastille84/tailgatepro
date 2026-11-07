@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useId, useRef, useState } from "react";
-import { HiArrowRight } from "react-icons/hi2";
+import { HiArrowPath, HiArrowRight } from "react-icons/hi2";
 
 import { Button } from "../../ui_comps/button";
 import { dataUrlToBlob } from "../../ui_comps/signature-pad";
@@ -31,8 +31,27 @@ type Mode =
 
 const CAMERA_UNAVAILABLE_NOTE = "Camera unavailable -- choose a photo instead.";
 
+type Facing = "environment" | "user";
+
 const hasCameraSupport = () =>
   typeof navigator !== "undefined" && !!navigator.mediaDevices?.getUserMedia;
+
+// `ideal` (not `exact`) so a single-camera device still opens instead of
+// rejecting when the requested side doesn't exist.
+const requestStream = (facing: Facing) =>
+  navigator.mediaDevices.getUserMedia({ video: { facingMode: { ideal: facing } } });
+
+// Only offers the flip button when the device reports more than one camera.
+// Browsers that can't enumerate devices get the button anyway.
+const hasMultipleCameras = async () => {
+  try {
+    const devices = await navigator.mediaDevices.enumerateDevices?.();
+    return !devices || devices.filter((d) => d.kind === "videoinput").length > 1;
+  } catch {
+    // Enumeration is only a hint for showing the button -- never block capture.
+    return true;
+  }
+};
 
 /**
  * Crew-photo capture step (docs/tasks.md Phase 4f, PRD §4.3). Opens a live
@@ -59,6 +78,8 @@ export const PhotoCapture = ({ onCapture, onSkip }: PhotoCaptureProps) => {
   );
   const [videoReady, setVideoReady] = useState(false);
   const [cameraNote, setCameraNote] = useState<string | null>(null);
+  const [facing, setFacing] = useState<Facing>("environment");
+  const [canFlip, setCanFlip] = useState(true);
 
   const videoRef = useRef<HTMLVideoElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -99,13 +120,30 @@ export const PhotoCapture = ({ onCapture, onSkip }: PhotoCaptureProps) => {
     }
 
     try {
-      streamRef.current = await navigator.mediaDevices.getUserMedia({
-        video: { facingMode: "environment" },
-      });
+      streamRef.current = await requestStream(facing);
+      setCanFlip(await hasMultipleCameras());
       setMode({ kind: "camera" });
     } catch {
       // Permission denied, no camera device, device busy, or an insecure
       // context -- fall back to the file picker rather than getting stuck.
+      setCameraNote(CAMERA_UNAVAILABLE_NOTE);
+      setMode({ kind: "fallback" });
+    }
+  };
+
+  // Swaps between the rear camera and the front (selfie) camera while the
+  // live preview is open. The new stream is bound to the existing <video>
+  // directly because the camera-mode binding effect only runs on mode change.
+  const handleFlipCamera = async () => {
+    const next: Facing = facing === "user" ? "environment" : "user";
+    setVideoReady(false);
+    stopStream();
+
+    try {
+      streamRef.current = await requestStream(next);
+      videoRef.current!.srcObject = streamRef.current;
+      setFacing(next);
+    } catch {
       setCameraNote(CAMERA_UNAVAILABLE_NOTE);
       setMode({ kind: "fallback" });
     }
@@ -194,10 +232,23 @@ export const PhotoCapture = ({ onCapture, onSkip }: PhotoCaptureProps) => {
               playsInline
               muted
               onLoadedMetadata={handleVideoReady}
+              $mirrored={facing === "user"}
             />
           </StyledPreviewFrame>
           <StyledCameraCanvas ref={canvasRef} aria-hidden="true" />
           <StyledPhotoActions>
+            {canFlip && (
+              <Button
+                type="button"
+                variant="outline"
+                size="md"
+                onClick={handleFlipCamera}
+                disabled={!videoReady}
+                leftIcon={<HiArrowPath aria-hidden="true" />}
+              >
+                Flip camera
+              </Button>
+            )}
             <Button
               type="button"
               variant="outline"
