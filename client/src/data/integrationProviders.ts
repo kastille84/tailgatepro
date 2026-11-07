@@ -39,7 +39,7 @@ export const INTEGRATION_PROVIDERS: IntegrationProviderConfig[] = [
     docs: [
       {
         label: "Procore: Developer Managed Service Accounts",
-        url: "https://procore.github.io/documentation/developer-managed-service-accounts",
+        url: "https://developers.procore.com/documentation/developer-managed-service-accounts",
       },
     ],
     credentialFields: [
@@ -59,11 +59,11 @@ export const INTEGRATION_PROVIDERS: IntegrationProviderConfig[] = [
     docs: [
       {
         label: "Autodesk: add a custom integration",
-        url: "https://help.autodesk.com/cloudhelp/ENU/Docs-Admin/files/account-administration/Custom_Integrations.html",
+        url: "https://help.autodesk.com/cloudhelp/ENG/Docs-Admin/files/hub-administration/Custom_Integrations.html",
       },
       {
         label: "Autodesk: create an app for your Client ID",
-        url: "https://aps.autodesk.com/getting-started",
+        url: "https://get-started.aps.autodesk.com/",
       },
     ],
     credentialFields: [

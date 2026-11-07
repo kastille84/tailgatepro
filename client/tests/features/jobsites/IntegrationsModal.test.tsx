@@ -217,9 +217,9 @@ describe("IntegrationsModal", () => {
 
     const links = screen.getAllByRole("link") as HTMLAnchorElement[];
     expect(links.map((link) => link.href)).toEqual([
-      "https://procore.github.io/documentation/developer-managed-service-accounts",
-      "https://help.autodesk.com/cloudhelp/ENU/Docs-Admin/files/account-administration/Custom_Integrations.html",
-      "https://aps.autodesk.com/getting-started",
+      "https://developers.procore.com/documentation/developer-managed-service-accounts",
+      "https://help.autodesk.com/cloudhelp/ENG/Docs-Admin/files/hub-administration/Custom_Integrations.html",
+      "https://get-started.aps.autodesk.com/",
     ]);
     links.forEach((link) => {
       expect(link.target).toBe("_blank");
@@ -237,7 +237,7 @@ describe("IntegrationsModal", () => {
     render_();
 
     const hrefs = (screen.getAllByRole("link") as HTMLAnchorElement[]).map((link) => link.href);
-    expect(hrefs.some((href) => href.includes("procore.github.io"))).toBe(false);
+    expect(hrefs.some((href) => href.includes("procore.com"))).toBe(false);
     expect(hrefs.some((href) => href.includes("autodesk.com"))).toBe(true);
   });
 });

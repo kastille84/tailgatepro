@@ -194,9 +194,16 @@ export const StyledMeetingTitle = styled.span`
 
 export const StyledMeetingActions = styled.div`
   display: flex;
-  flex-direction: column;
-  align-items: flex-end;
+  align-items: center;
+  justify-content: flex-end;
   gap: 0.8rem;
+  width: 100%;
+
+  @media (min-width: ${({ theme }) => theme.breakpoints.sm}) {
+    flex-direction: column;
+    align-items: flex-end;
+    width: auto;
+  }
 `;
 
 export const StyledMeetingDate = styled.span`
@@ -207,13 +214,30 @@ export const StyledMeetingDate = styled.span`
 
 export const StyledDateFilter = styled.div`
   display: flex;
-  flex-wrap: wrap;
-  align-items: flex-end;
+  flex-direction: column;
   gap: 1.2rem;
   margin-bottom: 1.6rem;
 
   > * {
-    flex: 1 1 14rem;
+    min-width: 0;
+  }
+
+  > button {
+    align-self: flex-start;
+  }
+
+  @media (min-width: ${({ theme }) => theme.breakpoints.sm}) {
+    flex-direction: row;
+    flex-wrap: wrap;
+    align-items: flex-end;
+
+    > * {
+      flex: 1 1 14rem;
+    }
+
+    > button {
+      align-self: flex-end;
+    }
   }
 `;
 
