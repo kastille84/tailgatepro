@@ -1,9 +1,17 @@
-import { useEffect, useImperativeHandle, useRef } from "react";
+import { useEffect, useImperativeHandle, useRef, useState } from "react";
+import { HiOutlineArrowsPointingIn, HiOutlineArrowsPointingOut } from "react-icons/hi2";
 import SignaturePadLib from "signature_pad";
 import type { Ref } from "react";
 
 import { Button } from "../button";
-import { StyledActions, StyledCanvas, StyledCanvasFrame, StyledWrapper } from "./styles";
+import {
+  StyledActions,
+  StyledCanvas,
+  StyledCanvasFrame,
+  StyledHint,
+  StyledWrapper,
+} from "./styles";
+import { useLandscapeFullscreen } from "./useLandscapeFullscreen";
 import { dataUrlToBlob } from "./utils";
 
 export interface SignaturePadHandle {
@@ -45,6 +53,7 @@ export const SignaturePad = ({
   hasError = false,
   "aria-label": ariaLabel = "Signature",
 }: SignaturePadProps) => {
+  const [expanded, setExpanded] = useState(false);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const padRef = useRef<SignaturePadLib | null>(null);
   // Keeps the latest onEnd without re-subscribing the "endStroke" listener
@@ -73,10 +82,16 @@ export const SignaturePad = ({
     const handleEndStroke = () => onEndRef.current?.(pad.isEmpty());
     pad.addEventListener("endStroke", handleEndStroke);
 
+    let lastWidth = 0;
+    let lastHeight = 0;
+
     // Handles both high-DPI screens and the canvas clearing itself whenever
     // its width/height attributes change -- see signature_pad's README
-    // "Handling high DPI screens" / "Handling canvas resize" recipes.
+    // "Handling high DPI screens" / "Handling canvas resize" recipes. Strokes
+    // are snapshotted first and redrawn scaled to the new size, so expanding,
+    // collapsing or rotating the phone mid-signature keeps the ink.
     const resizeCanvas = () => {
+      const strokes = pad.toData();
       const ratio = Math.max(window.devicePixelRatio || 1, 1);
       canvas.width = canvas.offsetWidth * ratio;
       canvas.height = canvas.offsetHeight * ratio;
@@ -85,11 +100,39 @@ export const SignaturePad = ({
       const ctx = canvas.getContext("2d");
       if (ctx) ctx.scale(ratio, ratio);
       pad.clear(); // otherwise isEmpty() can report incorrectly after a resize
+
+      if (strokes.length > 0 && lastWidth > 0 && lastHeight > 0) {
+        const scaleX = canvas.offsetWidth / lastWidth;
+        const scaleY = canvas.offsetHeight / lastHeight;
+        pad.fromData(
+          strokes.map((stroke) => ({
+            ...stroke,
+            points: stroke.points.map((point) => ({
+              ...point,
+              x: point.x * scaleX,
+              y: point.y * scaleY,
+            })),
+          })),
+        );
+      }
+      lastWidth = canvas.offsetWidth;
+      lastHeight = canvas.offsetHeight;
     };
     resizeCanvas();
-    window.addEventListener("resize", resizeCanvas);
+
+    // The frame changes size when the pad is expanded or the phone rotates,
+    // neither of which is guaranteed to fire a window resize. Browsers
+    // without ResizeObserver (and jsdom) fall back to window resize.
+    let observer: ResizeObserver | undefined;
+    if (typeof ResizeObserver !== "undefined") {
+      observer = new ResizeObserver(resizeCanvas);
+      observer.observe(canvas);
+    } else {
+      window.addEventListener("resize", resizeCanvas);
+    }
 
     return () => {
+      observer?.disconnect();
       window.removeEventListener("resize", resizeCanvas);
       pad.removeEventListener("endStroke", handleEndStroke);
       pad.off();
@@ -114,14 +157,38 @@ export const SignaturePad = ({
     [],
   );
 
+  useLandscapeFullscreen(expanded);
+
+  useEffect(() => {
+    if (!expanded) return;
+    const previousOverflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "Escape") setExpanded(false);
+    };
+    document.addEventListener("keydown", handleKeyDown);
+    return () => {
+      document.body.style.overflow = previousOverflow;
+      document.removeEventListener("keydown", handleKeyDown);
+    };
+  }, [expanded]);
+
   const handleClear = () => {
     padRef.current!.clear();
     onEndRef.current?.(true);
   };
 
   return (
-    <StyledWrapper>
-      <StyledCanvasFrame $hasError={hasError} $disabled={disabled}>
+    <StyledWrapper
+      $expanded={expanded}
+      {...(expanded && {
+        role: "dialog",
+        "aria-modal": true,
+        "aria-label": `${ariaLabel} (expanded)`,
+      })}
+    >
+      {expanded && <StyledHint>Rotate your phone sideways for more room.</StyledHint>}
+      <StyledCanvasFrame $hasError={hasError} $disabled={disabled} $expanded={expanded}>
         <StyledCanvas
           ref={canvasRef}
           role="img"
@@ -132,6 +199,15 @@ export const SignaturePad = ({
       <StyledActions>
         <Button type="button" variant="outline" size="sm" onClick={handleClear} disabled={disabled}>
           Clear
+        </Button>
+        <Button
+          type="button"
+          variant={expanded ? "primary" : "outline"}
+          size={expanded ? "md" : "sm"}
+          onClick={() => setExpanded((prev) => !prev)}
+          leftIcon={expanded ? <HiOutlineArrowsPointingIn /> : <HiOutlineArrowsPointingOut />}
+        >
+          {expanded ? "Done" : "Expand"}
         </Button>
       </StyledActions>
     </StyledWrapper>
