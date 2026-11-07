@@ -73,12 +73,15 @@ export const StyledPreviewImage = styled.img`
   height: auto;
 `;
 
-export const StyledVideo = styled.video`
+// `$mirrored` flips only the live preview (front-camera selfie view); the
+// canvas snapshot is drawn from the raw frame so the saved photo isn't reversed.
+export const StyledVideo = styled.video<{ $mirrored?: boolean }>`
   display: block;
   width: 100%;
   height: auto;
   aspect-ratio: 4 / 3;
   background-color: black;
+  transform: ${(props) => (props.$mirrored ? "scaleX(-1)" : "none")};
 `;
 
 // An off-screen scratch buffer used only to snapshot a video frame -- never

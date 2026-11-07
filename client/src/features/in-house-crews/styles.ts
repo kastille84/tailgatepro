@@ -79,6 +79,7 @@ export const StyledCard = styled.section`
   display: flex;
   flex-direction: column;
   gap: 1.2rem;
+  margin-bottom: 2rem;
   padding: 2rem;
   border-radius: ${({ theme }) => theme.borderRadius.md};
   border: 0.1rem solid ${({ theme }) => theme.colors.orange[500]};

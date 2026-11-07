@@ -54,7 +54,7 @@ export default defineConfig(({ mode }) => {
           theme_color: "#ff5f15",
           background_color: "#ffffff",
           display: "standalone",
-          orientation: "portrait",
+          orientation: "any",
           scope: "/",
           start_url: "/",
         },

@@ -29,12 +29,18 @@ const fakeStream = {
 /** Installs (or removes) `navigator.mediaDevices.getUserMedia` for a test --
  *  jsdom has no real implementation, so it's undefined by default, which
  *  already exercises the "unsupported" fallback path with no setup at all. */
-const setCameraSupport = (getUserMedia?: ReturnType<typeof vi.fn>) => {
+const setCameraSupport = (
+  getUserMedia?: ReturnType<typeof vi.fn>,
+  enumerateDevices?: ReturnType<typeof vi.fn>,
+) => {
   Object.defineProperty(navigator, "mediaDevices", {
     configurable: true,
-    value: getUserMedia ? { getUserMedia } : undefined,
+    value: getUserMedia ? { getUserMedia, enumerateDevices } : undefined,
   });
 };
+
+const cameras = (count: number) =>
+  Array.from({ length: count }, () => ({ kind: "videoinput" }));
 
 const stubCanvas = () => {
   const drawImage = vi.fn();
@@ -256,6 +262,118 @@ describe("PhotoCapture", () => {
       );
       expect(screen.getByText(/camera unavailable/i)).toBeDefined();
       expect(document.querySelector("video")).toBeNull();
+    });
+
+    describe("flip camera", () => {
+      const openLiveCamera = async (getUserMedia: ReturnType<typeof vi.fn>) => {
+        fireEvent.click(screen.getByRole("button", { name: /take crew photo/i }));
+        await waitFor(() => expect(getUserMedia).toHaveBeenCalledTimes(1));
+        const video = document.querySelector("video") as HTMLVideoElement;
+        markVideoReady(video);
+        return video;
+      };
+
+      it("starts on the rear camera, then flips to the front and back", async () => {
+        const getUserMedia = vi.fn().mockResolvedValue(fakeStream);
+        setCameraSupport(getUserMedia, vi.fn().mockResolvedValue(cameras(2)));
+        renderWithTheme(<PhotoCapture onCapture={vi.fn()} onSkip={vi.fn()} />);
+
+        const video = await openLiveCamera(getUserMedia);
+        expect(getUserMedia).toHaveBeenLastCalledWith({
+          video: { facingMode: { ideal: "environment" } },
+        });
+
+        fireEvent.click(screen.getByRole("button", { name: /flip camera/i }));
+        expect(trackStop).toHaveBeenCalledTimes(1);
+        await waitFor(() => expect(getUserMedia).toHaveBeenCalledTimes(2));
+        expect(getUserMedia).toHaveBeenLastCalledWith({
+          video: { facingMode: { ideal: "user" } },
+        });
+        expect(video.srcObject).toBe(fakeStream);
+        await waitFor(() =>
+          expect(getComputedStyle(video).transform).toBe("scaleX(-1)"),
+        );
+
+        markVideoReady(video);
+        fireEvent.click(screen.getByRole("button", { name: /flip camera/i }));
+        await waitFor(() => expect(getUserMedia).toHaveBeenCalledTimes(3));
+        expect(getUserMedia).toHaveBeenLastCalledWith({
+          video: { facingMode: { ideal: "environment" } },
+        });
+      });
+
+      it("disables the flip button until the new stream is ready", async () => {
+        const getUserMedia = vi.fn().mockResolvedValue(fakeStream);
+        setCameraSupport(getUserMedia, vi.fn().mockResolvedValue(cameras(2)));
+        renderWithTheme(<PhotoCapture onCapture={vi.fn()} onSkip={vi.fn()} />);
+
+        const video = await openLiveCamera(getUserMedia);
+        fireEvent.click(screen.getByRole("button", { name: /flip camera/i }));
+        expect(screen.getByRole("button", { name: /flip camera/i })).toHaveProperty(
+          "disabled",
+          true,
+        );
+        await waitFor(() => expect(getUserMedia).toHaveBeenCalledTimes(2));
+        markVideoReady(video);
+        expect(screen.getByRole("button", { name: /flip camera/i })).toHaveProperty(
+          "disabled",
+          false,
+        );
+      });
+
+      it("hides the flip button when the device has a single camera", async () => {
+        const getUserMedia = vi.fn().mockResolvedValue(fakeStream);
+        setCameraSupport(getUserMedia, vi.fn().mockResolvedValue(cameras(1)));
+        renderWithTheme(<PhotoCapture onCapture={vi.fn()} onSkip={vi.fn()} />);
+
+        await openLiveCamera(getUserMedia);
+        expect(screen.queryByRole("button", { name: /flip camera/i })).toBeNull();
+      });
+
+      it("still offers the flip button if device enumeration fails", async () => {
+        const getUserMedia = vi.fn().mockResolvedValue(fakeStream);
+        setCameraSupport(getUserMedia, vi.fn().mockRejectedValue(new Error("nope")));
+        renderWithTheme(<PhotoCapture onCapture={vi.fn()} onSkip={vi.fn()} />);
+
+        await openLiveCamera(getUserMedia);
+        expect(screen.getByRole("button", { name: /flip camera/i })).toBeDefined();
+      });
+
+      it("retake reopens the camera the worker last selected", async () => {
+        const getUserMedia = vi.fn().mockResolvedValue(fakeStream);
+        setCameraSupport(getUserMedia, vi.fn().mockResolvedValue(cameras(2)));
+        stubCanvas();
+        renderWithTheme(<PhotoCapture onCapture={vi.fn()} onSkip={vi.fn()} />);
+
+        const video = await openLiveCamera(getUserMedia);
+        fireEvent.click(screen.getByRole("button", { name: /flip camera/i }));
+        await waitFor(() => expect(getUserMedia).toHaveBeenCalledTimes(2));
+        markVideoReady(video);
+        fireEvent.click(screen.getByRole("button", { name: /^capture$/i }));
+        fireEvent.click(screen.getByRole("button", { name: /retake photo/i }));
+
+        await waitFor(() => expect(getUserMedia).toHaveBeenCalledTimes(3));
+        expect(getUserMedia).toHaveBeenLastCalledWith({
+          video: { facingMode: { ideal: "user" } },
+        });
+      });
+
+      it("falls back to the file picker if the flipped camera can't open", async () => {
+        const getUserMedia = vi
+          .fn()
+          .mockResolvedValueOnce(fakeStream)
+          .mockRejectedValueOnce(new Error("busy"));
+        setCameraSupport(getUserMedia, vi.fn().mockResolvedValue(cameras(2)));
+        renderWithTheme(<PhotoCapture onCapture={vi.fn()} onSkip={vi.fn()} />);
+
+        await openLiveCamera(getUserMedia);
+        fireEvent.click(screen.getByRole("button", { name: /flip camera/i }));
+
+        await waitFor(() =>
+          expect(screen.getByLabelText(/choose a photo/i)).toBeDefined(),
+        );
+        expect(screen.getByText(/camera unavailable/i)).toBeDefined();
+      });
     });
 
     it("falls back to the file picker when no 2D canvas context is available", async () => {

@@ -1,10 +1,27 @@
 import styled from "styled-components";
 
-export const StyledWrapper = styled.div`
+export const StyledWrapper = styled.div<{ $expanded?: boolean }>`
   display: flex;
   flex-direction: column;
   gap: 0.8rem;
   width: 100%;
+
+  ${({ $expanded, theme }) =>
+    $expanded &&
+    `
+    position: fixed;
+    inset: 0;
+    z-index: 1100;
+    height: 100dvh;
+    padding: 1.2rem;
+    background-color: ${theme.colors.concrete[200]};
+  `}
+`;
+
+export const StyledHint = styled.p`
+  margin: 0;
+  font-size: 1.4rem;
+  color: ${({ theme }) => theme.colors.concrete[700]};
 `;
 
 // Mirrors ui_comps/form/Input.tsx's border/focus/error treatment so the pad
@@ -14,9 +31,12 @@ export const StyledWrapper = styled.div`
 export const StyledCanvasFrame = styled.div<{
   $hasError?: boolean;
   $disabled?: boolean;
+  $expanded?: boolean;
 }>`
   width: 100%;
-  height: 18rem;
+  height: ${({ $expanded }) => ($expanded ? "auto" : "18rem")};
+  flex: ${({ $expanded }) => ($expanded ? "1" : "none")};
+  min-height: 0;
   border: 0.1rem solid
     ${({ theme, $hasError }) =>
       $hasError ? theme.colors.red[500] : theme.colors.navy[200]};
@@ -37,5 +57,6 @@ export const StyledCanvas = styled.canvas`
 
 export const StyledActions = styled.div`
   display: flex;
-  justify-content: flex-end;
+  justify-content: space-between;
+  gap: 0.8rem;
 `;
